@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MBS* Coffee Menu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="tip-box" role="tooltip"></div>
+
+<header class="header">
+  <div class="header-brand">
+    <span class="header-logo"><i data-lucide="coffee" class="icon" style="width:22px;height:22px"></i></span>
+    <div>
+      <div class="header-name">MBS<sup style="font-size:10px;vertical-align:super">*</sup> Coffee Menu</div>
+      <div class="header-sub">CFO-инструментарий · финансы кофейни в реальном времени</div>
+    </div>
+  </div>
+
+  <!-- Селектор локаций -->
+  <div class="loc-switcher" id="loc-switcher" onclick="toggleLocMenu(event)">
+    <span class="loc-icon" id="loc-icon">☕</span>
+    <span class="loc-name" id="loc-name">Моя кофейня</span>
+    <i data-lucide="chevron-down" class="icon" style="width:14px;height:14px;opacity:.7"></i>
+    <div class="loc-menu" id="loc-menu" onclick="event.stopPropagation()">
+      <div class="loc-menu-header">Заведения</div>
+      <div class="loc-list" id="loc-list"></div>
+      <div class="loc-menu-divider"></div>
+      <button class="loc-menu-item" onclick="openAddLocation()"><i data-lucide="plus" class="icon"></i> Добавить точку</button>
+      <button class="loc-menu-item" onclick="openTemplatesModal()"><i data-lucide="sparkles" class="icon"></i> Создать из шаблона</button>
+      <button class="loc-menu-item" onclick="renameActiveLocation()"><i data-lucide="pencil" class="icon"></i> Переименовать текущую</button>
+      <button class="loc-menu-item danger" onclick="deleteActiveLocation()"><i data-lucide="trash-2" class="icon"></i> Удалить текущую</button>
+    </div>
+  </div>
+
+  <div class="header-actions" style="display:flex;align-items:center;gap:6px">
+    <button class="burger-btn" id="burger-btn" onclick="toggleBurger()">☰</button>
+    <nav class="nav" id="main-nav">
+      <button class="nav-btn active" data-tab="dashboard"><i data-lucide="layout-dashboard" class="icon"></i> Дашборд</button>
+      <button class="nav-btn" data-tab="cost"><i data-lucide="calculator" class="icon"></i> Себестоимость</button>
+      <button class="nav-btn" data-tab="sales"><i data-lucide="shopping-cart" class="icon"></i> План продаж</button>
+      <button class="nav-btn" data-tab="finmodel"><i data-lucide="banknote" class="icon"></i> Финмодель</button>
+      <button class="nav-btn" data-tab="recipes"><i data-lucide="clipboard-list" class="icon"></i> Рецептуры</button>
+    </nav>
+    <button class="btn-reset" onclick="resetAll()"><i data-lucide="rotate-ccw" class="icon"></i> Сброс</button>
+
+    <!-- Меню экспорта -->
+    <div class="export-wrap" id="export-wrap">
+      <button class="theme-btn" onclick="toggleExportMenu(event)" title="Экспорт"><i data-lucide="download" class="icon"></i></button>
+      <div class="export-menu" id="export-menu" onclick="event.stopPropagation()">
+        <button class="loc-menu-item" onclick="exportFullPDF()"><i data-lucide="file-text" class="icon"></i> PDF — полный отчёт</button>
+        <button class="loc-menu-item" onclick="exportFullXLSX()"><i data-lucide="file-spreadsheet" class="icon"></i> Excel (xlsx)</button>
+        <div class="loc-menu-divider"></div>
+        <button class="loc-menu-item" onclick="window.print()"><i data-lucide="printer" class="icon"></i> Печать страницы</button>
+      </div>
+    </div>
+
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Тёмная / светлая тема"><i data-lucide="moon" class="icon" id="theme-icon"></i></button>
+  </div>
+</header>
+
+<!-- Нижний таббар (только mobile) -->
+<nav class="mobile-tabbar" id="mobile-tabbar">
+  <button class="mobile-tab active" data-tab="dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    <span>Обзор</span>
+  </button>
+  <button class="mobile-tab" data-tab="cost">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+    <span>Сырьё</span>
+  </button>
+  <button class="mobile-tab" data-tab="sales">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+    <span>Продажи</span>
+  </button>
+  <button class="mobile-tab" data-tab="finmodel">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+    <span>Финансы</span>
+  </button>
+  <button class="mobile-tab" data-tab="recipes">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    <span>Рецепты</span>
+  </button>
+</nav>
+<div class="modal-bg" id="modal-drink">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modal-drink-title"><i data-lucide="plus" class="icon"></i> Новый напиток</span>
+      <button class="modal-close" onclick="closeModal('modal-drink')">&times;</button>
+    </div>
+    <div class="modal-row">
+      <div>
+        <div class="modal-label">Название</div>
+        <input class="modal-inp" id="md-name" type="text" placeholder="Например: Раф фисташковый 300">
+      </div>
+      <div>
+        <div class="modal-label">Группа</div>
+        <select class="modal-select" id="md-group">
+          <option value="hot">☕ Горячие кофейные</option>
+          <option value="tea">🍵 Чай и матча</option>
+          <option value="cold">🧊 Холодные</option>
+          <option value="filter">🍓 Фильтр-кофе</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div>
+        <div class="modal-label">Цена продажи, ₽</div>
+        <input class="modal-inp" id="md-price" type="number" min="1" placeholder="350">
+      </div>
+      <div>
+        <div class="modal-label">Объём, мл</div>
+        <input class="modal-inp" id="md-vol" type="number" min="1" placeholder="300">
+      </div>
+    </div>
+    <div class="modal-label" style="margin-top:4px;margin-bottom:4px;font-size:13px;color:var(--navy)"><i data-lucide="package" class="icon"></i> Ингредиенты рецептуры</div>
+    <div class="modal-ings-header">
+      <span>Ингредиент</span>
+      <span>Кол-во</span>
+      <span>Потери <span class="loss-hint" data-tip="Коэффициент потерь 0–0.99. Пример: 0.05 = 5%.">?</span></span>
+      <span></span>
+    </div>
+    <div id="md-ings"></div>
+    <button class="btn btn-outline" style="margin-top:4px;margin-bottom:4px" onclick="addIngRow()"><i data-lucide="plus" class="icon"></i> Добавить ингредиент</button>
+    <input type="hidden" id="md-edit-id" value="">
+    <div class="modal-footer">
+      <button id="md-delete-btn" class="btn btn-outline" style="color:var(--red);border-color:#f4b8c4;display:none" onclick="mdDeleteAction()"><i data-lucide="trash-2" class="icon"></i> <span id="md-delete-label">Удалить</span></button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button class="btn btn-outline" onclick="closeModal('modal-drink')">Отмена</button>
+        <button class="btn-primary" onclick="saveDrink()">✔ Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Модал: добавить сырьё -->
+<div class="modal-bg" id="modal-mat">
+  <div class="modal">
+    <div class="modal-title">
+      <span><i data-lucide="plus" class="icon"></i> Новая позиция сырья</span>
+      <button class="modal-close" onclick="closeModal('modal-mat')">&times;</button>
+    </div>
+    <div class="modal-row">
+      <div>
+        <div class="modal-label">Название</div>
+        <input class="modal-inp" id="mm-name" type="text" placeholder="Например: Сироп агаве">
+      </div>
+      <div>
+        <div class="modal-label">Единица</div>
+        <select class="modal-select" id="mm-unit">
+          <option value="шт">шт (штуки, порции)</option>
+          <option value="г">г (граммы)</option>
+          <option value="мл">мл (миллилитры)</option>
+          <option value="кг">кг (килограммы)</option>
+          <option value="л">л (литры)</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div>
+        <div class="modal-label">Цена за единицу, ₽</div>
+        <input class="modal-inp" id="mm-price" type="number" min="1" placeholder="800">
+      </div>
+      <div>
+        <div class="modal-label">Объём в единице, г/мл/шт</div>
+        <input class="modal-inp" id="mm-size" type="number" min="1" placeholder="1000">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-mat')">Отмена</button>
+      <button class="btn-primary" onclick="saveMat()">✔ Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модал: выбор шаблона меню -->
+<div class="modal-bg" id="modal-templates">
+  <div class="modal" style="max-width:760px">
+    <div class="modal-title">
+      <span><i data-lucide="sparkles" class="icon"></i> Шаблоны меню</span>
+      <button class="modal-close" onclick="closeModal('modal-templates')">&times;</button>
+    </div>
+    <div class="modal-label" style="margin-bottom:12px;color:var(--muted);font-size:13px;font-weight:500">
+      Готовые наборы напитков под формат заведения. Создаст новую точку — текущие данные сохранятся.
+    </div>
+    <div id="templates-grid" class="templates-grid"></div>
+  </div>
+</div>
+
+<!-- Модал: добавить локацию -->
+<div class="modal-bg" id="modal-loc">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title">
+      <span id="modal-loc-title"><i data-lucide="plus" class="icon"></i> Новая точка</span>
+      <button class="modal-close" onclick="closeModal('modal-loc')">&times;</button>
+    </div>
+    <div class="modal-row" style="grid-template-columns:80px 1fr">
+      <div>
+        <div class="modal-label">Иконка</div>
+        <input class="modal-inp" id="ml-icon" type="text" maxlength="2" value="☕" style="font-size:22px;text-align:center">
+      </div>
+      <div>
+        <div class="modal-label">Название</div>
+        <input class="modal-inp" id="ml-name" type="text" placeholder="Например: На Тверской">
+      </div>
+    </div>
+    <div id="ml-clone-wrap">
+      <div class="modal-label">Скопировать данные из</div>
+      <select class="modal-select" id="ml-clone">
+        <option value="">— Пустая (с базовым меню) —</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button class="btn btn-outline" onclick="closeModal('modal-loc')">Отмена</button>
+        <button class="btn-primary" onclick="saveLocation()">✔ Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Модал: список всех поставщиков -->
+<div class="modal-bg" id="modal-suppliers-list">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-title">
+      <span><i data-lucide="truck" class="icon"></i> Поставщики</span>
+      <button class="modal-close" onclick="closeModal('modal-suppliers-list')">&times;</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div class="search-wrap" style="flex:1;margin:0">
+        <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
+        <input class="search-inp" id="sup-list-search" type="text" placeholder="Поиск по названию, телефону, сырью..."
+          oninput="supListSearch=this.value;renderSuppliersList()">
+      </div>
+      <button class="btn-primary" style="white-space:nowrap;padding:0 14px" onclick="openSupplierBookModal(null)"><i data-lucide="plus" class="icon"></i> Добавить</button>
+    </div>
+    <div id="sup-filter-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+    <div id="sup-list-stats" style="font-size:12px;color:var(--muted);margin-bottom:10px;padding:0 2px"></div>
+    <div id="sup-list-body" style="display:flex;flex-direction:column;gap:10px;max-height:50vh;overflow-y:auto;padding-right:4px"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" style="margin-left:auto" onclick="closeModal('modal-suppliers-list')">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модал: добавить/редактировать поставщика в справочнике -->
+<div class="modal-bg" id="modal-supplier-book">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title">
+      <span><i data-lucide="building-2" class="icon"></i> <span id="sup-book-title">Новый поставщик</span></span>
+      <button class="modal-close" onclick="cancelSupplierBookModal()">&times;</button>
+    </div>
+    <div>
+      <div class="modal-label">Название <span style="color:var(--red)">*</span></div>
+      <input class="modal-inp" id="sup-book-name" type="text" placeholder="Например: ООО «Кофе Импорт»">
+    </div>
+    <div style="margin-top:10px">
+      <div class="modal-label">Телефон / Email</div>
+      <input class="modal-inp" id="sup-book-phone" type="text" placeholder="+7 (495) 000-00-00">
+    </div>
+    <div style="margin-top:10px">
+      <div class="modal-label">Заметка (условия, доставка)</div>
+      <input class="modal-inp" id="sup-book-note" type="text" placeholder="Доставка вт/пт, минимум 5 кг">
+    </div>
+    <div style="margin-top:10px">
+      <div class="modal-label">Сайт</div>
+      <input class="modal-inp" id="sup-book-site" type="url" placeholder="https://">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="sup-book-del-btn" onclick="deleteSupplierBook()" style="color:var(--red);border-color:#f4b8c4;display:none"><i data-lucide="trash-2" class="icon"></i> Удалить</button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button class="btn btn-outline" onclick="cancelSupplierBookModal()">Отмена</button>
+        <button class="btn-primary" onclick="saveSupplierBook()">✔ Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Модал: поставщик сырья -->
+<div class="modal-bg" id="modal-supplier">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title">
+      <span><i data-lucide="truck" class="icon"></i> Поставщик: <span id="sup-mat-name" style="color:var(--green)">—</span></span>
+      <button class="modal-close" onclick="closeModal('modal-supplier')">&times;</button>
+    </div>
+    <div>
+      <div class="modal-label">Название поставщика</div>
+      <input class="modal-inp" id="sup-name" type="text" placeholder="Например: ООО «Кофе Импорт»">
+    </div>
+    <div style="margin-top:10px">
+      <div class="modal-label">Контакт (телефон / email)</div>
+      <input class="modal-inp" id="sup-phone" type="text" placeholder="+7 (495) 000-00-00">
+    </div>
+    <div style="margin-top:10px">
+      <div class="modal-label">Заметка (условия, доставка)</div>
+      <input class="modal-inp" id="sup-note" type="text" placeholder="Например: доставка по вт/чт, минимум 5кг">
+    </div>
+    <div style="margin-top:10px">
+      <div class="modal-label">Сайт</div>
+      <input class="modal-inp" id="sup-site" type="url" placeholder="https://">
+    </div>
+    <div class="modal-footer">
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button class="btn btn-outline" onclick="cancelSupplierModal()">Отмена</button>
+        <button class="btn-primary" onclick="saveSupplier()">✔ Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Модал: история цены сырья -->
+<div class="modal-bg" id="modal-price-hist">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-title">
+      <span><i data-lucide="history" class="icon"></i> История цены: <span id="phist-mat-name" style="color:var(--green)">—</span></span>
+      <button class="modal-close" onclick="closeModal('modal-price-hist')">&times;</button>
+    </div>
+    <div class="table-wrap" style="max-height:50vh;margin-bottom:0">
+      <table>
+        <thead><tr>
+          <th style="font-size:12px">Дата</th>
+          <th style="font-size:12px;text-align:right">Старая</th>
+          <th style="font-size:12px;text-align:right">Новая</th>
+          <th style="font-size:12px;text-align:right">Изменение</th>
+        </tr></thead>
+        <tbody id="phist-rows"></tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-price-hist')" style="margin-left:auto">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модал: кандидаты на удаление из меню -->
+<div class="modal-bg" id="modal-drop">
+  <div class="modal" style="max-width:880px">
+    <div class="modal-title">
+      <span><i data-lucide="scissors" class="icon"></i> Кандидаты на удаление из меню</span>
+      <button class="modal-close" onclick="closeModal('modal-drop')">&times;</button>
+    </div>
+    <div id="drop-grid"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-drop')" style="margin-left:auto">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- Онбординг -->
+<div id="onboarding" style="display:none">
+  <div class="onboard-bg">
+    <div class="onboard">
+      <div class="onboard-logo"><i data-lucide="coffee" class="icon" style="width:52px;height:52px;stroke-width:1.5"></i></div>
+      <div class="onboard-title">MBS* Coffee Menu</div>
+      <div class="onboard-sub">CFO-инструментарий — финансы кофейни в реальном времени</div>
+      <div class="onboard-steps">
+        <div class="onboard-step">
+          <div class="onboard-step-num">1</div>
+          <div class="onboard-step-text"><strong><i data-lucide="calculator" class="icon"></i> Себестоимость</strong> — введите цены на сырьё под вашу кофейню — все напитки пересчитаются мгновенно</div>
+        </div>
+        <div class="onboard-step">
+          <div class="onboard-step-num">2</div>
+          <div class="onboard-step-text"><strong><i data-lucide="shopping-cart" class="icon"></i> План продаж</strong> — укажите сколько порций каждого напитка продаётся в день</div>
+        </div>
+        <div class="onboard-step">
+          <div class="onboard-step-num">3</div>
+          <div class="onboard-step-text"><strong><i data-lucide="banknote" class="icon"></i> Финмодель</strong> — введите постоянные расходы и узнайте точку безубыточности и три сценария</div>
+        </div>
+      </div>
+      <button class="btn-primary" style="width:100%;padding:13px" onclick="closeOnboarding()">Понятно, начать →</button>
+    </div>
+  </div>
+</div>
+
+<main class="main">
+  <div id="tab-dashboard" class="tab active"></div>
+  <div id="tab-cost"      class="tab"></div>
+  <div id="tab-sales"     class="tab"></div>
+  <div id="tab-finmodel"  class="tab"></div>
+  <div id="tab-recipes"   class="tab"></div>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
