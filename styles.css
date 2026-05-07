@@ -405,11 +405,11 @@
 
     /* ── DOWNLOAD DROPDOWN ──────────────────────────────────────── */
     .mvd-download-wrap { position: relative; }
-    .mvd-download-menu { display: none; position: absolute; bottom: calc(100% + 6px); left: 0; background: #fff; border: 1px solid #e8e6e1; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.12); min-width: 190px; overflow: hidden; z-index: 10; }
+    .mvd-download-menu { display: none; position: absolute; bottom: calc(100% + 6px); left: 0; background: var(--white); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.18); min-width: 190px; overflow: hidden; z-index: 10; }
     .mvd-download-menu.open { display: block; }
     .mvd-download-menu button { display: flex; align-items: center; gap: 8px; width: 100%; background: none; border: none; padding: 10px 16px; font-size: 13px; color: var(--text); cursor: pointer; text-align: left; transition: background .12s; }
     .mvd-download-menu button:hover { background: var(--light); }
-    .mvd-download-menu button + button { border-top: 1px solid #f0f0f0; }
+    .mvd-download-menu button + button { border-top: 1px solid var(--border); }
     /* ── RECIPE VIEW MODAL ───────────────────────────────────── */
     .mvd-photo-wrap { margin:-16px -20px 16px; height:200px; overflow:hidden; border-radius:12px 12px 0 0; }
     .mvd-photo { width:100%; height:100%; object-fit:cover; display:block; }
@@ -795,7 +795,7 @@
     .loc-menu, .export-menu {
       display: none; position: absolute;
       top: calc(100% + 6px); left: 0; min-width: 260px;
-      background: white; border: 1px solid var(--border); border-radius: 12px;
+      background: var(--white); border: 1px solid var(--border); border-radius: 12px;
       box-shadow: 0 8px 28px rgba(0,0,0,.18); padding: 6px;
       z-index: 250; color: var(--text);
     }

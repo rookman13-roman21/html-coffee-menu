@@ -1777,7 +1777,7 @@ function openSupQuickDrop(key, btnEl) {
 
   const drop = document.createElement('div');
   drop.id = 'sup-quick-drop';
-  drop.style.cssText = 'position:fixed;z-index:9999;background:#fff;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.13);min-width:220px;max-height:320px;overflow-y:auto;padding:6px 0';
+  drop.style.cssText = 'position:fixed;z-index:9999;background:var(--white);border:1.5px solid var(--border);border-radius:10px;box-shadow:0 4px 24px rgba(0,0,0,.35);min-width:220px;max-height:320px;overflow-y:auto;padding:6px 0';
 
   const items = [
     { id: '__clear__', label: '— Не указан', sub: '' },
