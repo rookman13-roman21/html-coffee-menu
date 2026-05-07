@@ -1253,6 +1253,12 @@ function addIngRow(matKey='', amt='', loss='') {
 function openAddDrink() {
   document.getElementById('modal-drink-title').innerHTML = '<i data-lucide="plus" class="icon"></i> Новый напиток';
   if (window.lucide) lucide.createIcons({ nodes: [document.getElementById('modal-drink-title')] });
+  document.getElementById('md-process').value = '';
+  document.getElementById('md-video').value    = '';
+  const _prev = document.getElementById('md-img-preview');
+  _prev.src = ''; _prev.style.display = 'none';
+  document.getElementById('md-img-placeholder').style.display = '';
+  document.getElementById('md-img-clear').style.display = 'none';
   document.getElementById('md-delete-btn').style.display = 'none';
   document.getElementById('md-name').value  = '';
   document.getElementById('md-price').value = '';
@@ -1273,6 +1279,19 @@ function openEditDrink(id) {
   document.getElementById('md-vol').value   = d.vol;
   document.getElementById('md-group').value = d.group;
   document.getElementById('md-edit-id').value = id;
+  document.getElementById('md-process').value = d.process || '';
+  document.getElementById('md-video').value    = d.videoUrl || '';
+  // Изображение
+  const preview = document.getElementById('md-img-preview');
+  const placeholder = document.getElementById('md-img-placeholder');
+  const clearBtn = document.getElementById('md-img-clear');
+  if (d.image) {
+    preview.src = d.image; preview.style.display = 'block';
+    placeholder.style.display = 'none'; clearBtn.style.display = '';
+  } else {
+    preview.src = ''; preview.style.display = 'none';
+    placeholder.style.display = ''; clearBtn.style.display = 'none';
+  }
   document.getElementById('md-ings').innerHTML = '';
   d.recipe.forEach(r => addIngRow(r.mat, r.amt, r.loss||''));
   // показать кнопку удаления/сброса
@@ -1318,13 +1337,16 @@ function saveDrink() {
     recipe.push(ing);
   });
   if (recipe.length === 0) { alert('Добавьте хотя бы один ингредиент'); return; }
+  const process  = document.getElementById('md-process').value.trim();
+  const videoUrl = document.getElementById('md-video').value.trim();
+  const imgEl    = document.getElementById('md-img-preview');
+  const image    = (imgEl.style.display !== 'none' && imgEl.src) ? imgEl.src : '';
   if (editId !== '') {
     const id = parseInt(editId);
     const idx = DRINKS.findIndex(x=>x.id===id);
     if (idx >= 0) {
       const wasCustom = DRINKS[idx].custom || false;
-      // базовый напиток → modified; кастомный → остаётся custom
-      DRINKS[idx] = {...DRINKS[idx], name, group, vol, recipe,
+      DRINKS[idx] = {...DRINKS[idx], name, group, vol, recipe, process, videoUrl, image,
         custom: wasCustom,
         modified: !wasCustom || undefined
       };
@@ -1332,7 +1354,7 @@ function saveDrink() {
     S.salePrices[id] = price;
   } else {
     const id = nextDrinkId++;
-    DRINKS.push({ id, group, name, vol, recipe, price, custom:true });
+    DRINKS.push({ id, group, name, vol, recipe, process, videoUrl, image, price, custom:true });
     S.salePrices[id] = price;
     S.portions[id]   = 5;
   }
@@ -1348,6 +1370,28 @@ function deleteDrink(id) {
   delete S.portions[id];
   markDirtyDebounce();
   saveState();
+}
+function onDrinkImgChange(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  if (file.size > 5 * 1024 * 1024) { alert('Файл слишком большой. Максимум 5 МБ.'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('md-img-preview');
+    const placeholder = document.getElementById('md-img-placeholder');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    placeholder.style.display = 'none';
+    document.getElementById('md-img-clear').style.display = '';
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+function clearDrinkImg() {
+  const preview = document.getElementById('md-img-preview');
+  preview.src = ''; preview.style.display = 'none';
+  document.getElementById('md-img-placeholder').style.display = '';
+  document.getElementById('md-img-clear').style.display = 'none';
 }
 function mdDeleteAction() {
   const id = parseInt(document.getElementById('md-edit-id').value);
@@ -2614,8 +2658,18 @@ function filterRecipes(val) {
     const resetBtn = d.modified
       ? `<button class="btn btn-outline" style="padding:2px 8px;font-size:11px;color:var(--muted)" onclick="event.stopPropagation();resetDrink(${d.id})" title="Вернуть к исходному"><i data-lucide="rotate-ccw" class="icon"></i></button>`
       : '';
+    const imgHtml = d.image
+      ? `<div class="recipe-card-img"><img src="${d.image}" alt="${d.name}"></div>`
+      : '';
+    const processHtml = d.process
+      ? `<div class="recipe-card-process"><i data-lucide="chef-hat" class="icon" style="color:var(--muted);margin-right:4px"></i><span>${d.process.replace(/\n/g,'<br>')}</span></div>`
+      : '';
+    const videoHtml = d.videoUrl
+      ? `<a class="recipe-card-video" href="${d.videoUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i data-lucide="play-circle" class="icon"></i> Смотреть видео рецепт</a>`
+      : '';
     return `<div class="recipe-card" onclick="openEditDrink(${d.id})">
-      <div class="recipe-card-title">
+      ${imgHtml}
+      <div class="recipe-card-title" style="margin-top:${d.image?'10px':'0'}">
         <span>${d.name}</span>
         <div style="display:flex;align-items:center;gap:6px">${abcBadge(abcMap[d.id]||'C', abcTipMap[d.id]||'')}${editBtn}${resetBtn}</div>
       </div>
@@ -2629,6 +2683,8 @@ function filterRecipes(val) {
       <div class="recipe-total"><span>Себестоимость</span><span>${rub(totalCost)}</span></div>
       <div class="recipe-total" style="font-weight:400;font-size:12px;color:var(--muted)"><span>Цена продажи</span><span>${rub(price)}</span></div>
       <div class="recipe-total" style="color:var(--navy)"><span>Прибыль</span><span>${rub(price - totalCost)}</span></div>
+      ${processHtml}
+      ${videoHtml}
     </div>`;
   }
 
