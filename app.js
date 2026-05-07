@@ -4797,7 +4797,7 @@ function renderSuppliersList() {
       ).join('');
       const noMatBadge = g.isBookOnly ? `<span class="sup-book-badge">Без сырья</span>` : '';
       const editAction = g.isBookOnly
-        ? `openSupplierBookModal('${g.bookId}')`
+        ? `openSupplierBookModal('${g.bookId}', true)`
         : `editSupFromList('${g.matKeys[0]}')`;
       return `<div class="sup-card">
         <div class="sup-card-header">
@@ -4818,7 +4818,9 @@ function renderSuppliersList() {
 }
 
 // ── Справочник поставщиков (без привязки к сырью)
-function openSupplierBookModal(id) {
+let _supBookFromList = false;
+function openSupplierBookModal(id, fromList) {
+  _supBookFromList = !!fromList;
   _supBookEditId = id || null;
   if (id) {
     const entry = (S.supplierBook||[]).find(b => String(b.id) === String(id));
@@ -4841,8 +4843,10 @@ function openSupplierBookModal(id) {
   if (window.lucide) lucide.createIcons();
 }
 function cancelSupplierBookModal() {
+  const fromList = _supBookFromList;
+  _supBookFromList = false;
   closeModal('modal-supplier-book');
-  openSuppliersList();
+  if (fromList) openSuppliersList();
 }
 function saveSupplierBook() {
   const name  = document.getElementById('sup-book-name').value.trim();
@@ -4859,16 +4863,21 @@ function saveSupplierBook() {
     S.supplierBook.push({ id: maxId + 1, name, phone, note, site });
   }
   saveState();
+  const fromList = _supBookFromList;
+  _supBookFromList = false;
   closeModal('modal-supplier-book');
-  openSuppliersList();
-}
-function deleteSupplierBook() {
+  renderCost();
+  if (fromList) openSuppliersList();
+} {
   if (!_supBookEditId || !S.supplierBook) return;
   if (!confirm('Удалить поставщика из справочника?')) return;
   S.supplierBook = S.supplierBook.filter(b => String(b.id) !== String(_supBookEditId));
   saveState();
+  const fromList = _supBookFromList;
+  _supBookFromList = false;
   closeModal('modal-supplier-book');
-  openSuppliersList();
+  renderCost();
+  if (fromList) openSuppliersList();
 }
 
 function openPriceHistory(key) {
