@@ -484,10 +484,8 @@ function exportSales() {
 // ═══════════════════════════════════════════════════════════════════
 //  SORT (dashboard table)
 // ═══════════════════════════════════════════════════════════════════
-const sortState     = { col: 'profit', dir: 'desc' };
-const costSortState  = { col: 'name',   dir: 'asc'  };
+const sortState      = { col: 'profit', dir: 'desc' };
 const salesSortState = { col: 'name',   dir: 'asc'  };
-let   costSearch     = '';
 let   salesSearch    = '';
 function sortDrinks(drinks) {
   const { col, dir } = sortState;
@@ -511,94 +509,16 @@ function thSort(col, label, cls='', tip='') {
   return `<th class="${sc} ${cls}${tipCls}"${tipAttr} onclick="setSort('${col}')">${label} <span class="sort-arrow">${arrow}</span></th>`;
 }
 
-function setCostSort(col) {
-  if (costSortState.col === col) costSortState.dir = costSortState.dir === 'asc' ? 'desc' : 'asc';
-  else { costSortState.col = col; costSortState.dir = col === 'name' ? 'asc' : 'desc'; }
-  filterCost(costSearch);
-}
-function thCostSort(col, label, cls='', tip='') {
-  const active = costSortState.col === col;
-  const arrow  = active ? (costSortState.dir==='asc' ? '↑' : '↓') : '↕';
-  const sc     = active ? `sortable sort-${costSortState.dir}` : 'sortable';
-  const tipCls = tip ? ' tip' : '';
-  const tipAttr= tip ? ` data-tip="${tip}"` : '';
-  return `<th class="${sc} ${cls}${tipCls}"${tipAttr} onclick="setCostSort('${col}')">${label} <span class="sort-arrow">${arrow}</span></th>`;
-}
-let _matPanelOpen = false;
-let _semiPanelOpen = true;
-let _matActiveCat  = 'all';
+let _matActiveCat = 'all';
 
 function setMatCat(cat) {
   _matActiveCat = cat;
-  // Переключаем видимость групп и подсветку таба без полного ререндера
   document.querySelectorAll('.mat-cat-tab').forEach(el => {
     el.classList.toggle('active', el.dataset.cat === cat);
   });
   document.querySelectorAll('.mat-cat-group').forEach(el => {
     el.style.display = (cat === 'all' || el.dataset.cat === cat) ? '' : 'none';
   });
-}
-
-function toggleMatPanel() {
-  const panel = document.getElementById('mat-panel');
-  const arrow = document.getElementById('mat-toggle-arrow');
-  if (!panel) return;
-  _matPanelOpen = panel.style.display === 'none' || panel.style.display === '';
-  panel.style.display = _matPanelOpen ? 'block' : 'none';
-  if (arrow) arrow.textContent = _matPanelOpen ? '▲' : '▼';
-}
-
-function toggleSemiPanel() {
-  const panel = document.getElementById('semi-panel');
-  const arrow = document.getElementById('semi-toggle-arrow');
-  if (!panel) return;
-  _semiPanelOpen = !_semiPanelOpen;
-  panel.style.display = _semiPanelOpen ? 'block' : 'none';
-  if (arrow) arrow.textContent = _semiPanelOpen ? '▲' : '▼';
-}
-
-function filterCost(val) {
-  costSearch = val;
-  const drinks = enrich();
-  const { col, dir } = costSortState;
-  const sorted = [...drinks].sort((a,b) => {
-    const av = a[col], bv = b[col];
-    const r  = typeof av === 'string' ? av.localeCompare(bv,'ru') : av > bv ? 1 : av < bv ? -1 : 0;
-    return dir === 'asc' ? r : -r;
-  });
-  const filtered = costSearch
-    ? sorted.filter(d => d.name.toLowerCase().includes(costSearch.toLowerCase()))
-    : sorted;
-  let lastGroup = null;
-  const rows = filtered.map(d => {
-    let grRow = '';
-    if (!costSearch && d.group !== lastGroup) {
-      lastGroup = d.group;
-      grRow = `<tr class="group-row"><td colspan="7">${GROUP_LABEL[d.group]}</td></tr>`;
-    }
-    const fc = d.fc;
-    const recHighlight = d.fc > S.targetFC + 0.10 ? 'style="color:#7a5800;font-weight:800"' : 'style="color:var(--navy);font-weight:700"';
-    const actionBtn = d.custom
-      ? `<td><button class="btn btn-outline" style="padding:3px 8px;font-size:11px;color:var(--red);border-color:#f4b8c4" onclick="deleteDrink(${d.id})" title="Удалить напиток"><i data-lucide="trash-2" class="icon"></i></button></td>`
-      : d.modified
-        ? `<td><button class="btn btn-outline" style="padding:3px 8px;font-size:11px;color:var(--muted)" onclick="resetDrink(${d.id})" title="Вернуть исходную рецептуру и цену"><i data-lucide="rotate-ccw" class="icon"></i></button></td>`
-        : '<td></td>';
-    return grRow + `<tr>
-      <td class="fw7" style="cursor:pointer" onmousedown="if(document.activeElement&&document.activeElement.tagName==='INPUT')window._suppressRowClick=true;" onclick="if(window._suppressRowClick){window._suppressRowClick=false;}else{openEditDrink(${d.id});}">${d.name}${(d.custom||d.modified)?'<i data-lucide="pencil" class="icon" style="margin-left:5px;color:var(--muted)"></i>':''}</td>
-      <td class="ta-r">${rub(d.cost)}</td>
-      <td>${fcCombinedHtml(fc)}</td>
-      <td class="ta-r">
-        <input class="inp white" type="number" min="1"
-          value="${d.price}"
-          onchange="onSalePrice(${d.id},this.value)"> ₽
-      </td>
-      <td class="ta-r" ${recHighlight}>${rub(d.rec)}${d.fc > S.targetFC + 0.10 ? ' <span title="FC% существенно выше целевого" style="font-size:12px">⚠️</span>' : ''}</td>
-      <td class="ta-r num-pos">${rub(d.profit)}</td>
-      ${actionBtn}
-    </tr>`;
-  }).join('');
-  const tb = document.querySelector('#tab-cost tbody');
-  if (tb) { tb.innerHTML = rows; if (window.lucide) lucide.createIcons({ nodes: [tb] }); }
 }
 
 function setSalesSort(col) {
