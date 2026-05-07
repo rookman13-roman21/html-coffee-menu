@@ -220,7 +220,13 @@ const S = {
   priceLog:      [], // [{ matKey, oldPrice, newPrice, date }]
 };
 
-let activeTab = 'dashboard';
+let activeTab = (function() {
+  try {
+    const saved = localStorage.getItem('mbs_active_tab');
+    const valid = ['dashboard','cost','sales','finmodel','recipes'];
+    return (saved && valid.includes(saved)) ? saved : 'dashboard';
+  } catch(e) { return 'dashboard'; }
+})();
 let searchQuery = '';
 let _renderTimer = null;
 const dirty = { dashboard:true, cost:true, sales:true, finmodel:true, recipes:true };
@@ -3904,6 +3910,7 @@ function switchTab(tab) {
   activeTab = tab;
   document.getElementById('tab-' + activeTab).classList.add('active');
   if (dirty[activeTab]) { renderTab(activeTab); dirty[activeTab] = false; }
+  try { localStorage.setItem('mbs_active_tab', tab); } catch(e) {}
 }
 
 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -3951,6 +3958,7 @@ try {
 } catch(e) {}
 
 ['dashboard','cost','sales','finmodel','recipes'].forEach(t => { renderTab(t); dirty[t]=false; });
+switchTab(activeTab);
 if (window.lucide) lucide.createIcons();
 
 // Tooltip: единый div#tip-box, следует за курсором — без CSS ::after и race condition
