@@ -1787,7 +1787,7 @@ function openSupQuickDrop(key, btnEl) {
   items.forEach(item => {
     const div = document.createElement('div');
     div.style.cssText = 'padding:8px 14px;cursor:pointer;font-size:13px;display:flex;flex-direction:column;gap:1px';
-    div.innerHTML = `<span style="font-weight:600;color:var(--navy)">${item.label}</span>${item.sub ? `<span style="font-size:11px;color:var(--muted)">${item.sub}</span>` : ''}`;
+    div.innerHTML = `<span style="font-weight:600;color:var(--text)">${item.label}</span>${item.sub ? `<span style="font-size:11px;color:var(--muted)">${item.sub}</span>` : ''}`;
     if (cur.name && item.label === cur.name) div.style.background = 'var(--light)';
     div.addEventListener('mouseenter', () => div.style.background = 'var(--light)');
     div.addEventListener('mouseleave', () => div.style.background = cur.name === item.label ? 'var(--light)' : '');
@@ -2515,12 +2515,14 @@ function renderCost() {
           : "openSupplierBookModal('" + (g.bookId||'') + "')";
         return '<div class="sup-card">'
           + '<div class="sup-card-header">'
+          + '<div class="sup-card-info">'
           + '<span class="sup-card-name"><i data-lucide="building-2" class="icon"></i> ' + g.name + '</span>'
           + (g.phone ? '<a class="sup-card-phone" href="tel:' + g.phone + '">' + g.phone + '</a>' : '')
+          + '</div>'
           + '<button class="btn btn-outline sup-edit-btn" onclick="' + editFn + '"><i data-lucide="pencil" class="icon"></i></button>'
           + '</div>'
           + (g.note ? '<div class="sup-card-note">' + g.note + '</div>' : '')
-          + (g.site ? '<div class="sup-card-note"><a href="' + g.site + '" target="_blank" style="color:var(--green);text-decoration:none">🌐 ' + g.site + '</a></div>' : '')
+          + (g.site ? '<div class="sup-card-note"><a href="' + g.site + '" target="_blank" style="color:var(--muted);text-decoration:none">🌐 ' + g.site + '</a></div>' : '')
           + (matTags ? '<div class="sup-card-mats">' + matTags + '</div>' : '')
           + '</div>';
       }).join('') + '</div>'
@@ -4799,12 +4801,14 @@ function renderSuppliersList() {
         : `editSupFromList('${g.matKeys[0]}')`;
       return `<div class="sup-card">
         <div class="sup-card-header">
-          <span class="sup-card-name"><i data-lucide="building-2" class="icon"></i> ${g.name}</span>
-          ${g.phone ? `<a class="sup-card-phone" href="tel:${g.phone}">${g.phone}</a>` : ''}
+          <div class="sup-card-info">
+            <span class="sup-card-name"><i data-lucide="building-2" class="icon"></i> ${g.name}</span>
+            ${g.phone ? `<a class="sup-card-phone" href="tel:${g.phone}">${g.phone}</a>` : ''}
+          </div>
           <button class="btn btn-outline sup-edit-btn" onclick="${editAction}"><i data-lucide="pencil" class="icon"></i> Изменить</button>
         </div>
         ${g.note ? `<div class="sup-card-note">${g.note}</div>` : ''}
-        ${g.site ? `<div class="sup-card-note"><a href="${g.site}" target="_blank" style="color:var(--green);text-decoration:none">🌐 ${g.site}</a></div>` : ''}
+        ${g.site ? `<div class="sup-card-note"><a href="${g.site}" target="_blank" style="color:var(--muted);text-decoration:none">🌐 ${g.site}</a></div>` : ''}
         <div class="sup-card-mats">${matTags}${noMatBadge}</div>
       </div>`;
     }).join('');

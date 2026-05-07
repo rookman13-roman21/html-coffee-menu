@@ -218,11 +218,12 @@
       background: var(--gray); border-radius: 10px; padding: 12px 14px;
       border-left: 3px solid var(--green);
     }
-    .sup-card-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
-    .sup-card-name { font-weight: 700; font-size: 14px; color: var(--navy); display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0; }
-    .sup-card-phone { font-size: 13px; color: var(--green); text-decoration: none; }
-    .sup-card-phone:hover { text-decoration: underline; }
-    .sup-edit-btn { padding: 2px 10px !important; font-size: 11px !important; display: flex; align-items: center; gap: 4px; margin-left: auto; flex-shrink: 0; }
+    .sup-card-header { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 4px; }
+    .sup-card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .sup-card-name { font-weight: 700; font-size: 14px; color: var(--navy); display: flex; align-items: center; gap: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sup-card-phone { font-size: 12px; color: var(--muted); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sup-card-phone:hover { color: var(--navy); text-decoration: underline; }
+    .sup-edit-btn { padding: 4px 8px !important; font-size: 11px !important; display: flex; align-items: center; gap: 4px; flex-shrink: 0; margin-top: 2px; }
     .sup-card-note { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
     .sup-card-mats { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
     .sup-mat-tag { background: #e7f2e3; color: var(--green); font-size: 11px; font-weight: 600;
@@ -235,9 +236,11 @@
       font-size: 12px; font-weight: 600; cursor: pointer; color: var(--muted); transition: all .15s; }
     .filter-chip:hover { border-color: var(--green); color: var(--green); }
     .filter-chip.active { background: var(--green); color: #fff; border-color: var(--green); }
-    body.dark .sup-card { background: #252526; border-left-color: var(--green); }
+    body.dark .sup-card { background: #252526; border-left-color: #454545; }
     body.dark .sup-card-name { color: #e0e0e0; }
-    body.dark .sup-mat-tag { background: #1e3a1e; color: #7dc87d; }
+    body.dark .sup-card-phone { color: #858585; }
+    body.dark .sup-card-phone:hover { color: #d4d4d4; }
+    body.dark .sup-mat-tag { background: #2d2d2d; color: #d4d4d4; border: 1px solid #454545; }
     body.dark .sup-book-badge { background: #3a3000; color: #f0c040; }
     body.dark .filter-chip { background: #2d2d2d; border-color: #454545; color: #aaa; }
     body.dark .filter-chip.active { background: var(--green); color: #fff; }
