@@ -2610,7 +2610,7 @@ function filterRecipes(val) {
       </div>`;
     }).join('');
     const fcClr  = fc <= 0.25 ? 'var(--green)' : fc <= 0.30 ? '#b38600' : 'var(--red)';
-    const editBtn = `<button class="btn btn-outline" style="padding:2px 8px;font-size:11px" onclick="event.stopPropagation();openEditDrink(${d.id})" title="Редактировать напиток">&#9998;</button>`;
+    const editBtn = '';
     const resetBtn = d.modified
       ? `<button class="btn btn-outline" style="padding:2px 8px;font-size:11px;color:var(--muted)" onclick="event.stopPropagation();resetDrink(${d.id})" title="Вернуть к исходному"><i data-lucide="rotate-ccw" class="icon"></i></button>`
       : '';
