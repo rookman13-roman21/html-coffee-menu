@@ -2511,7 +2511,7 @@ function renderCost() {
     ? '<div class="mat-grid">' + supGroups.map(g => {
         const matTags = g.mats.map(name => '<span class="sup-mat-tag">' + name + '</span>').join('');
         const editFn = (g.matKeys && g.matKeys.length)
-          ? "editSupFromList('" + g.matKeys[0] + "')"
+          ? "openSupplierModal('" + g.matKeys[0] + "')"
           : "openSupplierBookModal('" + (g.bookId||'') + "')";
         return '<div class="sup-card">'
           + '<div class="sup-card-header">'
