@@ -86,6 +86,20 @@
     <span>Рецепты</span>
   </button>
 </nav>
+<!-- Модал: просмотр напитка (техкарта) -->
+<div class="modal-bg" id="modal-drink-view">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-title">
+      <span id="mvd-title"></span>
+      <button class="modal-close" onclick="closeModal('modal-drink-view')">&times;</button>
+    </div>
+    <div id="mvd-content" style="overflow-y:auto;max-height:68vh;padding-right:2px"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-drink-view')">Закрыть</button>
+      <button class="btn-primary" onclick="mvdOpenEdit()"><i data-lucide="pencil" class="icon"></i> Редактировать</button>
+    </div>
+  </div>
+</div>
 <div class="modal-bg" id="modal-drink">
   <div class="modal">
     <div class="modal-title">

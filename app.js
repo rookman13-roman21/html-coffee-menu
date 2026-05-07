@@ -23,6 +23,23 @@ const MAT = {
   lime:      { name: 'Лайм',                    unit: '1 кг',      price: 290,  size: 1000 },
 };
 
+// КБЖУ на 100 г / 100 мл каждого ингредиента
+const MAT_NUTRITION = {
+  coffee:        { kcal: 2,   protein: 0.1, fat: 0,    carbs: 0    },
+  filter_coffee: { kcal: 2,   protein: 0.1, fat: 0,    carbs: 0    },
+  milk:          { kcal: 52,  protein: 2.8, fat: 2.5,  carbs: 4.7  },
+  cream:         { kcal: 119, protein: 2.7, fat: 10.0, carbs: 4.0  },
+  cocoa:         { kcal: 289, protein: 19.6,fat: 13.7, carbs: 10.0 },
+  matcha:        { kcal: 324, protein: 23.0,fat: 5.0,  carbs: 38.0 },
+  sugar:         { kcal: 399, protein: 0,   fat: 0,    carbs: 99.8 },
+  sugar_van:     { kcal: 397, protein: 0,   fat: 0,    carbs: 99.0 },
+  sugar_org:     { kcal: 395, protein: 0,   fat: 0,    carbs: 98.0 },
+  orange:        { kcal: 47,  protein: 0.9, fat: 0.2,  carbs: 11.0 },
+  tea:           { kcal: 1,   protein: 0.1, fat: 0,    carbs: 0.1  },
+  tonic:         { kcal: 30,  protein: 0,   fat: 0,    carbs: 7.5  },
+  lime:          { kcal: 30,  protein: 0.7, fat: 0.2,  carbs: 7.4  },
+};
+
 // recipe: [ { mat, amt, loss? } ]
 //   mat  — ключ в MAT
 //   amt  — количество (г / мл / шт)
@@ -225,6 +242,20 @@ function calcIngCost(ing) {
   let c = (S.prices[ing.mat] / m.size) * ing.amt;
   if (ing.loss) c = c / (1 - ing.loss);
   return c;
+}
+
+function calcNutrition(d) {
+  let kcal = 0, protein = 0, fat = 0, carbs = 0;
+  (d.recipe || []).forEach(ing => {
+    const n = MAT_NUTRITION[ing.mat];
+    if (!n) return;
+    const amt = ing.amt * (1 - (ing.loss || 0));
+    kcal    += n.kcal    * amt / 100;
+    protein += n.protein * amt / 100;
+    fat     += n.fat     * amt / 100;
+    carbs   += n.carbs   * amt / 100;
+  });
+  return { kcal: Math.round(kcal), protein: +protein.toFixed(1), fat: +fat.toFixed(1), carbs: +carbs.toFixed(1) };
 }
 
 function enrich() {
@@ -1268,7 +1299,7 @@ function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 // Закрыть модал при клике на фон
 document.addEventListener('click', e => {
-  ['modal-drink','modal-mat','modal-templates','modal-loc','modal-supplier','modal-supplier-book','modal-price-hist','modal-drop','modal-suppliers-list'].forEach(id => {
+  ['modal-drink','modal-mat','modal-templates','modal-loc','modal-supplier','modal-supplier-book','modal-price-hist','modal-drop','modal-suppliers-list','modal-drink-view'].forEach(id => {
     const bg = document.getElementById(id);
     if (e.target === bg) closeModal(id);
   });
@@ -2643,6 +2674,80 @@ let recipeSearch = '';
 let recipeSort   = 'group';  // group | name | fc | profit
 let recipeGroup  = 'all';    // all | hot | tea | cold
 
+let _mvdId = null;
+function openViewDrink(id) {
+  const d = DRINKS.find(x => x.id === id);
+  if (!d) return;
+  _mvdId = id;
+  const enriched = enrich();
+  const abcMap = {}; const abcTipMap = {};
+  withABC(enriched).forEach(x => { abcMap[x.id] = x.abc; abcTipMap[x.id] = x.abcTip; });
+  const ings = d.recipe.filter(ing => MAT[ing.mat]).map(ing => ({
+    name: MAT[ing.mat].name, amt: ing.amt, unit: MAT[ing.mat].unit, cost: calcIngCost(ing)
+  }));
+  const totalCost = ings.reduce((s,i) => s + i.cost, 0);
+  const price = S.salePrices[d.id] || 0;
+  const fc = price > 0 ? totalCost / price : 0;
+  const fcClr = fc <= 0.25 ? 'var(--green)' : fc <= 0.30 ? '#b38600' : 'var(--red)';
+  const maxCost = Math.max(...ings.map(i => i.cost), 0.01);
+  const nut = calcNutrition(d);
+  const GROUP_ICONS = { hot:'coffee', tea:'leaf', cold:'snowflake', filter:'filter' };
+  const imgHtml = d.image
+    ? `<div class="mvd-photo-wrap"><img src="${d.image}" alt="${d.name}" class="mvd-photo"></div>`
+    : '';
+  const ingRows = ings.map(ing => {
+    const w = (ing.cost / maxCost * 100).toFixed(0);
+    const share = totalCost > 0 ? (ing.cost / totalCost * 100).toFixed(0) : 0;
+    return `<div class="recipe-ing">
+      <span class="recipe-ing-name">${ing.name}</span>
+      <span style="font-size:10px;color:var(--muted);flex-shrink:0">${ing.amt} ${ing.unit}</span>
+      <div class="recipe-bar-bg"><div class="recipe-bar-fill" style="width:${w}%"></div></div>
+      <span class="recipe-ing-share">${share}%</span>
+      <span class="recipe-ing-cost">${rub(ing.cost)}</span>
+    </div>`;
+  }).join('');
+  const processHtml = d.process
+    ? `<div class="mvd-section"><div class="mvd-section-title"><i data-lucide="chef-hat" class="icon"></i> Процесс приготовления</div><div class="mvd-process">${d.process.replace(/\n/g,'<br>')}</div></div>`
+    : '';
+  const videoHtml = d.videoUrl
+    ? `<a class="recipe-card-video" href="${d.videoUrl}" target="_blank" rel="noopener" style="margin-top:4px;display:inline-flex"><i data-lucide="play-circle" class="icon"></i> Смотреть видео рецепт</a>`
+    : '';
+  document.getElementById('mvd-title').textContent = d.name;
+  document.getElementById('mvd-content').innerHTML = `
+    ${imgHtml}
+    <div class="mvd-meta">
+      <span class="mvd-meta-group"><i data-lucide="${GROUP_ICONS[d.group]||'coffee'}" class="icon"></i> ${GROUP_LABEL[d.group]||d.group}</span>
+      <span class="mvd-meta-vol">${d.vol} мл</span>
+      <span style="font-weight:700;color:${fcClr}">FC ${pct(fc)}</span>
+      ${abcBadge(abcMap[id]||'C', abcTipMap[id]||'')}
+    </div>
+    <div class="mvd-section">
+      <div class="mvd-section-title"><i data-lucide="package" class="icon"></i> Состав</div>
+      ${ingRows}
+      <div class="recipe-total"><span>Себестоимость</span><span>${rub(totalCost)}</span></div>
+      <div class="recipe-total" style="font-weight:400;font-size:12px;color:var(--muted)"><span>Цена продажи</span><span>${rub(price)}</span></div>
+      <div class="recipe-total" style="color:var(--navy)"><span>Прибыль</span><span>${rub(price - totalCost)}</span></div>
+    </div>
+    <div class="mvd-section">
+      <div class="mvd-section-title"><i data-lucide="activity" class="icon"></i> КБЖУ на порцию</div>
+      <div class="mvd-nutrition">
+        <div class="mvd-nut-item"><span class="mvd-nut-val">${nut.kcal}</span><span class="mvd-nut-lbl">ккал</span></div>
+        <div class="mvd-nut-item"><span class="mvd-nut-val">${nut.protein}</span><span class="mvd-nut-lbl">белки, г</span></div>
+        <div class="mvd-nut-item"><span class="mvd-nut-val">${nut.fat}</span><span class="mvd-nut-lbl">жиры, г</span></div>
+        <div class="mvd-nut-item"><span class="mvd-nut-val">${nut.carbs}</span><span class="mvd-nut-lbl">углеводы, г</span></div>
+      </div>
+    </div>
+    ${processHtml}
+    ${videoHtml}
+  `;
+  openModal('modal-drink-view');
+  if (window.lucide) lucide.createIcons({ nodes: [document.getElementById('modal-drink-view')] });
+}
+function mvdOpenEdit() {
+  closeModal('modal-drink-view');
+  if (_mvdId !== null) openEditDrink(_mvdId);
+}
+
 function setRecipeSort(s)  { recipeSort  = s; filterRecipes(); }
 function setRecipeGroup(g) { recipeGroup = g; filterRecipes(); }
 function filterRecipes(val) {
@@ -2706,12 +2811,17 @@ function filterRecipes(val) {
       ? `<div class="recipe-card-img"><img src="${d.image}" alt="${d.name}"></div>`
       : '';
     const processHtml = d.process
-      ? `<div class="recipe-card-process"><i data-lucide="chef-hat" class="icon" style="color:var(--muted);margin-right:4px"></i><span>${d.process.replace(/\n/g,'<br>')}</span></div>`
+      ? `<div class="recipe-card-process-wrap">
+          <button class="recipe-card-process-toggle" onclick="event.stopPropagation();this.closest('.recipe-card-process-wrap').classList.toggle('open')">
+            <i data-lucide="chevron-down" class="icon"></i> Процесс приготовления
+          </button>
+          <div class="recipe-card-process-body">${d.process.replace(/\n/g,'<br>')}</div>
+        </div>`
       : '';
     const videoHtml = d.videoUrl
       ? `<a class="recipe-card-video" href="${d.videoUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i data-lucide="play-circle" class="icon"></i> Смотреть видео рецепт</a>`
       : '';
-    return `<div class="recipe-card" onclick="openEditDrink(${d.id})">
+    return `<div class="recipe-card" onclick="openViewDrink(${d.id})">
       ${imgHtml}
       <div class="recipe-card-title" style="margin-top:${d.image?'10px':'0'}">
         <span>${d.name}</span>

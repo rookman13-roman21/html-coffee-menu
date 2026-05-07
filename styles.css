@@ -383,6 +383,26 @@
     .recipe-bar-fill { height:100%; border-radius:3px; background:var(--soft); }
     .recipe-total { display:flex; justify-content:space-between; font-size:13px; font-weight:700; margin-top:10px; padding-top:10px; border-top:1px solid #f0f0f0; }
 
+    /* ── RECIPE VIEW MODAL ───────────────────────────────────── */
+    .mvd-photo-wrap { margin:-16px -20px 16px; height:200px; overflow:hidden; border-radius:12px 12px 0 0; }
+    .mvd-photo { width:100%; height:100%; object-fit:cover; display:block; }
+    .mvd-meta { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; font-size:13px; }
+    .mvd-meta-group { font-weight:700; color:var(--navy); display:flex; align-items:center; gap:4px; }
+    .mvd-meta-vol { color:var(--muted); }
+    .mvd-section { margin-bottom:18px; }
+    .mvd-section-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:8px; display:flex; align-items:center; gap:5px; }
+    .mvd-nutrition { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+    .mvd-nut-item { background:var(--light); border-radius:10px; padding:10px 8px; text-align:center; }
+    .mvd-nut-val { display:block; font-size:20px; font-weight:800; color:var(--navy); line-height:1; }
+    .mvd-nut-lbl { display:block; font-size:10px; color:var(--muted); margin-top:4px; }
+    .mvd-process { font-size:13px; color:var(--text); line-height:1.7; background:var(--light); border-radius:8px; padding:12px 14px; }
+    /* ── COLLAPSIBLE PROCESS ON CARD ─────────────────────────── */
+    .recipe-card-process-wrap { margin-top:10px; padding-top:10px; border-top:1px solid #f0f0f0; }
+    .recipe-card-process-toggle { background:none; border:none; cursor:pointer; font-size:12px; color:var(--muted); font-weight:600; display:flex; align-items:center; gap:5px; padding:0; width:100%; text-align:left; }
+    .recipe-card-process-toggle .icon { transition:transform .2s; flex-shrink:0; }
+    .recipe-card-process-wrap.open .recipe-card-process-toggle .icon { transform:rotate(180deg); }
+    .recipe-card-process-body { display:none; font-size:12px; color:var(--muted); line-height:1.6; margin-top:8px; }
+    .recipe-card-process-wrap.open .recipe-card-process-body { display:block; }
     /* ── TAB INTRO ──────────────────────────────────────────── */
     .tab-intro {
       background: white; border: 1px solid var(--border); border-radius: 12px;
