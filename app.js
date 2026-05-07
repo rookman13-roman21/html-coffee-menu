@@ -2716,7 +2716,7 @@ function openViewDrink(id) {
   document.getElementById('mvd-content').innerHTML = `
     ${imgHtml}
     <div class="mvd-meta">
-      <span class="mvd-meta-group"><i data-lucide="${GROUP_ICONS[d.group]||'coffee'}" class="icon"></i> ${GROUP_LABEL[d.group]||d.group}</span>
+      <span class="mvd-meta-group">${GROUP_LABEL[d.group]||d.group}</span>
       <span class="mvd-meta-vol">${d.vol} мл</span>
       <span style="font-weight:700;color:${fcClr}">FC ${pct(fc)}</span>
       ${abcBadge(abcMap[id]||'C', abcTipMap[id]||'')}
