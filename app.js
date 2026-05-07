@@ -2286,7 +2286,7 @@ function renderFinModel() {
       </div>
     </div>
 
-    <div class="section-title"><i data-lucide="users" class="icon"></i> Калькулятор ФОТ <span style="font-size:12px;font-weight:500;color:var(--muted);margin-left:6px">фонд оплаты труда</span></div>
+    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between"><span><i data-lucide="users" class="icon"></i> Калькулятор ФОТ <span style="font-size:12px;font-weight:500;color:var(--muted);margin-left:6px">фонд оплаты труда</span></span><button class="btn btn-outline" style="font-size:12px;padding:5px 12px" onclick="addPayrollPosition()"><i data-lucide="plus" class="icon"></i> Добавить должность</button></div>
     <div class="panel" style="padding:0;margin-bottom:8px;overflow:hidden">
       <div class="payroll-table-wrap">
         <table class="payroll-table">
@@ -2373,8 +2373,7 @@ function renderFinModel() {
           <span class="payroll-bench-norm">норма HoReCa: 25–35%</span>
         </div>`;
       })() : ''}
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-top:1px solid var(--border)">
-        <button class="btn btn-outline" style="font-size:12px;padding:5px 12px" onclick="addPayrollPosition()"><i data-lucide="plus" class="icon"></i> Добавить должность</button>
+      <div style="display:flex;justify-content:flex-end;align-items:center;padding:10px 14px;border-top:1px solid var(--border)">
         <span style="font-size:11px;color:var(--muted);font-style:italic"><i data-lucide="check-circle" class="icon" style="width:12px;height:12px;color:var(--green)"></i> ФОТ учитывается в расчётах автоматически</span>
       </div>
     </div>
