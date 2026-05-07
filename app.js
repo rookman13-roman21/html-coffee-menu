@@ -1291,6 +1291,7 @@ function openEditDrink(id) {
     delLabel.textContent = 'Сбросить';
     delBtn.dataset.action = 'reset';
   } else {
+    // базовый напиток: показываем «Сбросить» (недоступно пока не изменён, но модалка открылась из рецептур)
     delBtn.style.display = 'none';
   }
   if (window.lucide) lucide.createIcons({ nodes: [delBtn] });
@@ -2609,13 +2610,11 @@ function filterRecipes(val) {
       </div>`;
     }).join('');
     const fcClr  = fc <= 0.25 ? 'var(--green)' : fc <= 0.30 ? '#b38600' : 'var(--red)';
-    const editBtn = (d.custom || d.modified)
-      ? `<button class="btn btn-outline" style="padding:2px 8px;font-size:11px" onclick="openEditDrink(${d.id})" title="Редактировать">&#9998;</button>`
-      : '';
+    const editBtn = `<button class="btn btn-outline" style="padding:2px 8px;font-size:11px" onclick="event.stopPropagation();openEditDrink(${d.id})" title="Редактировать напиток">&#9998;</button>`;
     const resetBtn = d.modified
-      ? `<button class="btn btn-outline" style="padding:2px 8px;font-size:11px;color:var(--muted)" onclick="resetDrink(${d.id})" title="Вернуть к исходному"><i data-lucide="rotate-ccw" class="icon"></i></button>`
+      ? `<button class="btn btn-outline" style="padding:2px 8px;font-size:11px;color:var(--muted)" onclick="event.stopPropagation();resetDrink(${d.id})" title="Вернуть к исходному"><i data-lucide="rotate-ccw" class="icon"></i></button>`
       : '';
-    return `<div class="recipe-card">
+    return `<div class="recipe-card" onclick="openEditDrink(${d.id})">
       <div class="recipe-card-title">
         <span>${d.name}</span>
         <div style="display:flex;align-items:center;gap:6px">${abcBadge(abcMap[d.id]||'C', abcTipMap[d.id]||'')}${editBtn}${resetBtn}</div>
