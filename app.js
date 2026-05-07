@@ -1165,6 +1165,14 @@ function saveState() {
       suppliers: S.suppliers, supplierBook: S.supplierBook, priceLog: S.priceLog,
       customDrinks: DRINKS.filter(d => d.custom),
       modifiedDrinks: DRINKS.filter(d => d.modified).map(d => ({id:d.id,name:d.name,group:d.group,vol:d.vol,recipe:d.recipe})),
+      drinkPatches: DRINKS.reduce((acc, d) => {
+        const patch = {};
+        if (d.image)    patch.image    = d.image;
+        if (d.process)  patch.process  = d.process;
+        if (d.videoUrl) patch.videoUrl = d.videoUrl;
+        if (Object.keys(patch).length) acc[d.id] = patch;
+        return acc;
+      }, {}),
       customMats: Object.entries(MAT).filter(([,v])=>v.custom).map(([k,v])=>({key:k,...v}))
     }));
   } catch(e) {}
@@ -1217,6 +1225,12 @@ function loadState() {
       sv.modifiedDrinks.forEach(md => {
         const idx = DRINKS.findIndex(x => x.id === md.id);
         if (idx >= 0) DRINKS[idx] = {...DRINKS[idx], name:md.name, group:md.group, vol:md.vol, recipe:md.recipe, modified:true};
+      });
+    }
+    if (sv.drinkPatches) {
+      Object.entries(sv.drinkPatches).forEach(([idStr, patch]) => {
+        const idx = DRINKS.findIndex(x => x.id === Number(idStr));
+        if (idx >= 0) DRINKS[idx] = {...DRINKS[idx], ...patch};
       });
     }
   } catch(e) {}
