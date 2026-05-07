@@ -2517,7 +2517,7 @@ function renderCost() {
           + '<div class="sup-card-header">'
           + '<div class="sup-card-info">'
           + '<span class="sup-card-name"><i data-lucide="building-2" class="icon"></i> ' + g.name + '</span>'
-          + (g.phone ? '<a class="sup-card-phone" href="tel:' + g.phone + '">' + g.phone + '</a>' : '')
+          + (g.phone ? '<span class="sup-card-phone">' + g.phone + '</span>' : '')
           + '</div>'
           + '<button class="btn btn-outline sup-edit-btn" onclick="' + editFn + '"><i data-lucide="pencil" class="icon"></i></button>'
           + '</div>'
@@ -4803,7 +4803,7 @@ function renderSuppliersList() {
         <div class="sup-card-header">
           <div class="sup-card-info">
             <span class="sup-card-name"><i data-lucide="building-2" class="icon"></i> ${g.name}</span>
-            ${g.phone ? `<a class="sup-card-phone" href="tel:${g.phone}">${g.phone}</a>` : ''}
+            ${g.phone ? `<span class="sup-card-phone">${g.phone}</span>` : ''}
           </div>
           <button class="btn btn-outline sup-edit-btn" onclick="${editAction}"><i data-lucide="pencil" class="icon"></i> Изменить</button>
         </div>
