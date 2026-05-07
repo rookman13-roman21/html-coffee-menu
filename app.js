@@ -2261,7 +2261,7 @@ function renderFinModel() {
       <div class="pd-value">${rub(totalFixed)}</div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px">
+    <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:stretch;margin-bottom:24px">
       <div class="fin-param-card">
         <div class="fin-param-label" data-tip="УСН 6% — налог со всей выручки.&#10;УСН 15% — налог с (доходы − расходы).&#10;Выберите свой режим налогообложения."><i data-lucide="receipt" class="icon"></i> Режим налогообложения</div>
         <select class="modal-select" style="width:100%;font-size:13px" onchange="onTaxMode(this.value)">
