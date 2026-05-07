@@ -5,6 +5,11 @@
 			"label": "git commit крема",
 			"type": "shell",
 			"command": "git add app.js && git commit -m 'fix: крема не склоняем'"
+		},
+		{
+			"label": "git commit recipes button",
+			"type": "shell",
+			"command": "cd /Users/romansuslin_1/Downloads/All_Code/Coffee_menu/HTML_coffee_menu && git add app.js && git commit -m 'fix: move + Напиток button from renderCost to renderRecipes' && git push"
 		}
 	]
 }
