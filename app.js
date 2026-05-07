@@ -2445,20 +2445,6 @@ function renderFinModel() {
       <i data-lucide="trending-up" class="icon"></i> Результаты
     </div>
 
-    <div class="section-title"><i data-lucide="bar-chart-2" class="icon"></i> Взвешенные показатели из плана продаж</div>
-    <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-label" data-tip="Количество чашек в день&#10;из вкладки «План продаж»">Чашек/день (план)</div><div class="kpi-value">${int(totalPort)}</div></div>
-      <div class="kpi-card"><div class="kpi-label" data-tip="Средневзвешенная цена чашки&#10;с учётом порций в плане">Средний чек (взв.)</div><div class="kpi-value">${rub(avgPrice)}</div></div>
-      <div class="kpi-card"><div class="kpi-label" data-tip="Средневзвешенная себестоимость сырья&#10;на одну чашку (ингредиенты + потери)">Себест. (взв.)</div><div class="kpi-value">${rub(avgCost)}</div></div>
-      <div class="kpi-card"><div class="kpi-label" data-tip="Цена продажи минус себестоимость сырья&#10;без учёта пост. расходов">Прибыль/чашка (взв.)</div><div class="kpi-value">${rub(avgProfit)}</div></div>
-      <div class="kpi-card">
-        <div class="kpi-label" data-tip="Food Cost % — доля себестоимости в цене.&#10;Норма HoReCa: 20–28%.">FC% (взв.)</div>
-        <div class="kpi-value">${pct(avgFC)}</div>
-        <div style="font-size:10px;margin-top:5px;font-weight:700;color:${fcBench.clr}">${fcBench.lbl}</div>
-      </div>
-      <div class="kpi-card accent"><div class="kpi-label" data-tip="1 − FC% — доля выручки&#10;которая покрывает пост. расходы и прибыль">Маржинальность</div><div class="kpi-value">${pct(1-avgFC)}</div></div>
-    </div>
-
     ${warningsBanner}
 
     <div class="section-title" style="margin-top:8px"><i data-lucide="file-text" class="icon"></i> P&amp;L — Отчёт о прибылях и убытках <span style="font-size:12px;font-weight:500;color:var(--muted);margin-left:4px">(базовый план)</span></div>
@@ -2473,27 +2459,7 @@ function renderFinModel() {
       </table>
     </div>
 
-    <div class="section-title"><i data-lucide="target" class="icon"></i> Точка безубыточности <span data-tip="ТБУ — минимальный объём продаж,&#10;при котором выручка покрывает все расходы.&#10;Прибыль = 0. Всё выше — чистый доход." style="font-size:11px;font-weight:500;color:var(--muted);cursor:help;margin-left:4px">что это?</span></div>
-    <div class="bep-card">
-      <div><div class="bep-label" data-tip="Сколько чашек нужно продать&#10;за месяц чтобы выйти в ноль.&#10;= Пост. расходы ÷ (Цена − Себест.)">Чашек в месяц</div><div class="bep-value">${int(bep.cupsMonth)}</div></div>
-      <div><div class="bep-label" data-tip="Чашек в месяц ÷ ${S.days} дней.&#10;Ориентир: сколько нужно&#10;продавать каждый день.">Чашек в день</div><div class="bep-value">${int(bep.cupsDay)}</div></div>
-      <div><div class="bep-label" data-tip="Минимальная выручка в месяц.&#10;= Чашек ТБУ × Средний чек.&#10;Ниже этой суммы — убыток.">Выручка ТБУ / мес</div><div class="bep-value">${rub(bep.revBEP)}</div></div>
-    </div>
-    ${bepFormula ? `<div class="hint" style="margin-bottom:10px"><i data-lucide="function-square" class="icon"></i> ${bepFormula}</div>` : ''}
-    <div style="margin-bottom:24px">
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:6px">
-        <span style="color:var(--muted);font-weight:600"><i data-lucide="activity" class="icon"></i> Покрытие ТБУ текущим планом</span>
-        <span style="font-weight:800;color:${bepPClr}">${bepProgress.toFixed(0)}%${bepProgress>=100?' ✓':''}</span>
-      </div>
-      <div style="height:10px;background:var(--border);border-radius:999px;overflow:hidden">
-        <div style="height:100%;width:${bepProgress}%;background:${bepPClr};border-radius:999px;transition:width .4s"></div>
-      </div>
-      <div style="margin-top:8px;display:flex;gap:16px;flex-wrap:wrap;font-size:12px">
-        <span data-tip="На сколько можно упасть в продажах&#10;до наступления убытка.&#10;Чем выше — тем устойчивее бизнес.">Запас прочности: <strong class="${safetyCls}">${safetyAbs>=0?'+':''}${safetyPct.toFixed(1)}%</strong></span>
-        <span style="color:var(--muted)">(${safetyAbs>=0?'выше':'ниже'} ТБУ на ${rub(Math.abs(safetyAbs))})</span>
-      </div>
-    </div>
-    <div class="hint" style="margin-bottom:24px"><i data-lucide="lightbulb" class="icon"></i> Измените порции/день во вкладке «<i data-lucide="shopping-cart" class="icon"></i> План продаж» — финмодель пересчитается автоматически</div>
+
 
     <!-- ───────────────────────────────────────────── БЛОК 3: МОДЕЛИРОВАНИЕ -->
     <div class="finblock-hd finblock-hd-3">
