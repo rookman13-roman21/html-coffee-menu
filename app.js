@@ -2323,10 +2323,10 @@ function renderFinModel() {
               ).join('');
               return `<tr>
                 <td><input class="inp payroll-inp-name" id="pr-name-${p.id}" type="text" value="${p.name}" oninput="onPayrollPos(${p.id},'name',this.value)"></td>
-                <td><input class="inp payroll-inp" id="pr-rate-${p.id}" type="number" min="0" step="10" value="${p.rate}" oninput="onPayrollPos(${p.id},'rate',this.value)"></td>
-                <td><input class="inp payroll-inp" id="pr-hours-${p.id}" type="number" min="0" max="24" step="1" value="${p.hours}" oninput="onPayrollPos(${p.id},'hours',this.value)"></td>
-                <td><input class="inp payroll-inp" id="pr-shifts-${p.id}" type="number" min="0" step="1" value="${p.shifts}" oninput="onPayrollPos(${p.id},'shifts',this.value)"></td>
-                <td><input class="inp payroll-inp" id="pr-count-${p.id}" type="number" min="1" step="1" value="${p.count}" oninput="onPayrollPos(${p.id},'count',this.value)"></td>
+                <td><input class="inp payroll-inp" id="pr-rate-${p.id}" type="number" min="0" step="10" value="${p.rate}" oninput="onPayrollPos(${p.id},'rate',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></td>
+                <td><input class="inp payroll-inp" id="pr-hours-${p.id}" type="number" min="0" max="24" step="1" value="${p.hours}" oninput="onPayrollPos(${p.id},'hours',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></td>
+                <td><input class="inp payroll-inp" id="pr-shifts-${p.id}" type="number" min="0" step="1" value="${p.shifts}" oninput="onPayrollPos(${p.id},'shifts',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></td>
+                <td><input class="inp payroll-inp" id="pr-count-${p.id}" type="number" min="1" step="1" value="${p.count}" oninput="onPayrollPos(${p.id},'count',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></td>
                 <td>
                   <select class="payroll-emp-select" title="${empTypeTip(type)}" onchange="onPayrollPos(${p.id},'empType',this.value)" data-emptype="${type}">
                     ${sel}
@@ -2882,8 +2882,8 @@ function onPayrollPos(id, field, v) {
   if (!pos) return;
   if (field === 'name' || field === 'empType') {
     pos[field] = v;
-    if (field === 'empType') _refreshPayrollRow(id);
-    saveState();
+    if (field === 'empType') { renderFinModel(); saveState(); if(window.lucide) lucide.createIcons(); }
+    else saveState();
     return;
   }
   const n = parseFloat(v);
