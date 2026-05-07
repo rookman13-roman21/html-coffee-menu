@@ -2509,7 +2509,6 @@ function renderCost() {
   _costEl.innerHTML = `
     <div class="page-title">
       <span class="page-title-left"><i data-lucide="truck" class="icon"></i> Поставщики</span>
-      <button class="btn btn-green" onclick="openAddDrink()"><i data-lucide="plus" class="icon"></i> Напиток</button>
     </div>
     <div class="tab-intro">
       <div class="tab-intro-icon"><i data-lucide="truck" class="icon icon-lg"></i></div>
@@ -4271,7 +4270,10 @@ function renderRecipes() {
   document.getElementById('tab-recipes').innerHTML = `
     <div class="page-title">
       <span class="page-title-left"><i data-lucide="clipboard-list" class="icon"></i> Рецептуры и структура себестоимости</span>
-      <button class="btn btn-outline" onclick="exportTechCards()" title="Экспорт техкарт по ГОСТ Р 53105 в PDF"><i data-lucide="file-text" class="icon"></i> PDF техкарт</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-green" onclick="openAddDrink()"><i data-lucide="plus" class="icon"></i> Напиток</button>
+        <button class="btn btn-outline" onclick="exportTechCards()" title="Экспорт техкарт по ГОСТ Р 53105 в PDF"><i data-lucide="file-text" class="icon"></i> PDF техкарт</button>
+      </div>
     </div>
     <div class="tab-intro">
       <div class="tab-intro-icon"><i data-lucide="clipboard-list" class="icon icon-lg"></i></div>
