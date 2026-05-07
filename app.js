@@ -4446,8 +4446,15 @@ function onMatPriceCommit(key, v) {
 // Устаревший alias для совместимости (на случай если где-то вызывается напрямую)
 function onMatPrice(key, v) { onMatPriceInput(key, v); }
 function onSalePrice(id, v)  { const n=parseFloat(v); if(n>0){ S.salePrices[id]=n; markDirtyDebounce(); } }
-function onTargetFCSilent(v) { const n=parseFloat(v)/100; if(n>0&&n<1){ S.targetFC=n; } }
-function onTargetFC(v)       { const n=parseFloat(v)/100; if(n>0&&n<1){ S.targetFC=n; markDirtyDebounce(); } }
+function _syncTargetFCInputs(val) {
+  const v = Math.round(val * 100);
+  ['kpi-target-fc','dash-target-fc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el !== document.activeElement) el.value = v;
+  });
+}
+function onTargetFCSilent(v) { const n=parseFloat(v)/100; if(n>0&&n<1){ S.targetFC=n; _syncTargetFCInputs(n); } }
+function onTargetFC(v)       { const n=parseFloat(v)/100; if(n>0&&n<1){ S.targetFC=n; _syncTargetFCInputs(n); markDirtyDebounce(); } }
 function onPortions(id, v)   { const n=parseInt(v); if(n>=0){ S.portions[id]=n; dirty.finmodel=true; debounce(()=>{ renderSales(); saveState(); }); } }
 function onDays(v)           { const n=parseInt(v); if(n>0){ S.days=n; dirty.finmodel=true; debounce(()=>{ renderSales(); saveState(); }); } }
 
