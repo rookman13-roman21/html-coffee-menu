@@ -284,7 +284,7 @@
     #tip-box.tip-visible { opacity: 1; }
     body.dark #tip-box { background: #2a3d25; color: #d4d4d4; }
     .fin-param-card {
-      flex: 1; min-width: 220px; background: var(--gray); border-radius: 12px;
+      flex: 1 1 0; min-width: 220px; background: var(--gray); border-radius: 12px;
       padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;
     }
     .fin-param-label { font-size: 12px; font-weight: 700; color: var(--muted); display:flex; align-items:center; gap:5px; min-height: 34px; }
