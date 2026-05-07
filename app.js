@@ -4868,7 +4868,8 @@ function saveSupplierBook() {
   closeModal('modal-supplier-book');
   renderCost();
   if (fromList) openSuppliersList();
-} {
+}
+function deleteSupplierBook() {
   if (!_supBookEditId || !S.supplierBook) return;
   if (!confirm('Удалить поставщика из справочника?')) return;
   S.supplierBook = S.supplierBook.filter(b => String(b.id) !== String(_supBookEditId));
