@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -184,9 +185,22 @@
       <button class="modal-close" onclick="closeModal('modal-mat')">&times;</button>
     </div>
     <div class="modal-row">
-      <div>
+      <div style="flex:2">
         <div class="modal-label">Название</div>
         <input class="modal-inp" id="mm-name" type="text" placeholder="Например: Сироп агаве">
+      </div>
+      <div>
+        <div class="modal-label">Категория</div>
+        <select class="modal-select" id="mm-category">
+          <option value="coffee">☕ Кофе</option>
+          <option value="dairy">🥛 Молочная продукция</option>
+          <option value="tea">🍵 Чай и матча</option>
+          <option value="bakery">🧂 Бакалея</option>
+          <option value="drinks">🧃 Напитки</option>
+          <option value="fruits">🍊 Фрукты и ягоды</option>
+          <option value="supplies">📦 Расходники</option>
+          <option value="other" selected>📁 Прочее</option>
+        </select>
       </div>
       <div>
         <div class="modal-label">Единица</div>
@@ -209,9 +223,72 @@
         <input class="modal-inp" id="mm-size" type="number" min="1" placeholder="1000">
       </div>
     </div>
+    <div class="modal-label" style="margin-top:10px;margin-bottom:4px"><i data-lucide="truck" class="icon"></i> Поставщик <span style="color:var(--muted);font-size:11px;font-weight:400">(необязательно)</span></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select class="modal-select" id="mm-sup-book" onchange="_onMatSupBookChange(this)" style="flex:1;min-width:140px">
+        <option value="">— Не указан —</option>
+      </select>
+      <span style="color:var(--muted);font-size:12px;white-space:nowrap">или</span>
+      <input class="modal-inp" id="mm-sup-name" type="text" placeholder="Название" style="flex:2">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+      <input class="modal-inp" id="mm-sup-phone" type="text" placeholder="Телефон / email" style="flex:1">
+      <input class="modal-inp" id="mm-sup-note" type="text" placeholder="Заметка (условия, доставка)" style="flex:2">
+    </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-mat')">Отмена</button>
       <button class="btn-primary" onclick="saveMat()">✔ Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модал: полуфабрикат -->
+<div class="modal-bg" id="modal-semi">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-title">
+      <span id="modal-semi-title"><i data-lucide="layers" class="icon"></i> Новый полуфабрикат</span>
+      <button class="modal-close" onclick="closeModal('modal-semi')">&times;</button>
+    </div>
+    <div class="modal-row">
+      <div style="flex:2">
+        <div class="modal-label">Название</div>
+        <input class="modal-inp" id="ms-name" type="text" placeholder="Например: Карамельный соус">
+      </div>
+      <div>
+        <div class="modal-label">Единица выхода</div>
+        <select class="modal-select" id="ms-unit" onchange="_updateSemiCostPreview()">
+          <option value="мл">мл</option>
+          <option value="г">г</option>
+          <option value="шт">шт</option>
+        </select>
+      </div>
+      <div>
+        <div class="modal-label">Выход, ед.</div>
+        <input class="modal-inp" id="ms-yield" type="number" min="0.01" step="0.01" placeholder="1000" oninput="_updateSemiCostPreview()">
+      </div>
+    </div>
+    <div class="modal-label" style="margin-top:4px;margin-bottom:4px;font-size:13px;color:var(--navy)"><i data-lucide="package" class="icon"></i> Ингредиенты (только сырьё)</div>
+    <div class="modal-ings-header">
+      <span>Сырьё</span>
+      <span>Кол-во</span>
+      <span>Потери <span class="loss-hint" data-tip="Коэффициент потерь 0–0.99. Пример: 0.05 = 5%.">?</span></span>
+      <span></span>
+    </div>
+    <div id="ms-ings"></div>
+    <button class="btn btn-outline" style="margin-top:4px;margin-bottom:4px" onclick="addSemiIngRow()"><i data-lucide="plus" class="icon"></i> Добавить ингредиент</button>
+    <div id="ms-cost-preview" style="display:none;align-items:center;gap:8px;background:var(--gray);border-radius:8px;padding:8px 12px;margin:6px 0 2px;font-size:13px"></div>
+
+    <!-- Процесс приготовления -->
+    <div class="modal-label" style="margin-top:14px;margin-bottom:4px"><i data-lucide="chef-hat" class="icon"></i> Описание / процесс</div>
+    <textarea class="modal-inp" id="ms-process" rows="3" placeholder="Опишите технологию приготовления..." style="resize:vertical;font-family:inherit;line-height:1.6"></textarea>
+
+    <input type="hidden" id="ms-edit-id" value="">
+    <div class="modal-footer">
+      <button id="ms-delete-btn" class="btn btn-outline" style="color:var(--red);border-color:#f4b8c4;display:none" onclick="deleteSemi(document.getElementById('ms-edit-id').value)"><i data-lucide="trash-2" class="icon"></i> Удалить</button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button class="btn btn-outline" onclick="closeModal('modal-semi')">Отмена</button>
+        <button class="btn-primary" onclick="saveSemi()">✔ Сохранить</button>
+      </div>
     </div>
   </div>
 </div>
@@ -347,6 +424,38 @@
         <button class="btn btn-outline" onclick="cancelSupplierModal()">Отмена</button>
         <button class="btn-primary" onclick="saveSupplier()">✔ Сохранить</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Модал: просмотр поставщика сырья -->
+<div class="modal-bg" id="modal-supplier-info">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-title">
+      <span><i data-lucide="truck" class="icon"></i> Поставщик: <span id="si-mat-name" style="color:var(--green)">—</span></span>
+      <button class="modal-close" onclick="closeModal('modal-supplier-info')">&times;</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;padding:4px 0">
+      <div>
+        <div class="modal-label" style="margin-bottom:4px">Название</div>
+        <div id="si-name" style="font-size:15px;font-weight:700;color:var(--navy)">—</div>
+      </div>
+      <div id="si-phone-wrap">
+        <div class="modal-label" style="margin-bottom:4px">Телефон / Email</div>
+        <a id="si-phone" href="#" style="font-size:14px;font-weight:600;color:var(--green);text-decoration:none">—</a>
+      </div>
+      <div id="si-site-wrap">
+        <div class="modal-label" style="margin-bottom:4px">Сайт</div>
+        <a id="si-site" href="#" target="_blank" rel="noopener" style="font-size:13px;color:var(--green);word-break:break-all">—</a>
+      </div>
+      <div id="si-note-wrap">
+        <div class="modal-label" style="margin-bottom:4px">Заметка</div>
+        <div id="si-note" style="font-size:13px;color:var(--muted)">—</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-supplier-info')" style="margin-right:auto">Закрыть</button>
+      <button class="btn-primary" onclick="siOpenEdit()"><i data-lucide="pencil" class="icon"></i> Редактировать</button>
     </div>
   </div>
 </div>

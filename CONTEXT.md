@@ -1,7 +1,7 @@
 # CONTEXT — MBS* Coffee Menu
 
 > CFO-инструментарий для владельца кофейни. Один HTML-файл без зависимостей и сборки.
-> Последнее обновление: 7 мая 2026
+> Последнее обновление: 7 мая 2026 (сессия 12)
 
 ---
 
@@ -76,13 +76,27 @@ MAT = {
 }
 ```
 
+**`SEMI`** — массив полуфабрикатов (создаются пользователем):
+```js
+SEMI = [
+  { id, name, unit: 'мл'|'г'|'шт', yield: number, process: string,
+    recipe: [{mat, amt, loss?}] }
+]
+```
+- `id` — автоинкремент от `nextSemiId` (начинается с 1)
+- `unit` / `yield` — единица и объём одной партии выхода
+- `recipe` — только сырьё из MAT (не рекурсивно, п/ф не могут содержать п/ф)
+
+**`nextSemiId`** — автоинкремент id для полуфабрикатов
+
 **`DRINKS`** — массив 30 базовых напитков (ids 0–29; + кастомные при добавлении):
 ```js
-{ id, group, name, vol, recipe: [{mat, amt, loss?}], price, custom? }
+{ id, group, name, vol, recipe: [{mat?, semi?, amt, loss?}], price, custom? }
 ```
 - `group`: `'hot'` | `'tea'` | `'cold'` | `'filter'`
 - ids 27–29: Фильтр-кофе 250/350/350 (группа `'filter'`, ингредиент `filter_coffee`)
 - `recipe.loss` — коэффициент потерь при обработке (например, апельсин `loss:0.5`)
+- `recipe.mat` — ключ сырья из MAT **или** `recipe.semi` — id полуфабриката из SEMI
 - `price` — базовая цена продажи (переопределяется через `S.salePrices`)
 - `custom: true` — признак пользовательского напитка (сохраняется в localStorage)
 
@@ -139,8 +153,9 @@ S = {
 
 | Функция | Что делает |
 |---------|-----------|
-| `calcCost(drink)` | Себестоимость напитка из рецептуры (с учётом loss) |
-| `calcIngCost(ing)` | Себестоимость одного ингредиента (для вкладки Рецептуры) |
+| `calcCost(drink)` | Себестоимость напитка из рецептуры (с учётом loss; поддерживает `{semi}` и `{mat}`) |
+| `calcIngCost(ing)` | Себестоимость одного ингредиента (поддерживает `{semi}` и `{mat}`) |
+| `calcSemiCostPerUnit(semi)` | Себестоимость 1 единицы выхода полуфабриката: сумма сырья / yield |
 | `enrich()` | Возвращает массив drinks + `{cost, price, profit, fc, rec}` |
 | `withABC(drinks)` | Добавляет поле `abc: 'A'|'B'|'C'` (20/30/50% по прибыли) |
 | `avgMetrics(drinks)` | Простые средние (avgCost, avgPrice, avgProfit, avgFC) |
@@ -250,6 +265,20 @@ saveMat()               // добавить в MAT + S.prices с ключом 'c
 deleteMat(key)          // проверяет использование в рецептурах → удаляет
 ```
 
+**modal-semi** — добавить / редактировать полуфабрикат:
+```js
+openAddSemi()                        // открыть в режиме "новый"
+openEditSemi(id)                     // открыть в режиме "редактировать"
+saveSemi()                           // create/update в SEMI → renderCost()
+deleteSemi(id)                       // проверяет использование в напитках → удаляет
+addSemiIngRow(matKey, amt, loss)     // добавить строку MAT-ингредиента в форму п/ф
+matOnlyOptions(selected)             // <option> только из MAT (без SEMI)
+```
+
+Особенности `modal-semi`:
+- Live-расчёт стоимости: плашка `#ms-cost-preview` — «Себест. сырья: X ₽ · Y ₽/ед.»; обновляется через `_updateSemiCostPreview()` при изменении любого поля
+- Поле кол-ва: `type="text" inputmode="decimal"` — placeholder зависит от единицы сырья
+
 ---
 
 ### 5.9 PERSIST & THEME
@@ -312,8 +341,9 @@ resetAll()  // confirm → восстанавливает S из DEFAULTS + FIXE
 - Кнопки: «+ Напиток», «⬇ CSV»
 
 ### 🧮 Себестоимость
-- Сетка редактируемых цен на сырьё (при изменении → дебаунс-пересчёт)
+- Сетка редактируемых цен на сырьё (при изменении → дебаунс-пересчёт) — **сворачивается** кнопкой «Цены на сырьё ▲/▼»
 - Кнопка «+ Сырьё» → modal-mat
+- **Секция полуфабрикатов** — карточки SEMI с себестоимостью/ед., кнопки редактирования и удаления; **сворачивается** кнопкой «Полуфабрикаты ▲/▼»; кнопка «+ Полуфабрикат» → modal-semi
 - Целевой FC% (редактируемый) → обновляет колонку «Рекомендуемая цена»
 - Таблица: Напиток / Себест. / FC% (объединённый: значок+%+полоска) / Ваша цена / Рекомендуемая / Прибыль / кнопка
   - Рекомендуемая цена подсвечивается жёлтым (`#fffbe6`) + ⚠️ только если `FC% > targetFC + 10пп`
@@ -380,6 +410,10 @@ resetAll()  // confirm → восстанавливает S из DEFAULTS + FIXE
 | Выделение текста в ячейках при быстром клике | `user-select:none` на `td` + `user-select:auto` на `td input` |
 | FC% не двигался через text-align (flex-контейнер внутри td) | `justify-content: flex-end` на `.fc-combined` + `text-align: right; padding-right: 24px` на `td` |
 | Поставщики из localStorage перезаписывали дефолты | `loadState()`: проверка на непустой объект/массив перед применением |
+| Чёрный экран при печати в Safari (`file://`) | Blob URL и popup `window.print()` не работают в Safari на `file://`. Решение: `_printViaIframe(html)` — скрытый iframe в текущем документе, `iframe.contentWindow.print()` из родительского контекста |
+| Белый лист при скачивании PDF в Safari | Blob URL замораживал страницу при открытии диалога → `_printViaIframe` без Blob |
+| `type="number"` placeholder не показывается в Safari | `type="text" inputmode="decimal"` — placeholder всегда виден, `parseFloat()` при сохранении |
+| `unit` хранится как `'1 кг'`/`'1 л'` (не просто `'кг'`) | Проверка через `.includes('кг')` / `.includes('л')` для определения формата placeholder |
 
 ---
 
@@ -514,3 +548,130 @@ return fc <= 0.25 ? 'good' : fc <= 0.30 ? 'ok' : 'bad';
 
 **Исправление синтаксической ошибки:**
 - В `renderCost()`: пропущен закрывающий `` ` `` шаблонной строки `_costEl.innerHTML` — исправлено; страница не открывалась
+
+### Сессия 9 (7 мая 2026) — рефакторинг техкарт + Excel по ГОСТ + футер MBS
+
+**Рефакторинг печати техкарт:**
+- Вынесены общие части в три функции:
+  - `_techCardCSS()` — CSS для всех PDF техкарт (A4, ГОСТ-стиль, print-bar, .mbs-footer)
+  - `_buildTechCardBlock(d, orgName, cardNum, isLast)` — генерирует HTML одной техкарты: фото + «Утверждаю», 9 ГОСТ-блоков (шапка, рецептура брутто/нетто/потери, технология, качество, подписи)
+  - `_openTechCardsWindow(title, hint, pages, autoprint)` — открывает попап с техкартами
+
+**Excel техкарты (ExcelJS 4.4, CDN):**
+- `mvdDownloadExcel()` — ГОСТ-структура на одном листе:
+  - Шапка: A1:C6 фото, D1:H6 «Утверждаю»; слияние ячеек
+  - 9 блоков: общие сведения, рецептура, технология, показатели качества, пищевая ценность, подписи
+  - `autoH(text, colWidthChars, minH)` — автовысота строк по тексту
+  - `wrapText: true` на всех длинных ячейках
+- SheetJS остался для `exportFullXLSX` (общий Excel всей базы)
+
+**Футер «Московская школа бариста · baristaschool.ru»:**
+- Добавлен во все PDF-документы: `.mbs-footer` div в конце body
+- Добавлен в Excel: последняя строка, серый курсив
+
+### Сессия 10 (7 мая 2026) — исправление печати в Safari (чёрный экран + белый лист)
+
+**Проблема:** Safari на `file://` при вызове `window.print()` из popup-окна замораживал документ → чёрный экран; Blob URL вызывал белый лист.
+
+**Причина:** Safari не поддерживает `window.print()` из popup-окна на `file://` протоколе.
+
+**Решение — `_printViaIframe(html, filename)`:**
+```js
+// Создаём скрытый iframe в текущей странице (не попап!)
+const iframe = document.createElement('iframe');
+iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+document.body.appendChild(iframe);
+// Пишем HTML
+const doc = iframe.contentWindow.document;
+doc.open(); doc.write(html); doc.close();
+// Ждём загрузки картинок → print из родительского контекста
+iframe.contentWindow.print();
+setTimeout(() => iframe.remove(), 2000);
+```
+
+**Почему это работает в Safari:**
+- `iframe.contentWindow.print()` вызывается из контекста основной страницы — Safari обрабатывает корректно
+- Нет Blob URL (они замораживают страницу при печати)
+- Нет popup (заблокирован браузером / даёт чёрный экран)
+- Страховка: если картинки не загрузились за 3 сек — печать запускается принудительно
+
+**Что изменено:**
+- `_openTechCardsWindow` → убраны popup и Blob URL, вызывает `_printViaIframe(html)`; убрана кнопка print-bar (не нужна — диалог открывается сразу)
+- `exportFullPDF` → заменён `window.open + document.write` на `_printViaIframe(html, 'mbs-finmodel')`
+- Все три функции печати (`exportFullPDF`, `mvdDownloadPDF`, `exportTechCards`) теперь используют единый `_printViaIframe`
+
+**Ключевое правило для будущего:**
+> ⚠️ На `file://` в Safari НЕЛЬЗЯ использовать Blob URL или `window.print()` из popup.
+> Всегда использовать `_printViaIframe(html)` — скрытый iframe в текущем документе.
+
+### Сессия 11 (7 мая 2026) — полуфабрикаты (полная реализация)
+
+**Новые глобальные данные:**
+- `SEMI = []` — массив полуфабрикатов: `{id, name, unit, yield, process, recipe:[{mat,amt,loss?}]}`
+- `nextSemiId = 1` — автоинкремент id
+
+**Расчёты:**
+- `calcSemiCostPerUnit(semi)` — себестоимость 1 единицы выхода: `∑ calcIngCost(r) / yield`
+- `calcCost(drink)` — обновлён: поддерживает `{semi, amt, loss}` в рецептуре через рекурсивный вызов `calcSemiCostPerUnit`
+- `calcIngCost(ing)` — обновлён аналогично
+
+**Рецептуры напитков:**
+- `matOptions(selected)` — перестроен: значения `"mat:key"` / `"semi:id"`, полуфабрикаты в `<optgroup>`
+- `addIngRow(selected, amt, loss)` — принимает `"mat:key"` или `"semi:id"`, legacy-ключ автоконвертируется
+- `openEditDrink(id)` — загружает ингредиенты с `r.semi != null ? "semi:${r.semi}" : "mat:${r.mat}"`
+- `saveDrink()` — парсит `type:key` → `{semi: parseInt(key)}` или `{mat: key}`
+
+**Persist:**
+- `saveState()` — добавлено `semiItems: SEMI`
+- `loadState()` — восстанавливает `SEMI` и `nextSemiId` из `sv.semiItems`
+
+**CRUD полуфабрикатов:**
+- `openAddSemi()` / `openEditSemi(id)` / `saveSemi()` / `deleteSemi(id)`
+- `addSemiIngRow(matKey, amt, loss)` — строка MAT-ингредиента только из MAT
+- `matOnlyOptions(selected)` — `<option>` только из MAT
+- `_updateSemiCostPreview()` — live-расчёт стоимости в модале
+- `_onSemiMatChange(selectEl)` — обновляет placeholder/step при смене сырья
+
+**Секция полуфабрикатов в `renderCost`:**
+- Сворачиваемая панель (`_semiPanelOpen`, `toggleSemiPanel()`) с ▲/▼
+- Карточки: название, выход, **себестоимость/ед. выделена зелёным**
+- Кнопки редактирования и удаления прямо в карточке
+
+**modal-semi в index.html:**
+- Поля: название, единица выхода, выход, список ингредиентов, описание/процесс
+- Плашка `#ms-cost-preview` — live-расчёт себестоимости
+- Поля `ms-unit` и `ms-yield` имеют `onchange`/`oninput` для обновления preview
+
+**openViewDrink:**
+- Ингредиент `{semi}` показывается с именем и бейджем «п/ф» (зелёный)
+
+**_buildTechCardBlock:**
+- Строки рецептуры: п/ф отмечены `[п/ф]` надстрочно
+- Блок «Используемые полуфабрикаты» — расшифрованный состав каждого п/ф с таблицей и описанием
+
+**closeModal backdrop:**
+- Добавлен `'modal-semi'` в список модалов с закрытием по клику на фон
+
+### Сессия 12 (7 мая 2026) — умный placeholder для кол-ва ингредиента
+
+**Проблема:** пользователь не понимал, в каких единицах вводить кол-во. Например, для сырья `'Зерно эспрессо (1 кг)'` непонятно — вводить граммы или килограммы.
+
+**Решение:** placeholder в поле кол-ва зависит от единицы сырья:
+- `unit` содержит `'кг'` или `'л'` → placeholder `0.000` (подсказывает 3 знака после запятой)
+- всё остальное (г, мл, шт) → placeholder `0`
+
+**Ключевой факт:** `MAT[key].unit` хранится как `'1 кг'`, `'1 л'`, `'1 шт'` (с числом!). Поэтому используется `.includes('кг')` / `.includes('л')`, а не строгое `===`.
+
+**Функции:**
+- `_semiIngPlaceholder(matKey)` — placeholder для модала полуфабриката
+- `_semiIngStep(matKey)` — шаг (`0.001` для кг/л, `1` для остальных)
+- `_ingPlaceholder(val)` — placeholder для модала напитка (val = `"mat:key"` или `"semi:id"`)
+- `_ingStep(val)` — шаг для модала напитка
+- `_onSemiMatChange(selectEl)` — обновляет placeholder и step при смене сырья (п/ф)
+- `_onIngMatChange(selectEl)` — обновляет placeholder и step при смене сырья (напиток)
+
+**Поле кол-ва переведено на `type="text" inputmode="decimal"`** — `type="number"` в Safari не показывал placeholder. `parseFloat()` при сохранении корректно парсит текстовое значение.
+
+**Правило для будущего:**
+> ⚠️ `type="number"` placeholder не отображается в Safari (особенно на `file://`).
+> Для числовых полей с placeholder использовать `type="text" inputmode="decimal"`.
