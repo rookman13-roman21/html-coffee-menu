@@ -3315,32 +3315,6 @@ function renderFinModel() {
       </table>
     </div>
 
-    <div class="section-title" style="margin-top:4px"><i data-lucide="target" class="icon"></i> Точка безубыточности (ТБУ)</div>
-    <div class="panel" style="padding:16px 18px;margin-bottom:24px">
-      <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:14px">
-        <div style="flex:1;min-width:140px;background:var(--gray);border-radius:8px;padding:12px 16px;text-align:center">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.6;margin-bottom:6px">Чашек / день</div>
-          <div style="font-size:28px;font-weight:800;color:var(--navy)">${bep.cupsDay}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">${bep.cupsMonth} чашек / мес</div>
-        </div>
-        <div style="flex:1;min-width:140px;background:var(--gray);border-radius:8px;padding:12px 16px;text-align:center">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.6;margin-bottom:6px">Выручка / мес</div>
-          <div style="font-size:22px;font-weight:800;color:var(--navy)">${rub(bep.revBEP)}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">минимум для покрытия расходов</div>
-        </div>
-        <div style="flex:1;min-width:140px;background:${safetyAbs >= 0 ? '#e7f2e3' : '#fde8e8'};border-radius:8px;padding:12px 16px;text-align:center">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.6;margin-bottom:6px">Запас прочности</div>
-          <div style="font-size:22px;font-weight:800;color:${safetyAbs >= 0 ? 'var(--green)' : 'var(--red)'}" class="${safetyCls}">${rub(safetyAbs)}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">${safetyPct.toFixed(1)}% от выручки</div>
-        </div>
-      </div>
-      <div style="margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted)">Покрытие ТБУ текущим планом: ${bepProgress.toFixed(0)}%</div>
-      <div style="height:10px;background:var(--gray);border-radius:6px;overflow:hidden;margin-bottom:10px">
-        <div style="width:${bepProgress}%;height:100%;background:${bepPClr};border-radius:6px;transition:width .4s"></div>
-      </div>
-      ${bepFormula ? `<div class="hint" style="margin:0"><i data-lucide="info" class="icon"></i> ${bepFormula}</div>` : ''}
-    </div>
-
     <!-- ───────────────────────────────────────────── БЛОК 3: МОДЕЛИРОВАНИЕ -->
     <div class="finblock-hd finblock-hd-3">
       <span class="finblock-num">3</span>
