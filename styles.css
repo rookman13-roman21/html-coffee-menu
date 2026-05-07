@@ -114,10 +114,10 @@
     tbody td input, tbody td button { user-select: auto; -webkit-user-select: auto; }
     tfoot td { padding: 11px 14px; user-select: none; -webkit-user-select: none; }
 
-    /* Увеличенный отступ слева для колонки FC% (5-я) */
-    #tab-dashboard thead th:nth-child(5) { text-align: center; }
-    #tab-dashboard tbody td:nth-child(5) { text-align: right; padding-right: 24px; }
-    #tab-dashboard tbody td:nth-child(5) .fc-combined { justify-content: flex-end; }
+    /* Колонка FC% (3-я) в дашборде — по центру */
+    #tab-dashboard thead th:nth-child(3) { text-align: center; }
+    #tab-dashboard tbody td:nth-child(3) { text-align: center; padding-right: 0; }
+    #tab-dashboard tbody td:nth-child(3) .fc-combined { justify-content: center; }
 
     /* Выравнивание колонки FC% (3-я) в таблице себестоимости */
     #tab-cost thead th:nth-child(3) { text-align: center; }

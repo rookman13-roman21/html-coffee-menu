@@ -452,13 +452,7 @@ function fcBarHtml(fc) {
 function fcCombinedHtml(fc) {
   const cls = fcCls(fc);
   const clr = cls==='bad' ? 'var(--red)' : cls==='ok' ? '#7a5800' : 'var(--navy)';
-  const icon = cls==='good' ? '🟢' : cls==='ok' ? '🟡' : '🔴';
-  const w   = Math.min(fc / 0.40 * 100, 100).toFixed(0);
-  return `<div class="fc-combined">
-    <span class="fc-combined-icon">${icon}</span>
-    <span class="fc-combined-pct" style="color:${clr}">${pct(fc)}</span>
-    <div class="fc-bar"><div class="fc-bar-fill ${cls}" style="width:${w}%"></div></div>
-  </div>`;
+  return `<span style="color:${clr};font-weight:700;font-size:13px">${pct(fc)}</span>`;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -583,14 +577,14 @@ function filterCost(val) {
       grRow = `<tr class="group-row"><td colspan="7">${GROUP_LABEL[d.group]}</td></tr>`;
     }
     const fc = d.fc;
-    const recHighlight = d.fc > S.targetFC + 0.10 ? 'style="color:#7a5800;font-weight:800;background:#fffbe6"' : 'style="color:var(--navy);font-weight:700"';
+    const recHighlight = d.fc > S.targetFC + 0.10 ? 'style="color:#7a5800;font-weight:800"' : 'style="color:var(--navy);font-weight:700"';
     const actionBtn = d.custom
       ? `<td><button class="btn btn-outline" style="padding:3px 8px;font-size:11px;color:var(--red);border-color:#f4b8c4" onclick="deleteDrink(${d.id})" title="Удалить напиток"><i data-lucide="trash-2" class="icon"></i></button></td>`
       : d.modified
         ? `<td><button class="btn btn-outline" style="padding:3px 8px;font-size:11px;color:var(--muted)" onclick="resetDrink(${d.id})" title="Вернуть исходную рецептуру и цену"><i data-lucide="rotate-ccw" class="icon"></i></button></td>`
         : '<td></td>';
     return grRow + `<tr>
-      <td class="fw7" style="cursor:pointer" onclick="openEditDrink(${d.id})">${d.name}${(d.custom||d.modified)?'<i data-lucide="pencil" class="icon" style="margin-left:5px;color:var(--muted)"></i>':''}</td>
+      <td class="fw7" style="cursor:pointer" onmousedown="if(document.activeElement&&document.activeElement.tagName==='INPUT')window._suppressRowClick=true;" onclick="if(window._suppressRowClick){window._suppressRowClick=false;}else{openEditDrink(${d.id});}">${d.name}${(d.custom||d.modified)?'<i data-lucide="pencil" class="icon" style="margin-left:5px;color:var(--muted)"></i>':''}</td>
       <td class="ta-r">${rub(d.cost)}</td>
       <td>${fcCombinedHtml(fc)}</td>
       <td class="ta-r">
@@ -2342,17 +2336,19 @@ function renderDashboard() {
 
   const rows = filtered.map(d => {
     const profCls = d.profit >= avgProfit ? 'num-pos' : '';
+    const recHighlight = d.fc > S.targetFC + 0.10 ? 'style="color:#7a5800;font-weight:800"' : 'style="color:var(--navy);font-weight:700"';
     const actionBtn = d.custom
       ? `<button class="btn btn-outline" style="padding:3px 8px;font-size:11px;color:var(--red);border-color:#f4b8c4" onclick="event.stopPropagation();deleteDrink(${d.id})" title="Удалить напиток"><i data-lucide="trash-2" class="icon"></i></button>`
       : d.modified
         ? `<button class="btn btn-outline" style="padding:3px 8px;font-size:11px;color:var(--muted)" onclick="event.stopPropagation();resetDrink(${d.id})" title="Вернуть к исходному"><i data-lucide="rotate-ccw" class="icon"></i></button>`
         : '';
-    return `<tr style="cursor:pointer" onclick="openEditDrink(${d.id})">
+    return `<tr style="cursor:pointer" onmousedown="if(document.activeElement&&document.activeElement.tagName==='INPUT')window._suppressRowClick=true;" onclick="if(window._suppressRowClick){window._suppressRowClick=false;}else{openEditDrink(${d.id});}">
       <td class="fw7">${d.name}${(d.custom||d.modified)?'<i data-lucide="pencil" class="icon" style="margin-left:5px;color:var(--muted)"></i>':''}</td>
-      <td class="ta-r">${rub(d.price)}</td>
       <td class="ta-r">${rub(d.cost)}</td>
-      <td class="ta-r ${profCls}">${rub(d.profit)}</td>
       <td>${fcCombinedHtml(d.fc)}</td>
+      <td class="ta-r" onclick="event.stopPropagation()"><input class="inp white" type="number" min="1" value="${d.price}" onchange="onSalePrice(${d.id},this.value)"> ₽</td>
+      <td class="ta-r" ${recHighlight}>${rub(d.rec)}${d.fc > S.targetFC + 0.10 ? ' <span title="FC% существенно выше целевого" style="font-size:12px">⚠️</span>' : ''}</td>
+      <td class="ta-r ${profCls}">${rub(d.profit)}</td>
       <td class="ta-c">${abcBadge(d.abc, d.abcTip)}</td>
       <td onclick="event.stopPropagation()">${actionBtn}</td>
     </tr>`;
@@ -2372,15 +2368,17 @@ function renderDashboard() {
       <div>
         <div class="tab-intro-title">Что это?</div>
         <div class="tab-intro-text">
-          Главный экран для быстрой оценки меню. Показывает ключевые показатели и рейтинг напитков по прибыли с чашки.
-          <strong>FC%</strong> (фуд-кост) — доля себестоимости в цене продажи: чем ниже — тем выгоднее позиция.
+          Главный экран управления меню. Здесь вы видите рейтинг напитков, редактируете цены прямо в таблице и отслеживаете эффективность каждой позиции.
+          <strong>FC%</strong> (фуд-кост) — доля себестоимости в цене продажи: чем ниже — тем выгоднее позиция для кофейни.
         </div>
         <div class="tab-intro-steps">
           <span class="tab-intro-step">клик на заголовок → сортировка</span>
           <span class="tab-intro-step">🟢 FC ≤25% — отлично</span>
           <span class="tab-intro-step">🟡 26–30% — норма</span>
           <span class="tab-intro-step">🔴 >30% — риск</span>
-          <span class="tab-intro-step">Целевой FC% — редактируется прямо в карточке</span>
+          <span class="tab-intro-step">Цена ₽ — редактируйте прямо в таблице</span>
+          <span class="tab-intro-step">Рек. цена — минимум для целевого FC%</span>
+          <span class="tab-intro-step">⚠️ — цена ниже рекомендованной</span>
         </div>
       </div>
     </div>
@@ -2405,20 +2403,33 @@ function renderDashboard() {
     <div class="section-title"><i data-lucide="trending-down" class="icon"></i> Топ-10 по прибыли с чашки</div>
     <div class="panel" style="margin-bottom:20px">${chartHtml}</div>
     <div class="section-title"><i data-lucide="clipboard-list" class="icon"></i> Рейтинг напитков — кликните заголовок для сортировки</div>
-    <div class="search-wrap">
-      <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
-      <input class="search-inp" id="dash-search" type="text" placeholder="Поиск по названию..."
-        value="${searchQuery}" oninput="filterDashboard(this.value)">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      <div class="search-wrap" style="margin-bottom:0;flex:1;min-width:180px">
+        <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
+        <input class="search-inp" id="dash-search" type="text" placeholder="Поиск по названию..."
+          value="${searchQuery}" oninput="filterDashboard(this.value)">
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span style="font-size:13px;font-weight:600;color:var(--muted)">Целевой FC%:</span>
+        <input class="inp sm" type="number" min="5" max="60" step="1"
+          id="dash-target-fc"
+          value="${Math.round(S.targetFC*100)}"
+          oninput="onTargetFCSilent(this.value)"
+          onblur="onTargetFC(this.value)"
+          style="width:52px;text-align:center">
+        <span style="font-size:13px;font-weight:700;color:var(--navy)">%</span>
+      </div>
     </div>
     <div class="table-wrap">
       <table>
         <thead><tr>
-          ${thSort('name','Напиток','','')}
-          ${thSort('price','Цена ₽','ta-r','Цена продажи гостю. Редактируется во вкладке «Себестоимость»')}
-          ${thSort('cost','Себест. ₽','ta-r','Сумма затрат на сырьё для одной порции. Меняется при изменении цен сырья')}
-          ${thSort('profit','Прибыль ₽','ta-r','Цена − Себестоимость. Зелёные — выше среднего по меню')}
-          ${thSort('fc','FC%','','Food-cost: значок статуса + % + полоса. 🟢≤25% 🟡26–30% 🔴>30%')}
-          ${thSort('abc','ABC','ta-c','ABC-класс по прибыли: A = топ 20%, B = следующие 30%, C = остальные 50%')}
+          ${thSort('name','Напиток','','Название позиции меню. Клик по строке — открыть карточку редактирования')}
+          ${thSort('cost','Себест. ₽','ta-r','Расчётная себестоимость одной порции по текущим ценам сырья. Пересчитывается автоматически при изменении цен поставщиков')}
+          ${thSort('fc','FC%','ta-c','Food Cost % — доля себестоимости в цене продажи. 🟢 ≤25% отлично · 🟡 26–30% норма · 🔴 >30% пересмотрите цену или рецептуру')}
+          ${thSort('price','Цена ₽','ta-r','Цена продажи для гостя. Редактируется прямо в таблице — изменения сохраняются немедленно')}
+          ${thSort('rec','Рек. цена ₽','ta-r','Минимальная цена для достижения целевого FC%. ⚠️ — ваша цена существенно ниже рекомендованной, позиция убыточна по FC')}
+          ${thSort('profit','Прибыль ₽','ta-r','Прибыль с одной чашки = Цена − Себестоимость. Зелёный цвет — выше среднего по меню')}
+          ${thSort('abc','ABC','ta-c','ABC-анализ по прибыли с чашки: A — топ 20% (продвигать), B — следующие 30% (рабочий ассортимент), C — нижние 50% (пересмотреть)')}
           <th></th>
         </tr></thead>
         <tbody>${rows}</tbody>
@@ -2443,17 +2454,19 @@ function filterDashboard(val) {
     : sorted;
   const rows = filtered.map(d => {
     const profCls = d.profit >= avgProfit ? 'num-pos' : '';
+    const recHighlight = d.fc > S.targetFC + 0.10 ? 'style="color:#7a5800;font-weight:800"' : 'style="color:var(--navy);font-weight:700"';
     const actionBtn = d.custom
       ? `<button class="btn btn-outline" style="padding:3px 8px;font-size:11px;color:var(--red);border-color:#f4b8c4" onclick="event.stopPropagation();deleteDrink(${d.id})" title="Удалить напиток"><i data-lucide="trash-2" class="icon"></i></button>`
       : d.modified
         ? `<button class="btn btn-outline" style="padding:3px 8px;font-size:11px;color:var(--muted)" onclick="event.stopPropagation();resetDrink(${d.id})" title="Вернуть к исходному"><i data-lucide="rotate-ccw" class="icon"></i></button>`
         : '';
-    return `<tr style="cursor:pointer" onclick="openEditDrink(${d.id})">
+    return `<tr style="cursor:pointer" onmousedown="if(document.activeElement&&document.activeElement.tagName==='INPUT')window._suppressRowClick=true;" onclick="if(window._suppressRowClick){window._suppressRowClick=false;}else{openEditDrink(${d.id});}">
       <td class="fw7">${d.name}${(d.custom||d.modified)?'<i data-lucide="pencil" class="icon" style="margin-left:5px;color:var(--muted)"></i>':''}</td>
-      <td class="ta-r">${rub(d.price)}</td>
       <td class="ta-r">${rub(d.cost)}</td>
-      <td class="ta-r ${profCls}">${rub(d.profit)}</td>
       <td>${fcCombinedHtml(d.fc)}</td>
+      <td class="ta-r" onclick="event.stopPropagation()"><input class="inp white" type="number" min="1" value="${d.price}" onchange="onSalePrice(${d.id},this.value)"> ₽</td>
+      <td class="ta-r" ${recHighlight}>${rub(d.rec)}${d.fc > S.targetFC + 0.10 ? ' <span title="FC% существенно выше целевого" style="font-size:12px">⚠️</span>' : ''}</td>
+      <td class="ta-r ${profCls}">${rub(d.profit)}</td>
       <td class="ta-c">${abcBadge(d.abc, d.abcTip)}</td>
       <td onclick="event.stopPropagation()">${actionBtn}</td>
     </tr>`;
@@ -2466,9 +2479,7 @@ function filterDashboard(val) {
 //  RENDER — COST CALCULATOR
 // ════════════════════════════════════════════════════════════════════
 function renderCost() {
-  const drinks = enrich();
-
-  // Группируем сырьё по категориям
+  // ── Сырьё по категориям ──────────────────────────────────────────
   const matGroups = {};
   Object.entries(MAT).forEach(([key, m]) => {
     const cat = m.category || 'other';
@@ -2478,211 +2489,146 @@ function renderCost() {
   const matSortedCats = Object.keys(matGroups).sort((a, b) =>
     ((MAT_CATEGORIES[a]||{order:99}).order) - ((MAT_CATEGORIES[b]||{order:99}).order)
   );
-  const matInputs = matSortedCats.map(cat => {
-    const catLabel = (MAT_CATEGORIES[cat] || { label: cat }).label;
+  // ── Строим секцию Поставщики ────────────────────────────────────
+  const sups = S.suppliers || {};
+  const book = S.supplierBook || [];
+  const byName = {};
+  Object.entries(sups).forEach(([key, v]) => {
+    if (!v || (!v.name && !v.phone && !v.note)) return;
+    const nm = v.name || '(без названия)';
+    if (!byName[nm]) byName[nm] = { name: nm, phone: v.phone||'', note: v.note||'', site: v.site||'', mats: [], matKeys: [] };
+    if (MAT[key]) byName[nm].mats.push(MAT[key].name);
+    byName[nm].matKeys.push(key);
+    if (!byName[nm].phone && v.phone) byName[nm].phone = v.phone;
+    if (!byName[nm].note  && v.note)  byName[nm].note  = v.note;
+    if (!byName[nm].site  && v.site)  byName[nm].site  = v.site;
+  });
+  book.forEach(b => {
+    if (!byName[b.name]) byName[b.name] = { name: b.name, phone: b.phone||'', note: b.note||'', site: b.site||'', mats: [], matKeys: [], bookId: b.id };
+  });
+  const supGroups = Object.values(byName);
+  const suppliersHtml = supGroups.length
+    ? '<div class="mat-grid">' + supGroups.map(g => {
+        const matTags = g.mats.map(name => '<span class="sup-mat-tag">' + name + '</span>').join('');
+        const editFn = (g.matKeys && g.matKeys.length)
+          ? "editSupFromList('" + g.matKeys[0] + "')"
+          : "openSupplierBookModal('" + (g.bookId||'') + "')";
+        return '<div class="sup-card">'
+          + '<div class="sup-card-header">'
+          + '<span class="sup-card-name"><i data-lucide="building-2" class="icon"></i> ' + g.name + '</span>'
+          + (g.phone ? '<a class="sup-card-phone" href="tel:' + g.phone + '">' + g.phone + '</a>' : '')
+          + '<button class="btn btn-outline sup-edit-btn" onclick="' + editFn + '"><i data-lucide="pencil" class="icon"></i></button>'
+          + '</div>'
+          + (g.note ? '<div class="sup-card-note">' + g.note + '</div>' : '')
+          + (g.site ? '<div class="sup-card-note"><a href="' + g.site + '" target="_blank" style="color:var(--green);text-decoration:none">🌐 ' + g.site + '</a></div>' : '')
+          + (matTags ? '<div class="sup-card-mats">' + matTags + '</div>' : '')
+          + '</div>';
+      }).join('') + '</div>'
+    : '<div style="color:var(--muted);font-size:13px;padding:16px 0">Поставщики ещё не добавлены. Нажмите <b>+ Поставщик</b> или значок 🚚 у любого сырья.</div>';
+
+  // ── Строим секцию Ингредиенты ────────────────────────────────────
+  const matCatTabsHtml = `
+    <div class="mat-cat-tabs">
+      <button class="mat-cat-tab${_matActiveCat==='all'?' active':''}" onclick="setMatCat('all')">Всё <span>${Object.keys(MAT).length}</span></button>
+      ${matSortedCats.map(cat => {
+        const lbl = (MAT_CATEGORIES[cat]||{label:cat}).label;
+        return `<button class="mat-cat-tab${_matActiveCat===cat?' active':''}" onclick="setMatCat('${cat}')">${lbl} <span>${matGroups[cat].length}</span></button>`;
+      }).join('')}
+    </div>`;
+  const matCardsHtml = matSortedCats.map(cat => {
+    const catLabel = (MAT_CATEGORIES[cat]||{label:cat}).label;
+    const hidden = (_matActiveCat !== 'all' && _matActiveCat !== cat) ? 'display:none' : '';
     const cards = matGroups[cat].map(([key, m]) => {
-      const sup = (S.suppliers || {})[key];
+      const sup = (S.suppliers||{})[key];
       const supTitle = sup ? `${sup.name||''}${sup.phone?' · '+sup.phone:''}${sup.note?' · '+sup.note:''}` : 'Указать поставщика';
       const supClr = sup ? 'var(--green)' : 'var(--muted)';
-      return `
-    <div class="mat-item">
-      <div style="min-width:0">
-        <div class="mat-name" title="${m.name}">${m.name}</div>
-        <div class="mat-unit">${m.unit}${sup?` · <button class="sup-name-btn" onclick="openSupplierInfo('${key}')" title="${(sup.phone||'')} ${(sup.note||'')}">${sup.name||'поставщик'}</button>`:''}</div>
-      </div>
-      <div class="mat-controls">
-        <input class="inp sm" type="number" min="1"
-          id="mat-inp-${key}"
-          value="${S.prices[key]}"
-          onfocus="onMatPriceFocus('${key}')"
-          oninput="onMatPriceInput('${key}',this.value)"
-          onblur="onMatPriceCommit('${key}',this.value)">
-        <span style="font-size:12px;color:var(--muted);flex-shrink:0">₽</span>
-        <button class="mat-del" onclick="openSupQuickDrop('${key}',this)" title="${supTitle}" style="color:${supClr}"><i data-lucide="truck" class="icon"></i></button>
-        <button class="mat-del" onclick="openPriceHistory('${key}')" title="История цен"><i data-lucide="history" class="icon"></i></button>
-        ${m.custom ? `<button class="mat-del" onclick="deleteMat('${key}')" title="Удалить"><i data-lucide="trash-2" class="icon"></i></button>` : '<span style="width:20px"></span>'}
-      </div>
-    </div>
-  `;
+      return `<div class="mat-item">
+        <div style="min-width:0">
+          <div class="mat-name" title="${m.name}">${m.name}</div>
+          <div class="mat-unit">${m.unit}${sup?` · <button class="sup-name-btn" onclick="openSupplierInfo('${key}')" title="${(sup.phone||'')} ${(sup.note||'')}">${sup.name||'поставщик'}</button>`:''}</div>
+        </div>
+        <div class="mat-controls">
+          <input class="inp sm" type="number" min="1"
+            id="mat-inp-${key}" value="${S.prices[key]}"
+            onfocus="onMatPriceFocus('${key}')"
+            oninput="onMatPriceInput('${key}',this.value)"
+            onblur="onMatPriceCommit('${key}',this.value)">
+          <span style="font-size:12px;color:var(--muted);flex-shrink:0">₽</span>
+          <button class="mat-del" onclick="openSupQuickDrop('${key}',this)" title="${supTitle}" style="color:${supClr}"><i data-lucide="truck" class="icon"></i></button>
+          <button class="mat-del" onclick="openPriceHistory('${key}')" title="История цен"><i data-lucide="history" class="icon"></i></button>
+          ${m.custom ? `<button class="mat-del" onclick="deleteMat('${key}')" title="Удалить"><i data-lucide="trash-2" class="icon"></i></button>` : '<span style="width:20px"></span>'}
+        </div>
+      </div>`;
     }).join('');
-    return `<div style="margin-bottom:2px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:8px 4px 4px">${catLabel}</div><div class="mat-grid">${cards}</div></div>`;
+    return `<div class="mat-cat-group" data-cat="${cat}" style="${hidden}">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:4px 4px 6px">${catLabel}</div>
+      <div class="mat-grid">${cards}</div>
+    </div>`;
   }).join('');
 
-  // начальный рендер строк через filterCost-логику
-  const { col, dir } = costSortState;
-  const sortedDrinks = [...drinks].sort((a,b) => {
-    const av = a[col], bv = b[col];
-    const r  = typeof av === 'string' ? av.localeCompare(bv,'ru') : av > bv ? 1 : av < bv ? -1 : 0;
-    return dir === 'asc' ? r : -r;
-  });
-  const filteredDrinks = costSearch
-    ? sortedDrinks.filter(d => d.name.toLowerCase().includes(costSearch.toLowerCase()))
-    : sortedDrinks;
-  let lastGroup = null;
-  const rows = filteredDrinks.map(d => {
-    let grRow = '';
-    if (!costSearch && d.group !== lastGroup) {
-      lastGroup = d.group;
-      grRow = `<tr class="group-row"><td colspan="7">${GROUP_LABEL[d.group]}</td></tr>`;
-    }
-    const fc = d.fc;
-    const recHighlight = d.fc > S.targetFC + 0.10 ? 'style="color:#7a5800;font-weight:800;background:#fffbe6"' : 'style="color:var(--navy);font-weight:700"';
-    const actionBtn = d.custom
-      ? `<td><button class="btn btn-outline" style="padding:3px 8px;font-size:11px;color:var(--red);border-color:#f4b8c4" onclick="deleteDrink(${d.id})" title="Удалить напиток"><i data-lucide="trash-2" class="icon"></i></button></td>`
-      : d.modified
-        ? `<td><button class="btn btn-outline" style="padding:3px 8px;font-size:11px;color:var(--muted)" onclick="resetDrink(${d.id})" title="Вернуть исходную рецептуру и цену"><i data-lucide="rotate-ccw" class="icon"></i></button></td>`
-        : '<td></td>';
-    return grRow + `<tr>
-      <td class="fw7" style="cursor:pointer" onclick="openEditDrink(${d.id})">${d.name}${(d.custom||d.modified)?'<i data-lucide="pencil" class="icon" style="margin-left:5px;color:var(--muted)"></i>':''}</td>
-      <td class="ta-r">${rub(d.cost)}</td>
-      <td>${fcCombinedHtml(fc)}</td>
-      <td class="ta-r">
-        <input class="inp white" type="number" min="1"
-          value="${d.price}"
-          onchange="onSalePrice(${d.id},this.value)"> ₽
-      </td>
-      <td class="ta-r" ${recHighlight}>${rub(d.rec)}${d.fc > S.targetFC + 0.10 ? ' <span title="FC% существенно выше целевого" style="font-size:12px">⚠️</span>' : ''}</td>
-      <td class="ta-r num-pos">${rub(d.profit)}</td>
-      ${actionBtn}
-    </tr>`;
-  }).join('');
+  // ── Полуфабрикаты ────────────────────────────────────────────────
+  const semiHtml = SEMI.length
+    ? `<div class="mat-grid">${SEMI.map(s => {
+        const cost = calcSemiCostPerUnit(s);
+        return `<div class="mat-item" style="cursor:pointer" onclick="openEditSemi(${s.id})">
+          <div style="min-width:0">
+            <div class="mat-name" title="${s.name}">${s.name}</div>
+            <div class="mat-unit">Выход: ${s.yield} ${s.unit} · <b style="color:var(--green)">${rub(cost)}/${s.unit}</b></div>
+          </div>
+          <div class="mat-controls">
+            <button class="mat-del" onclick="event.stopPropagation();openEditSemi(${s.id})" title="Редактировать"><i data-lucide="pencil" class="icon"></i></button>
+            <button class="mat-del" onclick="event.stopPropagation();deleteSemi(${s.id})" title="Удалить" style="color:var(--red)"><i data-lucide="trash-2" class="icon"></i></button>
+          </div>
+        </div>`;
+      }).join('')}</div>`
+    : `<div style="color:var(--muted);font-size:13px;padding:16px 0">Нет полуфабрикатов. Нажмите «+ Полуфабрикат», чтобы добавить (соусы, сиропы, основы).</div>`;
 
   const _costEl = document.getElementById('tab-cost');
   const _costScroll = _costEl ? _costEl.scrollTop : 0;
-  const _costTableWrap = document.getElementById('cost-table-wrap');
-  const _costTableScroll = _costTableWrap ? _costTableWrap.scrollTop : 0;
   _costEl.innerHTML = `
     <div class="page-title">
-      <span><i data-lucide="calculator" class="icon"></i> Калькулятор себестоимости</span>
-      <button class="btn btn-outline" onclick="openModal('modal-mat')"><i data-lucide="plus" class="icon"></i> Сырьё</button>
+      <span class="page-title-left"><i data-lucide="truck" class="icon"></i> Поставщики</span>
     </div>
     <div class="tab-intro">
-      <div class="tab-intro-icon"><i data-lucide="calculator" class="icon icon-lg"></i></div>
+      <div class="tab-intro-icon"><i data-lucide="truck" class="icon icon-lg"></i></div>
       <div>
         <div class="tab-intro-title">Что здесь?</div>
         <div class="tab-intro-text">
-          Измените цену любого сырья → все напитки пересчитаются мгновенно.
-          Измените цену продажи напитка → FC% пересчитается авто.
-          <strong>Рекомендуемая цена</strong> — минимальная цена для достижения вашего целевого FC%.
+          Обновляйте цены сырья — все напитки пересчитаются мгновенно.
+          Здесь хранятся данные о поставщиках, ингредиенты и полуфабрикаты.
         </div>
         <div class="tab-intro-steps">
-          <span class="tab-intro-step">1. Измените цены сырья</span>
-          <span class="tab-intro-step">2. Установите целевой FC%</span>
-          <span class="tab-intro-step">3. Откорректируйте цены продажи</span>
+          <span class="tab-intro-step">🚚 Добавьте поставщика</span>
+          <span class="tab-intro-step">💰 Обновите цены сырья</span>
+          <span class="tab-intro-step">🧪 Управляйте полуфабрикатами</span>
         </div>
       </div>
     </div>
-    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <button class="btn btn-outline" id="mat-toggle-btn" onclick="toggleMatPanel()" style="gap:8px">
-          <i data-lucide="banknote" class="icon"></i> Цены на сырьё
-          <span style="background:var(--border);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700">${Object.keys(MAT).length}</span>
-          <span id="mat-toggle-arrow" style="font-size:11px;opacity:.5">▼</span>
-        </button>
-        <button class="btn btn-outline" onclick="openSuppliersList()"><i data-lucide="truck" class="icon"></i> Все поставщики</button>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span class="fw7" style="color:var(--navy);font-size:13px">Целевой FC%:</span>
-        <input class="inp sm" type="number" min="5" max="60" step="1"
-          id="cost-target-fc"
-          value="${Math.round(S.targetFC*100)}"
-          oninput="onTargetFCSilent(this.value)"
-          onblur="onTargetFC(this.value)"
-          style="width:52px"> <span style="font-size:13px;font-weight:700;color:var(--navy)">%</span>
-        <span class="hint" style="margin:0;font-size:12px">Рек. цена = Себест. ÷ ${pct(S.targetFC)}</span>
+
+    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+      <span><i data-lucide="building-2" class="icon"></i> Поставщики <span style="background:var(--border);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:4px">${supGroups.length}</span></span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline" onclick="openSuppliersList()"><i data-lucide="list" class="icon"></i> Полный список</button>
+        <button class="btn btn-green" onclick="openSupplierBookModal()"><i data-lucide="plus" class="icon"></i> Поставщик</button>
       </div>
     </div>
-    <div id="mat-panel" style="display:${_matPanelOpen ? 'block' : 'none'}">
-      <div class="mat-cat-tabs" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
-        <button class="mat-cat-tab${_matActiveCat==='all'?' active':''}" data-cat="all" onclick="setMatCat('all')" style="">
-          Всё <span>${Object.keys(MAT).length}</span>
-        </button>
-        ${matSortedCats.map(cat => {
-          const lbl = (MAT_CATEGORIES[cat]||{label:cat}).label;
-          const cnt = matGroups[cat].length;
-          return `<button class="mat-cat-tab${_matActiveCat===cat?' active':''}" data-cat="${cat}" onclick="setMatCat('${cat}')">${lbl} <span>${cnt}</span></button>`;
-        }).join('')}
-      </div>
-      ${matSortedCats.map(cat => {
-        const catLabel = (MAT_CATEGORIES[cat]||{label:cat}).label;
-        const cards = matGroups[cat].map(([key, m]) => {
-          const sup = (S.suppliers||{})[key];
-          const supTitle = sup ? `${sup.name||''}${sup.phone?' · '+sup.phone:''}${sup.note?' · '+sup.note:''}` : 'Указать поставщика';
-          const supClr = sup ? 'var(--green)' : 'var(--muted)';
-          return `<div class="mat-item">
-            <div style="min-width:0">
-              <div class="mat-name" title="${m.name}">${m.name}</div>
-              <div class="mat-unit">${m.unit}${sup?` · <button class="sup-name-btn" onclick="openSupplierInfo('${key}')" title="${(sup.phone||'')} ${(sup.note||'')}">${sup.name||'поставщик'}</button>`:''}</div>
-            </div>
-            <div class="mat-controls">
-              <input class="inp sm" type="number" min="1"
-                id="mat-inp-${key}" value="${S.prices[key]}"
-                onfocus="onMatPriceFocus('${key}')"
-                oninput="onMatPriceInput('${key}',this.value)"
-                onblur="onMatPriceCommit('${key}',this.value)">
-              <span style="font-size:12px;color:var(--muted);flex-shrink:0">₽</span>
-              <button class="mat-del" onclick="openSupQuickDrop('${key}',this)" title="${supTitle}" style="color:${supClr}"><i data-lucide="truck" class="icon"></i></button>
-              <button class="mat-del" onclick="openPriceHistory('${key}')" title="История цен"><i data-lucide="history" class="icon"></i></button>
-              ${m.custom ? `<button class="mat-del" onclick="deleteMat('${key}')" title="Удалить"><i data-lucide="trash-2" class="icon"></i></button>` : '<span style="width:20px"></span>'}
-            </div>
-          </div>`;
-        }).join('');
-        const hidden = (_matActiveCat !== 'all' && _matActiveCat !== cat) ? 'display:none' : '';
-        return `<div class="mat-cat-group" data-cat="${cat}" style="${hidden}"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:4px 4px 6px">${catLabel}</div><div class="mat-grid">${cards}</div></div>`;
-      }).join('')}
+    ${suppliersHtml}
+
+    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px">
+      <span><i data-lucide="banknote" class="icon"></i> Ингредиенты <span style="background:var(--border);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:4px">${Object.keys(MAT).length}</span></span>
+      <button class="btn btn-green" onclick="openModal('modal-mat')"><i data-lucide="plus" class="icon"></i> Сырьё</button>
     </div>
-    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-      <button class="btn btn-outline" id="semi-toggle-btn" onclick="toggleSemiPanel()" style="gap:8px">
-        <i data-lucide="layers" class="icon"></i> Полуфабрикаты
-        <span style="background:var(--border);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700">${SEMI.length}</span>
-        <span id="semi-toggle-arrow" style="font-size:11px;opacity:.5">${_semiPanelOpen ? '▲' : '▼'}</span>
-      </button>
-      <button class="btn btn-outline" onclick="openAddSemi()"><i data-lucide="plus" class="icon"></i> Полуфабрикат</button>
+    ${matCatTabsHtml}
+    ${matCardsHtml}
+
+    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px">
+      <span><i data-lucide="layers" class="icon"></i> Полуфабрикаты <span style="background:var(--border);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:4px">${SEMI.length}</span></span>
+      <button class="btn btn-green" onclick="openAddSemi()"><i data-lucide="plus" class="icon"></i> Полуфабрикат</button>
     </div>
-    <div id="semi-panel" style="display:${_semiPanelOpen ? 'block' : 'none'}">
-    ${SEMI.length ? `<div class="mat-grid">${SEMI.map(s => {
-      const cost = calcSemiCostPerUnit(s);
-      return `<div class="mat-item" style="cursor:pointer" onclick="openEditSemi(${s.id})">
-        <div style="min-width:0">
-          <div class="mat-name" title="${s.name}">${s.name}</div>
-          <div class="mat-unit">Выход: ${s.yield} ${s.unit} · <b style="color:var(--green)">${rub(cost)}/${s.unit}</b></div>
-        </div>
-        <div class="mat-controls">
-          <button class="mat-del" onclick="event.stopPropagation();openEditSemi(${s.id})" title="Редактировать"><i data-lucide="pencil" class="icon"></i></button>
-          <button class="mat-del" onclick="event.stopPropagation();deleteSemi(${s.id})" title="Удалить" style="color:var(--red)"><i data-lucide="trash-2" class="icon"></i></button>
-        </div>
-      </div>`;
-    }).join('')}</div>` : `<div style="color:var(--muted);font-size:13px;padding:8px 0 4px">Нет полуфабрикатов. Нажмите «+ Полуфабрикат», чтобы добавить (соусы, сиропы, основы).</div>`}
-    </div>
-    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-      <span><i data-lucide="list" class="icon"></i> Таблица напитков</span>
-      <div class="search-wrap" style="margin:0;max-width:260px;flex:1">
-        <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
-        <input class="search-inp" id="cost-search" type="text" placeholder="Поиск по названию..."
-          value="${costSearch}" oninput="filterCost(this.value)">
-      </div>
-    </div>
-    <div class="table-wrap" id="cost-table-wrap">
-      <table>
-        <thead>
-          <tr>
-            ${thCostSort('name','Напиток','','Название напитка')}
-            ${thCostSort('cost','Себест. ₽','ta-r','Сумма затрат на сырьё для одной порции')}
-            ${thCostSort('fc','FC%','','Food-cost: значок + % + полоса. 🟢≤25% 🟡26–30% 🔴>30%')}
-            <th class="ta-r tip" data-tip="Введите фактическую цену продажи. Нажмите Enter — всё пересчитается">Ваша цена ₽</th>
-            ${thCostSort('rec','Рекомендуемая ₽','ta-r','Минимальная цена для целевого FC%. Подсвечена жёлтым, если ваша цена ниже')}
-            ${thCostSort('profit','Прибыль ₽','ta-r','Цена − Себестоимость = прибыль с одной порции')}
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
+    ${semiHtml}
   `;
   if (window.lucide) lucide.createIcons();
   if (_costScroll) _costEl.scrollTop = _costScroll;
-  const _costTW = document.getElementById('cost-table-wrap');
-  if (_costTW && _costTableScroll) _costTW.scrollTop = _costTableScroll;
 }
 
 // ════════════════════════════════════════════════════════════════════
