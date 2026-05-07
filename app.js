@@ -2278,7 +2278,6 @@ function renderDashboard() {
     <div class="page-title">
       <span class="page-title-left"><i data-lucide="layout-dashboard" class="icon"></i> Обзор меню</span>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-outline" onclick="openAddDrink()"><i data-lucide="plus" class="icon"></i> Напиток</button>
         <button class="btn btn-outline" onclick="openDropCandidates()" title="Найти позиции с низкой эффективностью"><i data-lucide="scissors" class="icon"></i> Кандидаты на удаление</button>
         <button class="btn btn-outline" onclick="exportDashboard()">⬇ CSV</button>
       </div>
@@ -2510,6 +2509,7 @@ function renderCost() {
   _costEl.innerHTML = `
     <div class="page-title">
       <span class="page-title-left"><i data-lucide="truck" class="icon"></i> Поставщики</span>
+      <button class="btn btn-green" onclick="openAddDrink()"><i data-lucide="plus" class="icon"></i> Напиток</button>
     </div>
     <div class="tab-intro">
       <div class="tab-intro-icon"><i data-lucide="truck" class="icon icon-lg"></i></div>
