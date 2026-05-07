@@ -2748,6 +2748,193 @@ function mvdOpenEdit() {
   if (_mvdId !== null) openEditDrink(_mvdId);
 }
 
+function mvdToggleDownload(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('mvd-download-menu');
+  menu.classList.toggle('open');
+  const close = () => { menu.classList.remove('open'); document.removeEventListener('click', close); };
+  if (menu.classList.contains('open')) setTimeout(() => document.addEventListener('click', close), 0);
+}
+
+function _mvdGetData() {
+  const d = DRINKS.find(x => x.id === _mvdId);
+  if (!d) return null;
+  const ings = d.recipe.filter(ing => MAT[ing.mat]).map(ing => ({
+    name: MAT[ing.mat].name,
+    amt:  ing.amt,
+    unit: MAT[ing.mat].unit,
+    cost: calcIngCost(ing),
+    loss: ing.loss || 0
+  }));
+  const totalCost = ings.reduce((s, i) => s + i.cost, 0);
+  const price     = S.salePrices[d.id] || 0;
+  const profit    = price - totalCost;
+  const fc        = price > 0 ? totalCost / price : 0;
+  const nut       = calcNutrition(d);
+  const GROUP_NAMES = { hot: 'Горячие кофейные', tea: 'Чай и матча', cold: 'Холодные напитки', filter: 'Фильтр-кофе' };
+  return { d, ings, totalCost, price, profit, fc, nut, groupName: GROUP_NAMES[d.group] || d.group };
+}
+
+function mvdDownloadPDF() {
+  document.getElementById('mvd-download-menu').classList.remove('open');
+  const data = _mvdGetData(); if (!data) return;
+  const { d, ings, totalCost, price, profit, fc, nut, groupName } = data;
+  const maxCost = Math.max(...ings.map(i => i.cost), 0.01);
+  const ingRows = ings.map(ing => {
+    const share = totalCost > 0 ? (ing.cost / totalCost * 100).toFixed(0) : 0;
+    const barW  = (ing.cost / maxCost * 100).toFixed(0);
+    return `<tr>
+      <td>${ing.name}</td>
+      <td class="num">${ing.amt} ${ing.unit}</td>
+      <td class="num">${share}%
+        <div style="height:4px;border-radius:2px;background:#e8e6e1;margin-top:3px">
+          <div style="width:${barW}%;height:4px;border-radius:2px;background:#b5453a"></div>
+        </div>
+      </td>
+      <td class="num">${Math.round(ing.cost)} ₽</td>
+    </tr>`;
+  }).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Техкарта — ${d.name}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #1a1a1a; padding: 24px 28px; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #b5453a; padding-bottom: 12px; margin-bottom: 18px; }
+  .title { font-size: 22px; font-weight: 800; color: #1a1a1a; }
+  .meta { font-size: 11px; color: #7a7a7a; margin-top: 4px; }
+  .badge { display: inline-block; background: #b5453a; color: #fff; font-size: 10px; font-weight: 700; border-radius: 4px; padding: 2px 7px; margin-right: 6px; }
+  .section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #7a7a7a; margin: 16px 0 8px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #7a7a7a; text-align: left; border-bottom: 1px solid #e8e6e1; padding: 4px 6px; }
+  td { padding: 6px 6px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+  td.num { text-align: right; white-space: nowrap; }
+  .totals td { font-weight: 700; border-bottom: none; border-top: 2px solid #e8e6e1; }
+  .nutrition { display: flex; gap: 10px; margin-top: 8px; }
+  .nut-box { flex: 1; border: 1px solid #e8e6e1; border-radius: 8px; padding: 10px; text-align: center; }
+  .nut-val { font-size: 20px; font-weight: 800; color: #1a1a1a; }
+  .nut-lbl { font-size: 10px; color: #7a7a7a; margin-top: 2px; }
+  .process-box { background: #f8f7f4; border-radius: 8px; padding: 12px; line-height: 1.7; margin-top: 8px; font-size: 11px; color: #444; }
+  .fc-val { font-size: 13px; font-weight: 700; color: ${fc <= 0.25 ? '#2d8a56' : fc <= 0.30 ? '#b38600' : '#c0392b'}; }
+  .footer { margin-top: 24px; padding-top: 10px; border-top: 1px solid #e8e6e1; font-size: 10px; color: #bbb; text-align: right; }
+  ${d.image ? '.photo { width:100%; height:160px; object-fit:cover; border-radius:10px; margin-bottom:18px; display:block; }' : ''}
+  @media print { body { padding: 12px; } }
+</style></head><body>
+${d.image ? `<img src="${d.image}" class="photo">` : ''}
+<div class="header">
+  <div>
+    <div class="title">${d.name}</div>
+    <div class="meta"><span class="badge">${groupName}</span> ${d.vol} мл</div>
+  </div>
+  <div style="text-align:right">
+    <div class="fc-val">FC ${pct(fc)}</div>
+    <div style="font-size:10px;color:#7a7a7a;margin-top:2px">food cost</div>
+  </div>
+</div>
+<div class="section-title">Состав и себестоимость</div>
+<table>
+  <thead><tr><th>Ингредиент</th><th style="text-align:right">Кол-во</th><th style="text-align:right">Доля</th><th style="text-align:right">Стоимость</th></tr></thead>
+  <tbody>${ingRows}</tbody>
+  <tfoot class="totals">
+    <tr><td colspan="3">Себестоимость</td><td class="num">${Math.round(totalCost)} ₽</td></tr>
+    <tr style="font-weight:400;color:#7a7a7a"><td colspan="3">Цена продажи</td><td class="num">${Math.round(price)} ₽</td></tr>
+    <tr style="color:#1a4a6e"><td colspan="3">Прибыль</td><td class="num">${Math.round(profit)} ₽</td></tr>
+  </tfoot>
+</table>
+<div class="section-title">КБЖУ на порцию</div>
+<div class="nutrition">
+  <div class="nut-box"><div class="nut-val">${nut.kcal}</div><div class="nut-lbl">ккал</div></div>
+  <div class="nut-box"><div class="nut-val">${nut.protein}</div><div class="nut-lbl">белки, г</div></div>
+  <div class="nut-box"><div class="nut-val">${nut.fat}</div><div class="nut-lbl">жиры, г</div></div>
+  <div class="nut-box"><div class="nut-val">${nut.carbs}</div><div class="nut-lbl">углеводы, г</div></div>
+</div>
+${d.process ? `<div class="section-title">Процесс приготовления</div><div class="process-box">${d.process.replace(/\n/g,'<br>')}</div>` : ''}
+<div class="footer">Технологическая карта • Сформировано ${new Date().toLocaleDateString('ru')}</div>
+</body></html>`;
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:800px;height:600px';
+  document.body.appendChild(iframe);
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(html);
+  iframe.contentDocument.close();
+  iframe.onload = () => { iframe.contentWindow.focus(); iframe.contentWindow.print(); setTimeout(() => iframe.remove(), 2000); };
+}
+
+function mvdDownloadExcel() {
+  document.getElementById('mvd-download-menu').classList.remove('open');
+  const data = _mvdGetData(); if (!data) return;
+  const { d, ings, totalCost, price, profit, fc, nut, groupName } = data;
+  const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const cell = (v, bold, color, bg, align) => {
+    let s = '';
+    if (bold)  s += 'font-weight:700;';
+    if (color) s += `color:${color};`;
+    if (bg)    s += `background:${bg};`;
+    if (align) s += `text-align:${align};`;
+    return `<td style="${s}">${esc(v)}</td>`;
+  };
+  const ingRows = ings.map((ing, i) => {
+    const share = totalCost > 0 ? (ing.cost / totalCost * 100).toFixed(1) + '%' : '0%';
+    return `<tr style="background:${i % 2 ? '#faf9f7' : '#fff'}">
+      ${cell(ing.name)}
+      ${cell(ing.amt + ' ' + ing.unit, false, '', '', 'center')}
+      ${cell(share, false, '', '', 'center')}
+      ${cell(Math.round(ing.cost) + ' ₽', false, '', '', 'right')}
+    </tr>`;
+  }).join('');
+  const fcColor = fc <= 0.25 ? '#2d8a56' : fc <= 0.30 ? '#b38600' : '#c0392b';
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
+  xmlns:x="urn:schemas-microsoft-com:office:excel"
+  xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="UTF-8">
+<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+<x:Name>Техкарта</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+<style>
+  body { font-family: Arial, sans-serif; font-size: 11pt; }
+  table { border-collapse: collapse; width: 100%; }
+  td, th { border: 1px solid #e8e6e1; padding: 6px 10px; }
+  .h1 { font-size: 18pt; font-weight: 700; border: none; }
+  .muted { color: #7a7a7a; font-size: 9pt; border: none; }
+  .section { background: #f0ede8; font-weight: 700; font-size: 10pt; text-transform: uppercase; letter-spacing: .05em; color: #7a7a7a; }
+  .th { background: #f0ede8; font-weight: 700; text-align: center; }
+</style>
+</head><body>
+<table>
+  <tr><td colspan="4" class="h1">${esc(d.name)}</td></tr>
+  <tr><td colspan="2" class="muted">${esc(groupName)} • ${d.vol} мл</td>
+      <td class="muted" style="text-align:right">FC</td>
+      <td style="font-weight:700;color:${fcColor};text-align:right">${pct(fc)}</td></tr>
+  <tr><td colspan="4" style="border:none;height:12px"></td></tr>
+  <tr><td colspan="4" class="section">Состав и себестоимость</td></tr>
+  <tr><th class="th">Ингредиент</th><th class="th">Количество</th><th class="th">Доля</th><th class="th">Стоимость</th></tr>
+  ${ingRows}
+  <tr style="font-weight:700;background:#f8f7f4">${cell('Себестоимость',true)}<td></td><td></td>${cell(Math.round(totalCost)+' ₽',true,'','','right')}</tr>
+  <tr>${cell('Цена продажи',false,'#7a7a7a')}<td></td><td></td>${cell(Math.round(price)+' ₽',false,'#7a7a7a','','right')}</tr>
+  <tr style="font-weight:700">${cell('Прибыль',true,'#1a4a6e')}<td></td><td></td>${cell(Math.round(profit)+' ₽',true,'#1a4a6e','','right')}</tr>
+  <tr><td colspan="4" style="border:none;height:12px"></td></tr>
+  <tr><td colspan="4" class="section">КБЖУ на порцию</td></tr>
+  <tr><th class="th">Ккал</th><th class="th">Белки, г</th><th class="th">Жиры, г</th><th class="th">Углеводы, г</th></tr>
+  <tr style="text-align:center;font-weight:700;font-size:14pt">
+    <td>${nut.kcal}</td><td>${nut.protein}</td><td>${nut.fat}</td><td>${nut.carbs}</td>
+  </tr>
+  ${d.process ? `
+  <tr><td colspan="4" style="border:none;height:12px"></td></tr>
+  <tr><td colspan="4" class="section">Процесс приготовления</td></tr>
+  <tr><td colspan="4" style="white-space:pre-wrap;line-height:1.7">${esc(d.process)}</td></tr>` : ''}
+  <tr><td colspan="4" style="border:none;height:12px"></td></tr>
+  <tr><td colspan="4" class="muted">Технологическая карта • Сформировано ${new Date().toLocaleDateString('ru')}</td></tr>
+</table>
+</body></html>`;
+  const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `Техкарта — ${d.name}.xls`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+}
+
 function setRecipeSort(s)  { recipeSort  = s; filterRecipes(); }
 function setRecipeGroup(g) { recipeGroup = g; filterRecipes(); }
 function filterRecipes(val) {

@@ -96,6 +96,13 @@
     <div id="mvd-content" style="overflow-y:auto;max-height:68vh;padding-right:2px"></div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-drink-view')">Закрыть</button>
+      <div class="mvd-download-wrap">
+        <button class="btn btn-outline" onclick="mvdToggleDownload(event)"><i data-lucide="download" class="icon"></i> Скачать <i data-lucide="chevron-down" class="icon" style="margin-left:2px"></i></button>
+        <div class="mvd-download-menu" id="mvd-download-menu">
+          <button onclick="mvdDownloadPDF()"><i data-lucide="file-text" class="icon"></i> PDF (техкарта)</button>
+          <button onclick="mvdDownloadExcel()"><i data-lucide="table" class="icon"></i> Excel (.xls)</button>
+        </div>
+      </div>
       <button class="btn-primary" onclick="mvdOpenEdit()"><i data-lucide="pencil" class="icon"></i> Редактировать</button>
     </div>
   </div>
