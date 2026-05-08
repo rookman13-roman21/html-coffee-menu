@@ -100,7 +100,7 @@ const DRINKS = [
     recipe:[{mat:'coffee',amt:19},{mat:'cream',amt:350},{mat:'sugar_org',amt:10},{mat:'cup450',amt:1}], price:400,
     process:'Приготовить двойной эспрессо (19 г). В питчер налить 350 мл сливок 10%, добавить апельсиновый сахар (10 г), влить горячий эспрессо. Взбить капучинатором до воздушной текстуры 60°C. Перелить в прогретый бокал.' },
   { id:14, group:'hot',  name:'Какао 300',              vol:300,
-    recipe:[{mat:'milk',amt:200},{mat:'cocoa',amt:13},{mat:'sugar',amt:10},{mat:'cup350',amt:1}], price:350,
+    recipe:[{mat:'milk',amt:250},{mat:'cocoa',amt:13},{mat:'sugar',amt:10},{mat:'cup350',amt:1}], price:350,
     process:'В стакан добавить какао (13 г) и сахар (10 г), развести небольшим количеством кипятка до пасты без комочков. 250 мл холодного молока налить в питчер до нижней части носика. Вспенить капучинатором: погружение 1,5 см, температура 60°C, текстура «мокрый шёлк». Влить в стакан используя технику латте-арт.' },
   { id:15, group:'hot',  name:'Какао 400',              vol:400,
     recipe:[{mat:'milk',amt:300},{mat:'cocoa',amt:18},{mat:'sugar',amt:12},{mat:'cup450',amt:1}], price:390,
@@ -161,13 +161,37 @@ const SALES_PRESETS = {
   winter: { label:'❄️ Зимний спад',  portions:{0:4,1:8,2:12,3:18,4:14,5:14,6:9,7:7,8:5,9:3,10:8,11:5,12:4,13:3,14:7,15:5,16:3,17:12,18:6,19:4,20:2,21:2,22:1,23:0,24:1,25:0,26:1,27:2,28:2,29:1} },
 };
 
+const FIXED_COSTS_CATS = [
+  { id:'rent',  label:'Аренда и помещение' },
+  { id:'staff', label:'Персонал' },
+  { id:'equip', label:'Оборудование' },
+  { id:'ops',   label:'Операционные' },
+  { id:'mkt',   label:'Маркетинг' },
+  { id:'admin', label:'Административные' },
+  { id:'other', label:'Прочее' },
+];
+let _nextCostId = 200;
 const FIXED_COSTS_DEF = [
-  { name:'Аренда помещения',          value:80000 },
-  { name:'Коммунальные платежи',      value:15000 },
-  { name:'Амортизация оборудования',  value:20000 },
-  { name:'Маркетинг и реклама',       value:15000 },
-  { name:'Расходники (не сырьё)',     value:10000 },
-  { name:'Прочие постоянные',         value:10000 },
+  { id:1,  name:'Аренда помещения',            category:'rent',  value:80000, isVariable:false },
+  { id:2,  name:'Коммунальные услуги',          category:'rent',  value:15000, isVariable:false },
+  { id:3,  name:'Интернет и телефония',         category:'rent',  value:3000,  isVariable:false },
+  { id:4,  name:'Вывоз мусора / клининг',       category:'rent',  value:5000,  isVariable:false },
+  { id:5,  name:'ФОТ (зарплаты)',               category:'staff', value:0,     isVariable:false },
+  { id:6,  name:'Обучение / аттестация',        category:'staff', value:3000,  isVariable:false },
+  { id:7,  name:'Амортизация оборудования',     category:'equip', value:20000, isVariable:false },
+  { id:8,  name:'Техобслуживание / ремонт',     category:'equip', value:5000,  isVariable:false },
+  { id:9,  name:'Расходники (стаканы, крышки)', category:'ops',   value:10000, isVariable:true  },
+  { id:10, name:'Хозтовары (моющие, салфетки)', category:'ops',   value:3000,  isVariable:true  },
+  { id:11, name:'Реклама (таргет, Яндекс)',     category:'mkt',   value:10000, isVariable:false },
+  { id:12, name:'SMM / контент',                category:'mkt',   value:5000,  isVariable:false },
+  { id:13, name:'Программа лояльности / промо', category:'mkt',   value:3000,  isVariable:true  },
+  { id:14, name:'Бухгалтерия / аутсорс',        category:'admin', value:5000,  isVariable:false },
+  { id:15, name:'Эквайринг',                    category:'admin', value:0,     isVariable:true, isPercent:true, pct:2.0, pctShare:90 },
+  { id:16, name:'Касса / ОФД / ЕГАИС',          category:'admin', value:3000,  isVariable:false },
+  { id:17, name:'Прочие административные',      category:'admin', value:5000,  isVariable:false },
+  { id:18, name:'Страховка',                    category:'other', value:2000,  isVariable:false },
+  { id:19, name:'Лицензии / разрешения',        category:'other', value:1000,  isVariable:false },
+  { id:20, name:'Непредвиденные расходы',       category:'other', value:5000,  isVariable:false },
 ];
 
 const GROUP_LABEL = { hot:'<i data-lucide="coffee" class="icon"></i> Горячие кофейные', tea:'<i data-lucide="leaf" class="icon"></i> Чай и матча', cold:'<i data-lucide="snowflake" class="icon"></i> Холодные напитки', filter:'<i data-lucide="filter" class="icon"></i> Фильтр-кофе' };
@@ -254,19 +278,21 @@ const S = {
   seasonality: [1,1,1,1,1,1,1,1,1,1,1,1], // Янв-Дек: множитель выручки/объёма
   seasonalityOpen: false,
   suppliers: {
-    coffee:        { name: 'Rockets.coffee',  phone: '+7 925 386-74-20', note: '', site: 'https://b2b.rockets.coffee/' },
-    filter_coffee: { name: 'Rockets.coffee',  phone: '+7 925 386-74-20', note: '', site: 'https://b2b.rockets.coffee/' },
-    tonic:         { name: 'Rocket Tonic',    phone: '+7 800 201-79-69', note: '', site: 'https://rocket-tonic.com/' },
-    cocoa:         { name: 'Unicava',         phone: '+7 922 027-11-17', note: '', site: 'https://www.cacava-opt.ru/' },
-    milk:          { name: 'Петмол',          phone: '+7 999 233-30-04', note: '', site: 'https://mypetmol.ru/' },
-    cream:         { name: 'Петмол',          phone: '+7 999 233-30-04', note: '', site: 'https://mypetmol.ru/' },
+    coffee:        { name: 'Rockets.coffee',  phone: '+7 925 386-74-20', note: '', site: 'https://b2b.rockets.coffee' },
+    filter_coffee: { name: 'Rockets.coffee',  phone: '+7 925 386-74-20', note: '', site: 'https://b2b.rockets.coffee' },
+    tonic:         { name: 'Rocket Tonic',    phone: '+7 800 201-79-69', note: '', site: 'https://rocket-tonic.com' },
+    cocoa:         { name: 'Unicava',         phone: '+7 922 027-11-17', note: '', site: 'https://cacava-opt.ru' },
+    milk:          { name: 'Петмол',          phone: '+7 999 233-30-04', note: '', site: 'https://mypetmol.ru' },
+    cream:         { name: 'Петмол',          phone: '+7 999 233-30-04', note: '', site: 'https://mypetmol.ru' },
   },
   supplierBook: [
-    { id:1, name: 'Rockets.coffee', phone: '+7 925 386-74-20', note: 'Зерно эспрессо и фильтр-кофе', site: 'https://b2b.rockets.coffee/' },
-    { id:2, name: 'Tasty coffee',   phone: '+7 800 333-49-80', note: 'Зерно эспрессо и фильтр-кофе', site: 'https://shop.tastycoffee.ru/' },
-    { id:3, name: 'Rocket Tonic',   phone: '+7 800 201-79-69', note: 'Напитки (тоник)',               site: 'https://rocket-tonic.com/' },
-    { id:4, name: 'Unicava',        phone: '+7 922 027-11-17', note: 'Какао',                         site: 'https://www.cacava-opt.ru/' },
-    { id:5, name: 'Петмол',         phone: '+7 999 233-30-04', note: 'Молоко и сливки',               site: 'https://mypetmol.ru/' },
+    { id:1, name: 'Rockets.coffee', phone: '+7 925 386-74-20', note: 'Зерно для эспрессо, фильтр-кофе, чай, матча и др.', site: 'https://b2b.rockets.coffee/' },
+    { id:2, name: 'Tasty coffee',   phone: '+7 800 333-49-80', note: 'Зерно эспрессо и фильтр-кофе',                   site: 'https://shop.tastycoffee.ru/' },
+    { id:3, name: 'Rocket Tonic',   phone: '+7 800 201-79-69', note: 'Безалкогольные тоники разных вкусов',                site: 'https://rocket-tonic.com/' },
+    { id:4, name: 'Unicava',        phone: '+7 922 027-11-17', note: 'Bean to Bar шоколад и какао на максималках',         site: 'https://www.cacava-opt.ru/' },
+    { id:5, name: 'Петмол',         phone: '+7 999 233-30-04', note: 'Молоко и сливки для бариста',                   site: 'https://mypetmol.ru/' },
+    { id:6, name: 'Вкусов Лаб',     phone: '+7 965 342-88-99',  note: 'Аутентичные пряности, перец, соль и сахар премиального качества со всего мира.', site: 'https://vkusovlab.ru' },
+    { id:7, name: 'Planto',         phone: '+7 800 100-02-01',  note: 'Напитки на растительной основе для бариста',       site: 'https://logikamoloka.ru/beverages/' },
   ], // [ { id, name, phone, note, site } ] — справочник без привязки
   priceLog:      [], // [{ matKey, oldPrice, newPrice, date }]
 };
@@ -286,10 +312,32 @@ const dirty = { dashboard:true, cost:true, sales:true, finmodel:true, recipes:tr
 //  CALCULATIONS
 // ════════════════════════════════════════════════════════════════════
 // Себестоимость 1 единицы полуфабриката (г/мл/шт выхода)
+function _semiUnitFactor(matKey) {
+  const m = MAT[matKey];
+  if (!m) return 1;
+  const u = (m.unit || '').toLowerCase();
+  // Если единица "кг" или "л" — пользователь вводит в кг/л, формула ждёт г/мл
+  return (u.includes('кг') || (u === 'л' || u.includes(' л'))) ? 1000 : 1;
+}
+function _matDisplayUnit(matKey) {
+  const m = MAT[matKey];
+  if (!m) return '';
+  const u = (m.unit || '').toLowerCase();
+  if (u.includes('кг')) return 'кг';
+  if (u === 'л' || u.includes(' л')) return 'л';
+  return 'шт';
+}
+// Фактор для полуфабрикатов в составе напитка:
+// единица г/мл → пользователь вводит кг/л (как сырьё), храним кг/л, умножаем ×1000 при расчёте
+function _semiDrinkFactor(semi) {
+  if (!semi) return 1;
+  const u = (semi.unit || '').toLowerCase();
+  return (u === 'г' || u === 'мл' || u.startsWith('г') || u.startsWith('мл')) ? 1000 : 1;
+}
 function calcSemiCostPerUnit(semi) {
   const total = (semi.recipe || []).reduce((s, r) => {
     if (!MAT[r.mat]) return s;
-    let c = (S.prices[r.mat] / MAT[r.mat].size) * r.amt;
+    let c = ((S.prices[r.mat] || MAT[r.mat].price) / MAT[r.mat].size) * r.amt * _semiUnitFactor(r.mat);
     if (r.loss) c = c / (1 - r.loss);
     return s + c;
   }, 0);
@@ -297,26 +345,14 @@ function calcSemiCostPerUnit(semi) {
 }
 
 function calcCost(drink) {
-  return drink.recipe.reduce((sum, ing) => {
-    if (ing.semi != null) {
-      const s = SEMI.find(x => x.id === ing.semi);
-      if (!s) return sum;
-      let c = calcSemiCostPerUnit(s) * ing.amt;
-      if (ing.loss) c = c / (1 - ing.loss);
-      return sum + c;
-    }
-    if (!MAT[ing.mat]) return sum;
-    let c = (S.prices[ing.mat] / MAT[ing.mat].size) * ing.amt;
-    if (ing.loss) c = c / (1 - ing.loss);
-    return sum + c;
-  }, 0);
+  return drink.recipe.reduce((sum, ing) => sum + calcIngCost(ing), 0);
 }
 
 function calcIngCost(ing) {
   if (ing.semi != null) {
     const s = SEMI.find(x => x.id === ing.semi);
     if (!s) return 0;
-    let c = calcSemiCostPerUnit(s) * ing.amt;
+    let c = calcSemiCostPerUnit(s) * ing.amt * _semiDrinkFactor(s);
     if (ing.loss) c = c / (1 - ing.loss);
     return c;
   }
@@ -410,9 +446,11 @@ function salesMetrics(drinks) {
 }
 
 function bepCalc(drinks) {
-  const fixedFromCosts = S.fixedCosts.reduce((s,c)=>s+c.value, 0);
+  const { totRevMon: _bepRev } = salesMetrics(drinks);
+  const _bepEff = getEffectiveCosts(_bepRev);
+  const fixedFromCosts = _bepEff.reduce((s,c)=>s+c.value, 0);
   // Автоматически добавляем ФОТ если его нет в списке расходов
-  const fotInFixed = S.fixedCosts.some(c => /фот|зарплат|зп|оплата.?труда/i.test(c.name));
+  const fotInFixed = _bepEff.some(c => /фот|зарплат|зп|оплата.?труда/i.test(c.name));
   const payroll = fotInFixed ? 0 : (typeof payrollTotal === 'function' ? payrollTotal() : 0);
   const totalFixed = fixedFromCosts + payroll;
   const { avgProfit, avgPrice } = weightedMetrics(drinks);
@@ -421,10 +459,37 @@ function bepCalc(drinks) {
   return { totalFixed, fixedFromCosts, payroll, cupsMonth, cupsDay, revBEP: cupsMonth * avgPrice };
 }
 
+function getEffectiveCosts(revMon) {
+  if (revMon === undefined) {
+    const { totRevMon } = salesMetrics(enrich());
+    revMon = totRevMon;
+  }
+  const fotVal = typeof payrollTotal === 'function' ? payrollTotal() : 0;
+  return S.fixedCosts.map(c => {
+    // ФОТ-строка: всегда берём из калькулятора ФОТ
+    if (/^фот|зарплат|зп$|оплата.?труда/i.test(c.name.trim())) {
+      return { ...c, value: fotVal, _fromPayroll: true };
+    }
+    if (c.isPercent && c.pct) {
+      const share = (c.pctShare != null ? c.pctShare : 100) / 100;
+      return { ...c, value: Math.round(revMon * share * c.pct / 100) };
+    }
+    return c;
+  });
+}
+
 // ════════════════════════════════════════════════════════════════════
 //  FORMAT HELPERS
 // ════════════════════════════════════════════════════════════════════
 const rub = v => Math.round(v).toLocaleString('ru') + '\u00a0₽';
+// Для полуфабрикатов: показывает дробные копейки если значение < 1
+const rubSemi = (v, unit='') => {
+  if (!isFinite(v) || v === 0) return '0\u00a0₽';
+  const suffix = '\u00a0₽' + (unit ? '/' + unit : '');
+  if (v >= 1)   return Math.round(v).toLocaleString('ru') + suffix;
+  if (v >= 0.1) return v.toFixed(2) + suffix;
+  return v.toPrecision(2) + suffix;
+};
 const pct = v => (v * 100).toFixed(1) + '%';
 const int = v => Math.round(v).toLocaleString('ru');
 
@@ -440,15 +505,6 @@ function abcBadge(abc, tip='') {
   return `<span class="abc abc-${abc}"${tipAttr}>${abc}</span>`;
 }
 
-function fcBarHtml(fc) {
-  const cls = fcCls(fc);
-  const clr = cls==='bad' ? 'var(--red)' : cls==='ok' ? '#7a5800' : 'var(--navy)';
-  const w   = Math.min(fc / 0.40 * 100, 100).toFixed(0);
-  return `<div class="fc-bar-wrap">
-    <span style="font-weight:700;color:${clr}">${pct(fc)}</span>
-    <div class="fc-bar"><div class="fc-bar-fill ${cls}" style="width:${w}%"></div></div>
-  </div>`;
-}
 function fcCombinedHtml(fc) {
   const cls = fcCls(fc);
   const clr = cls==='bad' ? 'var(--red)' : cls==='ok' ? '#7a5800' : 'var(--navy)';
@@ -510,15 +566,115 @@ function thSort(col, label, cls='', tip='') {
 }
 
 let _matActiveCat = 'all';
+let _matCollapsed  = {}; // { [cat]: true/false }
+let _semiCollapsed = false;
 
 function setMatCat(cat) {
   _matActiveCat = cat;
   document.querySelectorAll('.mat-cat-tab').forEach(el => {
     el.classList.toggle('active', el.dataset.cat === cat);
   });
-  document.querySelectorAll('.mat-cat-group').forEach(el => {
-    el.style.display = (cat === 'all' || el.dataset.cat === cat) ? '' : 'none';
+  document.querySelectorAll('tr.mat-cat-header[data-cat]').forEach(el => {
+    const c = el.dataset.cat;
+    const visible = (cat === 'all' || cat === c);
+    el.style.display = visible ? '' : 'none';
+    const tbody = document.getElementById('mat-tbody-' + c);
+    if (tbody) tbody.style.display = (!visible || _matCollapsed[c]) ? 'none' : '';
   });
+}
+
+function toggleMatCat(cat) {
+  _matCollapsed[cat] = !_matCollapsed[cat];
+  const tbody = document.getElementById('mat-tbody-' + cat);
+  const icon  = document.getElementById('mat-cat-icon-' + cat);
+  if (tbody) tbody.style.display = _matCollapsed[cat] ? 'none' : '';
+  if (icon)  icon.textContent = _matCollapsed[cat] ? '▶' : '▼';
+}
+
+function toggleSemiCat() {
+  _semiCollapsed = !_semiCollapsed;
+  const tbody = document.getElementById('semi-tbody');
+  const icon  = document.getElementById('semi-cat-icon');
+  if (tbody) tbody.style.display = _semiCollapsed ? 'none' : '';
+  if (icon)  icon.textContent = _semiCollapsed ? '▶' : '▼';
+}
+
+// ── Попап использования ингредиента / полуфабриката в рецептах ──
+function _buildMatUsageMap() {
+  // { matKey: [ drinkName, ... ] }
+  const map = {};
+  const allDrinks = typeof enrich === 'function' ? enrich() : DRINKS;
+  allDrinks.forEach(d => {
+    (d.recipe || []).forEach(r => {
+      if (r.mat) {
+        if (!map[r.mat]) map[r.mat] = [];
+        map[r.mat].push(d.name);
+      }
+    });
+  });
+  return map;
+}
+
+function _buildSemiUsageMap() {
+  // { semiId: [ drinkName, ... ] }
+  const map = {};
+  const allDrinks = typeof enrich === 'function' ? enrich() : DRINKS;
+  allDrinks.forEach(d => {
+    (d.recipe || []).forEach(r => {
+      if (r.semi !== undefined && r.semi !== null) {
+        const sid = String(r.semi);
+        if (!map[sid]) map[sid] = [];
+        map[sid].push(d.name);
+      }
+    });
+  });
+  // also check SEMI recipes for nested mat/semi usage
+  SEMI.forEach(s => {
+    (s.recipe || []).forEach(r => {
+      if (r.mat) {
+        if (!map['mat:' + r.mat]) map['mat:' + r.mat] = [];
+        // not shown in mat table — skip
+      }
+    });
+  });
+  return map;
+}
+
+function openMatUsage(type, key) {
+  let name, drinksArr;
+  if (type === 'mat') {
+    const m = MAT[key];
+    name      = m ? m.name : key;
+    drinksArr = (window._matUsageMap || {})[key] || [];
+  } else {
+    const s = SEMI.find(x => String(x.id) === String(key));
+    name      = s ? s.name : key;
+    drinksArr = (window._semiUsageMap || {})[String(key)] || [];
+  }
+
+  const existing = document.getElementById('mat-usage-popup');
+  if (existing) existing.remove();
+  if (!drinksArr || !drinksArr.length) return;
+
+  const listHtml = drinksArr.map(n =>
+    `<div class="usage-popup-item"><i data-lucide="coffee" class="icon" style="width:13px;height:13px;flex-shrink:0"></i> ${n}</div>`
+  ).join('');
+
+  const overlay = document.createElement('div');
+  overlay.id = 'mat-usage-popup';
+  overlay.className = 'usage-popup-overlay';
+  overlay.innerHTML = `
+    <div class="usage-popup">
+      <div class="usage-popup-header">
+        <span class="usage-popup-title">Используется в рецептах</span>
+        <button class="usage-popup-close" onclick="document.getElementById('mat-usage-popup').remove()">&times;</button>
+      </div>
+      <div class="usage-popup-ingredient">${name}</div>
+      <div class="usage-popup-list">${listHtml}</div>
+    </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  if (window.lucide) lucide.createIcons();
 }
 
 function setSalesSort(col) {
@@ -738,6 +894,16 @@ function resetGlobalsToBase() {
 }
 function activeLoc() { return Loc.list.find(l => l.id === Loc.activeId); }
 
+function getOrgInfo() {
+  const loc = activeLoc() || {};
+  return {
+    name:      loc.name      || 'Кофейня',
+    legalName: loc.legalName || loc.name || 'Кофейня',
+    ceoTitle:  loc.ceoTitle  || 'Руководитель',
+    ceoName:   loc.ceoName   || '',
+    address:   loc.address   || '',
+  };
+}
 function renderLocSwitcherUI() {
   const loc = activeLoc();
   const nameEl = document.getElementById('loc-name');
@@ -795,10 +961,15 @@ function openAddLocation() {
   document.getElementById('modal-loc-title').innerHTML = '<i data-lucide="plus" class="icon"></i> Новая точка';
   document.getElementById('ml-icon').value = '☕';
   document.getElementById('ml-name').value = '';
+  document.getElementById('ml-legal-name').value = '';
+  document.getElementById('ml-ceo-title').value  = '';
+  document.getElementById('ml-ceo-name').value   = '';
+  document.getElementById('ml-address').value    = '';
   const sel = document.getElementById('ml-clone');
   sel.innerHTML = '<option value="">— Пустая (с базовым меню) —</option>'
     + Loc.list.map(l => `<option value="${l.id}">${l.icon||'☕'} ${l.name}</option>`).join('');
   document.getElementById('ml-clone-wrap').style.display = '';
+  document.getElementById('ml-requisites-wrap').style.display = '';
   document.getElementById('loc-menu')?.classList.remove('open');
   openModal('modal-loc');
   if (window.lucide) lucide.createIcons();
@@ -807,9 +978,14 @@ function renameActiveLocation() {
   const loc = activeLoc(); if (!loc) return;
   _locModalMode = 'rename'; _locTemplateId = null;
   document.getElementById('modal-loc-title').innerHTML = '<i data-lucide="pencil" class="icon"></i> Переименовать точку';
-  document.getElementById('ml-icon').value = loc.icon || '☕';
-  document.getElementById('ml-name').value = loc.name;
+  document.getElementById('ml-icon').value       = loc.icon       || '☕';
+  document.getElementById('ml-name').value       = loc.name;
+  document.getElementById('ml-legal-name').value = loc.legalName  || '';
+  document.getElementById('ml-ceo-title').value  = loc.ceoTitle   || '';
+  document.getElementById('ml-ceo-name').value   = loc.ceoName    || '';
+  document.getElementById('ml-address').value    = loc.address    || '';
   document.getElementById('ml-clone-wrap').style.display = 'none';
+  document.getElementById('ml-requisites-wrap').style.display = '';
   document.getElementById('loc-menu')?.classList.remove('open');
   openModal('modal-loc');
   if (window.lucide) lucide.createIcons();
@@ -836,7 +1012,14 @@ function saveLocation() {
   if (!name) { alert('Введите название точки'); return; }
 
   if (_locModalMode === 'rename') {
-    const loc = activeLoc(); if (loc) { loc.name = name; loc.icon = icon; }
+    const loc = activeLoc(); if (loc) {
+      loc.name      = name;
+      loc.icon      = icon;
+      loc.legalName = document.getElementById('ml-legal-name').value.trim();
+      loc.ceoTitle  = document.getElementById('ml-ceo-title').value.trim();
+      loc.ceoName   = document.getElementById('ml-ceo-name').value.trim();
+      loc.address   = document.getElementById('ml-address').value.trim();
+    }
     saveLocIndex();
     renderLocSwitcherUI();
     closeModal('modal-loc');
@@ -844,7 +1027,11 @@ function saveLocation() {
   }
 
   const id = 'loc_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
-  Loc.list.push({ id, name, icon });
+  const legalName = document.getElementById('ml-legal-name').value.trim();
+  const ceoTitle  = document.getElementById('ml-ceo-title').value.trim();
+  const ceoName   = document.getElementById('ml-ceo-name').value.trim();
+  const address   = document.getElementById('ml-address').value.trim();
+  Loc.list.push({ id, name, icon, legalName, ceoTitle, ceoName, address });
   saveState(); // Сохранили текущую перед уходом
   Loc.activeId = id;
   saveLocIndex();
@@ -931,6 +1118,7 @@ function chooseTemplate(id) {
   document.getElementById('ml-icon').value = tpl.icon;
   document.getElementById('ml-name').value = tpl.name;
   document.getElementById('ml-clone-wrap').style.display = 'none';
+  document.getElementById('ml-requisites-wrap').style.display = '';
   openModal('modal-loc');
   if (window.lucide) lucide.createIcons();
 }
@@ -1050,14 +1238,15 @@ function exportFullPDF() {
   const year = new Date().getFullYear();
 
   // Постоянные расходы (тот же расчёт что в P&L)
-  const fotInFixed  = S.fixedCosts.some(c => /фот|зарплат|зп|оплата.?труда/i.test(c.name));
+  const totRevMon   = sales.totRevMon;
+  const _eff1 = getEffectiveCosts(totRevMon);
+  const fotInFixed  = _eff1.some(c => /фот|зарплат|зп|оплата.?труда/i.test(c.name));
   const fotAmt      = fotInFixed ? 0 : (typeof payrollTotal === 'function' ? payrollTotal() : 0);
-  const varExtra    = S.fixedCosts.filter(c=>c.isVariable).reduce((s,c)=>s+c.value,0);
-  const fixedOnly   = S.fixedCosts.filter(c=>!c.isVariable).reduce((s,c)=>s+c.value,0);
+  const varExtra    = _eff1.filter(c=>c.isVariable).reduce((s,c)=>s+c.value,0);
+  const fixedOnly   = _eff1.filter(c=>!c.isVariable).reduce((s,c)=>s+c.value,0);
   const totalFixed  = fixedOnly + fotAmt + varExtra;
 
   // P&L
-  const totRevMon   = sales.totRevMon;
   const varCostsMon = drinks.reduce((s,d)=>s+(d.cost*(S.portions[d.id]||0)*S.days),0);
   const ebit        = totRevMon - varCostsMon - totalFixed;
   const taxAmt      = (typeof calcTax === 'function') ? calcTax(totRevMon, varCostsMon + varExtra, fixedOnly + fotAmt) : 0;
@@ -1123,7 +1312,7 @@ function exportFullPDF() {
     { label: 'Выручка от продаж',       val: totRevMon,   bold: false, top: true },
     { label: '− Себестоимость сырья',   val: -varCostsMon, bold: false },
     { label: 'Валовая прибыль',         val: totRevMon - varCostsMon, bold: true },
-    ...S.fixedCosts.map(c => ({ label: `− ${c.name}${c.isVariable?' (перем.)':''}`, val: -c.value })),
+    ...getEffectiveCosts(totRevMon).map(c => ({ label: `− ${c.name}${c.isVariable?' (перем.)':''}`, val: -c.value })),
     ...(fotAmt > 0 ? [{ label: '− ФОТ (все сотрудники)', val: -fotAmt }] : []),
     { label: 'EBIT (операц. прибыль)', val: ebit, bold: true },
     ...(taxAmt > 0 ? [{ label: `− Налог (${TAX_LABELS[S.taxMode]})`, val: -taxAmt }] : []),
@@ -1263,12 +1452,13 @@ async function exportFullXLSX() {
   const locName  = loc?.name || 'Кофейня';
 
   // Постоянные расходы / P&L (тот же расчёт что в renderFinModel)
-  const fotInFixed  = S.fixedCosts.some(c => /фот|зарплат|зп|оплата.?труда/i.test(c.name));
-  const fotAmt      = fotInFixed ? 0 : (typeof payrollTotal === 'function' ? payrollTotal() : 0);
-  const varExtra    = S.fixedCosts.filter(c => c.isVariable).reduce((s, c) => s + c.value, 0);
-  const fixedOnly   = S.fixedCosts.filter(c => !c.isVariable).reduce((s, c) => s + c.value, 0);
-  const totalFixed  = fixedOnly + fotAmt + varExtra;
   const totRevMon   = sales.totRevMon;
+  const _eff2 = getEffectiveCosts(totRevMon);
+  const fotInFixed  = _eff2.some(c => /фот|зарплат|зп|оплата.?труда/i.test(c.name));
+  const fotAmt      = fotInFixed ? 0 : (typeof payrollTotal === 'function' ? payrollTotal() : 0);
+  const varExtra    = _eff2.filter(c => c.isVariable).reduce((s, c) => s + c.value, 0);
+  const fixedOnly   = _eff2.filter(c => !c.isVariable).reduce((s, c) => s + c.value, 0);
+  const totalFixed  = fixedOnly + fotAmt + varExtra;
   const varCostsMon = drinks.reduce((s, d) => s + d.cost * (S.portions[d.id] || 0) * S.days, 0);
   const ebit        = totRevMon - varCostsMon - totalFixed;
   const taxAmt      = (typeof calcTax === 'function') ? calcTax(totRevMon, varCostsMon + varExtra, fixedOnly + fotAmt) : 0;
@@ -1452,7 +1642,7 @@ async function exportFullXLSX() {
     { label: 'Выручка от продаж',          val: totRevMon,           bold: true },
     { label: '  − Себестоимость сырья',     val: -varCostsMon,        bold: false },
     { label: 'Валовая прибыль',             val: totRevMon-varCostsMon, bold: true, sep: true },
-    ...S.fixedCosts.map(c => ({ label: `  − ${c.name}${c.isVariable?' (перем.)':''}`, val: -c.value })),
+    ...getEffectiveCosts(totRevMon).map(c => ({ label: `  − ${c.name}${c.isVariable?' (перем.)':''}`, val: -c.value })),
     ...(fotAmt > 0 ? [{ label: '  − ФОТ', val: -fotAmt }] : []),
     { label: 'EBIT (операц. прибыль)',      val: ebit,                bold: true, sep: true },
     ...(taxAmt > 0 ? [{ label: `  − Налог (${TAX_LABELS[S.taxMode]})`, val: -taxAmt }] : []),
@@ -1578,7 +1768,14 @@ function loadState() {
     if (sv.portions)    Object.assign(S.portions, sv.portions);
     if (sv.days != null)     S.days = sv.days;
     if (sv.targetFC != null) S.targetFC = sv.targetFC;
-    if (sv.fixedCosts)       S.fixedCosts = sv.fixedCosts;
+    if (sv.fixedCosts) {
+      S.fixedCosts = sv.fixedCosts;
+      // Миграция: добавляем category/id если нет
+      S.fixedCosts.forEach((c, i) => {
+        if (!c.id) c.id = 1000 + i;
+        if (!c.category) c.category = 'other';
+      });
+    }
     if (sv.taxMode)          S.taxMode = sv.taxMode;
     if (sv.investment != null) S.investment = sv.investment;
     if (sv.payroll && !sv.payrollPositions) {
@@ -1593,6 +1790,34 @@ function loadState() {
     if (sv.wif) { _wif.price = sv.wif.price||0; _wif.cost = sv.wif.cost||0; _wif.traffic = sv.wif.traffic||0; }
     if (sv.suppliers && Object.keys(sv.suppliers).length > 0) S.suppliers = sv.suppliers;
     if (sv.supplierBook && sv.supplierBook.length > 0) S.supplierBook = sv.supplierBook;
+    // Миграция: добавляем системных поставщиков если их ещё нет в книге
+    const _sysSuppliers = [
+      { id:6, name: 'Вкусов Лаб', phone: '+7 965 342-88-99', note: 'Аутентичные пряности, перец, соль и сахар премиального качества со всего мира.', site: 'https://vkusovlab.ru' },
+      { id:7, name: 'Planto', phone: '+7 800 100-02-01', note: 'Напитки на растительной основе для бариста', site: 'https://logikamoloka.ru/beverages/' },
+    ];
+    _sysSuppliers.forEach(sys => {
+      if (!S.supplierBook.find(b => b.name === sys.name)) {
+        const maxId = S.supplierBook.reduce((m, b) => Math.max(m, b.id||0), 0);
+        S.supplierBook.push({ ...sys, id: Math.max(sys.id, maxId + 1) });
+      }
+    });
+    // Миграция: обновляем телефоны существующих поставщиков
+    const _phoneUpdates = {
+      'Вкусов Лаб': '+7 965 342-88-99',
+      'Planto':      '+7 800 100-02-01',
+    };
+    S.supplierBook.forEach(b => {
+      if (_phoneUpdates[b.name]) b.phone = _phoneUpdates[b.name];
+    });
+    const _noteUpdates = {
+      'Rockets.coffee': 'Зерно для эспрессо, фильтр-кофе, чай, матча и др.',
+      'Rocket Tonic':   'Безалкогольные тоники разных вкусов',
+      'Unicava':        'Bean to Bar шоколад и какао на максималках',
+      'Петмол':         'Молоко и сливки для бариста',
+    };
+    S.supplierBook.forEach(b => {
+      if (_noteUpdates[b.name]) b.note = _noteUpdates[b.name];
+    });
     if (sv.priceLog)     S.priceLog     = sv.priceLog;
     if (sv.customMats) {
       sv.customMats.forEach(m => {
@@ -1797,8 +2022,7 @@ function _ingPlaceholder(val) {
   if (type === 'semi') {
     const s = SEMI.find(x => x.id === parseInt(key));
     if (!s) return '0';
-    const u = (s.unit || '').toLowerCase();
-    return (u.includes('кг') || u.includes('л')) ? '0.000' : '0';
+    return _semiDrinkFactor(s) === 1000 ? '0.000' : '0';
   }
   const m = MAT[key];
   if (!m) return '0';
@@ -1811,8 +2035,7 @@ function _ingStep(val) {
   const [type, key] = val.split(':');
   if (type === 'semi') {
     const s = SEMI.find(x => x.id === parseInt(key));
-    const u = s ? (s.unit || '').toLowerCase() : '';
-    return (u.includes('кг') || u.includes('л')) ? '0.001' : '1';
+    return (s && _semiDrinkFactor(s) === 1000) ? '0.001' : '1';
   }
   const m = MAT[key];
   if (!m) return '1';
@@ -1829,6 +2052,41 @@ function _onIngMatChange(selectEl) {
   amtInp.step = _ingStep(val);
 }
 
+function _calcIngRowCost(row) {
+  if (!row) return null;
+  const val  = row.querySelector('select').value || '';
+  const amtInp = row.querySelectorAll('input')[0];
+  const lossInp = row.querySelectorAll('input')[1];
+  const amt  = parseFloat(amtInp ? amtInp.value : 0) || 0;
+  const loss = (parseFloat(lossInp ? lossInp.value : 0) || 0) / 100;
+  if (!val || !(amt > 0)) return null;
+  let cost = 0;
+  if (val.startsWith('semi:')) {
+    const sid = parseInt(val.slice(5));
+    const s = SEMI.find(x => x.id === sid);
+    if (s) cost = calcSemiCostPerUnit(s) * amt * _semiDrinkFactor(s);
+    if (loss > 0) cost = cost / (1 - loss);
+  } else {
+    const key = val.startsWith('mat:') ? val.slice(4) : val;
+    const m = MAT[key];
+    if (!m) return null;
+    const factor = _semiUnitFactor(key);
+    const pricePerUnit = (S.prices[key] || m.price) / m.size;
+    cost = pricePerUnit * amt * factor;
+    if (loss > 0) cost = cost / (1 - loss);
+  }
+  return cost;
+}
+function _updateIngRowCost(anyEl) {
+  const row = anyEl.closest('.modal-ing-row');
+  if (!row) return;
+  const hint = row.querySelector('.ing-cost-hint');
+  if (!hint) return;
+  const cost = _calcIngRowCost(row);
+  hint.textContent = (cost != null && cost > 0)
+    ? (cost < 1 ? cost.toFixed(2) : Math.round(cost)) + ' ₽'
+    : '';
+}
 function addIngRow(selected='', amt='', loss='') {
   // selected = 'mat:coffee' | 'semi:5' | '' (legacy: plain key → convert)
   if (selected && !selected.startsWith('mat:') && !selected.startsWith('semi:')) selected = 'mat:' + selected;
@@ -1837,19 +2095,32 @@ function addIngRow(selected='', amt='', loss='') {
   const row = document.createElement('div');
   row.className = 'modal-ing-row';
   row.innerHTML = `
-    <select class="modal-select" onchange="_onIngMatChange(this)">${matOptions(selected)}</select>
-    <input class="modal-inp" type="text" inputmode="decimal" placeholder="${ph}" value="${amt}">
-    <input class="modal-inp" type="number" min="0" max="0.99" step="0.01" placeholder="0.05" value="${loss}">
+    <select class="modal-select" onchange="_onIngMatChange(this);_updateIngRowCost(this)">${matOptions(selected)}</select>
+    <input class="modal-inp" type="text" inputmode="decimal" placeholder="${ph}" value="${amt}" oninput="this.value=this.value.replace(',','.');_updateIngRowCost(this)">
+    <input class="modal-inp" type="number" min="0" max="99" step="1" placeholder="%" value="${loss}" oninput="_updateIngRowCost(this)">
+    <span class="ing-cost-hint"></span>
     <button class="modal-ing-del" title="Удалить ингредиент" onclick="this.closest('.modal-ing-row').remove()"><i data-lucide="trash-2" class="icon"></i></button>
   `;
   document.getElementById('md-ings').appendChild(row);
   if (window.lucide) lucide.createIcons({ nodes: [row] });
+  // Показать цену сразу если редактируем существующий напиток
+  if (amt) {
+    const hint = row.querySelector('.ing-cost-hint');
+    const cost = _calcIngRowCost(row);
+    if (hint && cost != null && cost > 0)
+      hint.textContent = (cost < 1 ? cost.toFixed(2) : Math.round(cost)) + ' ₽';
+  }
 }
 function openAddDrink() {
   document.getElementById('modal-drink-title').innerHTML = '<i data-lucide="plus" class="icon"></i> Новый напиток';
   if (window.lucide) lucide.createIcons({ nodes: [document.getElementById('modal-drink-title')] });
   document.getElementById('md-process').value = '';
   document.getElementById('md-video').value    = '';
+  document.getElementById('md-storage-temp').value = '';
+  document.getElementById('md-storage-life').value = '';
+  document.getElementById('md-appearance').value   = '';
+  document.getElementById('md-taste').value        = '';
+  document.getElementById('md-consistency').value  = '';
   const _prev = document.getElementById('md-img-preview');
   _prev.src = ''; _prev.style.display = 'none';
   document.getElementById('md-img-placeholder').style.display = '';
@@ -1876,6 +2147,15 @@ function openEditDrink(id) {
   document.getElementById('md-edit-id').value = id;
   document.getElementById('md-process').value = d.process || '';
   document.getElementById('md-video').value    = d.videoUrl || '';
+  const _isCold = d.group === 'cold';
+  const _defTemp = _isCold ? 'не выше +10°C' : 'не ниже 60°C';
+  const _defLife = _isCold ? '30 минут с момента приготовления' : '15 минут с момента приготовления';
+  document.getElementById('md-storage-temp').value = d.storage_temp || _defTemp;
+  document.getElementById('md-storage-life').value = d.storage_life || _defLife;
+  const _dq = DRINK_QUALITY[d.id];
+  document.getElementById('md-appearance').value   = d.appearance  || (_dq && _dq.appearance)  || '';
+  document.getElementById('md-taste').value        = d.taste       || (_dq && _dq.taste)       || '';
+  document.getElementById('md-consistency').value  = d.consistency || (_dq && _dq.consistency) || '';
   // Изображение
   const preview = document.getElementById('md-img-preview');
   const placeholder = document.getElementById('md-img-placeholder');
@@ -1890,7 +2170,14 @@ function openEditDrink(id) {
   document.getElementById('md-ings').innerHTML = '';
   d.recipe.forEach(r => {
     const sel = r.semi != null ? `semi:${r.semi}` : `mat:${r.mat}`;
-    addIngRow(sel, r.amt, r.loss||'');
+    let displayAmt = r.amt;
+    if (r.semi != null) {
+      displayAmt = r.amt;
+    } else if (r.mat) {
+      displayAmt = parseFloat((r.amt / _semiUnitFactor(r.mat)).toPrecision(6));
+    }
+    const displayLoss = r.loss ? parseFloat((r.loss * 100).toPrecision(4)) : '';
+    addIngRow(sel, displayAmt, displayLoss);
   });
   // показать кнопку удаления/сброса
   const delBtn = document.getElementById('md-delete-btn');
@@ -1927,14 +2214,16 @@ function saveDrink() {
     const inputs = row.querySelectorAll('input');
     const amt    = parseFloat(inputs[0].value);
     if (!selEl.value || !(amt > 0)) return;
-    const l = parseFloat(inputs[1].value);
+    const l = parseFloat(inputs[1].value) / 100;
     const [type, key] = selEl.value.split(':');
     if (type === 'semi') {
+      const s = SEMI.find(x => x.id === parseInt(key));
       const ing = { semi: parseInt(key), amt };
       if (l > 0 && l < 1) ing.loss = l;
       recipe.push(ing);
     } else {
-      const ing = { mat: key, amt };
+      const factor = _semiUnitFactor(key);
+      const ing = { mat: key, amt: amt * factor };
       if (l > 0 && l < 1) ing.loss = l;
       recipe.push(ing);
     }
@@ -1942,6 +2231,11 @@ function saveDrink() {
   if (recipe.length === 0) { alert('Добавьте хотя бы один ингредиент'); return; }
   const process  = document.getElementById('md-process').value.trim();
   const videoUrl = document.getElementById('md-video').value.trim();
+  const storage_temp  = document.getElementById('md-storage-temp').value.trim();
+  const storage_life  = document.getElementById('md-storage-life').value.trim();
+  const appearance    = document.getElementById('md-appearance').value.trim();
+  const taste         = document.getElementById('md-taste').value.trim();
+  const consistency   = document.getElementById('md-consistency').value.trim();
   const imgEl    = document.getElementById('md-img-preview');
   const image    = (imgEl.style.display !== 'none' && imgEl.src) ? imgEl.src : '';
   if (editId !== '') {
@@ -1950,6 +2244,7 @@ function saveDrink() {
     if (idx >= 0) {
       const wasCustom = DRINKS[idx].custom || false;
       DRINKS[idx] = {...DRINKS[idx], name, group, vol, recipe, process, videoUrl, image,
+        storage_temp, storage_life, appearance, taste, consistency,
         custom: wasCustom,
         modified: !wasCustom || undefined
       };
@@ -1957,7 +2252,8 @@ function saveDrink() {
     S.salePrices[id] = price;
   } else {
     const id = nextDrinkId++;
-    DRINKS.push({ id, group, name, vol, recipe, process, videoUrl, image, price, custom:true });
+    DRINKS.push({ id, group, name, vol, recipe, process, videoUrl, image,
+      storage_temp, storage_life, appearance, taste, consistency, price, custom:true });
     S.salePrices[id] = price;
     S.portions[id]   = 5;
   }
@@ -2025,7 +2321,12 @@ function saveMat() {
   if (!name || !(price>0) || !(size>0)) { alert('Заполните все поля'); return; }
   const key = 'custom_' + (nextMatKey++);
   const category = document.getElementById('mm-category').value || 'other';
-  MAT[key] = { name, unit, price, size, custom:true, category };
+  const kcal   = parseFloat(document.getElementById('mm-kcal').value)   || 0;
+  const protein= parseFloat(document.getElementById('mm-protein').value)|| 0;
+  const fat    = parseFloat(document.getElementById('mm-fat').value)    || 0;
+  const carbs  = parseFloat(document.getElementById('mm-carbs').value)  || 0;
+  const nutrition = (kcal || protein || fat || carbs) ? { kcal, protein, fat, carbs } : undefined;
+  MAT[key] = { name, unit, price, size, custom:true, category, ...(nutrition ? { nutrition } : {}) };
   S.prices[key] = price;
   // поставщик
   const supName  = document.getElementById('mm-sup-name').value.trim();
@@ -2045,6 +2346,7 @@ function saveMat() {
   document.getElementById('mm-sup-phone').value = '';
   document.getElementById('mm-sup-note').value  = '';
   document.getElementById('mm-sup-book').value  = '';
+  ['mm-kcal','mm-protein','mm-fat','mm-carbs'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   markDirtyDebounce();
   saveState();
 }
@@ -2104,38 +2406,99 @@ function _updateSemiCostPreview() {
     const m = MAT[matKey];
     if (!m || !(amt > 0)) return;
     const pricePerUnit = (S.prices[matKey] || m.price) / m.size;
-    totalRaw += pricePerUnit * amt * (1 + loss);
+    totalRaw += pricePerUnit * amt * _semiUnitFactor(matKey) * (1 + loss);
   });
   const unit = document.getElementById('ms-unit').value || 'ед.';
-  const perUnit = (yieldV > 0 && totalRaw > 0) ? (totalRaw / yieldV).toFixed(2) : null;
+  const perUnit = (yieldV > 0 && totalRaw > 0) ? (totalRaw / yieldV) : null;
   const el = document.getElementById('ms-cost-preview');
   if (!el) return;
   if (totalRaw > 0) {
     el.style.display = 'flex';
     el.innerHTML = `<span style="color:var(--muted);font-size:12px">Себест. сырья:</span>
-      <b style="color:var(--navy)">${totalRaw.toFixed(2)} ₽</b>
-      ${perUnit ? `<span style="color:var(--muted);font-size:12px">·</span><b style="color:var(--green)">${perUnit} ₽/${unit}</b>` : ''}`;
+      <b style="color:var(--navy)">${Math.round(totalRaw)} ₽</b>
+      ${perUnit ? `<span style="color:var(--muted);font-size:12px">·</span><b style="color:var(--green)">${perUnit < 1 ? perUnit.toFixed(2) : Math.round(perUnit)} ₽/${unit}</b>` : ''}`;
   } else {
     el.style.display = 'none';
   }
 }
 
-function addSemiIngRow(matKey='', amt='', loss='') {
+function addSemiIngRow(matKey='', amt='', loss='', yieldAmt='') {
   const wrap = document.getElementById('ms-ings');
   const firstKey = matKey || Object.keys(MAT)[0] || '';
   const row = document.createElement('div');
   row.className = 'ing-row';
   row.innerHTML = `
-    <select class="modal-select ing-mat" style="flex:2" onchange="_onSemiMatChange(this)">${matOnlyOptions(firstKey)}</select>
-    <input class="modal-inp ing-amt" type="text" inputmode="decimal" value="${amt}" placeholder="${_semiIngPlaceholder(firstKey)}" oninput="_updateSemiCostPreview()">
-    <input class="modal-inp ing-loss" type="number" min="0" max="0.99" step="0.01" value="${loss}" placeholder="0" oninput="_updateSemiCostPreview()">
+    <select class="modal-select ing-mat" style="flex:2" onchange="_onSemiMatChange(this);_updateSemiIngCost(this)">${matOnlyOptions(firstKey)}</select>
+    <input class="modal-inp ing-amt" type="text" inputmode="decimal" value="${amt}" placeholder="${_semiIngPlaceholder(firstKey)}" oninput="this.value=this.value.replace(',','.');_updateSemiCostPreview();_updateSemiIngCost(this);_autoCalcSemiIngYield(this)">
+    <input class="modal-inp ing-loss" type="number" min="0" max="99" step="1" value="${loss}" placeholder="%" oninput="_updateSemiCostPreview();_updateSemiIngCost(this);_autoCalcSemiIngYield(this)">
+    <input class="modal-inp ing-yield" type="text" inputmode="decimal" value="${yieldAmt}" placeholder="=" title="Фактический выход после обработки">
+    <span class="ing-cost-hint"></span>
     <button class="btn btn-outline" style="padding:6px 8px;color:var(--red)" onclick="this.closest('.ing-row').remove();_updateSemiCostPreview()"><i data-lucide="trash-2" class="icon"></i></button>
   `;
   wrap.appendChild(row);
   if (window.lucide) lucide.createIcons();
   _updateSemiCostPreview();
+  if (amt) {
+    const hint = row.querySelector('.ing-cost-hint');
+    const cost = _calcSemiIngCost(row);
+    if (hint && cost > 0) hint.textContent = (cost < 1 ? cost.toFixed(2) : Math.round(cost)) + '\u00a0₽';
+  }
 }
 
+function _autoCalcSemiIngYield(anyEl) {
+  const row = anyEl.closest('.ing-row');
+  if (!row) return;
+  const amtEl   = row.querySelector('.ing-amt');
+  const lossEl  = row.querySelector('.ing-loss');
+  const yieldEl = row.querySelector('.ing-yield');
+  if (!amtEl || !lossEl || !yieldEl) return;
+  const amt  = parseFloat(amtEl.value)  || 0;
+  const loss = parseFloat(lossEl.value) || 0;
+  if (amt > 0 && loss > 0) {
+    const y = amt * (1 - loss / 100);
+    yieldEl.value = parseFloat(y.toPrecision(4));
+  } else if (loss === 0) {
+    yieldEl.value = '';
+  }
+}
+function _autoFillSemiYield() {
+  const yieldInp = document.getElementById('ms-yield');
+  if (!yieldInp) return;
+  let total = 0;
+  let hasAny = false;
+  document.querySelectorAll('#ms-ings .ing-row').forEach(row => {
+    const matKey  = (row.querySelector('.ing-mat') || {}).value || '';
+    const amtVal  = parseFloat((row.querySelector('.ing-amt')  || {}).value) || 0;
+    const yldVal  = parseFloat((row.querySelector('.ing-yield')|| {}).value);
+    const factor  = _semiUnitFactor(matKey);
+    // если есть выход ингредиента — берём его, иначе берём кол-во
+    const contrib = isFinite(yldVal) ? yldVal * factor : amtVal * factor;
+    if (amtVal > 0 || isFinite(yldVal)) { total += contrib; hasAny = true; }
+  });
+  if (hasAny && total > 0) yieldInp.value = Math.round(total);
+}
+
+function _calcSemiIngCost(row) {
+  if (!row) return 0;
+  const key  = (row.querySelector('.ing-mat') || {}).value || '';
+  const amt  = parseFloat((row.querySelector('.ing-amt')  || {}).value) || 0;
+  const loss = (parseFloat((row.querySelector('.ing-loss') || {}).value) || 0) / 100;
+  const m = MAT[key];
+  if (!m || !(amt > 0)) return 0;
+  const factor = _semiUnitFactor(key);
+  const pricePerUnit = (S.prices[key] || m.price) / m.size;
+  let cost = pricePerUnit * amt * factor;
+  if (loss > 0) cost = cost / (1 - loss);
+  return cost;
+}
+function _updateSemiIngCost(anyEl) {
+  const row = anyEl.closest('.ing-row');
+  if (!row) return;
+  const hint = row.querySelector('.ing-cost-hint');
+  if (!hint) return;
+  const cost = _calcSemiIngCost(row);
+  hint.textContent = cost > 0 ? (cost < 1 ? cost.toFixed(2) : Math.round(cost)) + '\u00a0₽' : '';
+}
 function _onSemiMatChange(selectEl) {
   const row = selectEl.closest('.ing-row');
   if (!row) return;
@@ -2151,6 +2514,11 @@ function openAddSemi() {
   document.getElementById('ms-unit').value    = 'мл';
   document.getElementById('ms-yield').value   = '';
   document.getElementById('ms-process').value = '';
+  document.getElementById('ms-storage-temp').value = '';
+  document.getElementById('ms-storage-life').value = '';
+  document.getElementById('ms-appearance').value   = '';
+  document.getElementById('ms-taste').value        = '';
+  document.getElementById('ms-consistency').value  = '';
   document.getElementById('ms-edit-id').value = '';
   document.getElementById('ms-delete-btn').style.display = 'none';
   document.getElementById('ms-ings').innerHTML = '';
@@ -2168,10 +2536,15 @@ function openEditSemi(id) {
   document.getElementById('ms-unit').value    = semi.unit;
   document.getElementById('ms-yield').value   = semi.yield;
   document.getElementById('ms-process').value = semi.process || '';
+  document.getElementById('ms-storage-temp').value = semi.storage_temp || '';
+  document.getElementById('ms-storage-life').value = semi.storage_life || '';
+  document.getElementById('ms-appearance').value   = semi.appearance || '';
+  document.getElementById('ms-taste').value        = semi.taste || '';
+  document.getElementById('ms-consistency').value  = semi.consistency || '';
   document.getElementById('ms-edit-id').value = semi.id;
   document.getElementById('ms-delete-btn').style.display = '';
   document.getElementById('ms-ings').innerHTML = '';
-  (semi.recipe || []).forEach(r => addSemiIngRow(r.mat, r.amt, r.loss || ''));
+  (semi.recipe || []).forEach(r => addSemiIngRow(r.mat, r.amt, r.loss ? parseFloat((r.loss * 100).toPrecision(4)) : '', r.yieldAmt || ''));
   if (!(semi.recipe && semi.recipe.length)) addSemiIngRow();
   document.getElementById('modal-semi').classList.add('open');
   _updateSemiCostPreview();
@@ -2183,6 +2556,11 @@ function saveSemi() {
   const unit    = document.getElementById('ms-unit').value;
   const yieldV  = parseFloat(document.getElementById('ms-yield').value);
   const process = document.getElementById('ms-process').value.trim();
+  const storage_temp  = document.getElementById('ms-storage-temp').value.trim();
+  const storage_life  = document.getElementById('ms-storage-life').value.trim();
+  const appearance    = document.getElementById('ms-appearance').value.trim();
+  const taste         = document.getElementById('ms-taste').value.trim();
+  const consistency   = document.getElementById('ms-consistency').value.trim();
   const editId  = document.getElementById('ms-edit-id').value;
   if (!name) { alert('Введите название'); return; }
   if (!(yieldV > 0)) { alert('Введите выход (> 0)'); return; }
@@ -2191,10 +2569,12 @@ function saveSemi() {
   document.querySelectorAll('#ms-ings .ing-row').forEach(row => {
     const mat  = row.querySelector('.ing-mat').value;
     const amt  = parseFloat(row.querySelector('.ing-amt').value);
-    const loss = parseFloat(row.querySelector('.ing-loss').value) || 0;
+    const loss = (parseFloat(row.querySelector('.ing-loss').value) || 0) / 100;
+    const yieldAmt = parseFloat(row.querySelector('.ing-yield').value);
     if (mat && amt > 0) {
       const r = { mat, amt };
-      if (loss > 0) r.loss = loss;
+      if (loss > 0 && loss < 1) r.loss = loss;
+      if (isFinite(yieldAmt) && yieldAmt > 0) r.yieldAmt = yieldAmt;
       recipe.push(r);
     }
   });
@@ -2202,9 +2582,9 @@ function saveSemi() {
 
   if (editId) {
     const idx = SEMI.findIndex(s => s.id === parseInt(editId));
-    if (idx >= 0) SEMI[idx] = { id: parseInt(editId), name, unit, yield: yieldV, process, recipe };
+    if (idx >= 0) SEMI[idx] = { id: parseInt(editId), name, unit, yield: yieldV, process, storage_temp, storage_life, appearance, taste, consistency, recipe };
   } else {
-    SEMI.push({ id: nextSemiId++, name, unit, yield: yieldV, process, recipe });
+    SEMI.push({ id: nextSemiId++, name, unit, yield: yieldV, process, storage_temp, storage_life, appearance, taste, consistency, recipe });
   }
   closeModal('modal-semi');
   markDirtyDebounce();
@@ -2323,12 +2703,13 @@ function renderDashboard() {
     <div class="panel" style="margin-bottom:20px">${chartHtml}</div>
     <div class="section-title"><i data-lucide="clipboard-list" class="icon"></i> Рейтинг напитков — кликните заголовок для сортировки</div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
-      <div class="search-wrap" style="margin-bottom:0;flex:1;min-width:180px">
+      <div class="search-wrap" style="margin-bottom:0;min-width:180px">
         <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
         <input class="search-inp" id="dash-search" type="text" placeholder="Поиск по названию..."
-          value="${searchQuery}" oninput="filterDashboard(this.value)">
+          value="${searchQuery}" oninput="filterDashboard(this.value);_searchClear(this)">
+        <button class="search-clear${searchQuery ? ' visible' : ''}" title="Очистить" onclick="filterDashboard('');var el=document.getElementById('dash-search');el.value='';_searchClear(el)">✕</button>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto">
         <span style="font-size:13px;font-weight:600;color:var(--muted)">Целевой FC%:</span>
         <input class="inp sm" type="number" min="5" max="60" step="1"
           id="dash-target-fc"
@@ -2361,6 +2742,11 @@ function renderDashboard() {
       ${abcBadge('C')} Остальные 50% — пересмотреть цену или себестоимость
     </div>
   `;
+}
+
+function _searchClear(inp) {
+  const btn = inp.parentElement.querySelector('.search-clear');
+  if (btn) btn.classList.toggle('visible', inp.value.length > 0);
 }
 
 function filterDashboard(val) {
@@ -2456,52 +2842,121 @@ function renderCost() {
         return `<button class="mat-cat-tab${_matActiveCat===cat?' active':''}" onclick="setMatCat('${cat}')">${lbl} <span>${matGroups[cat].length}</span></button>`;
       }).join('')}
     </div>`;
-  const matCardsHtml = matSortedCats.map(cat => {
-    const catLabel = (MAT_CATEGORIES[cat]||{label:cat}).label;
-    const hidden = (_matActiveCat !== 'all' && _matActiveCat !== cat) ? 'display:none' : '';
-    const cards = matGroups[cat].map(([key, m]) => {
-      const sup = (S.suppliers||{})[key];
+
+  // ── Таблица ингредиентов ─────────────────────────────────────────
+  const matUsageMap = _buildMatUsageMap();
+  window._matUsageMap = matUsageMap;
+
+  const matRowsHtml = matSortedCats.map(cat => {
+    const catLabel  = (MAT_CATEGORIES[cat]||{label:cat}).label;
+    const collapsed = !!_matCollapsed[cat];
+    const catHidden = (_matActiveCat !== 'all' && _matActiveCat !== cat) ? 'display:none' : '';
+    const rows = matGroups[cat].map(([key, m]) => {
+      const sup      = (S.suppliers||{})[key];
       const supTitle = sup ? `${sup.name||''}${sup.phone?' · '+sup.phone:''}${sup.note?' · '+sup.note:''}` : 'Указать поставщика';
-      const supClr = sup ? 'var(--green)' : 'var(--muted)';
-      return `<div class="mat-item">
-        <div style="min-width:0">
-          <div class="mat-name" title="${m.name}">${m.name}</div>
-          <div class="mat-unit">${m.unit}${sup?` · <button class="sup-name-btn" onclick="openSupplierInfo('${key}')" title="${(sup.phone||'')} ${(sup.note||'')}">${sup.name||'поставщик'}</button>`:''}</div>
-        </div>
-        <div class="mat-controls">
-          <input class="inp sm" type="number" min="1"
+      const supClr   = sup ? 'var(--green)' : 'var(--muted)';
+      const supCell  = sup
+        ? `<button class="sup-name-btn" onclick="openSupplierInfo('${key}')" title="${(sup.phone||'')} ${(sup.note||'')}">${sup.name||'поставщик'}</button>`
+        : `<button class="mat-del" style="font-size:11px;color:var(--muted)" onclick="openSupQuickDrop('${key}',this)" title="Добавить поставщика">+ добавить</button>`;
+      const usedIn   = matUsageMap[key] || [];
+      const usageBadge = usedIn.length
+        ? `<button class="usage-badge" onclick="openMatUsage('mat','${key}')" title="Нажмите, чтобы увидеть рецепты">${usedIn.length}</button>`
+        : `<span class="usage-badge usage-badge-zero">0</span>`;
+      return `<tr style="${collapsed ? 'display:none' : ''}" class="mat-row" data-cat="${cat}">
+        <td class="mat-td-name">${m.name}</td>
+        <td class="mat-td-unit">${m.unit}</td>
+        <td class="mat-td-price">
+          <input class="inp sm" type="number" min="1" style="width:72px"
             id="mat-inp-${key}" value="${S.prices[key]}"
             onfocus="onMatPriceFocus('${key}')"
             oninput="onMatPriceInput('${key}',this.value)"
-            onblur="onMatPriceCommit('${key}',this.value)">
-          <span style="font-size:12px;color:var(--muted);flex-shrink:0">₽</span>
+            onblur="onMatPriceCommit('${key}',this.value)"> <span style="font-size:12px;color:var(--muted)">₽</span>
+        </td>
+        <td class="mat-td-sup">${supCell}</td>
+        <td class="mat-td-usage">${usageBadge}</td>
+        <td class="mat-td-actions">
           <button class="mat-del" onclick="openSupQuickDrop('${key}',this)" title="${supTitle}" style="color:${supClr}"><i data-lucide="truck" class="icon"></i></button>
           <button class="mat-del" onclick="openPriceHistory('${key}')" title="История цен"><i data-lucide="history" class="icon"></i></button>
-          ${m.custom ? `<button class="mat-del" onclick="deleteMat('${key}')" title="Удалить"><i data-lucide="trash-2" class="icon"></i></button>` : '<span style="width:20px"></span>'}
-        </div>
-      </div>`;
+          ${m.custom ? `<button class="mat-del" onclick="deleteMat('${key}')" title="Удалить" style="color:var(--red)"><i data-lucide="trash-2" class="icon"></i></button>` : ''}
+        </td>
+      </tr>`;
     }).join('');
-    return `<div class="mat-cat-group" data-cat="${cat}" style="${hidden}">
-      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:4px 4px 6px">${catLabel}</div>
-      <div class="mat-grid">${cards}</div>
-    </div>`;
+    return `<tr class="mat-cat-header" data-cat="${cat}" style="${catHidden}" onclick="toggleMatCat('${cat}')">
+        <td colspan="6">
+          <span id="mat-cat-icon-${cat}" class="mat-cat-chevron">${collapsed ? '▶' : '▼'}</span>
+          ${catLabel}
+          <span class="mat-cat-count">${matGroups[cat].length}</span>
+        </td>
+      </tr>
+      <tbody id="mat-tbody-${cat}">${rows}</tbody>`;
   }).join('');
 
+  const matCardsHtml = `<div class="mat-table-wrap">
+    <table class="mat-table">
+      <thead>
+        <tr>
+          <th style="width:30%">Название</th>
+          <th style="width:9%">Ед. изм.</th>
+          <th style="width:13%">Цена</th>
+          <th style="width:20%">Поставщик</th>
+          <th class="ta-c" style="width:8%" title="Кол-во рецептов, где используется">Рецепты</th>
+          <th style="width:20%">Действия</th>
+        </tr>
+      </thead>
+      ${matRowsHtml}
+    </table>
+  </div>`;
+
   // ── Полуфабрикаты ────────────────────────────────────────────────
+  const semiUsageMap = _buildSemiUsageMap();
+  window._semiUsageMap = semiUsageMap;
+
   const semiHtml = SEMI.length
-    ? `<div class="mat-grid">${SEMI.map(s => {
-        const cost = calcSemiCostPerUnit(s);
-        return `<div class="mat-item" style="cursor:pointer" onclick="openEditSemi(${s.id})">
-          <div style="min-width:0">
-            <div class="mat-name" title="${s.name}">${s.name}</div>
-            <div class="mat-unit">Выход: ${s.yield} ${s.unit} · <b style="color:var(--green)">${rub(cost)}/${s.unit}</b></div>
-          </div>
-          <div class="mat-controls">
-            <button class="mat-del" onclick="event.stopPropagation();openEditSemi(${s.id})" title="Редактировать"><i data-lucide="pencil" class="icon"></i></button>
-            <button class="mat-del" onclick="event.stopPropagation();deleteSemi(${s.id})" title="Удалить" style="color:var(--red)"><i data-lucide="trash-2" class="icon"></i></button>
-          </div>
-        </div>`;
-      }).join('')}</div>`
+    ? `<div class="mat-table-wrap">
+        <table class="mat-table">
+          <thead>
+            <tr>
+              <th style="width:33%">Название</th>
+              <th style="width:12%">Выход</th>
+              <th style="width:8%">Ед.</th>
+              <th style="width:17%">Себестоимость/ед.</th>
+              <th class="ta-c" style="width:8%" title="Кол-во рецептов, где используется">Рецепты</th>
+              <th style="width:22%">Действия</th>
+            </tr>
+          </thead>
+          <tr class="mat-cat-header" onclick="toggleSemiCat()">
+            <td colspan="6">
+              <span id="semi-cat-icon" class="mat-cat-chevron">${_semiCollapsed ? '▶' : '▼'}</span>
+              Полуфабрикаты
+              <span class="mat-cat-count">${SEMI.length}</span>
+            </td>
+          </tr>
+          <tbody id="semi-tbody" style="${_semiCollapsed ? 'display:none' : ''}">
+            ${SEMI.map(s => {
+              const cost    = calcSemiCostPerUnit(s);
+              const recipe  = s.recipe.map(r => {
+                const mat = MAT[r.mat];
+                return mat ? mat.name + ' ' + r.amt + (mat.unit.replace(/\d+ /,'')) : r.mat;
+              }).join(', ');
+              const usedIn  = semiUsageMap[String(s.id)] || [];
+              const semiUsageBadge = usedIn.length
+                ? `<button class="usage-badge" onclick="event.stopPropagation();openMatUsage('semi','${s.id}')" title="Нажмите, чтобы увидеть рецепты">${usedIn.length}</button>`
+                : `<span class="usage-badge usage-badge-zero">0</span>`;
+              return `<tr class="mat-row" title="Состав: ${recipe}" style="cursor:pointer" onclick="openEditSemi(${s.id})">
+                <td class="mat-td-name">${s.name}</td>
+                <td class="mat-td-unit">${s.yield}</td>
+                <td class="mat-td-unit">${s.unit}</td>
+                <td class="mat-td-price" style="font-weight:700;color:var(--green)">${rubSemi(cost, s.unit)}</td>
+                <td class="mat-td-usage">${semiUsageBadge}</td>
+                <td class="mat-td-actions">
+                  <button class="mat-del" onclick="event.stopPropagation();openEditSemi(${s.id})" title="Редактировать"><i data-lucide="pencil" class="icon"></i></button>
+                  <button class="mat-del" onclick="event.stopPropagation();deleteSemi(${s.id})" title="Удалить" style="color:var(--red)"><i data-lucide="trash-2" class="icon"></i></button>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`
     : `<div style="color:var(--muted);font-size:13px;padding:16px 0">Нет полуфабрикатов. Нажмите «+ Полуфабрикат», чтобы добавить (соусы, сиропы, основы).</div>`;
 
   const _costEl = document.getElementById('tab-cost');
@@ -2544,7 +2999,10 @@ function renderCost() {
 
     <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px">
       <span><i data-lucide="layers" class="icon"></i> Полуфабрикаты <span style="background:var(--border);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:4px">${SEMI.length}</span></span>
-      <button class="btn btn-green" onclick="openAddSemi()"><i data-lucide="plus" class="icon"></i> Полуфабрикат</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline" onclick="exportSemiTechCards()" title="Экспорт техкарт полуфабрикатов в PDF"><i data-lucide="file-text" class="icon"></i> PDF техкарт</button>
+        <button class="btn btn-green" onclick="openAddSemi()"><i data-lucide="plus" class="icon"></i> Полуфабрикат</button>
+      </div>
     </div>
     ${semiHtml}
   `;
@@ -2609,7 +3067,8 @@ function renderSales() {
       <div class="search-wrap" style="margin-bottom:0;flex:1;min-width:160px;max-width:280px">
         <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
         <input class="search-inp" id="sales-search" type="text" placeholder="Поиск по названию..."
-          value="${salesSearch}" oninput="filterSales(this.value)">
+          value="${salesSearch}" oninput="filterSales(this.value);_searchClear(this)">
+        <button class="search-clear${salesSearch ? ' visible' : ''}" title="Очистить" onclick="filterSales('');var el=document.getElementById('sales-search');el.value='';_searchClear(el)">✕</button>
       </div>
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
@@ -2915,38 +3374,50 @@ function renderFinModel() {
   const bepPClr      = bepProgress >= 100 ? 'var(--green)' : bepProgress >= 70 ? '#b38600' : 'var(--red)';
   const safetyCls    = safetyAbs >= 0 ? 'num-pos' : 'num-neg';
 
+  // Normalize fixedCosts: ensure id + category on all items
+  S.fixedCosts.forEach((c, _i) => { if (!c.id) c.id = 1000 + _i; if (!c.category) c.category = 'other'; });
+  const effCosts = getEffectiveCosts(totRevMon);
   // Окупаемость — вычислим через те же составляющие что и P&L
   // (переменные статьи из fixedCosts + только постоянные + ФОТ + налог)
-  const _fcOnly    = S.fixedCosts.filter(c=>!c.isVariable).reduce((s,c)=>s+c.value,0);
-  const _varExtra  = S.fixedCosts.filter(c=>c.isVariable).reduce((s,c)=>s+c.value,0);
-  const _fotAmt    = S.fixedCosts.some(c=>/фот|зарплат|зп|оплата.?труда/i.test(c.name)) ? 0 : (typeof payrollTotal==='function'?payrollTotal():0);
+  const _fcOnly    = effCosts.filter(c=>!c.isVariable).reduce((s,c)=>s+c.value,0);
+  const _varExtra  = effCosts.filter(c=>c.isVariable).reduce((s,c)=>s+c.value,0);
+  const _fotAmt    = effCosts.some(c=>/фот|зарплат|зп|оплата.?труда/i.test(c.name)) ? 0 : (typeof payrollTotal==='function'?payrollTotal():0);
   const _ebit      = (totRevMon - varCostsMon - _varExtra) - _fcOnly - _fotAmt;
   const _tax       = calcTax(totRevMon, varCostsMon + _varExtra, _fcOnly + _fotAmt);
   const baseNet    = _ebit - _tax;
   const investment = S.investment || 0;
   const paybackMon = investment > 0 && baseNet > 0 ? (investment / baseNet) : null;
 
-  const costInputs = S.fixedCosts.map((c,i) => `
-    <div class="cost-item">
-      <button class="cost-del-btn" onclick="delFixedCost(${i})" title="Удалить"><i data-lucide="x" class="icon" style="width:12px;height:12px"></i></button>
-      <input class="inp-name" type="text"
-        value="${c.name.replace(/"/g,'&quot;')}"
-        onfocus="this.style.borderColor='var(--green)';this.style.background='var(--light)'"
-        onblur="this.style.borderColor='transparent';this.style.background='transparent'"
-        onchange="onFixedCostName(${i},this.value)">
-      <div class="inp-amount-wrap">
-        <input class="inp md" type="number" min="0" step="1000"
-          value="${c.value}" onchange="onFixedCost(${i},this.value)">
-        <span style="font-size:12px;color:var(--muted)">₽</span>
-      </div>
-      <label class="cost-var-label" title="Переменная статья: в сценариях масштабируется с объёмом">
-        <input type="checkbox" ${c.isVariable?'checked':''} onchange="onFixedCostVariable(${i},this.checked)">
-        <span>перем.</span>
-      </label>
-    </div>
-  `).join('');
+  // Build grouped cost table
+  const costTableHtml = (() => {
+    let rows = '';
+    FIXED_COSTS_CATS.forEach(cat => {
+      const items = S.fixedCosts.map((c, idx) => ({ c, idx, ev: effCosts[idx] })).filter(({ c }) => (c.category || 'other') === cat.id);
+      if (!items.length) return;
+      const catTotal = items.reduce((s, { ev }) => s + ((ev && ev.value) || 0), 0);
+      rows += `<tr class="fc-cat-hdr" onclick="toggleFcCat('${cat.id}')"><td colspan="3"><span class="fc-cat-chev" id="fc-chev-${cat.id}">▼</span> ${cat.label} <span class="fc-cat-cnt">${items.length}</span></td><td style="text-align:right"><button class="fc-cat-add" onclick="event.stopPropagation();addFixedCostInCat('${cat.id}')" title="Добавить в эту категорию">+</button> ${rub(catTotal)}</td></tr>`;
+      items.forEach(({ c, idx, ev }) => {
+        const isFot = !!(ev && ev._fromPayroll);
+        const badge = isFot
+          ? `<span class="fc-badge fc-fot">авто-ФОТ</span>`
+          : c.isPercent
+            ? `<span class="fc-badge fc-pct">${c.pct}% · ${c.pctShare ?? 100}% выр.</span>`
+            : c.isVariable ? `<span class="fc-badge fc-var">перем.</span>` : `<span class="fc-badge fc-fix">фикс.</span>`;
+        const valTxt = c.isPercent
+          ? `<span class="fc-pct-amt">≈ ${rub((ev && ev.value) || 0)}</span>`
+          : rub((ev && ev.value) || 0);
+        const actionBtn = isFot
+          ? `<button class="fc-edit-btn" onclick="event.stopPropagation();scrollToPayroll()" title="Перейти к калькулятору ФОТ"><i data-lucide="arrow-down" class="icon" style="width:13px;height:13px"></i></button>`
+          : `<button class="fc-edit-btn" onclick="event.stopPropagation();openCostEditor(${idx})" title="Изменить"><i data-lucide="pencil" class="icon" style="width:13px;height:13px"></i></button>`;
+        const clickHandler = isFot ? `onclick="scrollToPayroll()"` : `onclick="openCostEditor(${idx})"`;
+        const fotHint = isFot ? ` <span style="font-size:11px;color:var(--muted)"> ← из калькулятора ФОТ</span>` : '';
+        rows += `<tr class="fc-item${isFot?' fc-item-fot':''}" data-fc-cat="${cat.id}" ${clickHandler}><td class="fc-item-name">${c.name.replace(/</g,'&lt;').replace(/>/g,'&gt;')}${fotHint}</td><td>${badge}</td><td style="text-align:right">${valTxt}</td><td style="text-align:right">${actionBtn}</td></tr>`;
+      });
+    });
+    return `<table class="fc-table"><colgroup><col style="width:44%"><col style="width:18%"><col style="width:26%"><col style="width:12%"></colgroup><thead><tr><th>Название</th><th>Тип</th><th style="text-align:right">₽ / мес</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+  })();
 
-  const varFixed  = S.fixedCosts.filter(c=>c.isVariable).reduce((s,c)=>s+c.value,0);
+  const varFixed  = effCosts.filter(c=>c.isVariable).reduce((s,c)=>s+c.value,0);
   const pureFixed  = totalFixed - varFixed;
 
   const SCEN = [
@@ -2997,13 +3468,13 @@ function renderFinModel() {
     : '';
   // P&L строки
   // Разделяем fixedCosts на постоянные и переменные
-  const fixedOnlyCosts    = S.fixedCosts.filter(c => !c.isVariable);
-  const variableExtraCosts = S.fixedCosts.filter(c => c.isVariable);
+  const fixedOnlyCosts    = effCosts.filter(c => !c.isVariable);
+  const variableExtraCosts = effCosts.filter(c => c.isVariable);
   const fixedOnlyTotal    = fixedOnlyCosts.reduce((s,c) => s+c.value, 0);
   const variableExtraTotal = variableExtraCosts.reduce((s,c) => s+c.value, 0);
   // ФОТ из калькулятора (объявляем заранее, чтобы использовать в gross/ebit)
   const payrollTotVal2 = payrollTotal();
-  const fotInFixed2 = S.fixedCosts.some(c => /фот|зарплат|зп|оплата.?труда/i.test(c.name));
+  const fotInFixed2 = effCosts.some(c => /фот|зарплат|зп|оплата.?труда/i.test(c.name));
   const fotAmount = fotInFixed2 ? 0 : payrollTotVal2;
   // Итого переменные расходы (сырьё + переменные статьи из списка расходов)
   const totalVarCosts = varCostsMon + variableExtraTotal;
@@ -3032,10 +3503,11 @@ function renderFinModel() {
 
   // Строки расшифровки: только постоянные
   const fixedDetailRows = fixedOnlyCosts.map(c => mkRow({
-    lbl: `· ${c.name}`,
+    lbl: `· ${c.name}${c._fromPayroll ? ' <span style="font-size:10px;opacity:.6">(калькулятор ФОТ)</span>' : ''}`,
     val: -c.value,
     pct: totRevMon > 0 ? c.value / totRevMon : 0,
     sub: true,
+    tip: c._fromPayroll ? 'Значение берётся автоматически из калькулятора ФОТ ниже' : undefined,
   }));
 
   // Строки расшифровки: переменные статьи из раздела расходов
@@ -3108,8 +3580,8 @@ function renderFinModel() {
       Такие статьи будут масштабироваться в <strong>сценариях</strong> (×0.5 / ×2.0) и на <strong>графике сезонности</strong> —
       в слабые месяцы они уменьшатся, в сильные вырастут. На базовый план и ТБУ галочка не влияет.
     </div>
-    <div class="costs-grid">${costInputs}</div>
-    <button class="btn btn-outline" style="margin:4px 0 16px;font-size:13px;display:inline-flex;align-items:center;gap:5px" onclick="addFixedCost()">
+    <div class="fc-table-wrap">${costTableHtml}</div>
+    <button class="btn btn-outline" style="margin:4px 0 16px;font-size:13px;display:inline-flex;align-items:center;gap:5px" onclick="addFixedCostInCat('other')">
       <i data-lucide="plus" class="icon"></i> Добавить статью
     </button>
     <div class="panel-dark" style="margin-bottom:20px">
@@ -3125,6 +3597,20 @@ function renderFinModel() {
           <option value="usn6"  ${taxMode==='usn6'  ?'selected':''}>УСН 6% — доходы</option>
           <option value="usn15" ${taxMode==='usn15' ?'selected':''}>УСН 15% — доходы − расходы</option>
         </select>
+        ${taxMode === 'none' ? `
+          <div style="margin-top:8px;padding:8px 10px;background:var(--light);border-radius:8px;border:1.5px solid var(--border);font-size:11.5px;color:var(--muted);line-height:1.5">
+            Налог не учитывается в расчётах P&amp;L.
+          </div>` : taxMode === 'usn6' ? `
+          <div style="margin-top:8px;padding:8px 10px;background:#f0faf0;border-radius:8px;border:1.5px solid #b5d4a8;font-size:11.5px;color:#1a5c1a;line-height:1.6">
+            <strong>6% от всей выручки</strong> — независимо от расходов.<br>
+            Пример: выручка 1 000 000 ₽ → налог <strong>60 000 ₽</strong>.<br>
+            <span style="opacity:.8">Выгоден, если расходы &lt; 60% от выручки. Взносы ИП уменьшают налог до 50%.</span>
+          </div>` : `
+          <div style="margin-top:8px;padding:8px 10px;background:#f0f4ff;border-radius:8px;border:1.5px solid #b5c8f4;font-size:11.5px;color:#1a2e6e;line-height:1.6">
+            <strong>15% от прибыли</strong> (выручка − все расходы).<br>
+            Пример: выручка 1 000 000 ₽, расходы 800 000 ₽ → налог <strong>30 000 ₽</strong>.<br>
+            <span style="opacity:.8">Выгоден при высоких расходах (&gt; 60% от выручки). Минимальный налог — 1% от выручки.</span>
+          </div>`}
       </div>
       <div class="fin-param-card">
         <div class="fin-param-label" data-tip="Сумма денег, вложенных в запуск:&#10;оборудование, ремонт, первый депозит...&#10;Срок окупаемости = инвестиции ÷ чистая прибыль."><i data-lucide="landmark" class="icon"></i> Стартовые вложения, ₽</div>
@@ -3142,7 +3628,7 @@ function renderFinModel() {
       </div>
     </div>
 
-    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between"><span><i data-lucide="users" class="icon"></i> Калькулятор ФОТ <span style="font-size:12px;font-weight:500;color:var(--muted);margin-left:6px">фонд оплаты труда</span></span><button class="btn btn-outline" style="font-size:12px;padding:5px 12px" onclick="addPayrollPosition()"><i data-lucide="plus" class="icon"></i> Добавить должность</button></div>
+    <div id="payroll-section" class="section-title" style="display:flex;align-items:center;justify-content:space-between"><span><i data-lucide="users" class="icon"></i> Калькулятор ФОТ <span style="font-size:12px;font-weight:500;color:var(--muted);margin-left:6px">фонд оплаты труда</span></span><button class="btn btn-outline" style="font-size:12px;padding:5px 12px" onclick="addPayrollPosition()"><i data-lucide="plus" class="icon"></i> Добавить должность</button></div>
     <div class="panel" style="padding:0;margin-bottom:8px;overflow:hidden">
       <div class="payroll-table-wrap">
         <table class="payroll-table">
@@ -3420,28 +3906,32 @@ function openViewDrink(id) {
     if (ing.semi != null) {
       const s = SEMI.find(x => x.id === ing.semi);
       if (!s) return null;
-      return { name: s.name + ' <span style="font-size:10px;background:#e8f5e9;color:var(--green);border-radius:4px;padding:1px 4px;font-weight:700">п/ф</span>', amt: ing.amt, unit: s.unit, cost: calcIngCost(ing) };
+      const factor = _semiDrinkFactor(s);
+      const dispAmt = ing.amt; // хранится в кг/л — показываем как есть
+      const su = (s.unit || '').toLowerCase();
+      const sUnit = (factor === 1000) ? (su.startsWith('г') ? 'кг' : 'л') : s.unit;
+      return { name: s.name + ' <span style="font-size:10px;background:#e8f5e9;color:var(--green);border-radius:4px;padding:1px 4px;font-weight:700">п/ф</span>', dispAmt, unit: sUnit, cost: calcIngCost(ing) };
     }
     if (!MAT[ing.mat]) return null;
-    return { name: MAT[ing.mat].name, amt: ing.amt, unit: MAT[ing.mat].unit, cost: calcIngCost(ing) };
+    const factor = _semiUnitFactor(ing.mat);
+    const dispAmt = parseFloat((ing.amt / factor).toPrecision(4));
+    const unit = _matDisplayUnit(ing.mat);
+    return { name: MAT[ing.mat].name, dispAmt, unit, cost: calcIngCost(ing) };
   }).filter(Boolean);
   const totalCost = ings.reduce((s,i) => s + i.cost, 0);
   const price = S.salePrices[d.id] || 0;
   const fc = price > 0 ? totalCost / price : 0;
   const fcClr = fc <= 0.25 ? 'var(--green)' : fc <= 0.30 ? '#b38600' : 'var(--red)';
-  const maxCost = Math.max(...ings.map(i => i.cost), 0.01);
   const nut = calcNutrition(d);
   const GROUP_ICONS = { hot:'coffee', tea:'leaf', cold:'snowflake', filter:'filter' };
   const imgHtml = d.image
     ? `<div class="mvd-photo-wrap"><img src="${d.image}" alt="${d.name}" class="mvd-photo"></div>`
     : '';
   const ingRows = ings.map(ing => {
-    const w = (ing.cost / maxCost * 100).toFixed(0);
     const share = totalCost > 0 ? (ing.cost / totalCost * 100).toFixed(0) : 0;
     return `<div class="recipe-ing">
       <span class="recipe-ing-name">${ing.name}</span>
-      <span style="font-size:10px;color:var(--muted);flex-shrink:0">${ing.amt} ${ing.unit}</span>
-      <div class="recipe-bar-bg"><div class="recipe-bar-fill" style="width:${w}%"></div></div>
+      <span style="font-size:10px;color:var(--muted);flex-shrink:0">${ing.dispAmt} ${ing.unit}</span>
       <span class="recipe-ing-share">${share}%</span>
       <span class="recipe-ing-cost">${rub(ing.cost)}</span>
     </div>`;
@@ -3482,6 +3972,9 @@ function openViewDrink(id) {
   `;
   openModal('modal-drink-view');
   if (window.lucide) lucide.createIcons({ nodes: [document.getElementById('modal-drink-view')] });
+  const hasSemi = d.recipe.some(r => r.semi != null);
+  const semiBtn = document.getElementById('mvd-semi-pdf-btn');
+  if (semiBtn) semiBtn.style.display = hasSemi ? '' : 'none';
 }
 function mvdOpenEdit() {
   closeModal('modal-drink-view');
@@ -3529,7 +4022,8 @@ function _techCardCSS() {
   .drink-photo { width: 160px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; display: block; }
   h1 { text-align: center; font-size: 13pt; margin: 8px 0 2px; }
   .gost { text-align: center; font-size: 9pt; color: #555; margin-bottom: 12px; }
-  h2 { font-size: 10pt; color: #417033; margin: 12px 0 5px; text-transform: uppercase; }
+  h2 { font-size: 10pt; color: #417033; margin: 12px 0 5px; text-transform: uppercase; break-after: avoid; }
+  .section { break-inside: avoid; }
   table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 9pt; }
   th { background: #417033; color: #fff; padding: 4px 6px; text-align: left; }
   td { padding: 3px 6px; border: 1px solid #ccc; }
@@ -3551,11 +4045,22 @@ function _techCardCSS() {
   @media print { .print-bar { display: none; } body { padding-top: 0; }
     th, .lbl, tr.total td { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }`;
 }// ─── Генерация HTML одной карточки ──────────────────────────────────
-function _buildTechCardBlock(d, orgName, cardNum, isLast) {
+function _buildTechCardBlock(d, org, cardNum, isLast) {
+  // org может быть строкой (обратная совместимость) или объектом
+  if (typeof org === 'string') org = { name: org, legalName: org, ceoTitle: 'Руководитель', ceoName: '', address: '' };
+  const orgName = org.name || 'Кофейня';
   const today = new Date().toLocaleDateString('ru');
   const year  = new Date().getFullYear();
   const GROUP_NAMES = { hot:'Горячие кофейные', tea:'Чай и матча', cold:'Холодные напитки', filter:'Фильтр-кофе' };
   const isCold = d.group === 'cold';
+
+  const _dq = DRINK_QUALITY[d.id] || {};
+  const qaAppearance  = d.appearance  || _dq.appearance  || '';
+  const qaTaste       = d.taste       || _dq.taste       || '';
+  const qaConsistency = d.consistency || _dq.consistency || '';
+  const qaColor       = _dq.color || '';
+  const storageLife   = d.storage_life  || (isCold ? '30 минут с момента приготовления' : '15 минут с момента приготовления');
+  const servingTemp   = d.storage_temp  || (isCold ? 'не выше +10°C' : 'не ниже 60°C');
 
   const recipeRows = d.recipe.map(r => {
     if (r.semi != null) {
@@ -3577,6 +4082,13 @@ function _buildTechCardBlock(d, orgName, cardNum, isLast) {
 
   // Блок раскрытых полуфабрикатов
   const usedSemis = d.recipe.filter(r => r.semi != null).map(r => SEMI.find(s => s.id === r.semi)).filter(Boolean);
+  // Стоимость ингредиента полуфабриката (с учётом _semiUnitFactor)
+  const _semiIngCostPDF = r => {
+    if (!MAT[r.mat]) return 0;
+    let c = ((S.prices[r.mat] || MAT[r.mat].price) / MAT[r.mat].size) * r.amt * _semiUnitFactor(r.mat);
+    if (r.loss) c = c / (1 - r.loss);
+    return c;
+  };
   const semiBlock = usedSemis.length ? `
   <h2>Используемые полуфабрикаты</h2>
   ${usedSemis.map(s => {
@@ -3585,10 +4097,10 @@ function _buildTechCardBlock(d, orgName, cardNum, isLast) {
       const m = MAT[r.mat];
       const loss = r.loss ? (r.loss*100).toFixed(0)+'%' : '—';
       const brutto = r.loss ? (r.amt/(1-r.loss)).toFixed(1) : r.amt.toString();
-      const cost = calcIngCost(r);
+      const cost = _semiIngCostPDF(r);
       return `<tr><td>${m.name}</td><td class="c">${m.unit.replace(/^1\s*/,'')}</td><td class="r">${brutto}</td><td class="r">${r.amt}</td><td class="c">${loss}</td><td class="r b">${Math.round(cost)} ₽</td></tr>`;
     }).join('');
-    const semiTotal = (s.recipe||[]).reduce((sum,r) => sum + calcIngCost(r), 0);
+    const semiTotal = (s.recipe||[]).reduce((sum,r) => sum + _semiIngCostPDF(r), 0);
     return `<p style="font-weight:700;margin:8pt 0 3pt">${s.name} — выход ${s.yield} ${s.unit}, себест. ${Math.round(semiCostPer)} ₽/${s.unit}</p>
     <table>
       <thead><tr><th>Сырьё</th><th>Ед.</th><th>Брутто</th><th>Нетто</th><th>Потери</th><th>Стоимость</th></tr></thead>
@@ -3607,25 +4119,34 @@ function _buildTechCardBlock(d, orgName, cardNum, isLast) {
       ? 'Чай: заварить кипятком (95°C) согласно дозировке, настаивать 3–5 минут. Матча: венчиком взбить порошок матча с горячей водой (80°C) до однородной пены, добавить молоко температурой 60°C. Подавать при температуре 60–65°C.'
       : 'Все компоненты предварительно охладить до +4°C. В стакан со льдом (3–4 кубика) последовательно влить ингредиенты согласно рецептуре. Перемешать барной ложкой. Подавать немедленно при температуре +4…+8°C.';
 
-  const q = DRINK_QUALITY[d.id];
-  const qaBlock = q
+  const qaBlock = (qaAppearance || qaTaste || qaConsistency || qaColor)
     ? `<table class="qa">
-      <tr><td class="lbl">Внешний вид</td><td>${q.appearance}</td></tr>
-      <tr><td class="lbl">Консистенция</td><td>${q.consistency}</td></tr>
-      <tr><td class="lbl">Цвет</td><td>${q.color}</td></tr>
-      <tr><td class="lbl">Вкус и запах</td><td>${q.taste}</td></tr>
+      ${qaAppearance  ? `<tr><td class="lbl">Внешний вид</td><td>${qaAppearance}</td></tr>` : ''}
+      ${qaConsistency ? `<tr><td class="lbl">Консистенция</td><td>${qaConsistency}</td></tr>` : ''}
+      ${qaColor       ? `<tr><td class="lbl">Цвет</td><td>${qaColor}</td></tr>` : ''}
+      ${qaTaste       ? `<tr><td class="lbl">Вкус и запах</td><td>${qaTaste}</td></tr>` : ''}
     </table>`
     : '<p style="color:#999;font-size:9pt">Показатели не заполнены</p>';
 
+
+  const nut = calcNutrition(d);
+
   return `<div class="card${isLast ? '' : ' pb'}">
   <div class="card-header-inner">
-    ${d.image ? `<img src="${d.image}" alt="${d.name}" class="drink-photo">` : '<div></div>'}
+    <div class="org-block">
+      ${org.legalName ? `<div style="font-weight:700;font-size:10pt">${org.legalName}</div>` : ''}
+      ${orgName !== org.legalName ? `<div style="font-size:9pt;color:#555">${orgName}</div>` : ''}
+      ${org.address ? `<div style="font-size:8.5pt;color:#666">${org.address}</div>` : ''}
+    </div>
     <div class="approve">
-      <div><b>Утверждаю:</b> руководитель ${orgName}</div>
-      <div style="margin-top:10px">_______________________</div>
+      <div><b>УТВЕРЖДАЮ:</b></div>
+      <div>${org.ceoTitle || 'Руководитель'} ${org.legalName || orgName}</div>
+      <div style="margin-top:8px">${org.ceoName || '_______________________'}</div>
+      <div style="margin-top:4px;color:#888">(${org.ceoName ? 'подпись' : 'Ф.И.О.'})</div>
       <div style="margin-top:6px">«__» ____________ ${year} г.</div>
     </div>
   </div>
+  ${d.image ? `<img src="${d.image}" alt="${d.name}" class="drink-photo" style="display:block;margin:0 auto 8px;width:160px;height:120px;object-fit:cover;border-radius:4px;border:1px solid #ccc">` : ''}
   <h1>ТЕХНОЛОГИЧЕСКАЯ КАРТА № ${cardNum}</h1>
   <p class="gost">(по ГОСТ Р 53105-2008)</p>
   <table class="info">
@@ -3633,24 +4154,56 @@ function _buildTechCardBlock(d, orgName, cardNum, isLast) {
     <tr><td class="lbl">Группа</td><td>${GROUP_NAMES[d.group] || '—'}</td></tr>
     <tr><td class="lbl">Выход готового изделия</td><td>${d.vol} мл (1 порция)</td></tr>
     <tr><td class="lbl">Дата составления</td><td>${today}</td></tr>
-    <tr><td class="lbl">Срок реализации</td><td>${isCold ? '30 минут с момента приготовления' : '15 минут с момента приготовления'}</td></tr>
+    <tr><td class="lbl">Срок реализации</td><td>${storageLife}</td></tr>
+    <tr><td class="lbl">Температура подачи</td><td>${servingTemp}</td></tr>
     <tr><td class="lbl">Условия хранения сырья</td><td>+2…+6 °C для молочных продуктов, сухие при +18 °C</td></tr>
   </table>
-  <h2>Рецептура</h2>
+
+  <div class="section">
+  <h2>1. Характеристика сырья</h2>
+  <p style="font-size:9pt;line-height:1.5;margin-bottom:8px">Продовольственное сырьё, пищевые продукты и полуфабрикаты, используемые для приготовления блюда, должны соответствовать требованиям действующих нормативных документов, иметь сопроводительные документы, подтверждающие их качество и безопасность (ТР ТС 021/2011).</p>
+  </div>
+
+  <div class="section">
+  <h2>2. Рецептура</h2>
   <table>
     <thead><tr><th>Сырьё / полуфабрикат</th><th>Ед.</th><th>Брутто</th><th>Нетто</th><th>Потери</th><th>Стоимость</th></tr></thead>
     <tbody>${recipeRows}
     <tr class="total"><td colspan="5">ИТОГО</td><td class="r b">${Math.round(totalCost)} ₽</td></tr>
     </tbody>
   </table>
-  <h2>Технология приготовления</h2>
+  </div>
+
+  <div class="section">
+  <h2>3. Технология приготовления</h2>
   <p class="tech">${techText}</p>
   ${semiBlock}
-  <h2>Показатели качества и безопасности</h2>
+  </div>
+
+  <div class="section">
+  <h2>4. Требования к оформлению и подаче</h2>
+  <p style="font-size:9pt;line-height:1.5;margin-bottom:8px">Подают в чистой посуде объёмом ${d.vol} мл. Температура подачи: ${servingTemp}. Срок реализации: ${storageLife}. Напиток подаётся немедленно после приготовления.</p>
+  </div>
+
+  <div class="section">
+  <h2>5. Показатели качества и безопасности</h2>
   ${qaBlock}
+  <p style="font-size:8.5pt;color:#444;margin-top:6px;line-height:1.5">Микробиологические показатели блюда соответствуют требованиям ТР ТС 021/2011 «О безопасности пищевой продукции», Приложение 1, индекс 6.2.</p>
+  </div>
+
+  <div class="section">
+  <h2>6. Пищевая ценность (1 порция, ${d.vol} мл)</h2>
+  <table class="qa">
+    <tr><td class="lbl">Белки, г</td><td class="lbl">Жиры, г</td><td class="lbl">Углеводы, г</td><td class="lbl">Энергетическая ценность, ккал</td></tr>
+    <tr><td>${nut.protein.toFixed(1)}</td><td>${nut.fat.toFixed(1)}</td><td>${nut.carbs.toFixed(1)}</td><td>${nut.kcal.toFixed(0)}</td></tr>
+  </table>
+  </div>
+
+  <div class="section">
   <div class="sign">
     <span>Технолог: ____________________</span>
     <span>Зав. производством: ____________________</span>
+  </div>
   </div>
 </div>`;
 }
@@ -3717,13 +4270,34 @@ ${pages}
 }
 
 // ─── PDF одной техкарты (из карточки напитка) ───────────────────────
+function mvdDownloadSemiPDF() {
+  document.getElementById('mvd-download-menu').classList.remove('open');
+  const d = DRINKS.find(x => x.id === _mvdId);
+  if (!d) return;
+  const usedSemis = d.recipe
+    .filter(r => r.semi != null)
+    .map(r => SEMI.find(s => s.id === r.semi))
+    .filter(Boolean);
+  if (!usedSemis.length) return;
+  const orgName = getOrgInfo().name;
+  const pages = usedSemis.map((s, idx) =>
+    _buildSemiTechCardBlock(s, orgName, idx + 1, idx === usedSemis.length - 1)
+  ).join('\n');
+  _openTechCardsWindow(
+    `Техкарты п/ф — ${d.name}`,
+    `${usedSemis.length} карт · ${new Date().toLocaleDateString('ru')}`,
+    pages,
+    400
+  );
+}
+
 function mvdDownloadPDF() {
   document.getElementById('mvd-download-menu').classList.remove('open');
   const data = _mvdGetData(); if (!data) return;
   const { d } = data;
-  const orgName = activeLoc()?.name || 'Кофейня';
+  const org = getOrgInfo();
   const cardNum = DRINKS.findIndex(x => x.id === d.id) + 1;
-  const page = _buildTechCardBlock(d, orgName, cardNum, true);
+  const page = _buildTechCardBlock(d, org, cardNum, true);
   _openTechCardsWindow(`Техкарта — ${d.name}`, '', page, 0);
 }
 async function mvdDownloadExcel() {
@@ -3735,8 +4309,13 @@ async function mvdDownloadExcel() {
   const year   = new Date().getFullYear();
   const isCold = d.group === 'cold';
   const cardNum = DRINKS.findIndex(x => x.id === d.id) + 1;
-  const orgName = activeLoc()?.name || 'Кофейня';
-  const q = DRINK_QUALITY[d.id];
+  const orgName = getOrgInfo().name;[d.id] || {};
+  const q = {
+    appearance:  d.appearance  || _dq2.appearance  || '',
+    taste:       d.taste       || _dq2.taste       || '',
+    consistency: d.consistency || _dq2.consistency || '',
+    color:       _dq2.color    || ''
+  };
 
   // брутто/нетто/потери из оригинального рецепта
   const recipeRows = d.recipe.filter(r => MAT[r.mat]).map(r => {
@@ -4145,19 +4724,29 @@ function filterRecipes(val) {
 
   function buildCard(d) {
     const ings = d.recipe
-      .filter(ing => MAT[ing.mat])
-      .map(ing => ({ name: MAT[ing.mat].name, amt: ing.amt, unit: MAT[ing.mat].unit, cost: calcIngCost(ing) }));
+      .filter(ing => (ing.semi != null ? SEMI.find(x => x.id === ing.semi) : MAT[ing.mat]))
+      .map(ing => {
+        if (ing.semi != null) {
+          const s = SEMI.find(x => x.id === ing.semi);
+          const factor = _semiDrinkFactor(s);
+          const dispAmt = ing.amt; // хранится в кг/л — показываем как есть
+          const su = (s.unit || '').toLowerCase();
+          const unit = (factor === 1000) ? (su.startsWith('г') ? 'кг' : 'л') : s.unit;
+          return { name: s.name + ' <span style="font-size:9px;background:#e8f5e9;color:var(--green);border-radius:3px;padding:1px 3px;font-weight:700">п/ф</span>', dispAmt, unit, cost: calcIngCost(ing) };
+        }
+        const factor = _semiUnitFactor(ing.mat);
+        const dispAmt = parseFloat((ing.amt / factor).toPrecision(4));
+        const unit = _matDisplayUnit(ing.mat);
+        return { name: MAT[ing.mat].name, dispAmt, unit, cost: calcIngCost(ing) };
+      });
     const totalCost = ings.reduce((s,i) => s + i.cost, 0);
     const price = S.salePrices[d.id];
     const fc = price > 0 ? totalCost / price : 0;
-    const maxCost = Math.max(...ings.map(i => i.cost), 0.01);
     const ingRows = ings.map(ing => {
-      const w     = (ing.cost / maxCost * 100).toFixed(0);
       const share = totalCost > 0 ? (ing.cost / totalCost * 100).toFixed(0) : 0;
       return `<div class="recipe-ing">
         <span class="recipe-ing-name">${ing.name}</span>
-        <span style="font-size:10px;color:var(--muted);flex-shrink:0">${ing.amt} ${ing.unit}</span>
-        <div class="recipe-bar-bg"><div class="recipe-bar-fill" style="width:${w}%"></div></div>
+        <span style="font-size:10px;color:var(--muted);flex-shrink:0">${ing.dispAmt} ${ing.unit}</span>
         <span class="recipe-ing-share">${share}%</span>
         <span class="recipe-ing-cost">${rub(ing.cost)}</span>
       </div>`;
@@ -4191,7 +4780,6 @@ function filterRecipes(val) {
         <span>${d.vol} мл</span>
         <span>·</span>
         <span style="color:${fcClr};font-weight:700">FC ${pct(fc)}</span>
-        ${fcBarHtml(fc)}
       </div>
       ${ingRows}
       <div class="recipe-total"><span>Себестоимость</span><span>${rub(totalCost)}</span></div>
@@ -4263,7 +4851,8 @@ function renderRecipes() {
       <div class="search-wrap" style="margin-bottom:0;min-width:200px;max-width:320px">
         <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
         <input class="search-inp" id="recipe-search" type="text" placeholder="Поиск по названию..."
-          value="${recipeSearch}" oninput="filterRecipes(this.value)">
+          value="${recipeSearch}" oninput="filterRecipes(this.value);_searchClear(this)">
+        <button class="search-clear${recipeSearch ? ' visible' : ''}" title="Очистить" onclick="filterRecipes('');var el=document.getElementById('recipe-search');el.value='';_searchClear(el)">✕</button>
       </div>
       <div class="recipe-filter-btns">${filterBtns}</div>
       <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
@@ -4302,12 +4891,16 @@ function markDirtyDebounce() {
 }
 function renderActive() { renderTab(activeTab); dirty[activeTab]=false; }
 function renderTab(tab) {
-  if      (tab==='dashboard') renderDashboard();
-  else if (tab==='cost')      renderCost();
-  else if (tab==='sales')     renderSales();
-  else if (tab==='finmodel')  renderFinModel();
-  else if (tab==='recipes')   renderRecipes();
-  if (window.lucide) lucide.createIcons();
+  try {
+    if      (tab==='dashboard') renderDashboard();
+    else if (tab==='cost')      renderCost();
+    else if (tab==='sales')     renderSales();
+    else if (tab==='finmodel')  renderFinModel();
+    else if (tab==='recipes')   renderRecipes();
+    if (window.lucide) lucide.createIcons();
+  } catch(e) {
+    console.error('[renderTab ' + tab + ']', e);
+  }
 }
 
 // Вызывается на каждый oninput — только пересчитывает, не логирует
@@ -4376,10 +4969,201 @@ function scaleSalesPortions(factor) {
 }
 function onFixedCost(i, v)   { const n=parseFloat(v); if(n>=0){ S.fixedCosts[i].value=n; debounce(()=>{ renderFinModel(); saveState(); }); } }
 function onFixedCostName(i, v) { if(v.trim()){ S.fixedCosts[i].name=v.trim(); saveState(); } }
-function addFixedCost() { S.fixedCosts.push({ name:'Новая статья', value:0 }); renderFinModel(); saveState(); if(window.lucide) lucide.createIcons(); }
+function addFixedCost() { addFixedCostInCat('other'); }
 function delFixedCost(i) { if(S.fixedCosts.length > 1) { S.fixedCosts.splice(i,1); renderFinModel(); saveState(); if(window.lucide) lucide.createIcons(); } }
 function onTaxMode(v) { S.taxMode = v; renderFinModel(); saveState(); if(window.lucide) lucide.createIcons(); }
 function onInvestment(v) { const n=parseFloat(v); if(n>=0){ S.investment=n; renderFinModel(); saveState(); if(window.lucide) lucide.createIcons(); } }
+
+function scrollToPayroll() {
+  const el = document.getElementById('payroll-section') || document.querySelector('.payroll-section, [data-section="payroll"]');
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const targetY = window.scrollY + rect.top - (window.innerHeight / 2) + (rect.height / 2);
+  window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+}
+
+function addFixedCostInCat(cat) {
+  S.fixedCosts.push({ id: ++_nextCostId, name:'Новая статья', value:0, category: cat || 'other', isVariable:false });
+  renderFinModel();
+  saveState();
+  const idx = S.fixedCosts.length - 1;
+  setTimeout(() => { openCostEditor(idx); if(window.lucide) lucide.createIcons(); }, 80);
+}
+
+function toggleFcCat(cat) {
+  const rows = document.querySelectorAll(`tr[data-fc-cat="${cat}"]`);
+  const chev = document.getElementById(`fc-chev-${cat}`);
+  const isHidden = rows.length > 0 && rows[0].style.display === 'none';
+  rows.forEach(r => r.style.display = isHidden ? '' : 'none');
+  if (chev) chev.textContent = isHidden ? '▼' : '▶';
+}
+
+let _fceIdx = -1;
+function openCostEditor(idx) {
+  _fceIdx = idx;
+  const c = S.fixedCosts[idx];
+  if (!c) return;
+  let ov = document.getElementById('fc-editor-overlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'fc-editor-overlay';
+    ov.className = 'fc-editor-overlay';
+    ov.addEventListener('click', function(e) { if (e.target === ov) closeCostEditor(); });
+    ov.innerHTML = `
+      <div class="fc-editor-modal">
+        <div class="fc-editor-hdr">
+          <span class="fc-editor-title">Редактировать расход</span>
+          <button class="fc-editor-close" onclick="closeCostEditor()">✕</button>
+        </div>
+        <div class="fc-editor-body">
+          <label class="fc-editor-label">Название</label>
+          <input id="fce-name" class="inp" type="text" style="width:100%;margin-bottom:12px">
+          <label class="fc-editor-label">Категория</label>
+          <select id="fce-category" class="modal-select" style="width:100%;margin-bottom:14px">
+            ${FIXED_COSTS_CATS.map(ct => `<option value="${ct.id}">${ct.label}</option>`).join('')}
+          </select>
+          <label class="fc-editor-label">Способ расчёта</label>
+          <div class="fce-type-row">
+            <label class="fce-radio"><input type="radio" name="fce-valtype" value="fixed" id="fce-type-fixed" onchange="_fceTypeChange()"> Фиксированная сумма ₽</label>
+            <label class="fce-radio"><input type="radio" name="fce-valtype" value="pct" id="fce-type-pct" onchange="_fceTypeChange()"> % от выручки</label>
+          </div>
+          <div id="fce-fixed-fields" style="margin-top:12px">
+            <label class="fc-editor-label">Сумма, ₽/мес</label>
+            <input id="fce-value" class="inp" type="number" min="0" step="500" style="width:100%;margin-bottom:10px">
+            <label class="fce-radio"><input type="checkbox" id="fce-variable"> Переменная — масштабируется в сценариях с объёмом продаж</label>
+          </div>
+          <div id="fce-pct-fields" style="display:none;margin-top:12px">
+            <label class="fc-editor-label">% от выручки</label>
+            <input id="fce-pct" class="inp" type="number" min="0" max="100" step="0.1" style="width:100%;margin-bottom:10px" oninput="_fcePctHint()">
+            <div style="margin-bottom:8px">
+              <button type="button" id="fce-share-toggle" onclick="_fceShareToggle()" style="background:none;border:none;padding:0;cursor:pointer;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px">
+                <span id="fce-share-arrow" style="font-size:10px">▶</span>
+                <span>Доля применимой выручки, %</span>
+                <span title="Если расход применяется не ко всей выручке — укажите долю. Пример: эквайринг только на безналичные оплаты (90% от выручки)" style="cursor:help;opacity:.6">ⓘ</span>
+                <span id="fce-share-cur" style="color:var(--navy);font-weight:700"></span>
+              </button>
+              <div id="fce-share-wrap" style="display:none;margin-top:6px">
+                <input id="fce-pctShare" class="inp" type="number" min="1" max="100" step="5" style="width:100%;margin-bottom:4px" oninput="_fcePctHint()">
+                <div style="font-size:11px;color:var(--muted)">100 = вся выручка · меньше 100 = только часть (напр. 90 если 90% оплат по карте)</div>
+              </div>
+            </div>
+            <div class="fce-pct-hint" id="fce-pct-hint"></div>
+          </div>
+        </div>
+        <div class="fc-editor-footer">
+          <button class="btn btn-sm fc-del-btn" onclick="deleteCostFromEditor()">Удалить</button>
+          <button class="btn btn-sm" style="background:var(--green);color:#fff;border:none" onclick="saveCostEditor()">Сохранить</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+  }
+  document.getElementById('fce-name').value = c.name || '';
+  document.getElementById('fce-category').value = c.category || 'other';
+  const isPct = !!c.isPercent;
+  document.getElementById('fce-type-fixed').checked = !isPct;
+  document.getElementById('fce-type-pct').checked = isPct;
+  document.getElementById('fce-value').value = c.value || 0;
+  document.getElementById('fce-variable').checked = !!c.isVariable;
+  document.getElementById('fce-pct').value = c.pct || 2;
+  // pctShare: дефолт 100 (= вся выручка); у эквайринга сохранено 90
+  const shareVal = c.pctShare != null ? c.pctShare : 100;
+  const shareEl  = document.getElementById('fce-pctShare');
+  if (shareEl) shareEl.value = shareVal;
+  // раскрыть поле сразу если значение нестандартное (< 100)
+  const shareWrap  = document.getElementById('fce-share-wrap');
+  const shareArrow = document.getElementById('fce-share-arrow');
+  if (shareWrap && shareArrow) {
+    const expanded = shareVal < 100;
+    shareWrap.style.display = expanded ? '' : 'none';
+    shareArrow.textContent  = expanded ? '▼' : '▶';
+  }
+  _fceTypeChange();
+  _fcePctHint();
+  ov.style.display = 'flex';
+}
+
+function closeCostEditor() {
+  const ov = document.getElementById('fc-editor-overlay');
+  if (ov) ov.style.display = 'none';
+  _fceIdx = -1;
+}
+
+function _fceTypeChange() {
+  const isPct = !!(document.getElementById('fce-type-pct') && document.getElementById('fce-type-pct').checked);
+  const ff = document.getElementById('fce-fixed-fields');
+  const pf = document.getElementById('fce-pct-fields');
+  if (ff) ff.style.display = isPct ? 'none' : '';
+  if (pf) pf.style.display = isPct ? '' : 'none';
+}
+
+function _fceShareToggle() {
+  const wrap  = document.getElementById('fce-share-wrap');
+  const arrow = document.getElementById('fce-share-arrow');
+  if (!wrap) return;
+  const open = wrap.style.display === 'none';
+  wrap.style.display  = open ? '' : 'none';
+  arrow.textContent   = open ? '▼' : '▶';
+}
+function _fceShareUpdate() {
+  const shareEl = document.getElementById('fce-pctShare');
+  const cur     = document.getElementById('fce-share-cur');
+  const wrap    = document.getElementById('fce-share-wrap');
+  const arrow   = document.getElementById('fce-share-arrow');
+  if (!shareEl || !cur) return;
+  const val = parseFloat(shareEl.value) || 100;
+  const notFull = val < 100;
+  cur.textContent   = notFull ? `(${val}%)` : '';
+  if (notFull && wrap && wrap.style.display === 'none') {
+    wrap.style.display = '';
+    if (arrow) arrow.textContent = '▼';
+  }
+}
+function _fcePctHint() {
+  const hint = document.getElementById('fce-pct-hint');
+  if (!hint) return;
+  _fceShareUpdate();
+  const pct   = parseFloat(document.getElementById('fce-pct').value) || 0;
+  const shareEl = document.getElementById('fce-pctShare');
+  const share = shareEl ? (parseFloat(shareEl.value) || 100) : 100;
+  const { totRevMon } = salesMetrics(enrich());
+  const computed = Math.round(totRevMon * share / 100 * pct / 100);
+  hint.textContent = computed > 0 ? `≈ ${computed.toLocaleString('ru')} ₽ / мес при текущей выручке` : '';
+}
+
+function saveCostEditor() {
+  if (_fceIdx < 0 || _fceIdx >= S.fixedCosts.length) return;
+  const c = S.fixedCosts[_fceIdx];
+  c.name = (document.getElementById('fce-name').value || '').trim() || c.name;
+  c.category = document.getElementById('fce-category').value || 'other';
+  const isPct = document.getElementById('fce-type-pct').checked;
+  if (isPct) {
+    c.isPercent  = true;
+    c.pct        = parseFloat(document.getElementById('fce-pct').value) || 0;
+    c.pctShare   = parseFloat(document.getElementById('fce-pctShare').value) || 100;
+    c.value      = 0;
+    c.isVariable = true;
+  } else {
+    c.isPercent  = false;
+    c.pct        = 0;
+    c.pctShare   = 100;
+    c.value      = parseFloat(document.getElementById('fce-value').value) || 0;
+    c.isVariable = document.getElementById('fce-variable').checked;
+  }
+  closeCostEditor();
+  renderFinModel();
+  saveState();
+  if (window.lucide) lucide.createIcons();
+}
+
+function deleteCostFromEditor() {
+  if (_fceIdx < 0 || S.fixedCosts.length <= 1) return;
+  if (!confirm(`Удалить «${S.fixedCosts[_fceIdx].name}»?`)) return;
+  S.fixedCosts.splice(_fceIdx, 1);
+  closeCostEditor();
+  renderFinModel();
+  saveState();
+  if (window.lucide) lucide.createIcons();
+}
 
 // ════════════════════════════════════════════════════════════════════
 //  PAYROLL CALCULATOR
@@ -4835,10 +5619,12 @@ function recalcWhatIf3() {
   const taxMode = S.taxMode || 'none';
 
   // Те же компоненты что и в P&L
-  const fotInFixed  = S.fixedCosts.some(c => /фот|зарплат|зп|оплата.?труда/i.test(c.name));
+  const { totRevMon: _wifRev } = salesMetrics(drinks);
+  const _wifEff = getEffectiveCosts(_wifRev);
+  const fotInFixed  = _wifEff.some(c => /фот|зарплат|зп|оплата.?труда/i.test(c.name));
   const fotAmount   = fotInFixed ? 0 : payrollTotal();
-  const varExtra    = S.fixedCosts.filter(c =>  c.isVariable).reduce((s,c)=>s+c.value, 0);
-  const pureFixed   = S.fixedCosts.filter(c => !c.isVariable).reduce((s,c)=>s+c.value, 0) + fotAmount;
+  const varExtra    = _wifEff.filter(c =>  c.isVariable).reduce((s,c)=>s+c.value, 0);
+  const pureFixed   = _wifEff.filter(c => !c.isVariable).reduce((s,c)=>s+c.value, 0) + fotAmount;
 
   const calcTax = (rev, varC, fixed) =>
     taxMode==='usn6' ? rev*0.06 : taxMode==='usn15' ? Math.max(0,(rev-varC-fixed)*0.15) : 0;
@@ -4959,7 +5745,7 @@ function onSeasonalMonth(i, v) {
     const drinks = enrich();
     const varCostsMon = drinks.reduce((s,d)=>s+d.cost*S.portions[d.id],0)*S.days;
     const totRevMon   = drinks.reduce((s,d)=>s+d.price*S.portions[d.id],0)*S.days;
-    const totalFixed  = S.fixedCosts.reduce((s,c)=>s+c.value,0);
+    const totalFixed  = getEffectiveCosts(totRevMon).reduce((s,c)=>s+c.value,0);
     const taxMode = S.taxMode||'none';
     const calcTaxLocal = (rev,varC,fixed) => taxMode==='usn6'?rev*0.06:taxMode==='usn15'?Math.max(0,(rev-varC-fixed)*0.15):0;
     chartEl.innerHTML = buildSeasonalChart(totRevMon, varCostsMon, totalFixed, calcTaxLocal);
@@ -5045,8 +5831,99 @@ function openDropCandidates() {
 // ════════════════════════════════════════════════════════════════════
 //  TECH CARDS PDF (по ГОСТ Р 53105 / СанПиН)
 // ════════════════════════════════════════════════════════════════════
+function exportSemiTechCards() {
+  if (!SEMI.length) { alert('Нет полуфабрикатов для печати.'); return; }
+  const orgName = getOrgInfo().name;
+  const pages = SEMI.map((s, idx) =>
+    _buildSemiTechCardBlock(s, orgName, idx + 1, idx === SEMI.length - 1)
+  ).join('\n');
+  _openTechCardsWindow(
+    `Техкарты полуфабрикатов — ${orgName}`,
+    `${SEMI.length} карт · ${new Date().toLocaleDateString('ru')}`,
+    pages,
+    400
+  );
+}
+
+function _buildSemiTechCardBlock(s, orgName, cardNum, isLast) {
+  const today = new Date().toLocaleDateString('ru');
+  const year  = new Date().getFullYear();
+  const semiCostPer = calcSemiCostPerUnit(s);
+
+  function _semiIngCost(r) {
+    if (!MAT[r.mat]) return 0;
+    let c = ((S.prices[r.mat] || MAT[r.mat].price) / MAT[r.mat].size) * r.amt * _semiUnitFactor(r.mat);
+    if (r.loss) c = c / (1 - r.loss);
+    return c;
+  }
+
+  const semiTotal = (s.recipe||[]).reduce((sum, r) => sum + _semiIngCost(r), 0);
+
+  const recipeRows = (s.recipe||[]).map(r => {
+    if (!MAT[r.mat]) return '';
+    const m      = MAT[r.mat];
+    const loss   = r.loss ? (r.loss * 100).toFixed(0) + '%' : '—';
+    const brutto = r.loss ? (r.amt / (1 - r.loss)).toFixed(3) : r.amt.toString();
+    const cost   = _semiIngCost(r);
+    return `<tr><td>${m.name}</td><td class="c">${m.unit.replace(/^1\s*/,'')}</td><td class="r">${brutto}</td><td class="r">${r.amt}</td><td class="c">${loss}</td><td class="r">${r.yieldAmt||'—'}</td><td class="r b">${Math.round(cost)} ₽</td></tr>`;
+  }).join('');
+
+  const processBlock = s.process
+    ? `<h2>Технология приготовления</h2><p class="tech">${s.process.replace(/\n/g,'<br>')}</p>`
+    : '';
+
+  const storageBlock = (s.storage_temp || s.storage_life) ? `
+  <h2>Условия хранения и реализации</h2>
+  <table class="info">
+    ${s.storage_temp ? `<tr><td class="lbl">Температура хранения</td><td>${s.storage_temp}</td></tr>` : ''}
+    ${s.storage_life ? `<tr><td class="lbl">Срок хранения</td><td>${s.storage_life}</td></tr>` : ''}
+  </table>` : '';
+
+  const organoBlock = (s.appearance || s.taste || s.consistency) ? `
+  <h2>Органолептические показатели</h2>
+  <table class="qa">
+    ${s.appearance  ? `<tr><td class="lbl">Внешний вид</td><td>${s.appearance}</td></tr>` : ''}
+    ${s.taste       ? `<tr><td class="lbl">Вкус и запах</td><td>${s.taste}</td></tr>` : ''}
+    ${s.consistency ? `<tr><td class="lbl">Консистенция</td><td>${s.consistency}</td></tr>` : ''}
+  </table>` : '';
+
+  return `<div class="card${isLast ? '' : ' pb'}">
+  <div class="card-header-inner">
+    <div></div>
+    <div class="approve">
+      <div><b>Утверждаю:</b> руководитель ${orgName}</div>
+      <div style="margin-top:10px">_______________________</div>
+      <div style="margin-top:6px">«__» ____________ ${year} г.</div>
+    </div>
+  </div>
+  <h1>ТЕХНОЛОГИЧЕСКАЯ КАРТА ПОЛУФАБРИКАТА № ${cardNum}</h1>
+  <p class="gost">(по ГОСТ Р 53105-2008)</p>
+  <table class="info">
+    <tr><td class="lbl">Наименование полуфабриката</td><td>${s.name}</td></tr>
+    <tr><td class="lbl">Выход готового полуфабриката</td><td>${s.yield} ${s.unit}</td></tr>
+    <tr><td class="lbl">Себестоимость единицы</td><td>${Math.round(semiCostPer)} ₽/${s.unit}</td></tr>
+    <tr><td class="lbl">Дата составления</td><td>${today}</td></tr>
+  </table>
+  <h2>Рецептура</h2>
+  <table>
+    <thead><tr><th>Сырьё</th><th>Ед.</th><th>Брутто</th><th>Нетто</th><th>Потери</th><th>Выход</th><th>Стоимость</th></tr></thead>
+    <tbody>${recipeRows}
+    <tr class="total"><td colspan="6">ИТОГО сырья</td><td class="r b">${Math.round(semiTotal)} ₽</td></tr>
+    </tbody>
+  </table>
+  ${processBlock}
+  ${storageBlock}
+  ${organoBlock}
+  <div class="sign">
+    <span>Технолог: ____________________</span>
+    <span>Зав. производством: ____________________</span>
+  </div>
+</div>`;
+}
+
 function exportTechCards() {
-  const orgName = activeLoc()?.name || 'Кофейня';
+  const org = getOrgInfo();
+  const orgName = org.name;
   let list = DRINKS.slice();
   if (recipeGroup !== 'all') list = list.filter(d => d.group === recipeGroup);
   if (recipeSearch) list = list.filter(d => d.name.toLowerCase().includes(recipeSearch.toLowerCase()));
@@ -5054,7 +5931,7 @@ function exportTechCards() {
 
   const pages = list.map((d, idx) => {
     const cardNum = DRINKS.findIndex(x => x.id === d.id) + 1;
-    return _buildTechCardBlock(d, orgName, cardNum, idx === list.length - 1);
+    return _buildTechCardBlock(d, org, cardNum, idx === list.length - 1);
   }).join('\n');
 
   _openTechCardsWindow(
@@ -5073,7 +5950,8 @@ function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.mobile-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   activeTab = tab;
-  document.getElementById('tab-' + activeTab).classList.add('active');
+  const tabEl = document.getElementById('tab-' + activeTab);
+  if (tabEl) tabEl.classList.add('active');
   if (dirty[activeTab]) { renderTab(activeTab); dirty[activeTab] = false; }
   try { localStorage.setItem('mbs_active_tab', tab); } catch(e) {}
 }
@@ -5109,7 +5987,7 @@ if (!Loc.list.length) {
 }
 if (!Loc.activeId) { Loc.activeId = Loc.list[0].id; saveLocIndex(); }
 loadState();
-renderLocSwitcherUI();
+try { renderLocSwitcherUI(); } catch(e) { console.error('[renderLocSwitcherUI]', e); }
 try {
   if (localStorage.getItem('mbs_theme') === 'dark') {
     document.body.classList.add('dark');
@@ -5122,7 +6000,8 @@ try {
   }
 } catch(e) {}
 
-['dashboard','cost','sales','finmodel','recipes'].forEach(t => { renderTab(t); dirty[t]=false; });
+// Рендерим только активную вкладку — остальные лениво по требованию
+Object.keys(dirty).forEach(k => dirty[k] = true);
 switchTab(activeTab);
 if (window.lucide) lucide.createIcons();
 

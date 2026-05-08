@@ -102,6 +102,7 @@
         <div class="mvd-download-menu" id="mvd-download-menu">
           <button onclick="mvdDownloadPDF()"><i data-lucide="file-text" class="icon"></i> PDF (техкарта)</button>
           <button onclick="mvdDownloadExcel()"><i data-lucide="table" class="icon"></i> Excel (.xls)</button>
+          <button id="mvd-semi-pdf-btn" onclick="mvdDownloadSemiPDF()" style="display:none"><i data-lucide="layers" class="icon"></i> PDF техкарт п/ф</button>
         </div>
       </div>
       <button class="btn-primary" onclick="mvdOpenEdit()"><i data-lucide="pencil" class="icon"></i> Редактировать</button>
@@ -143,7 +144,8 @@
     <div class="modal-ings-header">
       <span>Ингредиент</span>
       <span>Кол-во</span>
-      <span>Потери <span class="loss-hint" data-tip="Коэффициент потерь 0–0.99. Пример: 0.05 = 5%.">?</span></span>
+      <span>Потери <span class="loss-hint" data-tip="Потери в %. Пример: 5 = 5% потерь.">?</span></span>
+      <span>Цена</span>
       <span></span>
     </div>
     <div id="md-ings"></div>
@@ -167,7 +169,26 @@
     <div class="modal-label" style="margin-top:10px;margin-bottom:4px"><i data-lucide="video" class="icon"></i> Ссылка на видео / рецепт</div>
     <input class="modal-inp" id="md-video" type="url" placeholder="https://youtube.com/...">
 
-    <div class="modal-footer">
+    <!-- Условия хранения -->
+    <div class="modal-row" style="margin-top:12px;gap:10px">
+      <div style="flex:1">
+        <div class="modal-label"><i data-lucide="thermometer" class="icon"></i> Температура подачи</div>
+        <input class="modal-inp" id="md-storage-temp" type="text" placeholder="не ниже 60°C">
+      </div>
+      <div style="flex:1">
+        <div class="modal-label"><i data-lucide="clock" class="icon"></i> Срок реализации</div>
+        <input class="modal-inp" id="md-storage-life" type="text" placeholder="15 минут с момента приготовления">
+      </div>
+    </div>
+
+    <!-- Органолептика -->
+    <div class="modal-label" style="margin-top:12px;margin-bottom:4px"><i data-lucide="eye" class="icon"></i> Органолептические показатели</div>
+    <div class="modal-label" style="font-weight:500;font-size:12px;margin-bottom:4px">Внешний вид</div>
+    <textarea class="modal-inp" id="md-appearance" rows="2" placeholder="Однородный напиток, слой плотной пены..." style="resize:vertical;font-family:inherit;line-height:1.6"></textarea>
+    <div class="modal-label" style="font-weight:500;font-size:12px;margin-top:8px;margin-bottom:4px">Вкус и запах</div>
+    <textarea class="modal-inp" id="md-taste" rows="2" placeholder="Мягкий, кофейный, без посторонних привкусов..." style="resize:vertical;font-family:inherit;line-height:1.6"></textarea>
+    <div class="modal-label" style="font-weight:500;font-size:12px;margin-top:8px;margin-bottom:4px">Консистенция</div>
+    <textarea class="modal-inp" id="md-consistency" rows="2" placeholder="Жидкая, однородная, лёгкая пена..." style="resize:vertical;font-family:inherit;line-height:1.6"></textarea>
       <button id="md-delete-btn" class="btn btn-outline" style="color:var(--red);border-color:#f4b8c4;display:none" onclick="mdDeleteAction()"><i data-lucide="trash-2" class="icon"></i> <span id="md-delete-label">Удалить</span></button>
       <div style="display:flex;gap:8px;margin-left:auto">
         <button class="btn btn-outline" onclick="closeModal('modal-drink')">Отмена</button>
@@ -233,6 +254,15 @@
       <input class="modal-inp" id="mm-sup-phone" type="text" placeholder="Телефон / email" style="flex:1">
       <input class="modal-inp" id="mm-sup-note" type="text" placeholder="Заметка (условия, доставка)" style="flex:2">
     </div>
+    <details style="margin-top:12px">
+      <summary style="font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;user-select:none">КБЖУ на 100 г/мл <span style="font-size:11px;font-weight:400">(необязательно)</span></summary>
+      <div class="modal-row" style="margin-top:8px">
+        <div><div class="modal-label">Ккал</div><input class="modal-inp" id="mm-kcal" type="number" min="0" step="1" placeholder="0"></div>
+        <div><div class="modal-label">Белки, г</div><input class="modal-inp" id="mm-protein" type="number" min="0" step="0.1" placeholder="0"></div>
+        <div><div class="modal-label">Жиры, г</div><input class="modal-inp" id="mm-fat" type="number" min="0" step="0.1" placeholder="0"></div>
+        <div><div class="modal-label">Углеводы, г</div><input class="modal-inp" id="mm-carbs" type="number" min="0" step="0.1" placeholder="0"></div>
+      </div>
+    </details>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-mat')">Отмена</button>
       <button class="btn-primary" onclick="saveMat()">✔ Сохранить</button>
@@ -266,10 +296,12 @@
       </div>
     </div>
     <div class="modal-label" style="margin-top:4px;margin-bottom:4px;font-size:13px;color:var(--navy)"><i data-lucide="package" class="icon"></i> Ингредиенты (только сырьё)</div>
-    <div class="modal-ings-header">
+    <div class="modal-ings-header semi" id="ms-ings-header">
       <span>Сырьё</span>
       <span>Кол-во</span>
-      <span>Потери <span class="loss-hint" data-tip="Коэффициент потерь 0–0.99. Пример: 0.05 = 5%.">?</span></span>
+      <span>Потери <span class="loss-hint" data-tip="Потери в %. Пример: 5 = 5% потерь.">?</span></span>
+      <span>Выход <span class="loss-hint" data-tip="Фактический выход ингредиента после обработки. Если пусто — равен кол-ву.">?</span></span>
+      <span>Цена</span>
       <span></span>
     </div>
     <div id="ms-ings"></div>
@@ -279,6 +311,27 @@
     <!-- Процесс приготовления -->
     <div class="modal-label" style="margin-top:14px;margin-bottom:4px"><i data-lucide="chef-hat" class="icon"></i> Описание / процесс</div>
     <textarea class="modal-inp" id="ms-process" rows="3" placeholder="Опишите технологию приготовления..." style="resize:vertical;font-family:inherit;line-height:1.6"></textarea>
+
+    <!-- Условия хранения -->
+    <div class="modal-row" style="margin-top:12px;gap:10px">
+      <div style="flex:1">
+        <div class="modal-label"><i data-lucide="thermometer" class="icon"></i> Температура хранения</div>
+        <input class="modal-inp" id="ms-storage-temp" type="text" placeholder="+2…+6°C">
+      </div>
+      <div style="flex:1">
+        <div class="modal-label"><i data-lucide="clock" class="icon"></i> Срок хранения</div>
+        <input class="modal-inp" id="ms-storage-life" type="text" placeholder="48 часов">
+      </div>
+    </div>
+
+    <!-- Органолептика -->
+    <div class="modal-label" style="margin-top:12px;margin-bottom:4px"><i data-lucide="eye" class="icon"></i> Органолептические показатели</div>
+    <div class="modal-label" style="font-weight:500;font-size:12px;margin-bottom:4px">Внешний вид</div>
+    <textarea class="modal-inp" id="ms-appearance" rows="2" placeholder="Однородная масса без комков" style="resize:vertical;font-family:inherit;line-height:1.6"></textarea>
+    <div class="modal-label" style="font-weight:500;font-size:12px;margin-top:8px;margin-bottom:4px">Вкус и запах</div>
+    <textarea class="modal-inp" id="ms-taste" rows="2" placeholder="Насыщенный, сладкий" style="resize:vertical;font-family:inherit;line-height:1.6"></textarea>
+    <div class="modal-label" style="font-weight:500;font-size:12px;margin-top:8px;margin-bottom:4px">Консистенция</div>
+    <textarea class="modal-inp" id="ms-consistency" rows="2" placeholder="Густая, однородная" style="resize:vertical;font-family:inherit;line-height:1.6"></textarea>
 
     <input type="hidden" id="ms-edit-id" value="">
     <div class="modal-footer">
@@ -318,9 +371,27 @@
         <input class="modal-inp" id="ml-icon" type="text" maxlength="2" value="☕" style="font-size:22px;text-align:center">
       </div>
       <div>
-        <div class="modal-label">Название</div>
+        <div class="modal-label">Название (коммерческое)</div>
         <input class="modal-inp" id="ml-name" type="text" placeholder="Например: На Тверской">
       </div>
+    </div>
+    <!-- Реквизиты -->
+    <div id="ml-requisites-wrap">
+      <div style="margin:10px 0 6px;font-size:12px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.5px">Реквизиты для документов</div>
+      <div class="modal-label">Юридическое название (ИП / ООО)</div>
+      <input class="modal-inp" id="ml-legal-name" type="text" placeholder="ИП Иванова Анна Александровна">
+      <div class="modal-row" style="margin-top:8px;gap:10px">
+        <div style="flex:1">
+          <div class="modal-label">Должность руководителя</div>
+          <input class="modal-inp" id="ml-ceo-title" type="text" placeholder="Директор / ИП">
+        </div>
+        <div style="flex:1">
+          <div class="modal-label">ФИО руководителя</div>
+          <input class="modal-inp" id="ml-ceo-name" type="text" placeholder="Иванова А.А.">
+        </div>
+      </div>
+      <div class="modal-label" style="margin-top:8px">Адрес</div>
+      <input class="modal-inp" id="ml-address" type="text" placeholder="г. Москва, ул. Ленина, д. 1">
     </div>
     <div id="ml-clone-wrap">
       <div class="modal-label">Скопировать данные из</div>
@@ -348,7 +419,8 @@
       <div class="search-wrap" style="flex:1;margin:0">
         <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
         <input class="search-inp" id="sup-list-search" type="text" placeholder="Поиск по названию, телефону, сырью..."
-          oninput="supListSearch=this.value;renderSuppliersList()">
+          oninput="supListSearch=this.value;renderSuppliersList();_searchClear(this)">
+        <button class="search-clear" title="Очистить" onclick="supListSearch='';var el=document.getElementById('sup-list-search');el.value='';_searchClear(el);renderSuppliersList()">✕</button>
       </div>
       <button class="btn-primary" style="white-space:nowrap;padding:0 14px" onclick="openSupplierBookModal(null)"><i data-lucide="plus" class="icon"></i> Добавить</button>
     </div>
@@ -378,7 +450,8 @@
     </div>
     <div style="margin-top:10px">
       <div class="modal-label">Заметка (условия, доставка)</div>
-      <input class="modal-inp" id="sup-book-note" type="text" placeholder="Доставка вт/пт, минимум 5 кг">
+      <textarea class="modal-inp" id="sup-book-note" placeholder="Доставка вт/пт, минимум 5 кг"
+        style="resize:vertical;min-height:60px;height:80px;line-height:1.45"></textarea>
     </div>
     <div style="margin-top:10px">
       <div class="modal-label">Сайт</div>
