@@ -933,7 +933,7 @@
     .footer-col-right { align-items: flex-end; text-align: right; }
     .footer-col-title {
       font-size: 10px; font-weight: 800; letter-spacing: .12em;
-      text-transform: uppercase; color: var(--green); margin-bottom: 6px;
+      text-transform: uppercase; color: rgba(255,255,255,.5); margin-bottom: 6px;
     }
     .footer-link {
       display: flex; align-items: center; gap: 8px;
@@ -941,7 +941,7 @@
       transition: color .15s;
     }
     .footer-link:hover { color: var(--green); }
-    .footer-link .icon { color: var(--green); flex-shrink: 0; }
+    .footer-link .icon { color: rgba(255,255,255,.6); flex-shrink: 0; }
     .footer-logo { height: 44px; width: auto; margin-bottom: 14px; }
     .footer-social { display: flex; gap: 10px; }
     .footer-social-btn {
@@ -951,22 +951,22 @@
       display: flex; align-items: center; justify-content: center;
       text-decoration: none; transition: background .15s, color .15s, border-color .15s;
     }
-    .footer-social-btn:hover { background: var(--green); color: white; border-color: var(--green); }
+    .footer-social-btn:hover { background: rgba(255,255,255,.25); color: white; border-color: rgba(255,255,255,.4); }
     .footer-social-btn .icon { width: 16px; height: 16px; }
     .footer-copy { font-size: 11px; color: rgba(255,255,255,.35); margin-top: 8px; }
     .footer-addr-line {
       display: flex; align-items: flex-start; gap: 8px;
       font-size: 13px; color: rgba(255,255,255,.75); justify-content: flex-end; line-height: 1.5;
     }
-    .footer-addr-line .icon { flex-shrink: 0; color: var(--green); width: 15px; height: 15px; margin-top: 2px; }
+    .footer-addr-line .icon { flex-shrink: 0; color: rgba(255,255,255,.6); width: 15px; height: 15px; margin-top: 2px; }
     .footer-map-btn {
       display: inline-flex; align-items: center; gap: 7px;
-      background: transparent; color: var(--green);
-      border: 1.5px solid var(--green);
+      background: transparent; color: rgba(255,255,255,.8);
+      border: 1.5px solid rgba(255,255,255,.4);
       border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 700;
       text-decoration: none; transition: background .15s, color .15s;
     }
-    .footer-map-btn:hover { background: var(--green); color: white; }
+    .footer-map-btn:hover { background: rgba(255,255,255,.15); color: white; }
     .footer-map-btn .icon { color: inherit; }
 
     /* — Mobile — */
