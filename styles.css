@@ -1008,12 +1008,17 @@
       /* ── Форма в модалке — один столбец ── */
       .modal-row { grid-template-columns: 1fr; gap: 10px; }
 
+      /* ── Предотвращаем zoom на iOS при фокусе на любом поле ввода ── */
+      input, select, textarea,
+      .inp, .modal-inp, .modal-select, .sales-preset-select {
+        font-size: 16px !important;
+      }
+
       /* ── Инпуты и кнопки — увеличенные touch-таргеты ── */
       .modal-inp, .modal-select {
         height: 44px;
-        font-size: 16px; /* предотвращает zoom на iOS */
       }
-      textarea.modal-inp { height: auto; font-size: 16px; }
+      textarea.modal-inp { height: auto; }
 
       /* ── Строка ингредиента в модалке — перекомпоновка ── */
       .modal-ings-header { display: none; }
@@ -1025,8 +1030,8 @@
         border-bottom: 1px solid var(--border);
         margin-bottom: 0;
       }
-      .modal-ing-row .modal-select { grid-column: 1 / -1; font-size: 15px; height: 44px; }
-      .modal-ing-row .modal-inp   { height: 40px; font-size: 15px; }
+      .modal-ing-row .modal-select { grid-column: 1 / -1; height: 44px; }
+      .modal-ing-row .modal-inp   { height: 40px; }
       .ing-cost-hint { text-align: left; }
       .modal-ing-del { width: 44px; height: 44px; }
 
