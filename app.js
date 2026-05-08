@@ -3067,14 +3067,15 @@ function renderSales() {
       <div>
         <div class="tab-intro-title">План продаж</div>
         <div class="tab-intro-text">
-          Укажите среднее количество порций в день для каждого напитка.
-          Используйте <strong>пресеты</strong> для быстрого старта или кнопки <strong>масштаба</strong> для корректировки.
-          Данные автоматически попадают в <strong>Финмодель</strong>.
+          Задайте количество порций в день для каждого напитка — страница считает выручку, прибыль, food-cost и средний чек в реальном времени.
+          Используйте <strong>пресет</strong> для быстрого старта, а кнопки <strong>±10%</strong> — для масштабирования всего плана сразу.
+          Измените <strong>дни в месяце</strong>, чтобы учесть неполный месяц. Все данные автоматически передаются в <strong>Финмодель</strong>.
         </div>
         <div class="tab-intro-steps">
-          <span class="tab-intro-step">1. Выбери пресет или заполни вручную</span>
-          <span class="tab-intro-step">2. Скорректируй масштабом ±%</span>
-          <span class="tab-intro-step">3. Финмодель пересчитается автоматически</span>
+          <span class="tab-intro-step">1. Выбери пресет или заполни порции вручную</span>
+          <span class="tab-intro-step">2. Скорректируй масштабом ±10% или измени дни в месяце</span>
+          <span class="tab-intro-step">3. Следи за KPI: food-cost, средний чек, прибыль/мес</span>
+          <span class="tab-intro-step">4. Финмодель пересчитается автоматически</span>
         </div>
       </div>
     </div>
