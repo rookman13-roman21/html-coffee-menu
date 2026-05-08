@@ -1103,12 +1103,12 @@
       /* ── Выпадающее меню локации ── */
       .loc-menu, .export-menu {
         position: fixed !important;
-        bottom: calc(60px + env(safe-area-inset-bottom));
+        top: 58px !important;
         left: 10px !important; right: 10px !important;
-        top: auto !important; width: auto;
+        bottom: auto !important; width: auto;
         min-width: unset;
         border-radius: 16px;
-        max-height: 60vh;
+        max-height: calc(100vh - 120px);
         overflow-y: auto;
         z-index: 350 !important;
       }
