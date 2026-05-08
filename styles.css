@@ -553,6 +553,8 @@
     .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:8px; border:none; cursor:pointer; font-family:var(--font); font-size:13px; font-weight:700; transition:all .15s; }
     .btn-outline { background:white; border:1.5px solid var(--border); color:var(--navy); }
     .btn-outline:hover { background:var(--light); border-color:var(--green); }
+    .btn-green { background:var(--green); color:#fff; border:none; }
+    .btn-green:hover { opacity:.88; }
     .btn-reset { background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); color:white; padding:7px 13px; border-radius:8px; cursor:pointer; font-family:var(--font); font-size:12px; font-weight:700; transition:all .15s; white-space:nowrap; }
     .btn-reset:hover { background:rgba(255,255,255,.28); }
     .theme-btn { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22); color:rgba(255,255,255,.85); border-radius:8px; cursor:pointer; transition:all .15s; flex-shrink:0; }
@@ -708,6 +710,8 @@
     body.dark .inp:focus { background: #3c3c3c; border-color: #007fd4; }
     body.dark .btn-outline { background: #3c3c3c; border-color: #454545; color: #d4d4d4; }
     body.dark .btn-outline:hover { background: #4a4a4a; border-color: #555; }
+    body.dark .btn-green { background: var(--green); color: #fff; }
+    body.dark .sales-preset-select { background: #3c3c3c; color: #d4d4d4; border-color: #454545; }
     body.dark .search-inp { background: #3c3c3c; color: #d4d4d4; border-color: #454545; }
     body.dark .search-inp:focus { border-color: #007fd4; }
     body.dark .bep-card { background: #1e3a28; border: 1px solid #3e6b3a; }
