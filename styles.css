@@ -1014,20 +1014,25 @@
 
       /* Footer mobile */
       .footer-desktop { display: none; }
+      .site-footer { margin-top: 16px; }
       .footer-mobile {
-        display: flex; flex-direction: column; align-items: center; gap: 8px;
-        background: var(--navy); color: white;
-        padding: 14px 16px 20px;
+        display: flex; flex-direction: column; align-items: center; gap: 10px;
+        background: #1e2820; color: white;
+        border-top: 2px solid var(--green);
+        padding: 16px 16px calc(72px + env(safe-area-inset-bottom));
       }
-      .footer-mobile-logo { height: 22px; width: auto; margin-bottom: 2px; }
-      .footer-mobile-social { display: flex; gap: 18px; }
+      .footer-mobile-logo { height: 24px; width: auto; filter: brightness(0) invert(1); }
+      .footer-mobile-social { display: flex; gap: 24px; margin-top: 2px; }
       .footer-mobile-icon {
-        color: rgba(255,255,255,.8); text-decoration: none;
-        display: flex; align-items: center; transition: color .15s;
+        color: rgba(255,255,255,.7); text-decoration: none;
+        display: flex; align-items: center; justify-content: center;
+        width: 40px; height: 40px; border-radius: 50%;
+        background: rgba(255,255,255,.08);
+        transition: background .15s, color .15s;
       }
-      .footer-mobile-icon:hover { color: white; }
+      .footer-mobile-icon:hover { background: var(--green); color: white; }
       .footer-mobile-icon .icon { width: 18px; height: 18px; }
-      .footer-mobile-addr { font-size: 10px; color: rgba(255,255,255,.55); text-align: center; }
+      .footer-mobile-addr { font-size: 10px; color: rgba(255,255,255,.45); text-align: center; line-height: 1.5; }
 
       /* Скрываем десктопную навигацию и бургер */
       .nav { display: none !important; }
