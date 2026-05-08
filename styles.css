@@ -1713,10 +1713,7 @@
     .pr-mob-row1 { display: flex; align-items: center; gap: 8px; }
     .pr-mob-name-inp {
       flex: 1; font-weight: 700; font-size: 15px;
-      background: transparent; border: none; border-bottom: 1.5px solid var(--border);
-      border-radius: 0; padding: 4px 0; color: var(--text);
     }
-    .pr-mob-name-inp:focus { outline: none; border-bottom-color: var(--green); }
     .pr-mob-total {
       font-size: 17px; font-weight: 800; color: var(--navy);
       white-space: nowrap; flex-shrink: 0;
@@ -1747,8 +1744,6 @@
     }
     body.dark .pr-mob-card { border-bottom-color: #3a3a3a; }
     body.dark .pr-mob-total { color: #89d185; }
-    body.dark .pr-mob-name-inp { color: #d4d4d4; border-bottom-color: #3c3c3c; }
-    body.dark .pr-mob-name-inp:focus { border-bottom-color: #6abf69; }
     body.dark .pr-mob-tax-badge { background: rgba(255,100,80,.15); color: #ff8070; }
     body.dark .pr-mob-tax-zero { background: rgba(255,255,255,.06); }
     @media (max-width: 768px) {
