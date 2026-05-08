@@ -1114,6 +1114,8 @@
     /* ── Dashboard: глобальные стили ── */
     .dash-intro-toggle { display: none; } /* скрыто на десктопе */
     .sup-intro-toggle { display: none; } /* скрыто на десктопе */
+    .sales-intro-toggle { display: none; } /* скрыто на десктопе */
+    .sales-hdr-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .dash-hdr-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .dash-chart-name { width: 170px; flex-shrink: 0; }
     .dash-search-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
@@ -1138,6 +1140,13 @@
       .sup-intro-toggle { display: inline-flex !important; }
       .sup-intro-toggle.active { background: var(--navy); color: #fff; border-color: var(--navy); }
       .sup-btn-txt { display: none; }
+
+      /* Продажи: tab-intro и кнопки */
+      #sales-intro { display: none !important; }
+      #sales-intro.open { display: flex !important; }
+      .sales-intro-toggle { display: inline-flex !important; }
+      .sales-intro-toggle.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+      .sales-btn-txt { display: none; }
 
       /* Заголовок: только иконки */
       .dash-btn-txt { display: none; }

@@ -737,20 +737,20 @@ function filterSales(val) {
     }
     return grRow + `<tr${zeroCls}>
       <td class="fw7">${d.name}${p===0 ? ' <span style="font-size:10px;color:var(--muted)">—</span>' : ''}</td>
-      <td class="ta-r">${rub(d.price)}</td>
-      <td class="ta-r">${rub(d.cost)}</td>
-      <td class="ta-r fw7">${rub(d.profit)}</td>
+      <td class="ta-r mob-hide">${rub(d.price)}</td>
+      <td class="ta-r mob-hide">${rub(d.cost)}</td>
+      <td class="ta-r fw7 mob-hide">${rub(d.profit)}</td>
       <td class="ta-c">
-        <input class="inp sm" type="number" min="0" style="background:var(--light)"
+        <input class="inp sm" type="number" min="0" inputmode="numeric" style="background:var(--light)"
           value="${p}"
           data-portions-id="${d.id}"
           oninput="onPortions(${d.id},this.value)">
       </td>
-      <td class="ta-r">${rub(revD)}</td>
-      <td class="ta-r num-pos">${rub(prfD)}</td>
+      <td class="ta-r mob-hide">${rub(revD)}</td>
+      <td class="ta-r num-pos mob-hide">${rub(prfD)}</td>
       <td class="ta-r">${rub(revM)}</td>
       <td class="ta-r num-pos fw7">${rub(prfD * S.days)}</td>
-      <td style="width:80px;padding-right:10px">
+      <td class="mob-hide" style="width:80px;padding-right:10px">
         <div style="height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden">
           <div style="width:${barW}%;height:100%;background:var(--soft);border-radius:4px;transition:width .3s"></div>
         </div>
@@ -765,13 +765,13 @@ function filterSales(val) {
   if (foot) foot.innerHTML = `
     <tr style="background:var(--navy);color:white;font-weight:800;font-size:14px;box-shadow:0 -2px 8px rgba(0,0,0,.15)">
       <td>ИТОГО${salesSearch ? ' <span style="font-size:11px;opacity:.7">(фильтр)</span>' : ''}</td>
-      <td></td><td></td><td></td>
+      <td class="mob-hide"></td><td class="mob-hide"></td><td class="mob-hide"></td>
       <td class="ta-c" style="font-size:18px">${int(ftPort)}</td>
-      <td class="ta-r">${rub(ftRevDay)}</td>
-      <td class="ta-r">${rub(ftPrfDay)}</td>
+      <td class="ta-r mob-hide">${rub(ftRevDay)}</td>
+      <td class="ta-r mob-hide">${rub(ftPrfDay)}</td>
       <td class="ta-r">${rub(ftRevMon)}</td>
       <td class="ta-r">${rub(ftPrfMon)}</td>
-      <td></td>
+      <td class="mob-hide"></td>
     </tr>`;
 }
 
@@ -2756,6 +2756,14 @@ function toggleSupIntro() {
   if (btn) btn.classList.toggle('active', el.classList.contains('open'));
 }
 
+function toggleSalesIntro() {
+  const el = document.getElementById('sales-intro');
+  if (!el) return;
+  el.classList.toggle('open');
+  const btn = document.getElementById('sales-intro-btn');
+  if (btn) btn.classList.toggle('active', el.classList.contains('open'));
+}
+
 function filterDashboard(val) {
   searchQuery = val;
   const drinks = withABC(enrich());
@@ -3046,9 +3054,12 @@ function renderSales() {
   _salesEl.innerHTML = `
     <div class="page-title">
       <span class="page-title-left"><i data-lucide="shopping-cart" class="icon"></i> Планирование продаж</span>
-      <button class="btn btn-outline" onclick="exportSales()">⬇ Скачать CSV</button>
+      <div class="sales-hdr-actions">
+        <button class="btn btn-outline sales-intro-toggle" id="sales-intro-btn" onclick="toggleSalesIntro()" title="Подсказка"><i data-lucide="info" class="icon"></i> <span class="sales-btn-txt">Подсказка</span></button>
+        <button class="btn btn-outline" onclick="exportSales()"><i data-lucide="download" class="icon"></i><span class="sales-btn-txt"> Скачать CSV</span></button>
+      </div>
     </div>
-    <div class="tab-intro">
+    <div class="tab-intro" id="sales-intro">
       <div class="tab-intro-icon"><i data-lucide="shopping-cart" class="icon icon-lg"></i></div>
       <div>
         <div class="tab-intro-title">План продаж</div>
@@ -3080,7 +3091,7 @@ function renderSales() {
     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
         <span class="fw7" style="color:var(--navy);font-size:13px">Дней в месяце:</span>
-        <input class="inp sm" type="number" min="1" max="31"
+        <input class="inp sm" type="number" min="1" max="31" inputmode="numeric"
           value="${S.days}" onchange="onDays(this.value)">
       </div>
       <div class="search-wrap" style="margin-bottom:0;flex:1;min-width:160px;max-width:280px">
@@ -3116,15 +3127,15 @@ function renderSales() {
       <table>
         <thead><tr>
           ${thSalesSort('name','Напиток','','Название напитка')}
-          ${thSalesSort('price','Цена ₽','ta-r','Цена продажи гостю')}
-          ${thSalesSort('cost','Себест. ₽','ta-r','Сумма затрат на сырьё для одной порции')}
-          ${thSalesSort('profit','Прибыль/шт ₽','ta-r','Цена − Себест. = прибыль с одной порции')}
+          ${thSalesSort('price','Цена ₽','ta-r mob-hide','Цена продажи гостю')}
+          ${thSalesSort('cost','Себест. ₽','ta-r mob-hide','Сумма затрат на сырьё для одной порции')}
+          ${thSalesSort('profit','Прибыль/шт ₽','ta-r mob-hide','Цена − Себест. = прибыль с одной порции')}
           ${thSalesSort('portions','Порций/день','ta-c','Среднее количество порций в день')}
-          ${thSalesSort('revDay','Выручка/день ₽','ta-r','Цена × Порций/день')}
-          ${thSalesSort('prfDay','Прибыль/день ₽','ta-r','Прибыль/шт × Порций/день')}
+          ${thSalesSort('revDay','Выручка/день ₽','ta-r mob-hide','Цена × Порций/день')}
+          ${thSalesSort('prfDay','Прибыль/день ₽','ta-r mob-hide','Прибыль/шт × Порций/день')}
           ${thSalesSort('revMon','Выручка/мес ₽','ta-r','Выручка/день × Дней в месяце')}
           ${thSalesSort('prfMon','Прибыль/мес ₽','ta-r','Прибыль/день × Дней в месяце. Попадает в финмодель')}
-          <th class="tip" data-tip="Доля напитка в общей выручке за месяц">Доля</th>
+          <th class="tip mob-hide" data-tip="Доля напитка в общей выручке за месяц">Доля</th>
         </tr></thead>
         <tbody></tbody>
         <tfoot style="position:sticky;bottom:0;z-index:2"></tfoot>
