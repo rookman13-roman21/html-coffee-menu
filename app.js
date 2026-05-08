@@ -2756,6 +2756,13 @@ function toggleDashIntro() {
   const btn = document.getElementById('dash-intro-btn');
   if (btn) btn.classList.toggle('active', el.classList.contains('open'));
 }
+function toggleRecipesIntro() {
+  const el = document.getElementById('recipes-intro');
+  if (!el) return;
+  el.classList.toggle('open');
+  const btn = document.getElementById('recipes-intro-btn');
+  if (btn) btn.classList.toggle('active', el.classList.contains('open'));
+}
 
 function toggleSupIntro() {
   const el = document.getElementById('sup-intro');
@@ -4966,11 +4973,12 @@ function renderRecipes() {
     <div class="page-title">
       <span class="page-title-left"><i data-lucide="clipboard-list" class="icon"></i> Рецептуры и структура себестоимости</span>
       <div style="display:flex;gap:8px">
+        <button class="btn btn-outline recipes-intro-toggle" id="recipes-intro-btn" onclick="toggleRecipesIntro()" title="Подсказка"><i data-lucide="info" class="icon"></i> <span class="recipes-btn-txt">Подсказка</span></button>
         <button class="btn btn-green" onclick="openAddDrink()"><i data-lucide="plus" class="icon"></i> Напиток</button>
         <button class="btn btn-outline" onclick="exportTechCards()" title="Экспорт техкарт по ГОСТ Р 53105 в PDF"><i data-lucide="file-text" class="icon"></i> PDF техкарт</button>
       </div>
     </div>
-    <div class="tab-intro">
+    <div class="tab-intro" id="recipes-intro">
       <div class="tab-intro-icon"><i data-lucide="clipboard-list" class="icon icon-lg"></i></div>
       <div>
         <div class="tab-intro-title">Рецептуры и структура себестоимости</div>
