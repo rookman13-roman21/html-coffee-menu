@@ -831,12 +831,14 @@
       display: none; position: fixed; inset: 0;
       background: rgba(0,0,0,.5); z-index: 1000;
       align-items: center; justify-content: center;
+      touch-action: none;
     }
     .modal-bg.open { display: flex; }
     .modal {
       background: white; border-radius: 16px; padding: 28px 28px 24px;
       width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto;
       overscroll-behavior: contain;
+      touch-action: pan-y;
       box-shadow: 0 8px 40px rgba(0,0,0,.22);
     }
     body.dark .modal { background: #252526; color: var(--text); }

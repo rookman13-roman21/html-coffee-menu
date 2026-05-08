@@ -1929,8 +1929,24 @@ function closeOnboarding() {
 function openModal(id)  {
   document.getElementById(id).classList.add('open');
   if (id === 'modal-mat') _fillMatSupBookSelect();
+  // Блокируем скролл фона (iOS Safari fix)
+  const scrollY = window.scrollY;
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${scrollY}px`;
+  document.body.style.width = '100%';
+  document.body.dataset.scrollY = scrollY;
 }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  // Разблокируем фон только если больше нет открытых модалов
+  if (!document.querySelector('.modal-bg.open')) {
+    const scrollY = parseInt(document.body.dataset.scrollY || '0');
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    window.scrollTo(0, scrollY);
+  }
+}
 
 // Заполняем дропдаун книжки поставщиков в modal-mat
 function _fillMatSupBookSelect() {
