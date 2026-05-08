@@ -733,29 +733,18 @@ function filterSales(val) {
     let grRow = '';
     if (!salesSearch && d.group !== lastGroup) {
       lastGroup = d.group;
-      grRow = `<tr class="group-row"><td colspan="10">${GROUP_LABEL[d.group]}</td></tr>`;
+      grRow = `<tr class="group-row"><td colspan="4">${GROUP_LABEL[d.group]}</td></tr>`;
     }
     return grRow + `<tr${zeroCls}>
       <td class="fw7">${d.name}${p===0 ? ' <span style="font-size:10px;color:var(--muted)">—</span>' : ''}</td>
-      <td class="ta-r mob-hide">${rub(d.price)}</td>
-      <td class="ta-r mob-hide">${rub(d.cost)}</td>
-      <td class="ta-r fw7 mob-hide">${rub(d.profit)}</td>
       <td class="ta-c">
         <input class="inp sm" type="number" min="0" inputmode="numeric" style="background:var(--light)"
           value="${p}"
           data-portions-id="${d.id}"
           oninput="onPortions(${d.id},this.value)">
       </td>
-      <td class="ta-r mob-hide">${rub(revD)}</td>
-      <td class="ta-r num-pos mob-hide">${rub(prfD)}</td>
       <td class="ta-r">${rub(revM)}</td>
       <td class="ta-r num-pos fw7">${rub(prfD * S.days)}</td>
-      <td class="mob-hide" style="width:80px;padding-right:10px">
-        <div style="height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden">
-          <div style="width:${barW}%;height:100%;background:var(--soft);border-radius:4px;transition:width .3s"></div>
-        </div>
-        <div style="font-size:10px;color:var(--muted);margin-top:2px;text-align:right">${sharePct.toFixed(1)}%</div>
-      </td>
     </tr>`;
   }).join('');
 
@@ -765,13 +754,9 @@ function filterSales(val) {
   if (foot) foot.innerHTML = `
     <tr style="background:var(--navy);color:white;font-weight:800;font-size:14px;box-shadow:0 -2px 8px rgba(0,0,0,.15)">
       <td>ИТОГО${salesSearch ? ' <span style="font-size:11px;opacity:.7">(фильтр)</span>' : ''}</td>
-      <td class="mob-hide"></td><td class="mob-hide"></td><td class="mob-hide"></td>
       <td class="ta-c" style="font-size:18px">${int(ftPort)}</td>
-      <td class="ta-r mob-hide">${rub(ftRevDay)}</td>
-      <td class="ta-r mob-hide">${rub(ftPrfDay)}</td>
       <td class="ta-r">${rub(ftRevMon)}</td>
       <td class="ta-r">${rub(ftPrfMon)}</td>
-      <td class="mob-hide"></td>
     </tr>`;
 }
 
@@ -3075,70 +3060,60 @@ function renderSales() {
         </div>
       </div>
     </div>
-    <div class="sales-presets-block">
-      <div class="sales-presets-row">
+    ${(()=>{const fcClr=wFC>0.3?'var(--red)':wFC>0.25?'#b38600':'var(--green)';const fcBrd=wFC>0.3?'var(--red)':wFC>0.25?'#b38600':'var(--green)';return `
+    <div class="sales-kpi-row1">
+      <div class="sales-kpi-card sales-kpi-wide">
+        <div class="sales-kpi-label">Выручка / мес</div>
+        <div class="sales-kpi-val">${rub(totRevMon)}</div>
+      </div>
+      <div class="sales-kpi-card sales-kpi-wide sales-kpi-green">
+        <div class="sales-kpi-label">Прибыль / мес</div>
+        <div class="sales-kpi-val" style="color:var(--green)">${rub(totPrfMon)}</div>
+      </div>
+      <div class="sales-kpi-card sales-kpi-compact">
+        <div class="sales-kpi-label">Чашек / день</div>
+        <div class="sales-kpi-val">${int(totalPort)}</div>
+      </div>
+    </div>
+    <div class="sales-kpi-row2">
+      <div class="sales-kpi-card sales-kpi-compact" style="border-color:${fcBrd}">
+        <div class="sales-kpi-label">Food-cost %</div>
+        <div class="sales-kpi-val" style="color:${fcClr}">${pct(wFC)}</div>
+      </div>
+      <div class="sales-kpi-card sales-kpi-compact">
+        <div class="sales-kpi-label">Средний чек</div>
+        <div class="sales-kpi-val">${rub(avgChk)}</div>
+      </div>
+      <div class="sales-days-scale">
+        <span class="sales-days-label">Дней в месяце:</span>
+        <input class="inp sm" type="number" min="1" max="31" inputmode="numeric" value="${S.days}" onchange="onDays(this.value)">
+        <button class="btn btn-outline sales-scale-btn red" onclick="scaleSalesPortions(0.90)">−10%</button>
+        <button class="btn btn-outline sales-scale-btn green" onclick="scaleSalesPortions(1.10)">+10%</button>
+      </div>
+    </div>
+    <div class="sales-controls-row">
+      <div class="sales-preset-wrap">
         <span class="sales-presets-label">Пресет:</span>
         <select class="sales-preset-select" onchange="applySalesPreset(this.value)">
           <option value="">— выбрать —</option>
           ${Object.entries(SALES_PRESETS).map(([k,p])=>`<option value="${k}"${S.activePreset===k?' selected':''}>${p.label}</option>`).join('')}
         </select>
       </div>
-      <div class="sales-scale-row">
-        <span class="sales-presets-label">Масштаб:</span>
-        <div class="sales-scale-btns">
-          <button class="btn btn-outline sales-scale-btn red" onclick="scaleSalesPortions(0.90)">−10%</button>
-          <button class="btn btn-outline sales-scale-btn green" onclick="scaleSalesPortions(1.10)">+10%</button>
-        </div>
-      </div>
-    </div>
-    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-        <span class="fw7" style="color:var(--navy);font-size:13px">Дней в месяце:</span>
-        <input class="inp sm" type="number" min="1" max="31" inputmode="numeric"
-          value="${S.days}" onchange="onDays(this.value)">
-      </div>
-      <div class="search-wrap" style="margin-bottom:0;flex:1;min-width:160px;max-width:280px">
+      <div class="search-wrap" style="margin-bottom:0;flex:1;min-width:140px">
         <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
         <input class="search-inp" id="sales-search" type="text" placeholder="Поиск по названию..."
           value="${salesSearch}" oninput="filterSales(this.value);_searchClear(this)">
         <button class="search-clear${salesSearch ? ' visible' : ''}" title="Очистить" onclick="filterSales('');var el=document.getElementById('sales-search');el.value='';_searchClear(el)">✕</button>
       </div>
     </div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
-      <div style="flex:1;min-width:160px;background:var(--light);border:1.5px solid var(--border);border-radius:10px;padding:10px 16px">
-        <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Выручка / мес</div>
-        <div style="font-size:20px;font-weight:800;color:var(--navy)">${rub(totRevMon)}</div>
-      </div>
-      <div style="flex:1;min-width:160px;background:var(--light);border:1.5px solid var(--green);border-radius:10px;padding:10px 16px">
-        <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Прибыль / мес</div>
-        <div style="font-size:20px;font-weight:800;color:var(--green)">${rub(totPrfMon)}</div>
-      </div>
-      <div style="flex:0 0 auto;min-width:110px;background:var(--light);border:1.5px solid var(--border);border-radius:10px;padding:10px 16px">
-        <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Чашек / день</div>
-        <div style="font-size:20px;font-weight:800;color:var(--navy)">${int(totalPort)}</div>
-      </div>
-      <div style="flex:0 0 auto;min-width:110px;background:var(--light);border:1.5px solid ${wFC>0.3?'var(--red)':wFC>0.25?'#b38600':'var(--green)'};border-radius:10px;padding:10px 16px">
-        <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Food-cost %</div>
-        <div style="font-size:20px;font-weight:800;color:${wFC>0.3?'var(--red)':wFC>0.25?'#b38600':'var(--green)'}">${pct(wFC)}</div>
-      </div>
-      <div style="flex:0 0 auto;min-width:120px;background:var(--light);border:1.5px solid var(--border);border-radius:10px;padding:10px 16px">
-        <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Средний чек</div>
-        <div style="font-size:20px;font-weight:800;color:var(--navy)">${rub(avgChk)}</div>
-      </div>
-    </div>
+    `})()}
     <div class="table-wrap" id="sales-table-wrap">
       <table>
         <thead><tr>
           ${thSalesSort('name','Напиток','','Название напитка')}
-          ${thSalesSort('price','Цена ₽','ta-r mob-hide','Цена продажи гостю')}
-          ${thSalesSort('cost','Себест. ₽','ta-r mob-hide','Сумма затрат на сырьё для одной порции')}
-          ${thSalesSort('profit','Прибыль/шт ₽','ta-r mob-hide','Цена − Себест. = прибыль с одной порции')}
           ${thSalesSort('portions','Порций/день','ta-c','Среднее количество порций в день')}
-          ${thSalesSort('revDay','Выручка/день ₽','ta-r mob-hide','Цена × Порций/день')}
-          ${thSalesSort('prfDay','Прибыль/день ₽','ta-r mob-hide','Прибыль/шт × Порций/день')}
-          ${thSalesSort('revMon','Выручка/мес ₽','ta-r','Выручка/день × Дней в месяце')}
-          ${thSalesSort('prfMon','Прибыль/мес ₽','ta-r','Прибыль/день × Дней в месяце. Попадает в финмодель')}
-          <th class="tip mob-hide" data-tip="Доля напитка в общей выручке за месяц">Доля</th>
+          ${thSalesSort('revMon','Выручка/мес ₽','ta-r','Выручка за месяц = Цена × Порций × Дней')}
+          ${thSalesSort('prfMon','Прибыль/мес ₽','ta-r','Прибыль/шт × Порций × Дней. Попадает в финмодель')}
         </tr></thead>
         <tbody></tbody>
         <tfoot style="position:sticky;bottom:0;z-index:2"></tfoot>

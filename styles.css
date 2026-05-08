@@ -1117,32 +1117,59 @@
     .sales-intro-toggle { display: none; } /* скрыто на десктопе */
     .sales-hdr-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
-    /* ── Продажи: блок пресетов ── */
-    .sales-presets-block {
-      background: var(--gray); border-radius: 12px;
-      padding: 10px 14px; margin-bottom: 16px;
-      display: flex; flex-direction: column; gap: 8px;
+    /* ── Продажи: KPI-карточки ── */
+    .sales-kpi-row1 {
+      display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;
     }
-    .sales-presets-row,
-    .sales-scale-row {
-      display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;
+    .sales-kpi-row2 {
+      display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: stretch;
+    }
+    .sales-kpi-card {
+      background: var(--light); border: 1.5px solid var(--border);
+      border-radius: 12px; padding: 10px 16px;
+    }
+    .sales-kpi-wide   { flex: 1; min-width: 150px; }
+    .sales-kpi-compact { flex: 0 0 auto; min-width: 110px; }
+    .sales-kpi-green  { border-color: var(--green); }
+    .sales-kpi-label  {
+      font-size: 11px; color: var(--muted); font-weight: 600;
+      text-transform: uppercase; letter-spacing: .04em; margin-bottom: 3px;
+    }
+    .sales-kpi-val    { font-size: 20px; font-weight: 800; color: var(--navy); }
+
+    /* ── Продажи: строка «Дней + масштаб» ── */
+    .sales-days-scale {
+      display: flex; align-items: center; gap: 8px;
+      flex: 1; flex-wrap: wrap;
+      background: var(--light); border: 1.5px solid var(--border);
+      border-radius: 12px; padding: 10px 16px;
+    }
+    .sales-days-label {
+      font-size: 13px; font-weight: 700; color: var(--navy);
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .sales-days-scale .inp { margin-right: 4px; }
+    .sales-days-scale .sales-scale-btn { flex-shrink: 0; }
+
+    /* ── Продажи: строка «Пресет + Поиск» ── */
+    .sales-controls-row {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .sales-preset-wrap {
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
     }
     .sales-presets-label {
       font-size: 12px; font-weight: 700; color: var(--muted);
-      white-space: nowrap; flex-shrink: 0; min-width: 62px;
+      white-space: nowrap;
     }
     .sales-preset-select {
-      flex: 1; font-size: 13px; padding: 5px 10px;
+      font-size: 13px; padding: 6px 10px;
       border: 1.5px solid var(--border); border-radius: 8px;
       background: #fff; color: var(--navy); cursor: pointer;
-      max-width: 260px;
+      min-width: 180px;
     }
-    .sales-scale-btns {
-      display: flex; gap: 6px; flex-wrap: nowrap;
-    }
-    .sales-scale-btn {
-      font-size: 12px; padding: 5px 12px; white-space: nowrap;
-    }
+    .sales-scale-btn    { font-size: 12px; padding: 5px 12px; white-space: nowrap; }
     .sales-scale-btn.red   { color: var(--red); }
     .sales-scale-btn.green { color: var(--green); }
     .dash-hdr-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -1177,10 +1204,14 @@
       .sales-intro-toggle.active { background: var(--navy); color: #fff; border-color: var(--navy); }
       .sales-btn-txt { display: none; }
 
-      /* Продажи: пресеты на мобильном */
-      .sales-preset-select { font-size: 12px; }
+      /* Продажи: KPI и контролы на мобильном */
+      .sales-kpi-wide   { min-width: 120px; }
+      .sales-kpi-compact { min-width: 90px; }
+      .sales-kpi-val    { font-size: 17px; }
+      .sales-preset-select { min-width: 140px; font-size: 12px; }
       .sales-scale-btn  { font-size: 11px; padding: 5px 9px; }
-      .sales-presets-label { min-width: 58px; font-size: 11px; }
+      .sales-days-label { font-size: 12px; }
+      .sales-days-scale { padding: 8px 12px; }
 
       /* Заголовок: только иконки */
       .dash-btn-txt { display: none; }
