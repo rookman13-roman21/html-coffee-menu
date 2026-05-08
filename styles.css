@@ -1093,6 +1093,9 @@
 
       /* ── What-if слайдеры ── */
       .whatif-grid { grid-template-columns: 1fr; }
+      .whatif-panel { display: flex; flex-direction: column; }
+      .whatif-panel #whatif-result { order: -2; }
+      .whatif-panel .whatif-grid   { order: -1; }
 
       /* ── Сезонность — 2 колонки вместо 4 ── */
       .season-months { grid-template-columns: repeat(2, 1fr); }

@@ -3915,7 +3915,7 @@ function renderFinModel() {
       <span><i data-lucide="sliders" class="icon"></i> Pricing wizard — «А что если?» <span style="font-size:12px;font-weight:500;color:var(--muted);margin-left:6px">смоделируйте изменение цен и трафика</span></span>
       <button class="btn btn-outline" style="padding:5px 12px;font-size:12px;flex-shrink:0" onclick="resetWhatIf3()"><i data-lucide="rotate-ccw" class="icon"></i> Сбросить</button>
     </div>
-    <div class="panel" style="padding:16px 18px;margin-bottom:24px">
+    <div class="panel whatif-panel" style="padding:16px 18px;margin-bottom:24px">
       <div class="whatif-grid">
         <div class="whatif-slider">
           <div class="whatif-slider-head">
