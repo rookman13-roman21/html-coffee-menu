@@ -181,7 +181,7 @@ const DRINK_IMAGES = {
   23: 'images/Айс-какао.jpg',
   24: 'images/Бамбл.jpg',
   25: 'images/Бамбл.jpg',
-  26: 'images/Эспрессо-тоник.jpg',
+  26: 'images/Эспрессо -тоник.jpg',
   27: 'images/Фильтр-кофе.jpg',
   28: 'images/Фильтр-кофе.jpg',
   29: 'images/Пуровер.jpg',
