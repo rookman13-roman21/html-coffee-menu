@@ -779,6 +779,7 @@ function resetAll() {
   ];
   S.payrollSettings = { mrot: 22440, ndfl: 13, ins: 30 };
   S.payrollSettingsOpen = false;
+  S.fixedHintOpen = false;
   S.seasonality = [1,1,1,1,1,1,1,1,1,1,1,1];
   S.seasonalityOpen = false;
   S.suppliers = {};
@@ -871,6 +872,7 @@ function resetGlobalsToBase() {
   ];
   S.payrollSettings = { mrot: 22440, ndfl: 13, ins: 30 };
   S.payrollSettingsOpen = false;
+  S.fixedHintOpen = false;
   S.seasonality = [1,1,1,1,1,1,1,1,1,1,1,1];
   S.seasonalityOpen = false;
   S.suppliers = {};
@@ -1742,6 +1744,7 @@ function saveState() {
       taxMode: S.taxMode, investment: S.investment,
       payrollPositions: S.payrollPositions,
       payrollSettings: S.payrollSettings, payrollSettingsOpen: S.payrollSettingsOpen,
+      fixedHintOpen: S.fixedHintOpen,
       seasonality: S.seasonality, seasonalityOpen: S.seasonalityOpen,
       wif: { price: _wif.price, cost: _wif.cost, traffic: _wif.traffic },
       suppliers: S.suppliers, supplierBook: S.supplierBook, priceLog: S.priceLog,
@@ -1788,6 +1791,7 @@ function loadState() {
     if (sv.payrollPositions) S.payrollPositions = sv.payrollPositions;
     if (sv.payrollSettings)  Object.assign(S.payrollSettings, sv.payrollSettings);
     if (sv.payrollSettingsOpen != null) S.payrollSettingsOpen = sv.payrollSettingsOpen;
+    if (sv.fixedHintOpen != null) S.fixedHintOpen = sv.fixedHintOpen;
     if (sv.seasonality) S.seasonality = sv.seasonality;
     if (sv.seasonalityOpen != null) S.seasonalityOpen = sv.seasonalityOpen;
     if (sv.wif) { _wif.price = sv.wif.price||0; _wif.cost = sv.wif.cost||0; _wif.traffic = sv.wif.traffic||0; }
@@ -3475,7 +3479,8 @@ function renderFinModel() {
       : `<i data-lucide="x-circle" class="icon" style="width:18px;height:18px"></i>`;
     const fixedNote = varFixed > 0 ? ` <span style="font-size:10px;opacity:.6">(перем: ${rub(varFixed*sc.mult)})</span>` : '';
     return `
-      <div class="scenario-card sc-${sc.cls}">
+      <div class="scenario-card sc-${sc.cls}${sc.cls==='base'?' sc-base-active':''}">
+        ${sc.cls==='base' ? '<div class="sc-your-plan-badge">✦ Ваш план</div>' : ''}
         <div class="sc-title"><i data-lucide="${sc.icon}" class="icon"></i> ${sc.name} <span style="font-size:11px;opacity:.6">×${sc.mult}</span></div>
         <div class="sc-row"><span data-tip="Количество чашек в день&#10;из плана умноженное на ${sc.mult}">Чашек/день</span><span class="sv">${int(cups)}</span></div>
         <div class="sc-row"><span data-tip="Общая выручка за месяц&#10;= чашек/день × средний чек × дни">Выручка/мес</span><span class="sv">${rub(revMon)}</span></div>
@@ -3584,35 +3589,45 @@ function renderFinModel() {
     <div class="tab-intro">
       <div class="tab-intro-icon"><i data-lucide="banknote" class="icon icon-lg"></i></div>
       <div>
-        <div class="tab-intro-title">Что здесь?</div>
+        <div class="tab-intro-title">Финансовая модель</div>
         <div class="tab-intro-text">
-          Показывает точку безубыточности и три сценария на основе вашего <strong>реального плана продаж</strong>.
-          Заполните исходные данные — сразу увидите P&amp;L, ТБУ и прогноз на год.
+          Показывает <strong>P&amp;L, ТБУ и три сценария</strong> на основе реального плана продаж.<br>
+          Заполни расходы и ФОТ — цифры пересчитаются мгновенно.<br>
+          Все данные синхронизированы с вкладкой <strong>«Продажи»</strong> — изменил порции, обновилась финмодель.
         </div>
         <div class="tab-intro-steps">
-          <span class="tab-intro-step">1. Введите расходы и ФОТ</span>
-          <span class="tab-intro-step">2. Смотрите P&amp;L и ТБУ</span>
-          <span class="tab-intro-step">3. Смоделируйте сценарии</span>
+          <span class="tab-intro-step">1. Введи расходы и ФОТ</span>
+          <span class="tab-intro-step">2. Смотри P&amp;L и ТБУ</span>
+          <span class="tab-intro-step">3. Смоделируй сценарии</span>
           <span class="tab-intro-step">4. Прогноз на 12 месяцев</span>
         </div>
       </div>
     </div>
+    <div class="fin-quicknav">
+      <button class="fin-qn-btn" onclick="document.getElementById('finblock-1').scrollIntoView({behavior:'smooth'})"><i data-lucide="database" class="icon"></i> Исходные данные</button>
+      <button class="fin-qn-btn" onclick="document.getElementById('finblock-2').scrollIntoView({behavior:'smooth'})"><i data-lucide="trending-up" class="icon"></i> Результаты</button>
+      <button class="fin-qn-btn" onclick="document.getElementById('finblock-3').scrollIntoView({behavior:'smooth'})"><i data-lucide="sliders" class="icon"></i> Моделирование</button>
+      <button class="fin-qn-btn" onclick="document.getElementById('finblock-4').scrollIntoView({behavior:'smooth'})"><i data-lucide="calendar" class="icon"></i> Прогноз</button>
+    </div>
 
     <!-- ───────────────────────────────────────────── БЛОК 1: ИСХОДНЫЕ ДАННЫЕ -->
-    <div class="finblock-hd finblock-hd-1">
+    <div class="finblock-hd finblock-hd-1" id="finblock-1">
       <span class="finblock-num">1</span>
       <i data-lucide="database" class="icon"></i> Исходные данные
     </div>
 
-    <div class="section-title"><i data-lucide="pin" class="icon"></i> Постоянные расходы (₽/мес)</div>
-    <div class="hint" style="margin-bottom:12px">
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span><i data-lucide="pin" class="icon"></i> Постоянные расходы (₽/мес)</span>
+      <button class="fin-hint-toggle" onclick="toggleFixedHint()"><i data-lucide="${S.fixedHintOpen?'chevron-up':'info'}" class="icon"></i> ${S.fixedHintOpen?'Скрыть':'Что вводить?'}</button>
+    </div>
+    ${S.fixedHintOpen ? `<div class="hint" style="margin-bottom:12px">
       <i data-lucide="info" class="icon"></i>
       Введите расходы, которые платите каждый месяц независимо от объёма продаж: аренда, коммуналка, интернет, амортизация.
       <br><br>
       <strong>Галочка «перем.»</strong> — отмечайте расходы, которые <em>растут вместе с трафиком</em>: расходники, комиссия агрегаторов и т.п.
       Такие статьи будут масштабироваться в <strong>сценариях</strong> (×0.5 / ×2.0) и на <strong>графике сезонности</strong> —
       в слабые месяцы они уменьшатся, в сильные вырастут. На базовый план и ТБУ галочка не влияет.
-    </div>
+    </div>` : ''}
     <div class="fc-table-wrap">${costTableHtml}</div>
     <button class="btn btn-outline" style="margin:4px 0 16px;font-size:13px;display:inline-flex;align-items:center;gap:5px" onclick="addFixedCostInCat('other')">
       <i data-lucide="plus" class="icon"></i> Добавить статью
@@ -3663,6 +3678,32 @@ function renderFinModel() {
 
     <div id="payroll-section" class="section-title" style="display:flex;align-items:center;justify-content:space-between"><span><i data-lucide="users" class="icon"></i> Калькулятор ФОТ <span style="font-size:12px;font-weight:500;color:var(--muted);margin-left:6px">фонд оплаты труда</span></span><button class="btn btn-outline" style="font-size:12px;padding:5px 12px" onclick="addPayrollPosition()"><i data-lucide="plus" class="icon"></i> Добавить должность</button></div>
     <div class="panel" style="padding:0;margin-bottom:8px;overflow:hidden">
+      <div class="payroll-mobile-cards">
+        ${(S.payrollPositions||[]).map(p => {
+          const _mc = calcPositionCosts(p);
+          const _mtype = p.empType || 'black';
+          const _msel = ['white','grey','black'].map(t =>
+            `<option value="${t}"${_mtype===t?' selected':''}>${EMP_TYPE_LABELS[t]}</option>`
+          ).join('');
+          return `<div class="pr-mob-card">
+            <div class="pr-mob-row1">
+              <input class="inp pr-mob-name-inp" type="text" value="${p.name}" oninput="onPayrollPos(${p.id},'name',this.value)" placeholder="Должность">
+              <strong class="pr-mob-total">${rub(_mc.total)}</strong>
+              <button class="mat-del" onclick="deletePayrollPosition(${p.id})" title="Удалить"><i data-lucide="trash-2" class="icon"></i></button>
+            </div>
+            <div class="pr-mob-row2">
+              <div class="pr-mob-field"><span class="pr-mob-field-lbl">₽/ч</span><input class="inp pr-mob-inp" type="number" inputmode="numeric" value="${p.rate}" oninput="onPayrollPos(${p.id},'rate',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></div>
+              <div class="pr-mob-field"><span class="pr-mob-field-lbl">Ч/см</span><input class="inp pr-mob-inp" type="number" inputmode="numeric" value="${p.hours}" oninput="onPayrollPos(${p.id},'hours',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></div>
+              <div class="pr-mob-field"><span class="pr-mob-field-lbl">Смен</span><input class="inp pr-mob-inp" type="number" inputmode="numeric" value="${p.shifts}" oninput="onPayrollPos(${p.id},'shifts',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></div>
+              <div class="pr-mob-field"><span class="pr-mob-field-lbl">Кол.</span><input class="inp pr-mob-inp" type="number" inputmode="numeric" value="${p.count}" oninput="onPayrollPos(${p.id},'count',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></div>
+            </div>
+            <div class="pr-mob-row3">
+              <select class="payroll-emp-select" style="flex:1;max-width:180px" onchange="onPayrollPos(${p.id},'empType',this.value)" data-emptype="${_mtype}">${_msel}</select>
+              ${_mc.taxes > 0 ? `<span class="pr-mob-tax">+${rub(_mc.taxes)} взносы</span>` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
       <div class="payroll-table-wrap">
         <table class="payroll-table">
           <colgroup>
@@ -3815,12 +3856,31 @@ function renderFinModel() {
     </div>
 
     <!-- ───────────────────────────────────────────── БЛОК 2: РЕЗУЛЬТАТЫ -->
-    <div class="finblock-hd finblock-hd-2">
+    <div class="finblock-hd finblock-hd-2" id="finblock-2">
       <span class="finblock-num">2</span>
       <i data-lucide="trending-up" class="icon"></i> Результаты
     </div>
 
     ${warningsBanner}
+
+    <div class="fin-kpi-row">
+      <div class="fin-kpi-card">
+        <div class="fin-kpi-label"><i data-lucide="trending-up" class="icon"></i> Выручка / мес</div>
+        <div class="fin-kpi-val">${rub(totRevMon)}</div>
+      </div>
+      <div class="fin-kpi-card fin-kpi-costs">
+        <div class="fin-kpi-label"><i data-lucide="minus-circle" class="icon"></i> Расходы / мес</div>
+        <div class="fin-kpi-val">${rub(totRevMon - baseNet)}</div>
+      </div>
+      <div class="fin-kpi-card ${baseNet >= 0 ? 'fin-kpi-profit' : 'fin-kpi-loss'}">
+        <div class="fin-kpi-label"><i data-lucide="${baseNet >= 0 ? 'check-circle' : 'alert-circle'}" class="icon"></i> Чистая прибыль</div>
+        <div class="fin-kpi-val">${rub(baseNet)}</div>
+      </div>
+      <div class="fin-kpi-card">
+        <div class="fin-kpi-label"><i data-lucide="percent" class="icon"></i> FC% (средний)</div>
+        <div class="fin-kpi-val" style="color:${avgFC<=0.25?'var(--green)':avgFC<=0.30?'#b38600':'var(--red)'}">${pct(avgFC)}</div>
+      </div>
+    </div>
 
     <div class="section-title" style="margin-top:8px"><i data-lucide="file-text" class="icon"></i> P&amp;L — Отчёт о прибылях и убытках <span style="font-size:12px;font-weight:500;color:var(--muted);margin-left:4px">(базовый план)</span></div>
     <div class="panel" style="padding:0;overflow:hidden;margin-bottom:24px">
@@ -3835,12 +3895,15 @@ function renderFinModel() {
     </div>
 
     <!-- ───────────────────────────────────────────── БЛОК 3: МОДЕЛИРОВАНИЕ -->
-    <div class="finblock-hd finblock-hd-3">
+    <div class="finblock-hd finblock-hd-3" id="finblock-3">
       <span class="finblock-num">3</span>
       <i data-lucide="sliders" class="icon"></i> Моделирование
     </div>
 
-    <div class="section-title"><i data-lucide="sliders" class="icon"></i> Pricing wizard — «А что если?» <span style="font-size:12px;font-weight:500;color:var(--muted);margin-left:6px">смоделируйте изменение цен и трафика</span></div>
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <span><i data-lucide="sliders" class="icon"></i> Pricing wizard — «А что если?» <span style="font-size:12px;font-weight:500;color:var(--muted);margin-left:6px">смоделируйте изменение цен и трафика</span></span>
+      <button class="btn btn-outline" style="padding:5px 12px;font-size:12px;flex-shrink:0" onclick="resetWhatIf3()"><i data-lucide="rotate-ccw" class="icon"></i> Сбросить</button>
+    </div>
     <div class="panel" style="padding:16px 18px;margin-bottom:24px">
       <div class="whatif-grid">
         <div class="whatif-slider">
@@ -3869,10 +3932,7 @@ function renderFinModel() {
         </div>
       </div>
       <div id="whatif-result" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:8px">
-        <div class="hint" style="margin:0"><i data-lucide="info" class="icon"></i> Двигайте слайдеры — сразу увидите как меняются маржа, ТБУ и прибыль</div>
-        <button class="btn btn-outline" style="padding:5px 12px;font-size:12px" onclick="resetWhatIf3()"><i data-lucide="rotate-ccw" class="icon"></i> Сбросить</button>
-      </div>
+      <div class="hint" style="margin-top:10px"><i data-lucide="info" class="icon"></i> Двигайте слайдеры — сразу увидите как меняются маржа, ТБУ и прибыль</div>
     </div>
 
     <div class="section-title"><i data-lucide="trending-up" class="icon"></i> Сценарии относительно вашего базового плана</div>
@@ -3883,7 +3943,7 @@ function renderFinModel() {
     <div class="scenario-grid">${scenarioCards}</div>
 
     <!-- ───────────────────────────────────────────── БЛОК 4: ПРОГНОЗ НА ГОД -->
-    <div class="finblock-hd finblock-hd-4">
+    <div class="finblock-hd finblock-hd-4" id="finblock-4">
       <span class="finblock-num">4</span>
       <i data-lucide="calendar" class="icon"></i> Прогноз на год
     </div>
@@ -5334,6 +5394,12 @@ function onPayrollSetting(key, v) {
 }
 function togglePayrollSettings() {
   S.payrollSettingsOpen = !S.payrollSettingsOpen;
+  saveState();
+  renderFinModel();
+  if (window.lucide) lucide.createIcons();
+}
+function toggleFixedHint() {
+  S.fixedHintOpen = !S.fixedHintOpen;
   saveState();
   renderFinModel();
   if (window.lucide) lucide.createIcons();
