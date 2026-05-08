@@ -962,3 +962,114 @@ function toggleExportMenu(e) {
 #### Техническое примечание: обходной путь для git push
 
 `run_in_terminal` для git-команд падает с regex overflow (сторонний терминал содержит `group-course-block.html`). Рабочий обходной путь — bash-скрипт через create_file + run_in_terminal.
+
+
+---
+
+### Сессия 20 (9 мая 2026) — изображения, логотип, подвал, мобильное меню
+
+---
+
+#### 1. Система изображений для напитков
+
+**Инфраструктура уже существовала** (обнаружено в ходе аудита):
+- `d.image` поддерживается в `filterRecipes()`, `openViewDrink()`, `_buildTechCardBlock()`
+- CSS классы `.recipe-card-img`, `.mvd-photo-wrap` уже присутствовали
+- Modal upload UI (FileReader → base64) уже был реализован
+
+**Сделано:**
+- Создана папка `images/` в репозитории
+- Добавлен объект `DRINK_IMAGES` (app.js) — маппинг id напитка → путь к файлу
+- Добавлена функция `getDrinkImage(d)` — возвращает `d.image || DRINK_IMAGES[d.id] || null`
+- Все 3 места рендеринга обновлены: используют `getDrinkImage(d)` + `onerror` (скрывает если файл не найден)
+- Все 30 напитков получили логичные имена файлов на русском (пары 300/400 мл — общее фото)
+
+**Файлы добавлены пользователем (16 шт):**
+`Эспрессо.jpg`, `Американо.jpg`, `Капучино.jpg`, `Латте.jpg`, `Флэт уайт.jpg`,
+`Моккачино.jpg`, `Раф ванильный.jpg`, `Раф апельсиновый.jpg`, `Какао.jpg`,
+`Ванильное облако.jpg`, `Зелёный чай.jpg`, `Чай.jpg`, `Матча.jpg`,
+`Айс-латте.jpg`, `Бамбл.jpg`, `Эспрессо -тоник.jpg` (с пробелом — исправлено в маппинге)
+
+**Без фото:** Айс-какао, Фильтр-кофе, Пуровер — скрываются автоматически через `onerror`
+
+**Коммиты:** `aea265b`, `d6e6633`
+
+---
+
+#### 2. Логотип в шапке
+
+- Убрана иконка кофе и текст «MBS* Coffee Menu»
+- **Десктоп:** `moscow barista school logo.svg` (высота 36px)
+- **Мобильный** (≤768px): `MBS logo.svg` (высота 28px) — CSS `content:` override в `@media`
+- На экране онбординга: логотип `moscow barista school logo.svg` вместо иконки+текста
+
+**Коммиты:** `7176a3c`, `92099b3`
+
+---
+
+#### 3. Подвал (footer)
+
+**Структура:**
+- Десктоп: 3 колонки — Контакты | Логотип + соцсети | Адрес
+- Мобильный: тёмная полоса — логотип MBS + 4 иконки (телефон, Instagram, Telegram, карта) + адрес
+
+**Контакты:**
+- Телефон: +7 995 999-28-36
+- Сайт: baristaschool.ru
+- Instagram: instagram.com/barista_school
+- Telegram: t.me/moscowbaristaschool
+- Адрес: м. Бауманская, Нижняя Красносельская 35 стр. 50
+- Яндекс.Карты: yandex.ru/maps/org/206204133172
+
+**Проблемы и исправления по итерациям:**
+1. Иконки не отображались → заменены `<i data-lucide>` на inline SVG (footer был после `<script>`)
+2. Footer перенесён ДО `<script src="app.js">` — иконки начали работать
+3. Мобильный footer перекрывался таббаром → `padding-bottom: calc(72px + env(safe-area-inset-bottom))`
+4. Цвет подвала: тёмный `#1e2820` → `var(--navy)` (как шапка) — согласованность
+5. Зелёные тексты не читались на зелёном фоне → все тексты/иконки переведены в белый
+6. Тёмная тема: подвал оставался зелёным (`--navy` в dark = `#89d185`) → `body.dark .footer-desktop/mobile { background: #252526 !important }`
+7. Иконка адреса убрана (была «съехавшая»)
+8. Год: 2025 → 2026
+
+**Финальное состояние:**
+- Светлая тема: фон `var(--navy)` (#417033) = шапка, тексты белые
+- Тёмная тема: фон `#252526` = как все блоки
+
+**Коммиты:** `140fe45`, `3ff13d5`, `fffa035`, `a9b149a`, `f024ab9`, `5783796`, `723d457`
+
+---
+
+#### 4. Мобильное нижнее меню (таббар)
+
+**До:** простая плашка `var(--navy)` с тонкой белой линией на активной вкладке
+
+**После (редизайн):**
+- Стеклянный фон: `rgba(55, 90, 43, 0.92)` + `backdrop-filter: blur(16px)`
+- Тонкая верхняя граница: `rgba(255,255,255,.08)`
+- Активная вкладка: pill-подсветка `rgba(255,255,255,.14)` + `border-radius: 12px`
+- Активная иконка: поднимается `translateY(-1px)` + мягкое свечение `drop-shadow`
+- Неактивные: `rgba(255,255,255,.5)`, плавная анимация `.2s`
+- Gap между кнопками, `border-radius` у каждой кнопки
+- Тёмная тема: `rgba(30,30,30,.92)` с blur
+
+**Коммит:** `b4e3685`
+
+---
+
+#### Итоговые коммиты сессии 20
+
+| Коммит | Описание |
+|--------|----------|
+| `aea265b` | feat: add images/ folder + DRINK_IMAGES mapping |
+| `d6e6633` | feat: add drink images (16 photos) + fix espresso-tonic filename |
+| `7176a3c` | feat: replace header text with MBS logo SVG |
+| `92099b3` | feat: use MBS logo.svg in mobile header |
+| `140fe45` | feat: add footer — desktop card + mobile dark bar |
+| `3ff13d5` | fix: footer icons via inline SVG, dark desktop, mobile above tabbar |
+| `fffa035` | fix: footer year 2026, restore dark desktop CSS, fix addr icon |
+| `a9b149a` | fix: footer matches header color, remove addr icon |
+| `f024ab9` | fix: footer all text/icons white for readability on green bg |
+| `5783796` | fix: footer dark theme uses dark gray #252526 |
+| `723d457` | fix: footer dark theme force gray bg (!important) |
+| `b4e3685` | feat: redesign mobile tabbar — glass blur, pill active state |
+
