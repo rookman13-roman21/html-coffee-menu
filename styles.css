@@ -1093,12 +1093,15 @@
 
       /* ── What-if слайдеры ── */
       .whatif-grid { grid-template-columns: 1fr; }
-      .whatif-panel { display: flex; flex-direction: column; }
+      .whatif-panel { display: flex; flex-direction: column; overflow: hidden; }
       .whatif-panel #whatif-result { order: -2; }
       .whatif-panel .whatif-grid   { order: -1; }
-      .wif-cards { grid-template-columns: repeat(2, 1fr); }
-      .wif-card-accent { grid-column: 1 / -1; flex-direction: column; align-items: flex-start; gap: 4px; }
+      .wif-cards { grid-template-columns: repeat(2, 1fr) !important; }
+      .wif-card-accent { grid-column: 1 / -1 !important; flex-direction: column; align-items: flex-start; gap: 4px; }
+      .wif-card-accent .wif-card-label { flex: none; }
+      .wif-card-accent .wif-delta { margin-top: 2px; }
       .wif-sliders { grid-template-columns: 1fr; }
+      .wif-slider-val { font-size: 16px; }
 
       /* ── Сезонность — 2 колонки вместо 4 ── */
       .season-months { grid-template-columns: repeat(2, 1fr); }
@@ -1433,6 +1436,7 @@
       grid-template-columns: repeat(4, 1fr);
       gap: 10px;
       margin-bottom: 0;
+      min-width: 0;
     }
     .wif-card {
       background: var(--gray); border-radius: 10px;
