@@ -2809,7 +2809,15 @@ function renderCost() {
     if (!byName[nm].site  && v.site)  byName[nm].site  = v.site;
   });
   book.forEach(b => {
-    if (!byName[b.name]) byName[b.name] = { name: b.name, phone: b.phone||'', note: b.note||'', site: b.site||'', mats: [], matKeys: [], bookId: b.id };
+    if (!byName[b.name]) {
+      byName[b.name] = { name: b.name, phone: b.phone||'', note: b.note||'', site: b.site||'', mats: [], matKeys: [], bookId: b.id };
+    } else {
+      // дополняем из книги если в suppliers данные пустые
+      if (!byName[b.name].note  && b.note)  byName[b.name].note  = b.note;
+      if (!byName[b.name].phone && b.phone) byName[b.name].phone = b.phone;
+      if (!byName[b.name].site  && b.site)  byName[b.name].site  = b.site;
+      if (!byName[b.name].bookId) byName[b.name].bookId = b.id;
+    }
   });
   const supGroups = Object.values(byName);
   const suppliersHtml = supGroups.length
