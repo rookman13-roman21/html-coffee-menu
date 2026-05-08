@@ -3657,15 +3657,15 @@ function renderFinModel() {
           <option value="usn15" ${taxMode==='usn15' ?'selected':''}>УСН 15% — доходы − расходы</option>
         </select>
         ${taxMode === 'none' ? `
-          <div style="margin-top:8px;padding:8px 10px;background:var(--light);border-radius:8px;border:1.5px solid var(--border);font-size:11.5px;color:var(--muted);line-height:1.5">
+          <div class="tax-hint-box th-none">
             Налог не учитывается в расчётах P&amp;L.
           </div>` : taxMode === 'usn6' ? `
-          <div style="margin-top:8px;padding:8px 10px;background:#f0faf0;border-radius:8px;border:1.5px solid #b5d4a8;font-size:11.5px;color:#1a5c1a;line-height:1.6">
+          <div class="tax-hint-box th-usn6">
             <strong>6% от всей выручки</strong> — независимо от расходов.<br>
             Пример: выручка 1 000 000 ₽ → налог <strong>60 000 ₽</strong>.<br>
             <span style="opacity:.8">Выгоден, если расходы &lt; 60% от выручки. Взносы ИП уменьшают налог до 50%.</span>
           </div>` : `
-          <div style="margin-top:8px;padding:8px 10px;background:#f0f4ff;border-radius:8px;border:1.5px solid #b5c8f4;font-size:11.5px;color:#1a2e6e;line-height:1.6">
+          <div class="tax-hint-box th-usn15">
             <strong>15% от прибыли</strong> (выручка − все расходы).<br>
             Пример: выручка 1 000 000 ₽, расходы 800 000 ₽ → налог <strong>30 000 ₽</strong>.<br>
             <span style="opacity:.8">Выгоден при высоких расходах (&gt; 60% от выручки). Минимальный налог — 1% от выручки.</span>
