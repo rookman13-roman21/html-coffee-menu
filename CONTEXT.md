@@ -1,7 +1,7 @@
 # CONTEXT — MBS* Coffee Menu
 
 > CFO-инструментарий для владельца кофейни. Один HTML-файл без зависимостей и сборки.
-> Последнее обновление: 8 мая 2026 (сессия 14)
+> Последнее обновление: 8 мая 2026 (сессия 18)
 
 ---
 
@@ -349,14 +349,13 @@ resetAll()  // confirm → восстанавливает S из DEFAULTS + FIXE
 - Поиск + сортировка
 
 ### 🛒 План продаж
+- **KPI-строка 1** `.sales-kpi-row1`: «Выручка/мес», «Прибыль/мес» (зелёная), «Чашек/день»
+- **KPI-строка 2** `.sales-kpi-row2`: «Food-cost %» (цвет по порогу), «Средний чек», блок «Дней в месяце + кнопки ±10%»
 - Редактируемые порции/день (oninput + дебаунс 400мс)
-- Выручка и прибыль за день и месяц (авторасчёт)
-- Мини-бар доли в выручке (%)
+- Таблица **4 колонки**: Напиток / Порций/день / Выручка/мес ₽ / Прибыль/мес ₽
 - ИТОГО-строка в tfoot
-- 6 KPI-плашек по портфелю (взвешенный FC%, средний чек, ср. прибыль/чашка, ...)
-- Поиск + сортировка по 7 столбцам
-- 4 кнопки пресетов (Обычный / Тихий / Летний / Зимний) — активный подсвечивается зелёным (`S.activePreset`)
-- Кнопка «⬇ CSV»
+- Пресет-селект + поиск по названию + сортировка по 4 столбцам
+- Кнопки «⬇ CSV»
 
 ### 💰 Финмодель
 - Редактируемые статьи постоянных расходов (inline + delete)
@@ -412,6 +411,10 @@ resetAll()  // confirm → восстанавливает S из DEFAULTS + FIXE
 | Белый лист при скачивании PDF в Safari | Blob URL замораживал страницу при открытии диалога → `_printViaIframe` без Blob |
 | `type="number"` placeholder не показывается в Safari | `type="text" inputmode="decimal"` — placeholder всегда виден, `parseFloat()` при сохранении |
 | `unit` хранится как `'1 кг'`/`'1 л'` (не просто `'кг'`) | Проверка через `.includes('кг')` / `.includes('л')` для определения формата placeholder |
+| iOS Safari зумирует страницу при фокусе | `font-size: 16px !important` на все `input/select/textarea` внутри `@media (max-width: 768px)` |
+| `position: fixed` не работает внутри `position: sticky` на iOS | `#loc-menu` и `#export-menu` вынесены из хедера в DOM после `</header>`; JS позиционирует через `getBoundingClientRect()` |
+| На мобиле выпадалка «Моя кофейня» открывалась внизу экрана | `top: 58px !important` в мобильном медиа-запросе — меню прижато к шапке |
+| `.btn-green` не был определён в CSS | Добавлен `.btn-green { background: var(--green); color: #fff; border: none; }` + hover + dark override |
 
 ---
 
@@ -781,3 +784,116 @@ try { renderLocSwitcherUI(); } catch(e) { console.error('[renderLocSwitcherUI]',
 - Любые `document.getElementById(...)` внутри функций должны объявляться локально через `const el = ...`
 - INIT-блок критичен — любая необработанная ошибка гасит всю инициализацию включая `switchTab()`
 - Все вызовы в INIT-блоке оборачивать в try/catch
+
+---
+
+### Сессия 15 (8 мая 2026) — новая вёрстка вкладки «План продаж»
+
+**Новая 2-строчная KPI-секция (коммит `267d02f`):**
+
+Вместо одной горизонтальной строки — два ряда KPI:
+- **Строка 1** `.sales-kpi-row1`: 3 карточки — «Выручка / мес» (широкая), «Прибыль / мес» (широкая, зелёная), «Чашек / день» (компактная)
+- **Строка 2** `.sales-kpi-row2`: 4 элемента — «Food-cost %» (граница меняет цвет по порогу), «Средний чек», блок «Дней в месяце + ±10%»
+
+**Таблица плана продаж — 4 колонки:**
+- Убраны колонки «Выручка/день» и «Прибыль/день» — перегружали экран
+- Оставлены: **Напиток** / **Порций/день** / **Выручка/мес ₽** / **Прибыль/мес ₽**
+- `filterSales` пересчитан под 4 колонки (`colspan=4`)
+
+**Новые CSS-классы:**
+- `.sales-kpi-row1`, `.sales-kpi-row2` — flex-строки KPI
+- `.sales-kpi-card` — базовая карточка
+- `.sales-kpi-wide` — широкая карточка (flex: 2)
+- `.sales-kpi-compact` — компактная (flex: 1)
+- `.sales-kpi-green` — зелёная рамка (прибыль)
+- `.sales-days-scale` — блок «Дней + кнопки»
+- `.sales-scale-btn.red/.green` — кнопки −10% / +10%
+
+---
+
+### Сессия 16 (8 мая 2026) — dark mode фиксы
+
+**`.btn-green` не существовал в CSS (коммит `f47df2b`):**
+- Кнопки «+ Поставщик», «+ Сырьё», «+ Полуфабрикат», «+ Напиток» использовали класс `.btn-green` в app.js — но он не был определён в styles.css
+- Добавлены правила:
+  ```css
+  .btn-green { background: var(--green); color: #fff; border: none; }
+  .btn-green:hover { opacity: .88; }
+  body.dark .btn-green { background: var(--green); color: #fff; }
+  ```
+
+**`.sales-preset-select` в тёмной теме (коммит `f47df2b`):**
+- Имел `background: #fff` без dark override → белый фон в тёмной теме
+- Добавлено: `body.dark .sales-preset-select { background: #3c3c3c; color: #d4d4d4; border-color: #454545; }`
+
+---
+
+### Сессия 17 (8 мая 2026) — мобильные UX-фиксы
+
+**Предотвращение zoom на iOS при фокусе (коммит `36c6709`):**
+- iOS Safari зумирует страницу при фокусе на полях с `font-size < 16px`
+- Добавлен универсальный override внутри `@media (max-width: 768px)`:
+  ```css
+  input, select, textarea,
+  .inp, .modal-inp, .modal-select, .sales-preset-select {
+    font-size: 16px !important;
+  }
+  ```
+- Удалены дублирующие `font-size: 15px/16px` из отдельных мобильных правил
+
+**Исправление выпадающего меню «Моя кофейня» на iOS (коммиты `7d4f586`, `d745b1d`):**
+
+Причина бага: `position: fixed` внутри `position: sticky` не работает на iOS Safari.
+- `#loc-menu` и `#export-menu` **вынесены из хедера** в DOM — сразу после `</header>`
+- CSS: `position: fixed` для обоих меню; z-index: 250 (десктоп), 350 (мобайл)
+- На десктопе: `toggleLocMenu()` и `toggleExportMenu()` вычисляют позицию через `.getBoundingClientRect()` и устанавливают `top`/`left`/`right` динамически
+- На мобайле: `top: 58px !important` — меню открывается прямо под шапкой
+
+**Обновлённые функции JS:**
+```js
+function toggleLocMenu(e) {
+  // desktop: позиционирует по getBoundingClientRect() от #loc-switcher
+  // mobile: css top:58px через !important
+}
+function toggleExportMenu(e) {
+  // desktop: позиционирует справа, привязка к #export-wrap
+}
+```
+
+---
+
+### Сессия 18 (8 мая 2026) — inputmode для всех числовых полей
+
+**Цель:** на мобиле открывать правильную клавиатуру для каждого поля ввода.
+
+**Правило:**
+| `inputmode` | Клавиатура | Где используется |
+|---|---|---|
+| `numeric` | Только цифры (без точки) | Целые числа: цена, объём, кол-во, ставки, МРОТ |
+| `decimal` | Цифры + точка/запятая | Дробные: БЖУ, выход п/ф, %, НДФЛ, страховые |
+| `tel` | Телефонная (цифры + + # *) | Поля телефона поставщиков |
+
+**Что добавлено/изменено:**
+
+*index.html:*
+- `md-price` (цена напитка) → `inputmode="numeric"`
+- `md-vol` (объём мл) → сначала `numeric`, потом исправлено на `decimal` (объём может быть дробным)
+- `mm-price`, `mm-size` (цена/объём сырья) → `numeric`
+- `mm-kcal` → `numeric`; `mm-protein`, `mm-fat`, `mm-carbs` → `decimal`
+- `ms-yield` (выход полуфабриката) → `decimal`
+- `sup-phone`, `sup-book-phone`, `mm-sup-phone` — `type="text"` → `type="tel" inputmode="tel"`
+
+*app.js:*
+- Потери `%` в строках ингредиентов → `numeric`
+- `kpi-target-fc` (целевой FC%) → `numeric`
+- Стартовые вложения → `numeric`
+- ФОТ: ставка, часы, смены, кол-во → `numeric`
+- МРОТ → `numeric`; НДФЛ, страховые → `decimal`
+- Статьи расходов: сумма → `numeric`; % от выручки → `decimal`; доля % → `numeric`
+
+**Уже было правильно (не изменялось):**
+- Поля кол-ва ингредиентов (`.ing-amt`, `.ing-yield`) — `type="text" inputmode="decimal"` ✅
+- Поле порций/день в таблице продаж — `inputmode="numeric"` ✅
+- Цена сырья в таблице — `inputmode="numeric"` ✅
+- Цена продажи (inline) — `inputmode="numeric"` ✅
+- Дни в месяце — `inputmode="numeric"` ✅
