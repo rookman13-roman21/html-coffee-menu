@@ -3602,15 +3602,15 @@ function renderFinModel() {
       <div>
         <div class="tab-intro-title">Финансовая модель</div>
         <div class="tab-intro-text">
-          Показывает <strong>P&amp;L, ТБУ и три сценария</strong> на основе реального плана продаж.<br>
-          Заполни расходы и ФОТ — цифры пересчитаются мгновенно.<br>
-          Все данные синхронизированы с вкладкой <strong>«Продажи»</strong> — изменил порции, обновилась финмодель.
+          Полный <strong>P&amp;L, ТБУ и три сценария</strong> на основе реального плана продаж из вкладки «Продажи».<br>
+          Данные синхронизируются автоматически — изменил меню или порции, финмодель пересчиталась.<br>
+          Введи стартовые вложения вверху страницы — появится срок окупаемости.
         </div>
         <div class="tab-intro-steps">
-          <span class="tab-intro-step">1. Введи расходы и ФОТ</span>
-          <span class="tab-intro-step">2. Смотри P&amp;L и ТБУ</span>
-          <span class="tab-intro-step">3. Смоделируй сценарии</span>
-          <span class="tab-intro-step">4. Прогноз на 12 месяцев</span>
+          <span class="tab-intro-step">1. Стартовые вложения → срок окупаемости</span>
+          <span class="tab-intro-step">2. Расходы и ФОТ → P&amp;L и ТБУ</span>
+          <span class="tab-intro-step">3. Моделирование: цена / гости / средний чек</span>
+          <span class="tab-intro-step">4. Сезонность: пресеты БЦ, ЖК, лето → прогноз на 12 мес</span>
         </div>
       </div>
     </div>
