@@ -3915,35 +3915,36 @@ function renderFinModel() {
       <span><i data-lucide="sliders" class="icon"></i> Pricing wizard — «А что если?» <span style="font-size:12px;font-weight:500;color:var(--muted);margin-left:6px">смоделируйте изменение цен и трафика</span></span>
       <button class="btn btn-outline" style="padding:5px 12px;font-size:12px;flex-shrink:0" onclick="resetWhatIf3()"><i data-lucide="rotate-ccw" class="icon"></i> Сбросить</button>
     </div>
-    <div class="panel whatif-panel" style="padding:16px 18px;margin-bottom:24px">
-      <div class="whatif-grid">
-        <div class="whatif-slider">
-          <div class="whatif-slider-head">
-            <span><i data-lucide="tag" class="icon" style="color:var(--green)"></i> <strong>Цены продажи</strong></span>
-            <strong id="wif-price-val" style="color:var(--navy)">${(_wif.price>=0?'+':'')+_wif.price}%</strong>
+    <div class="panel whatif-panel" style="padding:20px;margin-bottom:24px">
+      <div id="whatif-result" class="wif-cards"></div>
+      <div class="wif-divider"></div>
+      <div class="wif-sliders">
+        <div class="wif-slider-card">
+          <div class="wif-slider-top">
+            <span class="wif-slider-label"><i data-lucide="tag" class="icon" style="color:var(--green)"></i> Цены продажи</span>
+            <span class="wif-slider-val" id="wif-price-val">${(_wif.price>=0?'+':'')+_wif.price}%</span>
           </div>
           <input type="range" id="wif-price" min="-50" max="50" step="1" value="${_wif.price}" oninput="onWhatIf3('price',this.value)">
           <div class="whatif-marks"><span>−50%</span><span>0</span><span>+50%</span></div>
         </div>
-        <div class="whatif-slider">
-          <div class="whatif-slider-head">
-            <span><i data-lucide="package" class="icon" style="color:#b38600"></i> <strong>Цены сырья</strong></span>
-            <strong id="wif-cost-val" style="color:var(--navy)">${(_wif.cost>=0?'+':'')+_wif.cost}%</strong>
+        <div class="wif-slider-card">
+          <div class="wif-slider-top">
+            <span class="wif-slider-label"><i data-lucide="package" class="icon" style="color:#b38600"></i> Цены сырья</span>
+            <span class="wif-slider-val" id="wif-cost-val">${(_wif.cost>=0?'+':'')+_wif.cost}%</span>
           </div>
           <input type="range" id="wif-cost" min="-50" max="50" step="1" value="${_wif.cost}" oninput="onWhatIf3('cost',this.value)">
           <div class="whatif-marks"><span>−50%</span><span>0</span><span>+50%</span></div>
         </div>
-        <div class="whatif-slider">
-          <div class="whatif-slider-head">
-            <span><i data-lucide="users" class="icon" style="color:var(--red)"></i> <strong>Трафик / порции</strong></span>
-            <strong id="wif-traffic-val" style="color:var(--navy)">${(_wif.traffic>=0?'+':'')+_wif.traffic}%</strong>
+        <div class="wif-slider-card">
+          <div class="wif-slider-top">
+            <span class="wif-slider-label"><i data-lucide="users" class="icon" style="color:var(--red)"></i> Трафик / порции</span>
+            <span class="wif-slider-val" id="wif-traffic-val">${(_wif.traffic>=0?'+':'')+_wif.traffic}%</span>
           </div>
           <input type="range" id="wif-traffic" min="-50" max="50" step="5" value="${_wif.traffic}" oninput="onWhatIf3('traffic',this.value)">
           <div class="whatif-marks"><span>−50%</span><span>0</span><span>+50%</span></div>
         </div>
       </div>
-      <div id="whatif-result" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px"></div>
-      <div class="hint" style="margin-top:10px"><i data-lucide="info" class="icon"></i> Двигайте слайдеры — сразу увидите как меняются маржа, ТБУ и прибыль</div>
+      <div class="hint" style="margin-top:12px"><i data-lucide="info" class="icon"></i> Двигайте слайдеры — сразу увидите как меняются маржа, ТБУ и прибыль</div>
     </div>
 
     <div class="section-title"><i data-lucide="trending-up" class="icon"></i> Сценарии относительно вашего базового плана</div>
@@ -5779,31 +5780,38 @@ function recalcWhatIf3() {
   const dFCClr   = dFCpp<0  ? 'var(--green)' : dFCpp>0  ? 'var(--red)' : 'var(--muted)'; // FC↓ = хорошо
   const s = v => v>0?'+':'';
 
+  const mkDelta = (val, label, invert=false) => {
+    if (Math.abs(val) < 0.01) return `<span class="wif-delta wif-delta-zero">${label}</span>`;
+    const pos = invert ? val < 0 : val > 0;
+    const cls = pos ? 'wif-delta-pos' : 'wif-delta-neg';
+    return `<span class="wif-delta ${cls}">${label}</span>`;
+  };
+
   out.innerHTML = `
-    <div style="flex:1;min-width:130px;background:var(--gray);border-radius:9px;padding:10px 13px">
-      <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">Средний чек</div>
-      <div style="font-weight:800;font-size:17px">${rub(avgChk)}</div>
-      <div style="font-size:11px;font-weight:700;color:${dAvgClr};margin-top:2px">${s(dAvgAbs)}${rub(dAvgAbs)} к базе</div>
+    <div class="wif-card">
+      <div class="wif-card-label">Средний чек</div>
+      <div class="wif-card-val">${rub(avgChk)}</div>
+      ${mkDelta(dAvgAbs, `${s(dAvgAbs)}${rub(dAvgAbs)} к базе`)}
     </div>
-    <div style="flex:1;min-width:130px;background:var(--gray);border-radius:9px;padding:10px 13px">
-      <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">FC%</div>
-      <div style="font-weight:800;font-size:17px">${pct(fc2)}</div>
-      <div style="font-size:11px;font-weight:700;color:${dFCClr};margin-top:2px">${s(dFCpp)}${dFCpp.toFixed(1)} pp к базе</div>
+    <div class="wif-card">
+      <div class="wif-card-label">FC%</div>
+      <div class="wif-card-val">${pct(fc2)}</div>
+      ${mkDelta(dFCpp, `${s(dFCpp)}${dFCpp.toFixed(1)} pp к базе`, true)}
     </div>
-    <div style="flex:1;min-width:130px;background:var(--gray);border-radius:9px;padding:10px 13px">
-      <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">Выручка / мес</div>
-      <div style="font-weight:800;font-size:17px">${rub(rev2)}</div>
-      <div style="font-size:11px;font-weight:700;color:${dRevClr};margin-top:2px">${s(dRevAbs)}${rub(dRevAbs)} к базе</div>
+    <div class="wif-card">
+      <div class="wif-card-label">Выручка / мес</div>
+      <div class="wif-card-val">${rub(rev2)}</div>
+      ${mkDelta(dRevAbs, `${s(dRevAbs)}${rub(dRevAbs)} к базе`)}
     </div>
-    <div style="flex:1;min-width:130px;background:var(--gray);border-radius:9px;padding:10px 13px">
-      <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">Выручка ТБУ</div>
-      <div style="font-weight:800;font-size:17px">${rub(bep2)}</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:2px">покрытие ${cover.toFixed(0)}%</div>
+    <div class="wif-card">
+      <div class="wif-card-label">Выручка ТБУ</div>
+      <div class="wif-card-val">${rub(bep2)}</div>
+      <span class="wif-delta wif-delta-zero">покрытие ${cover.toFixed(0)}%</span>
     </div>
-    <div style="flex:1.4;min-width:160px;background:var(--light);border-radius:9px;padding:10px 13px">
-      <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">Чистая прибыль / мес</div>
-      <div style="font-weight:800;font-size:18px;color:${netClr}">${rub(net2)}</div>
-      <div style="font-size:11px;font-weight:700;color:${dClr};margin-top:2px">${sign}${rub(delta)} к базе</div>
+    <div class="wif-card wif-card-accent">
+      <div class="wif-card-label">Чистая прибыль / мес</div>
+      <div class="wif-card-val" style="color:${netClr}">${rub(net2)}</div>
+      ${mkDelta(delta, `${sign}${rub(delta)} к базе`)}
     </div>`;
 }
 // Совместимость со старым обработчиком (если где-то остался)

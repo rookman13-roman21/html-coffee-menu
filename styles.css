@@ -1096,6 +1096,9 @@
       .whatif-panel { display: flex; flex-direction: column; }
       .whatif-panel #whatif-result { order: -2; }
       .whatif-panel .whatif-grid   { order: -1; }
+      .wif-cards { grid-template-columns: repeat(2, 1fr); }
+      .wif-card-accent { grid-column: 1 / -1; flex-direction: column; align-items: flex-start; gap: 4px; }
+      .wif-sliders { grid-template-columns: 1fr; }
 
       /* ── Сезонность — 2 колонки вместо 4 ── */
       .season-months { grid-template-columns: repeat(2, 1fr); }
@@ -1423,6 +1426,72 @@
     }
 
     body.dark .whatif-slider { background: #2a2a2a; }
+
+    /* ── WHAT-IF: новая верстка ───────────────────────── */
+    .wif-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 0;
+    }
+    .wif-card {
+      background: var(--gray); border-radius: 10px;
+      padding: 12px 14px; display: flex; flex-direction: column; gap: 4px;
+    }
+    .wif-card-accent {
+      grid-column: 1 / -1;
+      background: var(--light);
+      border: 1.5px solid var(--border);
+      flex-direction: row; align-items: center; flex-wrap: wrap; gap: 8px 20px;
+      padding: 14px 18px;
+    }
+    .wif-card-label {
+      font-size: 10px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .04em;
+    }
+    .wif-card-val { font-size: 19px; font-weight: 800; color: var(--text); line-height: 1.1; }
+    .wif-card-accent .wif-card-label { flex: 0 0 100%; margin-bottom: -4px; }
+    .wif-card-accent .wif-card-val   { font-size: 22px; }
+
+    /* pill-дельта */
+    .wif-delta {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+    }
+    .wif-delta-pos  { background: rgba(76,175,80,.15);  color: #2e7d32; }
+    .wif-delta-neg  { background: rgba(229,57,53,.12);  color: #c62828; }
+    .wif-delta-zero { background: transparent; color: var(--muted); padding: 2px 0; }
+    body.dark .wif-delta-pos  { background: rgba(105,191,105,.18); color: #7ab87e; }
+    body.dark .wif-delta-neg  { background: rgba(255,100,100,.15); color: #ff8080; }
+    body.dark .wif-card { background: #2a2a2a; }
+    body.dark .wif-card-accent { background: #252526; border-color: #3c3c3c; }
+
+    /* разделитель */
+    .wif-divider {
+      border: none; border-top: 1.5px solid var(--border);
+      margin: 16px 0;
+    }
+    body.dark .wif-divider { border-top-color: #3c3c3c; }
+
+    /* слайдеры */
+    .wif-sliders {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .wif-slider-card {
+      background: var(--gray); border-radius: 10px; padding: 12px 14px;
+    }
+    body.dark .wif-slider-card { background: #2a2a2a; }
+    .wif-slider-top {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 10px;
+    }
+    .wif-slider-label { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 5px; }
+    .wif-slider-val {
+      font-size: 18px; font-weight: 800; color: var(--navy);
+      min-width: 52px; text-align: right;
+    }
+    .wif-slider-card input[type=range] { width: 100%; accent-color: var(--green); cursor: pointer; margin: 0; }
 
     /* ── PAYROLL CALCULATOR ──────────────────────────────── */
     .payroll-table-wrap { overflow-x: auto; }
