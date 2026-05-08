@@ -1116,6 +1116,38 @@
     .sup-intro-toggle { display: none; } /* скрыто на десктопе */
     .sales-intro-toggle { display: none; } /* скрыто на десктопе */
     .sales-hdr-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+    /* ── Продажи: блок пресетов ── */
+    .sales-presets-block {
+      background: var(--gray); border-radius: 12px;
+      padding: 10px 14px; margin-bottom: 16px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .sales-presets-row,
+    .sales-scale-row {
+      display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;
+    }
+    .sales-presets-label {
+      font-size: 12px; font-weight: 700; color: var(--muted);
+      white-space: nowrap; flex-shrink: 0; min-width: 62px;
+    }
+    .sales-presets-btns {
+      display: flex; gap: 6px; flex-wrap: wrap;
+    }
+    .sales-scale-btns {
+      display: flex; gap: 6px; flex-wrap: nowrap;
+    }
+    .sales-preset-btn {
+      font-size: 12px; padding: 5px 12px; white-space: nowrap;
+    }
+    .sales-preset-btn.active {
+      background: var(--green); color: #fff; border-color: var(--green);
+    }
+    .sales-scale-btn {
+      font-size: 12px; padding: 5px 12px; white-space: nowrap;
+    }
+    .sales-scale-btn.red   { color: var(--red); }
+    .sales-scale-btn.green { color: var(--green); }
     .dash-hdr-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .dash-chart-name { width: 170px; flex-shrink: 0; }
     .dash-search-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
@@ -1147,6 +1179,11 @@
       .sales-intro-toggle { display: inline-flex !important; }
       .sales-intro-toggle.active { background: var(--navy); color: #fff; border-color: var(--navy); }
       .sales-btn-txt { display: none; }
+
+      /* Продажи: пресеты на мобильном */
+      .sales-preset-btn { font-size: 11px; padding: 5px 8px; }
+      .sales-scale-btn  { font-size: 11px; padding: 5px 9px; }
+      .sales-presets-label { min-width: 58px; font-size: 11px; }
 
       /* Заголовок: только иконки */
       .dash-btn-txt { display: none; }

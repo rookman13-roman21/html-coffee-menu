@@ -3075,18 +3075,25 @@ function renderSales() {
         </div>
       </div>
     </div>
-    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:16px;background:var(--gray);border-radius:12px;padding:10px 14px">
-      <span style="font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap;margin-right:2px">Пресеты:</span>
-      ${Object.entries(SALES_PRESETS).map(([k,p])=>{
-        const isActive = S.activePreset === k;
-        return `<button class="btn btn-outline" style="font-size:12px;padding:5px 12px;white-space:nowrap${isActive ? ';background:var(--green);color:#fff;border-color:var(--green)' : ''}" onclick="applySalesPreset('${k}')">${p.label}</button>`;
-      }).join('')}
-      <div style="width:1px;height:24px;background:var(--border);margin:0 4px;flex-shrink:0"></div>
-      <span style="font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap">Масштаб:</span>
-      <button class="btn btn-outline" style="font-size:12px;padding:5px 12px;color:var(--red);white-space:nowrap" onclick="scaleSalesPortions(0.75)">−25%</button>
-      <button class="btn btn-outline" style="font-size:12px;padding:5px 12px;color:var(--red);white-space:nowrap" onclick="scaleSalesPortions(0.90)">−10%</button>
-      <button class="btn btn-outline" style="font-size:12px;padding:5px 12px;color:var(--green);white-space:nowrap" onclick="scaleSalesPortions(1.10)">+10%</button>
-      <button class="btn btn-outline" style="font-size:12px;padding:5px 12px;color:var(--green);white-space:nowrap" onclick="scaleSalesPortions(1.25)">+25%</button>
+    <div class="sales-presets-block">
+      <div class="sales-presets-row">
+        <span class="sales-presets-label">Пресеты:</span>
+        <div class="sales-presets-btns">
+          ${Object.entries(SALES_PRESETS).map(([k,p])=>{
+            const isActive = S.activePreset === k;
+            return `<button class="btn btn-outline sales-preset-btn${isActive ? ' active' : ''}" onclick="applySalesPreset('${k}')">${p.label}</button>`;
+          }).join('')}
+        </div>
+      </div>
+      <div class="sales-scale-row">
+        <span class="sales-presets-label">Масштаб:</span>
+        <div class="sales-scale-btns">
+          <button class="btn btn-outline sales-scale-btn red" onclick="scaleSalesPortions(0.75)">−25%</button>
+          <button class="btn btn-outline sales-scale-btn red" onclick="scaleSalesPortions(0.90)">−10%</button>
+          <button class="btn btn-outline sales-scale-btn green" onclick="scaleSalesPortions(1.10)">+10%</button>
+          <button class="btn btn-outline sales-scale-btn green" onclick="scaleSalesPortions(1.25)">+25%</button>
+        </div>
+      </div>
     </div>
     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
