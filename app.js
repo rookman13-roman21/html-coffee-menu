@@ -4992,7 +4992,6 @@ function renderRecipes() {
       <div class="recipes-toolbar-row recipes-toolbar-filters">
         <div class="recipe-filter-btns">${filterBtns}</div>
         <div class="recipes-toolbar-sort">
-          <span class="recipes-sort-label">Сорт:</span>
           <div class="recipe-sort-btns">${sortBtns}</div>
         </div>
       </div>
