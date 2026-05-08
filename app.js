@@ -3973,24 +3973,39 @@ function renderFinModel() {
     </div>
 
     <div class="section-title"><i data-lucide="calendar" class="icon"></i> Сезонность <span style="font-size:12px;font-weight:500;color:var(--muted);margin-left:6px">прогноз прибыли по 12 месяцам</span></div>
-    <div class="pts-wrap" style="margin-bottom:20px">
-      <button class="pts-toggle" onclick="toggleSeasonality()">
-        <i data-lucide="sliders" class="icon"></i>
-        Коэффициенты сезонности (слайдеры)
-        <span class="pts-toggle-hint">коэфф. 1.0 = базовый месяц</span>
-        <i data-lucide="${S.seasonalityOpen?'chevron-up':'chevron-down'}" class="icon" style="margin-left:auto"></i>
-      </button>
-      ${S.seasonalityOpen ? `<div class="pts-body">
-        <div class="season-months">
-          ${['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'].map((m,i) => `
-          <div class="season-month-item">
-            <div class="season-month-label">${m}</div>
-            <input type="range" class="season-range" min="0.3" max="2.0" step="0.05" value="${(S.seasonality||Array(12).fill(1))[i]}" oninput="onSeasonalMonth(${i},this.value)">
-            <div class="season-month-val" id="sm-val-${i}">${Math.round(((S.seasonality||Array(12).fill(1))[i])*100)}%</div>
-          </div>`).join('')}
-        </div>
-        <div class="hint" style="margin-top:12px"><i data-lucide="info" class="icon"></i> 100% = базовый месяц. 80% = слабый месяц (−20%). 130% = сильный месяц (+30%). Переменные расходы (отмеченные выше) тоже масштабируются.</div>
-      </div>` : ''}
+
+    <!-- Пресеты -->
+    <div class="season-presets">
+      <button class="season-preset-btn" onclick="applySeasonPreset('flat')"><i data-lucide="minus" class="icon"></i> Равномерно</button>
+      <button class="season-preset-btn" onclick="applySeasonPreset('summer')">&#9728; Лето +30%</button>
+      <button class="season-preset-btn" onclick="applySeasonPreset('winter')">&#10052; Зима</button>
+    </div>
+
+    <!-- Сетка 12 ячеек -->
+    <div class="season-grid">
+      ${['\u042fнв','\u0424ев','\u041cар','\u0410пр','\u041cай','\u0418юн','\u0418юл','\u0410вг','\u0421ен','\u041eкт','\u041dоя','\u0414ек'].map((m,i) => {
+        const k = (S.seasonality||Array(12).fill(1))[i];
+        const pct = Math.round(k*100);
+        const cls = k > 1.05 ? 'season-cell-up' : k < 0.95 ? 'season-cell-down' : '';
+        return `<button class="season-cell ${cls}" onclick="openSeasonDrawer(${i})">
+          <span class="season-cell-mon">${m}</span>
+          <span class="season-cell-pct" id="scell-${i}">${pct}%</span>
+        </button>`;
+      }).join('')}
+    </div>
+
+    <!-- Drawer -->
+    <div class="season-drawer" id="season-drawer">
+      <div class="season-drawer-header">
+        <span class="season-drawer-title" id="season-drawer-title">Январь</span>
+        <button class="season-drawer-close" onclick="closeSeasonDrawer()"><i data-lucide="x" class="icon"></i></button>
+      </div>
+      <div class="season-drawer-body">
+        <div class="season-drawer-val" id="season-drawer-val">100%</div>
+        <input type="range" id="season-drawer-range" class="season-drawer-range" min="30" max="200" step="5" value="100" oninput="onSeasonDrawerChange(this.value)">
+        <div class="season-drawer-marks"><span>30%</span><span>100%</span><span>200%</span></div>
+        <div class="season-drawer-hint">100% = базовый месяц &nbsp;·&nbsp; <span style="color:var(--green)">120%</span> = +20% &nbsp;·&nbsp; <span style="color:var(--red)">80%</span> = −20%</div>
+      </div>
     </div>
 
     <div class="section-title"><i data-lucide="bar-chart" class="icon"></i> Чистая прибыль / 12 месяцев</div>
@@ -5884,7 +5899,7 @@ function onSeasonalMonth(i, v) {
   S.seasonality[i] = parseFloat(v);
   const lbl = document.getElementById('sm-val-'+i);
   if (lbl) lbl.textContent = Math.round(parseFloat(v)*100) + '%';
-  // перерисовать только чарт
+  // perерисовать только чарт
   const chartEl = document.getElementById('seasonal-chart');
   if (chartEl) {
     const drinks = enrich();
@@ -5897,6 +5912,73 @@ function onSeasonalMonth(i, v) {
   }
   saveState();
 }
+
+let _seasonDrawerIdx = 0;
+function openSeasonDrawer(i) {
+  _seasonDrawerIdx = i;
+  const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  const k = (S.seasonality||Array(12).fill(1))[i];
+  const pct = Math.round(k*100);
+  const drawer = document.getElementById('season-drawer');
+  document.getElementById('season-drawer-title').textContent = MONTHS[i];
+  document.getElementById('season-drawer-val').textContent = pct + '%';
+  const range = document.getElementById('season-drawer-range');
+  range.value = pct;
+  _updateDrawerRangeColor(pct);
+  drawer.classList.add('open');
+}
+function closeSeasonDrawer() {
+  document.getElementById('season-drawer').classList.remove('open');
+}
+function onSeasonDrawerChange(v) {
+  const pct = parseInt(v);
+  const k = pct / 100;
+  if (!S.seasonality) S.seasonality = Array(12).fill(1);
+  S.seasonality[_seasonDrawerIdx] = k;
+  document.getElementById('season-drawer-val').textContent = pct + '%';
+  _updateDrawerRangeColor(pct);
+  // Обновить ячейку в сетке
+  const cell = document.getElementById('scell-' + _seasonDrawerIdx);
+  const btn  = cell && cell.closest('.season-cell');
+  if (cell) cell.textContent = pct + '%';
+  if (btn) {
+    btn.classList.toggle('season-cell-up',   k > 1.05);
+    btn.classList.toggle('season-cell-down', k < 0.95);
+    btn.classList.toggle('',                 k >= 0.95 && k <= 1.05);
+  }
+  // Обновить чарт
+  const chartEl = document.getElementById('seasonal-chart');
+  if (chartEl) {
+    const drinks = enrich();
+    const varCostsMon = drinks.reduce((s,d)=>s+d.cost*S.portions[d.id],0)*S.days;
+    const totRevMon   = drinks.reduce((s,d)=>s+d.price*S.portions[d.id],0)*S.days;
+    const totalFixed  = getEffectiveCosts(totRevMon).reduce((s,c)=>s+c.value,0);
+    const taxMode = S.taxMode||'none';
+    const calcTaxLocal = (rev,varC,fixed) => taxMode==='usn6'?rev*0.06:taxMode==='usn15'?Math.max(0,(rev-varC-fixed)*0.15):0;
+    chartEl.innerHTML = buildSeasonalChart(totRevMon, varCostsMon, totalFixed, calcTaxLocal);
+  }
+  saveState();
+}
+function _updateDrawerRangeColor(pct) {
+  const range = document.getElementById('season-drawer-range');
+  if (!range) return;
+  const pos = (pct - 30) / (200 - 30) * 100;
+  const clr = pct > 105 ? '#6abf69' : pct < 95 ? '#e53935' : '#888';
+  range.style.background = `linear-gradient(to right, ${clr} ${pos}%, var(--border) ${pos}%)`;
+}
+
+function applySeasonPreset(preset) {
+  const FLAT   = Array(12).fill(1);
+  // Лето: апр-сен +30%, дек-фев слабый
+  const SUMMER = [0.75, 0.75, 0.90, 1.10, 1.25, 1.35, 1.35, 1.25, 1.10, 0.95, 0.80, 0.75];
+  // Зима: ноя-фев +20%, лето слабое
+  const WINTER = [1.20, 1.15, 1.00, 0.90, 0.85, 0.75, 0.75, 0.80, 0.95, 1.05, 1.15, 1.25];
+  S.seasonality = preset === 'summer' ? SUMMER : preset === 'winter' ? WINTER : FLAT;
+  saveState();
+  renderFinModel();
+  if (window.lucide) lucide.createIcons();
+}
+
 function toggleSeasonality() {
   S.seasonalityOpen = !S.seasonalityOpen;
   saveState();

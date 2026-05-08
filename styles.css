@@ -1605,6 +1605,80 @@
     body.dark .payroll-bench   { background:#252526; }
     body.dark .season-month-val { color:#c5e1a5; }
 
+    /* ── SEASON GRID + DRAWER ───────────────────────── */
+    .season-presets {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;
+    }
+    .season-preset-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 5px 13px; border-radius: 999px;
+      border: 1.5px solid var(--border); background: var(--light);
+      font-family: var(--font); font-size: 12px; font-weight: 600;
+      color: var(--text); cursor: pointer; transition: all .15s;
+    }
+    .season-preset-btn:hover { border-color: var(--green); color: var(--navy); }
+    body.dark .season-preset-btn { background: #2a2a2a; border-color: #3c3c3c; color: #d4d4d4; }
+    body.dark .season-preset-btn:hover { border-color: #6abf69; color: #89d185; }
+
+    .season-grid {
+      display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
+      margin-bottom: 20px;
+    }
+    .season-cell {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 8px 4px; border-radius: 10px;
+      border: 1.5px solid var(--border); background: var(--light);
+      cursor: pointer; transition: all .15s;
+      font-family: var(--font);
+    }
+    .season-cell:hover { border-color: var(--navy); }
+    .season-cell-up   { background: rgba(76,175,80,.1);  border-color: rgba(76,175,80,.35); }
+    .season-cell-down { background: rgba(229,57,53,.08); border-color: rgba(229,57,53,.3); }
+    .season-cell-mon  { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    .season-cell-pct  { font-size: 14px; font-weight: 800; color: var(--text); }
+    .season-cell-up   .season-cell-pct { color: #2e7d32; }
+    .season-cell-down .season-cell-pct { color: #c62828; }
+    body.dark .season-cell            { background: #2a2a2a; border-color: #3c3c3c; }
+    body.dark .season-cell-up         { background: rgba(105,191,105,.15); border-color: rgba(105,191,105,.4); }
+    body.dark .season-cell-down       { background: rgba(255,100,80,.12);  border-color: rgba(255,100,80,.35); }
+    body.dark .season-cell-up   .season-cell-pct { color: #7ab87e; }
+    body.dark .season-cell-down .season-cell-pct { color: #ff8070; }
+
+    /* Drawer */
+    .season-drawer {
+      display: none; position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--card); border-radius: 20px 20px 0 0;
+      box-shadow: 0 -8px 32px rgba(0,0,0,.22);
+      padding: 0 0 calc(20px + env(safe-area-inset-bottom));
+      z-index: 500;
+      transition: transform .25s ease;
+    }
+    .season-drawer.open { display: block; }
+    .season-drawer-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .season-drawer-title { font-size: 17px; font-weight: 800; color: var(--text); }
+    .season-drawer-close {
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); padding: 4px;
+      display: flex; align-items: center;
+    }
+    .season-drawer-body { padding: 20px 24px 8px; }
+    .season-drawer-val  { font-size: 44px; font-weight: 900; color: var(--navy); text-align: center; margin-bottom: 16px; }
+    .season-drawer-range {
+      width: 100%; accent-color: var(--green); cursor: pointer;
+      height: 6px; border-radius: 4px; appearance: none;
+      outline: none;
+    }
+    .season-drawer-range::-webkit-slider-thumb { width: 26px; height: 26px; }
+    .season-drawer-marks { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 6px; }
+    .season-drawer-hint  { font-size: 12px; color: var(--muted); text-align: center; margin-top: 14px; }
+    body.dark .season-drawer { background: #1e1e1e; }
+    body.dark .season-drawer-header { border-bottom-color: #3c3c3c; }
+
     /* ── FINMODEL BLOCK HEADERS ──────────────────────── */
     .finblock-hd {
       display: flex; align-items: center; gap: 10px;
