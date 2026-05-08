@@ -152,6 +152,42 @@ const DRINKS = [
     process:'Смолоть 18 г зерна (помол средне-крупный). Установить фильтр Hario V60, промыть кипятком, слить. Засыпать кофе. Залить 36 мл воды 93°C для «цветения», подождать 45 сек. Затем три порции по ~78 мл с интервалом 30–40 сек круговыми движениями. Общее время: 3:00–3:30 мин.' },
 ];
 
+// ─── Изображения напитков (файлы в папке images/) ───────────────
+// Одно фото на тип, варианты по объёму используют одно изображение
+const DRINK_IMAGES = {
+   0: 'images/Эспрессо.jpg',
+   1: 'images/Американо.jpg',
+   2: 'images/Американо.jpg',
+   3: 'images/Капучино.jpg',
+   4: 'images/Капучино.jpg',
+   5: 'images/Латте.jpg',
+   6: 'images/Латте.jpg',
+   7: 'images/Флэт уайт.jpg',
+   8: 'images/Моккачино.jpg',
+   9: 'images/Моккачино.jpg',
+  10: 'images/Раф ванильный.jpg',
+  11: 'images/Раф ванильный.jpg',
+  12: 'images/Раф апельсиновый.jpg',
+  13: 'images/Раф апельсиновый.jpg',
+  14: 'images/Какао.jpg',
+  15: 'images/Какао.jpg',
+  16: 'images/Ванильное облако.jpg',
+  17: 'images/Чай.jpg',
+  18: 'images/Матча.jpg',
+  19: 'images/Матча.jpg',
+  20: 'images/Айс-латте.jpg',
+  21: 'images/Айс-латте.jpg',
+  22: 'images/Айс-какао.jpg',
+  23: 'images/Айс-какао.jpg',
+  24: 'images/Бамбл.jpg',
+  25: 'images/Бамбл.jpg',
+  26: 'images/Эспрессо-тоник.jpg',
+  27: 'images/Фильтр-кофе.jpg',
+  28: 'images/Фильтр-кофе.jpg',
+  29: 'images/Пуровер.jpg',
+};
+function getDrinkImage(d) { return d.image || DRINK_IMAGES[d.id] || null; }
+
 // ─── Пресеты плана продаж ────────────────────────────────────────
 // Ключи = id напитка, значения = порций/день
 const SALES_PRESETS = {
@@ -4064,8 +4100,9 @@ function openViewDrink(id) {
   const fcClr = fc <= 0.25 ? 'var(--green)' : fc <= 0.30 ? '#b38600' : 'var(--red)';
   const nut = calcNutrition(d);
   const GROUP_ICONS = { hot:'coffee', tea:'leaf', cold:'snowflake', filter:'filter' };
-  const imgHtml = d.image
-    ? `<div class="mvd-photo-wrap"><img src="${d.image}" alt="${d.name}" class="mvd-photo"></div>`
+  const _img = getDrinkImage(d);
+  const imgHtml = _img
+    ? `<div class="mvd-photo-wrap"><img src="${_img}" alt="${d.name}" class="mvd-photo" onerror="this.closest('.mvd-photo-wrap').style.display='none'"></div>`
     : '';
   const ingRows = ings.map(ing => {
     const share = totalCost > 0 ? (ing.cost / totalCost * 100).toFixed(0) : 0;
@@ -4286,7 +4323,7 @@ function _buildTechCardBlock(d, org, cardNum, isLast) {
       <div style="margin-top:6px">«__» ____________ ${year} г.</div>
     </div>
   </div>
-  ${d.image ? `<img src="${d.image}" alt="${d.name}" class="drink-photo" style="display:block;margin:0 auto 8px;width:160px;height:120px;object-fit:cover;border-radius:4px;border:1px solid #ccc">` : ''}
+  ${getDrinkImage(d) ? `<img src="${getDrinkImage(d)}" alt="${d.name}" class="drink-photo" style="display:block;margin:0 auto 8px;width:160px;height:120px;object-fit:cover;border-radius:4px;border:1px solid #ccc" onerror="this.style.display='none'">` : ''}
   <h1>ТЕХНОЛОГИЧЕСКАЯ КАРТА № ${cardNum}</h1>
   <p class="gost">(по ГОСТ Р 53105-2008)</p>
   <table class="info">
@@ -4896,8 +4933,9 @@ function filterRecipes(val) {
     const resetBtn = d.modified
       ? `<button class="btn btn-outline" style="padding:2px 8px;font-size:11px;color:var(--muted)" onclick="event.stopPropagation();resetDrink(${d.id})" title="Вернуть к исходному"><i data-lucide="rotate-ccw" class="icon"></i></button>`
       : '';
-    const imgHtml = d.image
-      ? `<div class="recipe-card-img"><img src="${d.image}" alt="${d.name}"></div>`
+    const _img = getDrinkImage(d);
+    const imgHtml = _img
+      ? `<div class="recipe-card-img"><img src="${_img}" alt="${d.name}" onerror="this.closest('.recipe-card-img').style.display='none'"></div>`
       : '';
     const processHtml = d.process
       ? `<div class="recipe-card-process-wrap">
