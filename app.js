@@ -2646,7 +2646,7 @@ function renderDashboard() {
       <td class="fw7">${d.name}${(d.custom||d.modified)?'<i data-lucide="pencil" class="icon" style="margin-left:5px;color:var(--muted)"></i>':''}</td>
       <td class="ta-r">${rub(d.cost)}</td>
       <td>${fcCombinedHtml(d.fc)}</td>
-      <td class="ta-r" onclick="event.stopPropagation()"><input class="inp white" type="number" min="1" value="${d.price}" onchange="onSalePrice(${d.id},this.value)"> ₽</td>
+      <td class="ta-r" onclick="event.stopPropagation()"><span style="display:inline-flex;align-items:center;gap:4px"><input class="inp white" type="number" min="1" value="${d.price}" onchange="onSalePrice(${d.id},this.value)"><span style="font-size:12px;color:var(--muted)">₽</span></span></td>
       <td class="ta-r" ${recHighlight}>${rub(d.rec)}${d.fc > S.targetFC + 0.10 ? ' <span title="FC% существенно выше целевого" style="font-size:12px">⚠️</span>' : ''}</td>
       <td class="ta-r ${profCls}">${rub(d.profit)}</td>
       <td class="ta-c">${abcBadge(d.abc, d.abcTip)}</td>
@@ -2769,7 +2769,7 @@ function filterDashboard(val) {
       <td class="fw7">${d.name}${(d.custom||d.modified)?'<i data-lucide="pencil" class="icon" style="margin-left:5px;color:var(--muted)"></i>':''}</td>
       <td class="ta-r">${rub(d.cost)}</td>
       <td>${fcCombinedHtml(d.fc)}</td>
-      <td class="ta-r" style="white-space:nowrap" onclick="event.stopPropagation()"><input class="inp white" type="number" min="1" value="${d.price}" onchange="onSalePrice(${d.id},this.value)"> ₽</td>
+      <td class="ta-r" onclick="event.stopPropagation()"><span style="display:inline-flex;align-items:center;gap:4px"><input class="inp white" type="number" min="1" value="${d.price}" onchange="onSalePrice(${d.id},this.value)"><span style="font-size:12px;color:var(--muted)">₽</span></span></td>
       <td class="ta-r" ${recHighlight}>${rub(d.rec)}${d.fc > S.targetFC + 0.10 ? ' <span title="FC% существенно выше целевого" style="font-size:12px">⚠️</span>' : ''}</td>
       <td class="ta-r ${profCls}">${rub(d.profit)}</td>
       <td class="ta-c">${abcBadge(d.abc, d.abcTip)}</td>
