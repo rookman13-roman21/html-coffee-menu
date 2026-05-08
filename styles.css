@@ -1125,6 +1125,12 @@
     .dash-intro-toggle { display: none; } /* скрыто на десктопе */
     .sup-intro-toggle { display: none; } /* скрыто на десктопе */
     .sales-intro-toggle { display: none; } /* скрыто на десктопе */
+
+    /* Финмодель: intro скрыт везде, открывается кнопкой */
+    #fin-intro { display: none !important; }
+    #fin-intro.open { display: flex !important; }
+    .fin-intro-toggle { display: inline-flex; }
+    .fin-intro-toggle.active { background: var(--navy); color: #fff; border-color: var(--navy); }
     .sales-hdr-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
     /* ── Продажи: KPI-карточки ── */
@@ -1213,6 +1219,9 @@
       .sales-intro-toggle { display: inline-flex !important; }
       .sales-intro-toggle.active { background: var(--navy); color: #fff; border-color: var(--navy); }
       .sales-btn-txt { display: none; }
+
+      /* Финмодель: скрываем текст кнопки на мобайле */
+      .fin-intro-btn-txt { display: none; }
 
       /* Продажи: KPI и контролы на мобильном */
       .sales-kpi-wide   { min-width: 120px; }

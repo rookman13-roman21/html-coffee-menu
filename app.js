@@ -2773,6 +2773,14 @@ function toggleSalesIntro() {
   if (btn) btn.classList.toggle('active', el.classList.contains('open'));
 }
 
+function toggleFinIntro() {
+  const el = document.getElementById('fin-intro');
+  if (!el) return;
+  el.classList.toggle('open');
+  const btn = document.getElementById('fin-intro-btn');
+  if (btn) btn.classList.toggle('active', el.classList.contains('open'));
+}
+
 function filterDashboard(val) {
   searchQuery = val;
   const drinks = withABC(enrich());
@@ -3585,8 +3593,11 @@ function renderFinModel() {
   const warningsBanner = warnings.length ? `<div class="fin-warnings">${warnings.join('')}</div>` : '';
 
   document.getElementById('tab-finmodel').innerHTML = `
-    <div class="page-title"><span class="page-title-left"><i data-lucide="banknote" class="icon"></i> Финансовая модель</span></div>
-    <div class="tab-intro">
+    <div class="page-title">
+      <span class="page-title-left"><i data-lucide="banknote" class="icon"></i> Финансовая модель</span>
+      <button class="btn btn-outline fin-intro-toggle" id="fin-intro-btn" onclick="toggleFinIntro()" title="Подсказка"><i data-lucide="info" class="icon"></i> <span class="fin-intro-btn-txt">Подсказка</span></button>
+    </div>
+    <div class="tab-intro" id="fin-intro">
       <div class="tab-intro-icon"><i data-lucide="banknote" class="icon icon-lg"></i></div>
       <div>
         <div class="tab-intro-title">Финансовая модель</div>
