@@ -2100,7 +2100,7 @@ function addIngRow(selected='', amt='', loss='') {
   row.innerHTML = `
     <select class="modal-select" onchange="_onIngMatChange(this);_updateIngRowCost(this)">${matOptions(selected)}</select>
     <input class="modal-inp" type="text" inputmode="decimal" placeholder="${ph}" value="${amt}" oninput="this.value=this.value.replace(',','.');_updateIngRowCost(this)">
-    <input class="modal-inp" type="number" min="0" max="99" step="1" placeholder="%" value="${loss}" oninput="_updateIngRowCost(this)">
+    <input class="modal-inp" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="%" value="${loss}" oninput="_updateIngRowCost(this)">
     <span class="ing-cost-hint"></span>
     <button class="modal-ing-del" title="Удалить ингредиент" onclick="this.closest('.modal-ing-row').remove()"><i data-lucide="trash-2" class="icon"></i></button>
   `;
@@ -2433,7 +2433,7 @@ function addSemiIngRow(matKey='', amt='', loss='', yieldAmt='') {
   row.innerHTML = `
     <select class="modal-select ing-mat" style="flex:2" onchange="_onSemiMatChange(this);_updateSemiIngCost(this)">${matOnlyOptions(firstKey)}</select>
     <input class="modal-inp ing-amt" type="text" inputmode="decimal" value="${amt}" placeholder="${_semiIngPlaceholder(firstKey)}" oninput="this.value=this.value.replace(',','.');_updateSemiCostPreview();_updateSemiIngCost(this);_autoCalcSemiIngYield(this)">
-    <input class="modal-inp ing-loss" type="number" min="0" max="99" step="1" value="${loss}" placeholder="%" oninput="_updateSemiCostPreview();_updateSemiIngCost(this);_autoCalcSemiIngYield(this)">
+    <input class="modal-inp ing-loss" type="number" min="0" max="99" step="1" inputmode="numeric" value="${loss}" placeholder="%" oninput="_updateSemiCostPreview();_updateSemiIngCost(this);_autoCalcSemiIngYield(this)">
     <input class="modal-inp ing-yield" type="text" inputmode="decimal" value="${yieldAmt}" placeholder="=" title="Фактический выход после обработки">
     <span class="ing-cost-hint"></span>
     <button class="btn btn-outline" style="padding:6px 8px;color:var(--red)" onclick="this.closest('.ing-row').remove();_updateSemiCostPreview()"><i data-lucide="trash-2" class="icon"></i></button>
@@ -2693,7 +2693,7 @@ function renderDashboard() {
       <div class="kpi-card kpi-card--editable kpi-card--span2" title="Нажмите для изменения">
         <div class="kpi-label">Целевой FC%</div>
         <div class="kpi-value kpi-value--input">
-          <input type="number" id="kpi-target-fc" class="kpi-inp" min="5" max="60" step="1"
+          <input type="number" id="kpi-target-fc" class="kpi-inp" min="5" max="60" step="1" inputmode="numeric"
             value="${Math.round(S.targetFC*100)}"
             oninput="onTargetFCSilent(this.value)"
             onblur="onTargetFC(this.value)"
@@ -3642,7 +3642,7 @@ function renderFinModel() {
       <div class="fin-param-card">
         <div class="fin-param-label" data-tip="Сумма денег, вложенных в запуск:&#10;оборудование, ремонт, первый депозит...&#10;Срок окупаемости = инвестиции ÷ чистая прибыль."><i data-lucide="landmark" class="icon"></i> Стартовые вложения, ₽</div>
         <div style="display:flex;align-items:center;gap:6px">
-          <input class="inp" type="number" min="0" step="50000" style="flex:1;text-align:right"
+          <input class="inp" type="number" min="0" step="50000" inputmode="numeric" style="flex:1;text-align:right"
             value="${investment}" onchange="onInvestment(this.value)" placeholder="0">
           <span style="font-size:12px;color:var(--muted)">₽</span>
         </div>
@@ -3692,10 +3692,10 @@ function renderFinModel() {
               ).join('');
               return `<tr>
                 <td><input class="inp payroll-inp-name" id="pr-name-${p.id}" type="text" value="${p.name}" oninput="onPayrollPos(${p.id},'name',this.value)"></td>
-                <td><input class="inp payroll-inp" id="pr-rate-${p.id}" type="number" min="0" step="10" value="${p.rate}" oninput="onPayrollPos(${p.id},'rate',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></td>
-                <td><input class="inp payroll-inp" id="pr-hours-${p.id}" type="number" min="0" max="24" step="1" value="${p.hours}" oninput="onPayrollPos(${p.id},'hours',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></td>
-                <td><input class="inp payroll-inp" id="pr-shifts-${p.id}" type="number" min="0" step="1" value="${p.shifts}" oninput="onPayrollPos(${p.id},'shifts',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></td>
-                <td><input class="inp payroll-inp" id="pr-count-${p.id}" type="number" min="1" step="1" value="${p.count}" oninput="onPayrollPos(${p.id},'count',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></td>
+                <td><input class="inp payroll-inp" id="pr-rate-${p.id}" type="number" min="0" step="10" inputmode="numeric" value="${p.rate}" oninput="onPayrollPos(${p.id},'rate',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></td>
+                <td><input class="inp payroll-inp" id="pr-hours-${p.id}" type="number" min="0" max="24" step="1" inputmode="numeric" value="${p.hours}" oninput="onPayrollPos(${p.id},'hours',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></td>
+                <td><input class="inp payroll-inp" id="pr-shifts-${p.id}" type="number" min="0" step="1" inputmode="numeric" value="${p.shifts}" oninput="onPayrollPos(${p.id},'shifts',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></td>
+                <td><input class="inp payroll-inp" id="pr-count-${p.id}" type="number" min="1" step="1" inputmode="numeric" value="${p.count}" oninput="onPayrollPos(${p.id},'count',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></td>
                 <td>
                   <select class="payroll-emp-select" title="${empTypeTip(type)}" onchange="onPayrollPos(${p.id},'empType',this.value)" data-emptype="${type}">
                     ${sel}
@@ -3789,19 +3789,19 @@ function renderFinModel() {
             <label class="pts-rate-label">МРОТ (ваш регион), ₽
               <span class="pts-rate-hint">Федеральный — 22 440 ₽. В регионах может быть ниже.</span>
             </label>
-            <input class="inp" type="number" min="0" step="100" value="${PS().mrot}" oninput="onPayrollSetting('mrot',this.value)" style="max-width:160px;text-align:right">
+            <input class="inp" type="number" min="0" step="100" inputmode="numeric" value="${PS().mrot}" oninput="onPayrollSetting('mrot',this.value)" style="max-width:160px;text-align:right">
           </div>
           <div class="pts-rate-group">
             <label class="pts-rate-label">НДФЛ, %
               <span class="pts-rate-hint">Стандартная ставка — 13%. С 2025 г. при доходе от 2.4 млн — 15%.</span>
             </label>
-            <input class="inp" type="number" min="0" max="50" step="0.1" value="${PS().ndfl}" oninput="onPayrollSetting('ndfl',this.value)" style="max-width:120px;text-align:right">
+            <input class="inp" type="number" min="0" max="50" step="0.1" inputmode="decimal" value="${PS().ndfl}" oninput="onPayrollSetting('ndfl',this.value)" style="max-width:120px;text-align:right">
           </div>
           <div class="pts-rate-group">
             <label class="pts-rate-label">Страховые взносы, %
               <span class="pts-rate-hint">Стандарт — 30%. Для МСП с зарплат свыше МРОТ — 15% (льготный тариф).</span>
             </label>
-            <input class="inp" type="number" min="0" max="100" step="0.1" value="${PS().ins}" oninput="onPayrollSetting('ins',this.value)" style="max-width:120px;text-align:right">
+            <input class="inp" type="number" min="0" max="100" step="0.1" inputmode="decimal" value="${PS().ins}" oninput="onPayrollSetting('ins',this.value)" style="max-width:120px;text-align:right">
           </div>
         </div>
       </div>
@@ -5056,12 +5056,12 @@ function openCostEditor(idx) {
           </div>
           <div id="fce-fixed-fields" style="margin-top:12px">
             <label class="fc-editor-label">Сумма, ₽/мес</label>
-            <input id="fce-value" class="inp" type="number" min="0" step="500" style="width:100%;margin-bottom:10px">
+            <input id="fce-value" class="inp" type="number" min="0" step="500" inputmode="numeric" style="width:100%;margin-bottom:10px">
             <label class="fce-radio"><input type="checkbox" id="fce-variable"> Переменная — масштабируется в сценариях с объёмом продаж</label>
           </div>
           <div id="fce-pct-fields" style="display:none;margin-top:12px">
             <label class="fc-editor-label">% от выручки</label>
-            <input id="fce-pct" class="inp" type="number" min="0" max="100" step="0.1" style="width:100%;margin-bottom:10px" oninput="_fcePctHint()">
+            <input id="fce-pct" class="inp" type="number" min="0" max="100" step="0.1" inputmode="decimal" style="width:100%;margin-bottom:10px" oninput="_fcePctHint()">
             <div style="margin-bottom:8px">
               <button type="button" id="fce-share-toggle" onclick="_fceShareToggle()" style="background:none;border:none;padding:0;cursor:pointer;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px">
                 <span id="fce-share-arrow" style="font-size:10px">▶</span>
@@ -5070,7 +5070,7 @@ function openCostEditor(idx) {
                 <span id="fce-share-cur" style="color:var(--navy);font-weight:700"></span>
               </button>
               <div id="fce-share-wrap" style="display:none;margin-top:6px">
-                <input id="fce-pctShare" class="inp" type="number" min="1" max="100" step="5" style="width:100%;margin-bottom:4px" oninput="_fcePctHint()">
+                <input id="fce-pctShare" class="inp" type="number" min="1" max="100" step="5" inputmode="numeric" style="width:100%;margin-bottom:4px" oninput="_fcePctHint()">
                 <div style="font-size:11px;color:var(--muted)">100 = вся выручка · меньше 100 = только часть (напр. 90 если 90% оплат по карте)</div>
               </div>
             </div>

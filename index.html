@@ -135,11 +135,11 @@
     <div class="modal-row">
       <div>
         <div class="modal-label">Цена продажи, ₽</div>
-        <input class="modal-inp" id="md-price" type="number" min="1" placeholder="350">
+        <input class="modal-inp" id="md-price" type="number" min="1" inputmode="numeric" placeholder="350">
       </div>
       <div>
         <div class="modal-label">Объём, мл</div>
-        <input class="modal-inp" id="md-vol" type="number" min="1" placeholder="300">
+        <input class="modal-inp" id="md-vol" type="number" min="1" inputmode="numeric" placeholder="300">
       </div>
     </div>
     <div class="modal-label" style="margin-top:4px;margin-bottom:4px;font-size:13px;color:var(--navy)"><i data-lucide="package" class="icon"></i> Ингредиенты рецептуры</div>
@@ -237,11 +237,11 @@
     <div class="modal-row">
       <div>
         <div class="modal-label">Цена за единицу, ₽</div>
-        <input class="modal-inp" id="mm-price" type="number" min="1" placeholder="800">
+        <input class="modal-inp" id="mm-price" type="number" min="1" inputmode="numeric" placeholder="800">
       </div>
       <div>
         <div class="modal-label">Объём в единице, г/мл/шт</div>
-        <input class="modal-inp" id="mm-size" type="number" min="1" placeholder="1000">
+        <input class="modal-inp" id="mm-size" type="number" min="1" inputmode="numeric" placeholder="1000">
       </div>
     </div>
     <div class="modal-label" style="margin-top:10px;margin-bottom:4px"><i data-lucide="truck" class="icon"></i> Поставщик <span style="color:var(--muted);font-size:11px;font-weight:400">(необязательно)</span></div>
@@ -259,10 +259,10 @@
     <details style="margin-top:12px">
       <summary style="font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;user-select:none">КБЖУ на 100 г/мл <span style="font-size:11px;font-weight:400">(необязательно)</span></summary>
       <div class="modal-row" style="margin-top:8px">
-        <div><div class="modal-label">Ккал</div><input class="modal-inp" id="mm-kcal" type="number" min="0" step="1" placeholder="0"></div>
-        <div><div class="modal-label">Белки, г</div><input class="modal-inp" id="mm-protein" type="number" min="0" step="0.1" placeholder="0"></div>
-        <div><div class="modal-label">Жиры, г</div><input class="modal-inp" id="mm-fat" type="number" min="0" step="0.1" placeholder="0"></div>
-        <div><div class="modal-label">Углеводы, г</div><input class="modal-inp" id="mm-carbs" type="number" min="0" step="0.1" placeholder="0"></div>
+        <div><div class="modal-label">Ккал</div><input class="modal-inp" id="mm-kcal" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></div>
+        <div><div class="modal-label">Белки, г</div><input class="modal-inp" id="mm-protein" type="number" min="0" step="0.1" inputmode="decimal" placeholder="0"></div>
+        <div><div class="modal-label">Жиры, г</div><input class="modal-inp" id="mm-fat" type="number" min="0" step="0.1" inputmode="decimal" placeholder="0"></div>
+        <div><div class="modal-label">Углеводы, г</div><input class="modal-inp" id="mm-carbs" type="number" min="0" step="0.1" inputmode="decimal" placeholder="0"></div>
       </div>
     </details>
     <div class="modal-footer">
@@ -294,7 +294,7 @@
       </div>
       <div>
         <div class="modal-label">Выход, ед.</div>
-        <input class="modal-inp" id="ms-yield" type="number" min="0.01" step="0.01" placeholder="1000" oninput="_updateSemiCostPreview()">
+        <input class="modal-inp" id="ms-yield" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="1000" oninput="_updateSemiCostPreview()">
       </div>
     </div>
     <div class="modal-label" style="margin-top:4px;margin-bottom:4px;font-size:13px;color:var(--navy)"><i data-lucide="package" class="icon"></i> Ингредиенты (только сырьё)</div>
