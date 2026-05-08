@@ -1280,9 +1280,7 @@
       /* Рецептуры: tab-intro и кнопка */
       #recipes-intro { display: none !important; }
       #recipes-intro.open { display: flex !important; }
-      .recipes-intro-toggle { display: inline-flex !important; }
       .recipes-intro-toggle.active { background: var(--navy); color: #fff; border-color: var(--navy); }
-      .recipes-btn-txt { display: none; }
 
       /* Финмодель: скрываем текст кнопки на мобайле */
       .fin-intro-btn-txt { display: none; }
