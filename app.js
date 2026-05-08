@@ -5887,8 +5887,33 @@ function buildSeasonalChart(totRevMon, varCostsMon, totalFixed, calcTax) {
   }).join('');
   const zeroLine=`<line x1="${PL}" y1="${zero}" x2="${PL+cw}" y2="${zero}" stroke="${clrAxis}" stroke-width="1.5"/>`;
   const axisY=`<line x1="${PL}" y1="${PT}" x2="${PL}" y2="${PT+ch}" stroke="${clrAxis}" stroke-width="1.5"/>`;
+
+  // KPI под графиком
+  const totalYear = data.reduce((s,d)=>s+d.net, 0);
+  const bestMonth = data.reduce((a,b)=>a.net>b.net?a:b);
+  const worstMonth = data.reduce((a,b)=>a.net<b.net?a:b);
+  const fmRub = v => rub ? rub(v) : (Math.round(v).toLocaleString('ru-RU')+' ₽');
+  const kpiClr = v => v >= 0 ? 'var(--green)' : 'var(--red)';
+  const kpiHtml = `
+    <div class="season-kpi">
+      <div class="season-kpi-card">
+        <div class="season-kpi-label">Итого за год</div>
+        <div class="season-kpi-val" style="color:${kpiClr(totalYear)}">${fmRub(totalYear)}</div>
+      </div>
+      <div class="season-kpi-card">
+        <div class="season-kpi-label">Лучший месяц</div>
+        <div class="season-kpi-val" style="color:var(--green)">${fmRub(bestMonth.net)}</div>
+        <div class="season-kpi-sub">${bestMonth.m}</div>
+      </div>
+      <div class="season-kpi-card">
+        <div class="season-kpi-label">Худший месяц</div>
+        <div class="season-kpi-val" style="color:${kpiClr(worstMonth.net)}">${fmRub(worstMonth.net)}</div>
+        <div class="season-kpi-sub">${worstMonth.m}</div>
+      </div>
+    </div>`;
+
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;overflow:visible" xmlns="http://www.w3.org/2000/svg">
-    ${gridSvg}${axisY}${zeroLine}${barsSvg}</svg>`;
+    ${gridSvg}${axisY}${zeroLine}${barsSvg}</svg>${kpiHtml}`;
 }
 
 // ════════════════════════════════════════════════════════════════════
