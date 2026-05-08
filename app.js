@@ -3978,7 +3978,8 @@ function renderFinModel() {
     <div class="season-presets">
       <button class="season-preset-btn" onclick="applySeasonPreset('flat')"><i data-lucide="minus" class="icon"></i> Равномерно</button>
       <button class="season-preset-btn" onclick="applySeasonPreset('summer')">&#9728; Лето +30%</button>
-      <button class="season-preset-btn" onclick="applySeasonPreset('winter')">&#10052; Зима</button>
+      <button class="season-preset-btn" onclick="applySeasonPreset('bc')">🏢 Кофейня в БЦ</button>
+      <button class="season-preset-btn" onclick="applySeasonPreset('jk')">🏘️ Кофейня в ЖК</button>
     </div>
 
     <!-- Сетка 12 ячеек -->
@@ -5996,9 +5997,11 @@ function applySeasonPreset(preset) {
   const FLAT   = Array(12).fill(1);
   // Лето: апр-сен +30%, дек-фев слабый
   const SUMMER = [0.75, 0.75, 0.90, 1.10, 1.25, 1.35, 1.35, 1.25, 1.10, 0.95, 0.80, 0.75];
-  // Зима: ноя-фев +20%, лето слабое
-  const WINTER = [1.20, 1.15, 1.00, 0.90, 0.85, 0.75, 0.75, 0.80, 0.95, 1.05, 1.15, 1.25];
-  S.seasonality = preset === 'summer' ? SUMMER : preset === 'winter' ? WINTER : FLAT;
+  // Кофейня в БЦ: пики фев-май и сен-ноя (деловые сезоны), летом -25% (отпуска), янв слабый (каникулы)
+  const BC     = [0.80, 1.10, 1.15, 1.20, 1.15, 0.85, 0.70, 0.75, 1.15, 1.20, 1.15, 0.85];
+  // Кофейня в ЖК: летом +20% (дети дома, жара), ноя-фев тихий (люди дома), авг пик
+  const JK     = [0.80, 0.85, 0.90, 1.00, 1.10, 1.20, 1.25, 1.30, 1.10, 1.00, 0.85, 0.80];
+  S.seasonality = preset === 'summer' ? SUMMER : preset === 'bc' ? BC : preset === 'jk' ? JK : FLAT;
   saveState();
   renderFinModel();
   if (window.lucide) lucide.createIcons();
