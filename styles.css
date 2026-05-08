@@ -970,6 +970,155 @@
       .mobile-tab svg { width: 18px; height: 18px; }
     }
 
+    /* ══════════════════════════════════════════════════════════
+       МОБИЛЬНАЯ ВЕРСИЯ — комплексные улучшения
+       ══════════════════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+
+      /* ── Модальные окна — как bottom sheet ── */
+      .modal-bg {
+        align-items: flex-end;
+        padding: 0;
+      }
+      .modal {
+        border-radius: 20px 20px 0 0;
+        padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+        max-width: 100%;
+        max-height: 88vh;
+        width: 100%;
+        /* ручка сверху */
+        background-image: linear-gradient(var(--border), var(--border));
+        background-size: 40px 4px;
+        background-repeat: no-repeat;
+        background-position: center 10px;
+        padding-top: 28px;
+      }
+      body.dark .modal {
+        background-color: #252526;
+        background-image: linear-gradient(#454545, #454545);
+        background-size: 40px 4px;
+        background-repeat: no-repeat;
+        background-position: center 10px;
+      }
+
+      /* ── Форма в модалке — один столбец ── */
+      .modal-row { grid-template-columns: 1fr; gap: 10px; }
+
+      /* ── Инпуты и кнопки — увеличенные touch-таргеты ── */
+      .modal-inp, .modal-select {
+        height: 44px;
+        font-size: 16px; /* предотвращает zoom на iOS */
+      }
+      textarea.modal-inp { height: auto; font-size: 16px; }
+
+      /* ── Строка ингредиента в модалке — перекомпоновка ── */
+      .modal-ings-header { display: none; }
+      .modal-ing-row {
+        grid-template-columns: 1fr 80px 44px;
+        grid-template-rows: auto auto;
+        gap: 6px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 0;
+      }
+      .modal-ing-row .modal-select { grid-column: 1 / -1; font-size: 15px; height: 44px; }
+      .modal-ing-row .modal-inp   { height: 40px; font-size: 15px; }
+      .ing-cost-hint { text-align: left; }
+      .modal-ing-del { width: 44px; height: 44px; }
+
+      /* ── Кнопки в футере модалки ── */
+      .modal-footer { gap: 8px; }
+      .modal-footer .btn { flex: 1; justify-content: center; min-height: 44px; font-size: 14px; }
+
+      /* ── Основные кнопки ── */
+      .btn { min-height: 40px; }
+      .btn-primary { min-height: 44px; }
+
+      /* ── Шапка таблицы рецептуры ── */
+      .table-wrap { -webkit-overflow-scrolling: touch; }
+
+      /* ── Dashboard: KPI сетка ── */
+      .kpi-grid { grid-template-columns: repeat(2,1fr); gap: 8px; }
+      .kpi-card { padding: 12px 12px 10px; }
+      .kpi-val  { font-size: 20px; }
+
+      /* ── Insights ── */
+      .insights-grid { grid-template-columns: 1fr; }
+
+      /* ── What-if слайдеры ── */
+      .whatif-grid { grid-template-columns: 1fr; }
+
+      /* ── Сезонность — 2 колонки вместо 4 ── */
+      .season-months { grid-template-columns: repeat(2, 1fr); }
+
+      /* ── Блок сценариев ── */
+      .scenario-grid { grid-template-columns: 1fr; }
+
+      /* ── Зарплатная таблица ── */
+      .payroll-table-wrap { border-radius: 10px; }
+      .payroll-summary { flex-wrap: wrap; gap: 10px; }
+      .payroll-sum-item { min-width: 40%; }
+      .payroll-sum-sep  { display: none; }
+
+      /* ── ФинМодель: заголовки блоков ── */
+      .finblock-hd { font-size: 13px; padding: 9px 12px; margin: 28px 0 14px; }
+
+      /* ── Рецепты: карточки напитка ── */
+      .recipe-grid { grid-template-columns: 1fr; }
+      .recipe-card { padding: 14px 14px 12px; }
+
+      /* ── Просмотр напитка (mvd) ── */
+      .mvd-nutrition { grid-template-columns: repeat(4,1fr); gap: 6px; }
+      .mvd-nut-val  { font-size: 16px; }
+      .mvd-nut-lbl  { font-size: 10px; }
+
+      /* ── Страница заголовки и секции ── */
+      .page-title    { font-size: 17px; }
+      .section-title { font-size: 13px; }
+
+      /* ── Фильтр/поиск в рецептах ── */
+      .recipe-search-row { flex-wrap: wrap; gap: 8px; }
+      .recipe-search-row input  { width: 100%; }
+      .recipe-search-row select { flex: 1; }
+
+      /* ── Кнопки действий над таблицами ── */
+      .toolbar { flex-wrap: wrap; gap: 8px; }
+      .toolbar .btn { font-size: 12px; padding: 6px 12px; }
+
+      /* ── Онбординг ── */
+      .onboard { padding: 24px 18px; border-radius: 20px 20px 0 0; max-height: 90vh; overflow-y: auto; }
+
+      /* ── Переключатель локации в хедере ── */
+      .loc-switcher .loc-name { max-width: 80px; font-size: 11px; }
+
+      /* ── Выпадающее меню локации ── */
+      .loc-menu, .export-menu {
+        position: fixed;
+        bottom: calc(60px + env(safe-area-inset-bottom));
+        left: 10px; right: 10px;
+        top: auto; width: auto;
+        min-width: unset;
+        border-radius: 16px;
+        max-height: 60vh;
+        overflow-y: auto;
+      }
+      .export-menu { right: 10px; left: 10px; }
+
+      /* ── Ячейки таблицы себестоимости ── */
+      .cost-table td, .cost-table th { padding: 6px 8px; font-size: 12px; }
+
+      /* ── Нет горизонтального скролла там где он не нужен ── */
+      .main { overflow-x: hidden; }
+    }
+
+    /* Очень узкие экраны (iPhone SE) */
+    @media (max-width: 375px) {
+      .kpi-grid { grid-template-columns: repeat(2,1fr); gap: 6px; }
+      .kpi-card { padding: 10px 10px 8px; }
+      .kpi-val  { font-size: 17px; }
+      .main { padding: 12px 10px calc(60px + env(safe-area-inset-bottom) + 8px); }
+    }
+
     /* ── LOCATION SWITCHER ──────────────────────────────────── */
     .loc-switcher {
       position: relative;
