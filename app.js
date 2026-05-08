@@ -2436,12 +2436,12 @@ function renderCost() {
           + '<div class="sup-card-header">'
           + '<div class="sup-card-info">'
           + '<span class="sup-card-name"><i data-lucide="building-2" class="icon"></i> ' + g.name + '</span>'
-          + (g.phone ? '<span class="sup-card-phone">' + g.phone + '</span>' : '')
+          + (g.phone ? '<span class="sup-card-phone"><a href="tel:' + g.phone.replace(/\s/g,'') + '">' + g.phone + '</a></span>' : '')
           + '</div>'
           + '<button class="btn btn-outline sup-edit-btn" onclick="' + editFn + '"><i data-lucide="pencil" class="icon"></i></button>'
           + '</div>'
           + (g.note ? '<div class="sup-card-note">' + g.note + '</div>' : '')
-          + (g.site ? '<div class="sup-card-note"><a href="' + g.site + '" target="_blank" style="color:var(--muted);text-decoration:none">🌐 ' + g.site + '</a></div>' : '')
+          + (g.site ? '<div class="sup-card-note"><a href="' + g.site + '" target="_blank" style="color:var(--muted);text-decoration:none;font-size:12px">🌐 ' + g.site.replace(/^https?:\/\//, '') + '</a></div>' : '')
           + (matTags ? '<div class="sup-card-mats">' + matTags + '</div>' : '')
           + '</div>';
       }).join('') + '</div>'
