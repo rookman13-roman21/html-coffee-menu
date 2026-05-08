@@ -2669,19 +2669,21 @@ function renderDashboard() {
     <div class="tab-intro" id="dash-intro">
       <div class="tab-intro-icon"><i data-lucide="layout-dashboard" class="icon icon-lg"></i></div>
       <div>
-        <div class="tab-intro-title">Что это?</div>
+        <div class="tab-intro-title">Добро пожаловать в MBS* Coffee Menu</div>
         <div class="tab-intro-text">
-          Главный экран управления меню. Здесь вы видите рейтинг напитков, редактируете цены прямо в таблице и отслеживаете эффективность каждой позиции.
-          <strong>FC%</strong> (фуд-кост) — доля себестоимости в цене продажи: чем ниже — тем выгоднее позиция для кофейни.
+          Это CFO-инструмент владельца кофейни: он считает <strong>себестоимость</strong> каждого напитка из рецептуры, показывает <strong>прибыль с каждой чашки</strong> и помогает построить <strong>финансовую модель</strong> всего заведения.
+          Вкладка «Обзор» — стартовая точка: здесь рейтинг всех напитков по прибыльности, ABC-анализ меню и ключевые метрики.
+          <strong>FC%</strong> (фуд-кост) — доля себестоимости в цене: чем ниже — тем выгоднее позиция.
+          Цену продажи можно редактировать прямо в таблице — все расчёты пересчитаются мгновенно.
         </div>
         <div class="tab-intro-steps">
-          <span class="tab-intro-step">клик на заголовок → сортировка</span>
-          <span class="tab-intro-step">🟢 FC ≤25% — отлично</span>
-          <span class="tab-intro-step">🟡 26–30% — норма</span>
-          <span class="tab-intro-step">🔴 >30% — риск</span>
-          <span class="tab-intro-step">Цена ₽ — редактируйте прямо в таблице</span>
-          <span class="tab-intro-step">Рек. цена — минимум для целевого FC%</span>
-          <span class="tab-intro-step">⚠️ — цена ниже рекомендованной</span>
+          <span class="tab-intro-step">🟢 FC ≤ 25% — отлично</span>
+          <span class="tab-intro-step">🟡 26–30% — допустимо</span>
+          <span class="tab-intro-step">🔴 > 30% — пересмотри цену</span>
+          <span class="tab-intro-step">A — топ 20% по прибыли, B — рабочий диапазон, C — кандидаты на пересмотр</span>
+          <span class="tab-intro-step">Целевой FC% — задай норму, система покажет рекомендуемую цену</span>
+          <span class="tab-intro-step">⚠️ рядом с ценой — она ниже рекомендованной для твоего целевого FC%</span>
+          <span class="tab-intro-step">Клик на заголовок таблицы — сортировка по любому столбцу</span>
         </div>
       </div>
     </div>
