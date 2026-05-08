@@ -736,6 +736,11 @@
       --muted:  #858585;
       --white:  #252526;
     }
+    body.dark .footer-desktop,
+    body.dark .footer-mobile {
+      background: #252526 !important;
+      border-top-color: #3a3a3a !important;
+    }
     body.dark .header {
       background: #333333;
       box-shadow: 0 2px 8px rgba(0,0,0,.5);
