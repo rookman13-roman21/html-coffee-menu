@@ -2626,7 +2626,7 @@ function renderDashboard() {
     const bc = d.abc==='A' ? 'var(--soft)' : d.abc==='B' ? '#ffd84a' : 'var(--red-bg)';
     const vc = d.abc==='A' ? 'var(--navy)' : d.abc==='B' ? '#7a5800' : 'var(--red)';
     return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-      <div style="width:170px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;font-weight:600">${d.name}</div>
+      <div class="dash-chart-name" style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;font-weight:600">${d.name}</div>
       <div style="flex:1;height:14px;background:#e5e7eb;border-radius:4px;overflow:hidden">
         <div style="width:${w}%;height:100%;background:${bc};border-radius:4px;transition:width .4s"></div>
       </div>
@@ -2644,10 +2644,10 @@ function renderDashboard() {
         : '';
     return `<tr style="cursor:pointer" onmousedown="if(document.activeElement&&document.activeElement.tagName==='INPUT')window._suppressRowClick=true;" onclick="if(window._suppressRowClick){window._suppressRowClick=false;}else{openEditDrink(${d.id});}">
       <td class="fw7">${d.name}${(d.custom||d.modified)?'<i data-lucide="pencil" class="icon" style="margin-left:5px;color:var(--muted)"></i>':''}</td>
-      <td class="ta-r">${rub(d.cost)}</td>
+      <td class="ta-r mob-hide">${rub(d.cost)}</td>
       <td>${fcCombinedHtml(d.fc)}</td>
-      <td class="ta-r" onclick="event.stopPropagation()"><span style="display:inline-flex;align-items:center;gap:4px"><input class="inp white" type="number" min="1" value="${d.price}" onchange="onSalePrice(${d.id},this.value)"><span style="font-size:12px;color:var(--muted)">₽</span></span></td>
-      <td class="ta-r" ${recHighlight}>${rub(d.rec)}${d.fc > S.targetFC + 0.10 ? ' <span title="FC% существенно выше целевого" style="font-size:12px">⚠️</span>' : ''}</td>
+      <td class="ta-r" onclick="event.stopPropagation()"><span style="display:inline-flex;align-items:center;gap:4px"><input class="inp white dash-price-inp" type="number" inputmode="numeric" min="1" value="${d.price}" onchange="onSalePrice(${d.id},this.value)"><span style="font-size:12px;color:var(--muted)">₽</span></span></td>
+      <td class="ta-r mob-hide" ${recHighlight}>${rub(d.rec)}${d.fc > S.targetFC + 0.10 ? ' <span title="FC% существенно выше целевого" style="font-size:12px">⚠️</span>' : ''}</td>
       <td class="ta-r ${profCls}">${rub(d.profit)}</td>
       <td class="ta-c">${abcBadge(d.abc, d.abcTip)}</td>
       <td onclick="event.stopPropagation()">${actionBtn}</td>
@@ -2657,12 +2657,13 @@ function renderDashboard() {
   document.getElementById('tab-dashboard').innerHTML = `
     <div class="page-title">
       <span class="page-title-left"><i data-lucide="layout-dashboard" class="icon"></i> Обзор меню</span>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-outline" onclick="openDropCandidates()" title="Найти позиции с низкой эффективностью"><i data-lucide="scissors" class="icon"></i> Кандидаты на удаление</button>
-        <button class="btn btn-outline" onclick="exportDashboard()">⬇ CSV</button>
+      <div class="dash-hdr-actions">
+        <button class="btn btn-outline dash-intro-toggle" id="dash-intro-btn" onclick="toggleDashIntro()" title="Подсказка"><i data-lucide="info" class="icon"></i> <span class="dash-btn-txt">Подсказка</span></button>
+        <button class="btn btn-outline" onclick="openDropCandidates()" title="Кандидаты на удаление"><i data-lucide="scissors" class="icon"></i> <span class="dash-btn-txt">Кандидаты</span></button>
+        <button class="btn btn-outline" onclick="exportDashboard()" title="CSV"><i data-lucide="download" class="icon"></i> <span class="dash-btn-txt">CSV</span></button>
       </div>
     </div>
-    <div class="tab-intro">
+    <div class="tab-intro" id="dash-intro">
       <div class="tab-intro-icon"><i data-lucide="layout-dashboard" class="icon icon-lg"></i></div>
       <div>
         <div class="tab-intro-title">Что это?</div>
@@ -2686,7 +2687,7 @@ function renderDashboard() {
       <div class="kpi-card"><div class="kpi-label">Средний чек</div><div class="kpi-value">${rub(avgPrice)}</div></div>
       <div class="kpi-card"><div class="kpi-label">Прибыль / чашка</div><div class="kpi-value">${rub(avgProfit)}</div></div>
       <div class="kpi-card"><div class="kpi-label">Средний FC%</div><div class="kpi-value">${pct(avgFC)}</div></div>
-      <div class="kpi-card kpi-card--editable" title="Нажмите для изменения">
+      <div class="kpi-card kpi-card--editable kpi-card--span2" title="Нажмите для изменения">
         <div class="kpi-label">Целевой FC%</div>
         <div class="kpi-value kpi-value--input">
           <input type="number" id="kpi-target-fc" class="kpi-inp" min="5" max="60" step="1"
@@ -2702,32 +2703,22 @@ function renderDashboard() {
     <div class="section-title"><i data-lucide="trending-down" class="icon"></i> Топ-10 по прибыли с чашки</div>
     <div class="panel" style="margin-bottom:20px">${chartHtml}</div>
     <div class="section-title"><i data-lucide="clipboard-list" class="icon"></i> Рейтинг напитков — кликните заголовок для сортировки</div>
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
-      <div class="search-wrap" style="margin-bottom:0;min-width:180px">
+    <div class="dash-search-row">
+      <div class="search-wrap" style="margin-bottom:0;flex:1">
         <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
         <input class="search-inp" id="dash-search" type="text" placeholder="Поиск по названию..."
           value="${searchQuery}" oninput="filterDashboard(this.value);_searchClear(this)">
         <button class="search-clear${searchQuery ? ' visible' : ''}" title="Очистить" onclick="filterDashboard('');var el=document.getElementById('dash-search');el.value='';_searchClear(el)">✕</button>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto">
-        <span style="font-size:13px;font-weight:600;color:var(--muted)">Целевой FC%:</span>
-        <input class="inp sm" type="number" min="5" max="60" step="1"
-          id="dash-target-fc"
-          value="${Math.round(S.targetFC*100)}"
-          oninput="onTargetFCSilent(this.value)"
-          onblur="onTargetFC(this.value)"
-          style="width:52px;text-align:center">
-        <span style="font-size:13px;font-weight:700;color:var(--navy)">%</span>
       </div>
     </div>
     <div class="table-wrap">
       <table>
         <thead><tr>
           ${thSort('name','Напиток','','Название позиции меню. Клик по строке — открыть карточку редактирования')}
-          ${thSort('cost','Себест. ₽','ta-r','Расчётная себестоимость одной порции по текущим ценам сырья. Пересчитывается автоматически при изменении цен поставщиков')}
+          ${thSort('cost','Себест. ₽','ta-r mob-hide','Расчётная себестоимость одной порции по текущим ценам сырья. Пересчитывается автоматически при изменении цен поставщиков')}
           ${thSort('fc','FC%','ta-c','Food Cost % — доля себестоимости в цене продажи. 🟢 ≤25% отлично · 🟡 26–30% норма · 🔴 >30% пересмотрите цену или рецептуру')}
           ${thSort('price','Цена ₽','ta-r','Цена продажи для гостя. Редактируется прямо в таблице — изменения сохраняются немедленно')}
-          ${thSort('rec','Рек. цена ₽','ta-r','Минимальная цена для достижения целевого FC%. ⚠️ — ваша цена существенно ниже рекомендованной, позиция убыточна по FC')}
+          ${thSort('rec','Рек. цена ₽','ta-r mob-hide','Минимальная цена для достижения целевого FC%. ⚠️ — ваша цена существенно ниже рекомендованной, позиция убыточна по FC')}
           ${thSort('profit','Прибыль ₽','ta-r','Прибыль с одной чашки = Цена − Себестоимость. Зелёный цвет — выше среднего по меню')}
           ${thSort('abc','ABC','ta-c','ABC-анализ по прибыли с чашки: A — топ 20% (продвигать), B — следующие 30% (рабочий ассортимент), C — нижние 50% (пересмотреть)')}
           <th></th>
@@ -2749,6 +2740,14 @@ function _searchClear(inp) {
   if (btn) btn.classList.toggle('visible', inp.value.length > 0);
 }
 
+function toggleDashIntro() {
+  const el = document.getElementById('dash-intro');
+  if (!el) return;
+  el.classList.toggle('open');
+  const btn = document.getElementById('dash-intro-btn');
+  if (btn) btn.classList.toggle('active', el.classList.contains('open'));
+}
+
 function filterDashboard(val) {
   searchQuery = val;
   const drinks = withABC(enrich());
@@ -2767,17 +2766,20 @@ function filterDashboard(val) {
         : '';
     return `<tr style="cursor:pointer" onmousedown="if(document.activeElement&&document.activeElement.tagName==='INPUT')window._suppressRowClick=true;" onclick="if(window._suppressRowClick){window._suppressRowClick=false;}else{openEditDrink(${d.id});}">
       <td class="fw7">${d.name}${(d.custom||d.modified)?'<i data-lucide="pencil" class="icon" style="margin-left:5px;color:var(--muted)"></i>':''}</td>
-      <td class="ta-r">${rub(d.cost)}</td>
+      <td class="ta-r mob-hide">${rub(d.cost)}</td>
       <td>${fcCombinedHtml(d.fc)}</td>
-      <td class="ta-r" onclick="event.stopPropagation()"><span style="display:inline-flex;align-items:center;gap:4px"><input class="inp white" type="number" min="1" value="${d.price}" onchange="onSalePrice(${d.id},this.value)"><span style="font-size:12px;color:var(--muted)">₽</span></span></td>
-      <td class="ta-r" ${recHighlight}>${rub(d.rec)}${d.fc > S.targetFC + 0.10 ? ' <span title="FC% существенно выше целевого" style="font-size:12px">⚠️</span>' : ''}</td>
+      <td class="ta-r" onclick="event.stopPropagation()"><span style="display:inline-flex;align-items:center;gap:4px"><input class="inp white dash-price-inp" type="number" inputmode="numeric" min="1" value="${d.price}" onchange="onSalePrice(${d.id},this.value)"><span style="font-size:12px;color:var(--muted)">₽</span></span></td>
+      <td class="ta-r mob-hide" ${recHighlight}>${rub(d.rec)}${d.fc > S.targetFC + 0.10 ? ' <span title="FC% существенно выше целевого" style="font-size:12px">⚠️</span>' : ''}</td>
       <td class="ta-r ${profCls}">${rub(d.profit)}</td>
       <td class="ta-c">${abcBadge(d.abc, d.abcTip)}</td>
       <td onclick="event.stopPropagation()">${actionBtn}</td>
     </tr>`;
   }).join('');
   const tb = document.querySelector('#tab-dashboard tbody');
-  if (tb) { tb.innerHTML = rows; if (window.lucide) lucide.createIcons({ nodes: [tb] }); }
+  if (tb) {
+    tb.innerHTML = rows || `<tr><td colspan="8" style="text-align:center;padding:32px 16px;color:var(--muted);font-size:14px">🔍 Ничего не найдено — попробуйте изменить запрос</td></tr>`;
+    if (window.lucide) lucide.createIcons({ nodes: [tb] });
+  }
 }
 
 // ════════════════════════════════════════════════════════════════════
