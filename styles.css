@@ -1080,6 +1080,14 @@
       .mobile-tab:active { background: rgba(255,255,255,.08); }
 
       body.dark .mobile-tabbar { background: #252526; box-shadow: 0 -2px 16px rgba(0,0,0,.45); }
+      body.dark .footer-desktop {
+        background: #252526;
+        border-top-color: #3a3a3a;
+      }
+      body.dark .footer-mobile {
+        background: #252526;
+        border-top-color: #3a3a3a;
+      }
       body.dark .mobile-tab.active { color: #d4d4d4; }
       body.dark .mobile-tab.active::before { background: #007fd4; }
 
