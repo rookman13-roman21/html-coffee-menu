@@ -626,8 +626,9 @@
     }
     .tab-intro-icon { font-size: 30px; line-height: 1; flex-shrink: 0; padding-top: 2px; }
     .tab-intro-title { font-size: 14px; font-weight: 800; color: var(--navy); margin-bottom: 4px; }
-    .tab-intro-text  { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .tab-intro-text  { font-size: 13px; color: var(--muted); line-height: 1.7; }
     .tab-intro-text strong { color: var(--text); font-weight: 700; }
+    .tab-intro-text br { display: block; content: ''; margin-top: 5px; }
     .tab-intro-steps { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
     .tab-intro-step {
       background: var(--light); border-radius: 6px; padding: 4px 10px;
