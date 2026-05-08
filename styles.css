@@ -706,6 +706,18 @@
     }
     .recipe-filter-btns { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
     .recipe-sort-btns   { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+    /* ── RECIPES TOOLBAR ────────────────────────────────── */
+    .recipes-toolbar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .recipes-toolbar-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .recipes-toolbar-search { flex-wrap: nowrap; }
+    .recipes-toolbar-filters { justify-content: space-between; }
+    .recipes-toolbar-sort { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
+    .recipes-sort-label { font-size: 12px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+    @media (max-width: 600px) {
+      .recipes-toolbar-filters { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .recipes-toolbar-sort { margin-left: 0; }
+      .recipe-sort-btns { flex-wrap: wrap; }
+    }
 
     /* ── DARK THEME (VS Code palette) ────────────────── */
     body.dark {

@@ -4953,7 +4953,7 @@ function renderRecipes() {
     { k:'hot', l:'<i data-lucide="coffee" class="icon"></i> Горячие' },
     { k:'tea', l:'<i data-lucide="leaf" class="icon"></i> Чай' },
     { k:'cold',l:'<i data-lucide="snowflake" class="icon"></i> Холодные' },
-    { k:'filter',l:'<i data-lucide="filter" class="icon"></i> Фильтр' },
+    { k:'filter',l:'<i data-lucide="droplets" class="icon"></i> Пуровер' },
   ];
   const sortBtns = sortLabels.map(s =>
     `<button class="recipe-sort-btn${recipeSort===s.k?' active':''}" onclick="setRecipeSort('${s.k}')">${s.l}</button>`
@@ -4976,21 +4976,25 @@ function renderRecipes() {
         <div class="tab-intro-title">Что здесь?</div>
         <div class="tab-intro-text">
           Карточка каждого напитка с разбивкой себестоимости по ингредиентам.
-          <strong>Полоса</strong> показывает долю каждого ингредиента в общей себестоимости. Измените цены сырья — карточки обновятся.
+          Доля каждого ингредиента показана в процентах. Измените цены сырья — карточки обновятся.
         </div>
       </div>
     </div>
-    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:16px">
-      <div class="search-wrap" style="margin-bottom:0;min-width:200px;max-width:320px">
-        <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
-        <input class="search-inp" id="recipe-search" type="text" placeholder="Поиск по названию..."
-          value="${recipeSearch}" oninput="filterRecipes(this.value);_searchClear(this)">
-        <button class="search-clear${recipeSearch ? ' visible' : ''}" title="Очистить" onclick="filterRecipes('');var el=document.getElementById('recipe-search');el.value='';_searchClear(el)">✕</button>
+    <div class="recipes-toolbar">
+      <div class="recipes-toolbar-row recipes-toolbar-search">
+        <div class="search-wrap" style="margin-bottom:0;flex:1">
+          <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
+          <input class="search-inp" id="recipe-search" type="text" placeholder="Поиск по названию..."
+            value="${recipeSearch}" oninput="filterRecipes(this.value);_searchClear(this)">
+          <button class="search-clear${recipeSearch ? ' visible' : ''}" title="Очистить" onclick="filterRecipes('');var el=document.getElementById('recipe-search');el.value='';_searchClear(el)">✕</button>
+        </div>
       </div>
-      <div class="recipe-filter-btns">${filterBtns}</div>
-      <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
-        <span style="font-size:12px;color:var(--muted);font-weight:600">Сорт:</span>
-        <div class="recipe-sort-btns">${sortBtns}</div>
+      <div class="recipes-toolbar-row recipes-toolbar-filters">
+        <div class="recipe-filter-btns">${filterBtns}</div>
+        <div class="recipes-toolbar-sort">
+          <span class="recipes-sort-label">Сорт:</span>
+          <div class="recipe-sort-btns">${sortBtns}</div>
+        </div>
       </div>
     </div>
     <div class="recipe-groups"></div>
