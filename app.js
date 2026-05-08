@@ -3662,13 +3662,13 @@ function renderFinModel() {
           </div>` : taxMode === 'usn6' ? `
           <div class="tax-hint-box th-usn6">
             <strong>6% от всей выручки</strong> — независимо от расходов.<br>
-            Пример: выручка 1 000 000 ₽ → налог <strong>60 000 ₽</strong>.<br>
             <span style="opacity:.8">Выгоден, если расходы &lt; 60% от выручки. Взносы ИП уменьшают налог до 50%.</span>
+            <div class="tax-hint-amount">При текущей выручке: <strong>${rub(_tax)} / мес</strong></div>
           </div>` : `
           <div class="tax-hint-box th-usn15">
             <strong>15% от прибыли</strong> (выручка − все расходы).<br>
-            Пример: выручка 1 000 000 ₽, расходы 800 000 ₽ → налог <strong>30 000 ₽</strong>.<br>
             <span style="opacity:.8">Выгоден при высоких расходах (&gt; 60% от выручки). Минимальный налог — 1% от выручки.</span>
+            <div class="tax-hint-amount">При текущей прибыли: <strong>${rub(_tax)} / мес</strong></div>
           </div>`}
       </div>
       <div class="fin-param-card">

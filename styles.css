@@ -465,6 +465,11 @@
     body.dark .tax-hint-box           { background: #252526; border-color: #3c3c3c; color: #9e9e9e; }
     body.dark .tax-hint-box.th-usn6   { background: #1a2e1a; border-color: #3a6040; color: #7ab87e; }
     body.dark .tax-hint-box.th-usn15  { background: #1a1e35; border-color: #3a48a8; color: #8aacdf; }
+    .tax-hint-amount {
+      margin-top: 7px; padding-top: 6px; border-top: 1px solid currentColor;
+      opacity: .9; font-size: 12px;
+    }
+    .tax-hint-amount strong { font-size: 14px; }
 
     /* ── Cost editor popup ──────────────────────────────────────── */
     .fc-editor-overlay {
