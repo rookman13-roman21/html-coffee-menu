@@ -3621,6 +3621,22 @@ function renderFinModel() {
       <button class="fin-qn-btn" onclick="document.getElementById('finblock-4').scrollIntoView({behavior:'smooth'})"><i data-lucide="calendar" class="icon"></i> Прогноз</button>
     </div>
 
+    <!-- ─────────────────────────────────── СТАРТОВЫЕ ВЛОЖЕНИЯ (верх страницы) -->
+    <div class="fin-invest-top">
+      <div class="fin-invest-top-label" data-tip="Сумма денег, вложенных в запуск:&#10;оборудование, ремонт, первый депозит...&#10;Срок окупаемости = инвестиции ÷ чистая прибыль."><i data-lucide="landmark" class="icon"></i> Стартовые вложения, ₽</div>
+      <div class="fin-invest-top-row">
+        <input class="inp" type="number" min="0" step="50000" inputmode="numeric" style="width:160px;text-align:right"
+          value="${investment}" onchange="onInvestment(this.value)" placeholder="0">
+        <span style="font-size:12px;color:var(--muted)">₽</span>
+        ${paybackMon !== null
+          ? `<span class="fin-invest-top-payback"><i data-lucide="clock" class="icon"></i> Окупаемость: <strong style="color:var(--navy)">${paybackMon.toFixed(1)} мес.</strong></span>`
+          : investment > 0 && baseNet <= 0
+            ? `<span class="fin-invest-top-payback" style="color:var(--red)"><i data-lucide="alert-circle" class="icon"></i> Убыток — окупаемости нет</span>`
+            : `<span class="fin-invest-top-payback" style="color:var(--muted)">Введите сумму — увидите срок окупаемости</span>`
+        }
+      </div>
+    </div>
+
     <!-- ───────────────────────────────────────────── БЛОК 1: ИСХОДНЫЕ ДАННЫЕ -->
     <div class="finblock-hd finblock-hd-1" id="finblock-1">
       <span class="finblock-num">1</span>
@@ -3648,43 +3664,27 @@ function renderFinModel() {
       <div class="pd-value">${rub(totalFixed)}</div>
     </div>
 
-    <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:stretch;margin-bottom:24px">
-      <div class="fin-param-card">
-        <div class="fin-param-label" data-tip="УСН 6% — налог со всей выручки.&#10;УСН 15% — налог с (доходы − расходы).&#10;Выберите свой режим налогообложения."><i data-lucide="receipt" class="icon"></i> Режим налогообложения</div>
-        <select class="modal-select" style="width:100%;font-size:13px" onchange="onTaxMode(this.value)">
-          <option value="none"  ${taxMode==='none'  ?'selected':''}>Без налога</option>
-          <option value="usn6"  ${taxMode==='usn6'  ?'selected':''}>УСН 6% — доходы</option>
-          <option value="usn15" ${taxMode==='usn15' ?'selected':''}>УСН 15% — доходы − расходы</option>
-        </select>
-        ${taxMode === 'none' ? `
-          <div class="tax-hint-box th-none">
-            Налог не учитывается в расчётах P&amp;L.
-          </div>` : taxMode === 'usn6' ? `
-          <div class="tax-hint-box th-usn6">
-            <strong>6% от всей выручки</strong> — независимо от расходов.<br>
-            <span style="opacity:.8">Выгоден, если расходы &lt; 60% от выручки. Взносы ИП уменьшают налог до 50%.</span>
-            <div class="tax-hint-amount">При текущей выручке: <strong>${rub(_tax)} / мес</strong></div>
-          </div>` : `
-          <div class="tax-hint-box th-usn15">
-            <strong>15% от прибыли</strong> (выручка − все расходы).<br>
-            <span style="opacity:.8">Выгоден при высоких расходах (&gt; 60% от выручки). Минимальный налог — 1% от выручки.</span>
-            <div class="tax-hint-amount">При текущей прибыли: <strong>${rub(_tax)} / мес</strong></div>
-          </div>`}
-      </div>
-      <div class="fin-param-card">
-        <div class="fin-param-label" data-tip="Сумма денег, вложенных в запуск:&#10;оборудование, ремонт, первый депозит...&#10;Срок окупаемости = инвестиции ÷ чистая прибыль."><i data-lucide="landmark" class="icon"></i> Стартовые вложения, ₽</div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <input class="inp" type="number" min="0" step="50000" inputmode="numeric" style="flex:1;text-align:right"
-            value="${investment}" onchange="onInvestment(this.value)" placeholder="0">
-          <span style="font-size:12px;color:var(--muted)">₽</span>
-        </div>
-        ${paybackMon !== null
-          ? `<div style="font-size:12px;margin-top:4px"><i data-lucide="clock" class="icon"></i> Окупаемость: <strong style="color:var(--navy)">${paybackMon.toFixed(1)} мес.</strong></div>`
-          : investment > 0 && baseNet <= 0
-            ? `<div style="font-size:12px;margin-top:4px;color:var(--red)"><i data-lucide="alert-circle" class="icon"></i> Убыток — окупаемости нет</div>`
-            : `<div style="font-size:12px;margin-top:4px;color:var(--muted)">Введите сумму инвестиций</div>`
-        }
-      </div>
+    <div class="fin-param-card" style="max-width:420px;margin-bottom:24px">
+      <div class="fin-param-label" data-tip="УСН 6% — налог со всей выручки.&#10;УСН 15% — налог с (доходы − расходы).&#10;Выберите свой режим налогообложения."><i data-lucide="receipt" class="icon"></i> Режим налогообложения</div>
+      <select class="modal-select" style="width:100%;font-size:13px" onchange="onTaxMode(this.value)">
+        <option value="none"  ${taxMode==='none'  ?'selected':''}>Без налога</option>
+        <option value="usn6"  ${taxMode==='usn6'  ?'selected':''}>УСН 6% — доходы</option>
+        <option value="usn15" ${taxMode==='usn15' ?'selected':''}>УСН 15% — доходы − расходы</option>
+      </select>
+      ${taxMode === 'none' ? `
+        <div class="tax-hint-box th-none">
+          Налог не учитывается в расчётах P&amp;L.
+        </div>` : taxMode === 'usn6' ? `
+        <div class="tax-hint-box th-usn6">
+          <strong>6% от всей выручки</strong> — независимо от расходов.<br>
+          <span style="opacity:.8">Выгоден, если расходы &lt; 60% от выручки. Взносы ИП уменьшают налог до 50%.</span>
+          <div class="tax-hint-amount">При текущей выручке: <strong>${rub(_tax)} / мес</strong></div>
+        </div>` : `
+        <div class="tax-hint-box th-usn15">
+          <strong>15% от прибыли</strong> (выручка − все расходы).<br>
+          <span style="opacity:.8">Выгоден при высоких расходах (&gt; 60% от выручки). Минимальный налог — 1% от выручки.</span>
+          <div class="tax-hint-amount">При текущей прибыли: <strong>${rub(_tax)} / мес</strong></div>
+        </div>`}
     </div>
 
     <div id="payroll-section" class="section-title" style="display:flex;align-items:center;justify-content:space-between"><span><i data-lucide="users" class="icon"></i> Калькулятор ФОТ <span style="font-size:12px;font-weight:500;color:var(--muted);margin-left:6px">фонд оплаты труда</span></span><button class="btn btn-outline" style="font-size:12px;padding:5px 12px" onclick="addPayrollPosition()"><i data-lucide="plus" class="icon"></i> Добавить должность</button></div>
