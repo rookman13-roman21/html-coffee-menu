@@ -5942,9 +5942,9 @@ function onSeasonDrawerChange(v) {
   const btn  = cell && cell.closest('.season-cell');
   if (cell) cell.textContent = pct + '%';
   if (btn) {
-    btn.classList.toggle('season-cell-up',   k > 1.05);
-    btn.classList.toggle('season-cell-down', k < 0.95);
-    btn.classList.toggle('',                 k >= 0.95 && k <= 1.05);
+    btn.classList.remove('season-cell-up', 'season-cell-down');
+    if (k > 1.05) btn.classList.add('season-cell-up');
+    else if (k < 0.95) btn.classList.add('season-cell-down');
   }
   // Обновить чарт
   const chartEl = document.getElementById('seasonal-chart');
