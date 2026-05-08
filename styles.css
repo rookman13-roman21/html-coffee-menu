@@ -915,6 +915,60 @@
     }
     .modal-ing-del:hover { background: var(--red-bg); }
 
+    /* ══════════════════════════════════════════════════════════════════
+       FOOTER
+    ══════════════════════════════════════════════════════════════════ */
+    .site-footer { margin-top: 48px; }
+
+    /* — Desktop — */
+    .footer-desktop {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 24px;
+      background: var(--white); border-top: 2px solid var(--border);
+      border-radius: 16px 16px 0 0;
+      padding: 36px 48px;
+      box-shadow: 0 -2px 16px rgba(65,112,51,.07);
+    }
+    .footer-col { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+    .footer-col-center { align-items: center; text-align: center; flex: 1.2; }
+    .footer-col-right { align-items: flex-end; text-align: right; }
+    .footer-col-title {
+      font-size: 11px; font-weight: 800; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--navy); margin-bottom: 4px;
+    }
+    .footer-link {
+      display: flex; align-items: center; gap: 7px;
+      color: var(--text); text-decoration: none; font-size: 13px;
+      transition: color .15s;
+    }
+    .footer-link:hover { color: var(--green); }
+    .footer-logo { height: 40px; width: auto; margin-bottom: 10px; }
+    .footer-social { display: flex; gap: 10px; }
+    .footer-social-btn {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--light); color: var(--navy);
+      display: flex; align-items: center; justify-content: center;
+      text-decoration: none; transition: background .15s, color .15s;
+    }
+    .footer-social-btn:hover { background: var(--navy); color: white; }
+    .footer-social-btn .icon { width: 16px; height: 16px; }
+    .footer-copy { font-size: 11px; color: var(--muted); margin-top: 6px; }
+    .footer-addr-line {
+      display: flex; align-items: flex-start; gap: 7px;
+      font-size: 13px; color: var(--text); justify-content: flex-end;
+    }
+    .footer-addr-line .icon { margin-top: 2px; flex-shrink: 0; color: var(--navy); }
+    .footer-map-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--light); color: var(--navy);
+      border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 700;
+      text-decoration: none; transition: background .15s;
+    }
+    .footer-map-btn:hover { background: var(--soft); }
+
+    /* — Mobile — */
+    .footer-mobile { display: none; }
+
     /* ── ONBOARDING ──────────────────────────────────────────── */
     #onboarding { position: fixed; inset: 0; z-index: 2000; }
     .onboard-bg {
@@ -957,6 +1011,23 @@
       .header-name { font-size: 15px; }
       .header-logo svg { width: 18px !important; height: 18px !important; }
       .header-logo-img { content: url('images/MBS logo.svg'); height: 28px; }
+
+      /* Footer mobile */
+      .footer-desktop { display: none; }
+      .footer-mobile {
+        display: flex; flex-direction: column; align-items: center; gap: 8px;
+        background: var(--navy); color: white;
+        padding: 14px 16px 20px;
+      }
+      .footer-mobile-logo { height: 22px; width: auto; margin-bottom: 2px; }
+      .footer-mobile-social { display: flex; gap: 18px; }
+      .footer-mobile-icon {
+        color: rgba(255,255,255,.8); text-decoration: none;
+        display: flex; align-items: center; transition: color .15s;
+      }
+      .footer-mobile-icon:hover { color: white; }
+      .footer-mobile-icon .icon { width: 18px; height: 18px; }
+      .footer-mobile-addr { font-size: 10px; color: rgba(255,255,255,.55); text-align: center; }
 
       /* Скрываем десктопную навигацию и бургер */
       .nav { display: none !important; }
