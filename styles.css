@@ -1131,17 +1131,14 @@
       font-size: 12px; font-weight: 700; color: var(--muted);
       white-space: nowrap; flex-shrink: 0; min-width: 62px;
     }
-    .sales-presets-btns {
-      display: flex; gap: 6px; flex-wrap: wrap;
+    .sales-preset-select {
+      flex: 1; font-size: 13px; padding: 5px 10px;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      background: #fff; color: var(--navy); cursor: pointer;
+      max-width: 260px;
     }
     .sales-scale-btns {
       display: flex; gap: 6px; flex-wrap: nowrap;
-    }
-    .sales-preset-btn {
-      font-size: 12px; padding: 5px 12px; white-space: nowrap;
-    }
-    .sales-preset-btn.active {
-      background: var(--green); color: #fff; border-color: var(--green);
     }
     .sales-scale-btn {
       font-size: 12px; padding: 5px 12px; white-space: nowrap;
@@ -1181,7 +1178,7 @@
       .sales-btn-txt { display: none; }
 
       /* Продажи: пресеты на мобильном */
-      .sales-preset-btn { font-size: 11px; padding: 5px 8px; }
+      .sales-preset-select { font-size: 12px; }
       .sales-scale-btn  { font-size: 11px; padding: 5px 9px; }
       .sales-presets-label { min-width: 58px; font-size: 11px; }
 

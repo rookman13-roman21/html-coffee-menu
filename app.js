@@ -3077,21 +3077,17 @@ function renderSales() {
     </div>
     <div class="sales-presets-block">
       <div class="sales-presets-row">
-        <span class="sales-presets-label">Пресеты:</span>
-        <div class="sales-presets-btns">
-          ${Object.entries(SALES_PRESETS).map(([k,p])=>{
-            const isActive = S.activePreset === k;
-            return `<button class="btn btn-outline sales-preset-btn${isActive ? ' active' : ''}" onclick="applySalesPreset('${k}')">${p.label}</button>`;
-          }).join('')}
-        </div>
+        <span class="sales-presets-label">Пресет:</span>
+        <select class="sales-preset-select" onchange="applySalesPreset(this.value)">
+          <option value="">— выбрать —</option>
+          ${Object.entries(SALES_PRESETS).map(([k,p])=>`<option value="${k}"${S.activePreset===k?' selected':''}>${p.label}</option>`).join('')}
+        </select>
       </div>
       <div class="sales-scale-row">
         <span class="sales-presets-label">Масштаб:</span>
         <div class="sales-scale-btns">
-          <button class="btn btn-outline sales-scale-btn red" onclick="scaleSalesPortions(0.75)">−25%</button>
           <button class="btn btn-outline sales-scale-btn red" onclick="scaleSalesPortions(0.90)">−10%</button>
           <button class="btn btn-outline sales-scale-btn green" onclick="scaleSalesPortions(1.10)">+10%</button>
-          <button class="btn btn-outline sales-scale-btn green" onclick="scaleSalesPortions(1.25)">+25%</button>
         </div>
       </div>
     </div>
