@@ -5767,18 +5767,33 @@ function recalcWhatIf3() {
   const sign  = delta>0 ? '+' : '';
   const netClr = net2>=0 ? 'var(--navy)' : 'var(--red)';
 
+  // Базовые показатели для дельт
+  const baseFC   = baseRev>0 ? baseVar/baseRev : 0;
+  const baseAvgChk = basePort>0 ? baseRev/(basePort*S.days) : 0;
+  const dRevAbs  = rev2 - baseRev;
+  const dAvgAbs  = avgChk - baseAvgChk;
+  const dFCpp    = (fc2 - baseFC) * 100;  // в процентных пунктах
+
+  const dRevClr  = dRevAbs>0 ? 'var(--green)' : dRevAbs<0 ? 'var(--red)' : 'var(--muted)';
+  const dAvgClr  = dAvgAbs>0 ? 'var(--green)' : dAvgAbs<0 ? 'var(--red)' : 'var(--muted)';
+  const dFCClr   = dFCpp<0  ? 'var(--green)' : dFCpp>0  ? 'var(--red)' : 'var(--muted)'; // FC↓ = хорошо
+  const s = v => v>0?'+':'';
+
   out.innerHTML = `
     <div style="flex:1;min-width:130px;background:var(--gray);border-radius:9px;padding:10px 13px">
       <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">Средний чек</div>
       <div style="font-weight:800;font-size:17px">${rub(avgChk)}</div>
+      <div style="font-size:11px;font-weight:700;color:${dAvgClr};margin-top:2px">${s(dAvgAbs)}${rub(dAvgAbs)} к базе</div>
     </div>
     <div style="flex:1;min-width:130px;background:var(--gray);border-radius:9px;padding:10px 13px">
       <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">FC%</div>
       <div style="font-weight:800;font-size:17px">${pct(fc2)}</div>
+      <div style="font-size:11px;font-weight:700;color:${dFCClr};margin-top:2px">${s(dFCpp)}${dFCpp.toFixed(1)} pp к базе</div>
     </div>
     <div style="flex:1;min-width:130px;background:var(--gray);border-radius:9px;padding:10px 13px">
       <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">Выручка / мес</div>
       <div style="font-weight:800;font-size:17px">${rub(rev2)}</div>
+      <div style="font-size:11px;font-weight:700;color:${dRevClr};margin-top:2px">${s(dRevAbs)}${rub(dRevAbs)} к базе</div>
     </div>
     <div style="flex:1;min-width:130px;background:var(--gray);border-radius:9px;padding:10px 13px">
       <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px">Выручка ТБУ</div>
