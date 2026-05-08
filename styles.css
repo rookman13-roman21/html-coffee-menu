@@ -1703,19 +1703,54 @@
 
     /* ── PAYROLL MOBILE CARDS ─────────────────────────── */
     .payroll-mobile-cards { display: none; }
-    .pr-mob-card { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+    .pr-mob-card {
+      padding: 14px 16px; border-bottom: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 10px;
+    }
     .pr-mob-card:last-child { border-bottom: none; }
+
+    /* Строка 1: имя + сумма + делить */
     .pr-mob-row1 { display: flex; align-items: center; gap: 8px; }
-    .pr-mob-name-inp { flex: 1; font-weight: 700; }
-    .pr-mob-total { font-size: 16px; font-weight: 800; color: var(--navy); white-space: nowrap; flex-shrink: 0; }
-    .pr-mob-row2 { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
-    .pr-mob-field { display: flex; flex-direction: column; gap: 2px; }
-    .pr-mob-field-lbl { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-    .pr-mob-inp { text-align: right; font-size: 13px; padding: 5px 6px !important; }
-    .pr-mob-row3 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .pr-mob-tax { font-size: 11px; color: #c0392b; font-weight: 600; }
+    .pr-mob-name-inp {
+      flex: 1; font-weight: 700; font-size: 15px;
+      background: transparent; border: none; border-bottom: 1.5px solid var(--border);
+      border-radius: 0; padding: 4px 0; color: var(--text);
+    }
+    .pr-mob-name-inp:focus { outline: none; border-bottom-color: var(--green); }
+    .pr-mob-total {
+      font-size: 17px; font-weight: 800; color: var(--navy);
+      white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* Сетка 2×2 для инпутов */
+    .pr-mob-row2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .pr-mob-field { display: flex; flex-direction: column; gap: 3px; }
+    .pr-mob-field-lbl {
+      font-size: 10px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .pr-mob-inp {
+      text-align: right; font-size: 14px;
+      padding: 7px 10px !important; width: 100%;
+    }
+
+    /* Строка 3: схема + взносы */
+    .pr-mob-row3 { display: flex; align-items: center; gap: 8px; }
+    .pr-mob-scheme-sel { flex: 1; font-size: 13px; }
+    .pr-mob-tax-badge {
+      font-size: 11px; font-weight: 700;
+      padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+      background: rgba(192,57,43,.1); color: #c0392b;
+    }
+    .pr-mob-tax-zero {
+      background: rgba(0,0,0,.05); color: var(--muted);
+    }
     body.dark .pr-mob-card { border-bottom-color: #3a3a3a; }
     body.dark .pr-mob-total { color: #89d185; }
+    body.dark .pr-mob-name-inp { color: #d4d4d4; border-bottom-color: #3c3c3c; }
+    body.dark .pr-mob-name-inp:focus { border-bottom-color: #6abf69; }
+    body.dark .pr-mob-tax-badge { background: rgba(255,100,80,.15); color: #ff8070; }
+    body.dark .pr-mob-tax-zero { background: rgba(255,255,255,.06); }
     @media (max-width: 768px) {
       .payroll-mobile-cards { display: block; }
       .payroll-table-wrap   { display: none; }

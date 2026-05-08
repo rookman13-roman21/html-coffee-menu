@@ -3703,14 +3703,26 @@ function renderFinModel() {
               <button class="mat-del" onclick="deletePayrollPosition(${p.id})" title="Удалить"><i data-lucide="trash-2" class="icon"></i></button>
             </div>
             <div class="pr-mob-row2">
-              <div class="pr-mob-field"><span class="pr-mob-field-lbl">₽/ч</span><input class="inp pr-mob-inp" type="number" inputmode="numeric" value="${p.rate}" oninput="onPayrollPos(${p.id},'rate',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></div>
-              <div class="pr-mob-field"><span class="pr-mob-field-lbl">Ч/см</span><input class="inp pr-mob-inp" type="number" inputmode="numeric" value="${p.hours}" oninput="onPayrollPos(${p.id},'hours',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></div>
-              <div class="pr-mob-field"><span class="pr-mob-field-lbl">Смен</span><input class="inp pr-mob-inp" type="number" inputmode="numeric" value="${p.shifts}" oninput="onPayrollPos(${p.id},'shifts',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></div>
-              <div class="pr-mob-field"><span class="pr-mob-field-lbl">Кол.</span><input class="inp pr-mob-inp" type="number" inputmode="numeric" value="${p.count}" oninput="onPayrollPos(${p.id},'count',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()"></div>
+              <div class="pr-mob-field">
+                <span class="pr-mob-field-lbl">Ставка ₽/ч</span>
+                <input class="inp pr-mob-inp" type="number" inputmode="numeric" value="${p.rate}" oninput="onPayrollPos(${p.id},'rate',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()">
+              </div>
+              <div class="pr-mob-field">
+                <span class="pr-mob-field-lbl">Часов/смену</span>
+                <input class="inp pr-mob-inp" type="number" inputmode="numeric" value="${p.hours}" oninput="onPayrollPos(${p.id},'hours',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()">
+              </div>
+              <div class="pr-mob-field">
+                <span class="pr-mob-field-lbl">Смен/мес</span>
+                <input class="inp pr-mob-inp" type="number" inputmode="numeric" value="${p.shifts}" oninput="onPayrollPos(${p.id},'shifts',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()">
+              </div>
+              <div class="pr-mob-field">
+                <span class="pr-mob-field-lbl">Количество</span>
+                <input class="inp pr-mob-inp" type="number" inputmode="numeric" value="${p.count}" oninput="onPayrollPos(${p.id},'count',this.value)" onchange="renderFinModel();if(window.lucide)lucide.createIcons()">
+              </div>
             </div>
             <div class="pr-mob-row3">
-              <select class="payroll-emp-select" style="flex:1;max-width:180px" onchange="onPayrollPos(${p.id},'empType',this.value)" data-emptype="${_mtype}">${_msel}</select>
-              ${_mc.taxes > 0 ? `<span class="pr-mob-tax">+${rub(_mc.taxes)} взносы</span>` : ''}
+              <select class="payroll-emp-select pr-mob-scheme-sel" onchange="onPayrollPos(${p.id},'empType',this.value)" data-emptype="${_mtype}">${_msel}</select>
+              ${_mc.taxes > 0 ? `<span class="pr-mob-tax-badge">+ ${rub(_mc.taxes)} взносы</span>` : '<span class="pr-mob-tax-badge pr-mob-tax-zero">без взносов</span>'}
             </div>
           </div>`;
         }).join('')}
