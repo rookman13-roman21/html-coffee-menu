@@ -2748,6 +2748,14 @@ function toggleDashIntro() {
   if (btn) btn.classList.toggle('active', el.classList.contains('open'));
 }
 
+function toggleSupIntro() {
+  const el = document.getElementById('sup-intro');
+  if (!el) return;
+  el.classList.toggle('open');
+  const btn = document.getElementById('sup-intro-btn');
+  if (btn) btn.classList.toggle('active', el.classList.contains('open'));
+}
+
 function filterDashboard(val) {
   searchQuery = val;
   const drinks = withABC(enrich());
@@ -2874,15 +2882,15 @@ function renderCost() {
         : `<span class="usage-badge usage-badge-zero">0</span>`;
       return `<tr style="${collapsed ? 'display:none' : ''}" class="mat-row" data-cat="${cat}">
         <td class="mat-td-name">${m.name}</td>
-        <td class="mat-td-unit">${m.unit}</td>
+        <td class="mat-td-unit mob-hide">${m.unit}</td>
         <td class="mat-td-price">
-          <input class="inp sm" type="number" min="1" style="width:72px"
+          <input class="inp sm" type="number" min="1" style="width:72px" inputmode="numeric"
             id="mat-inp-${key}" value="${S.prices[key]}"
             onfocus="onMatPriceFocus('${key}')"
             oninput="onMatPriceInput('${key}',this.value)"
             onblur="onMatPriceCommit('${key}',this.value)"> <span style="font-size:12px;color:var(--muted)">₽</span>
         </td>
-        <td class="mat-td-sup">${supCell}</td>
+        <td class="mat-td-sup mob-hide">${supCell}</td>
         <td class="mat-td-usage">${usageBadge}</td>
         <td class="mat-td-actions">
           <button class="mat-del" onclick="openSupQuickDrop('${key}',this)" title="${supTitle}" style="color:${supClr}"><i data-lucide="truck" class="icon"></i></button>
@@ -2906,9 +2914,9 @@ function renderCost() {
       <thead>
         <tr>
           <th style="width:30%">Название</th>
-          <th style="width:9%">Ед. изм.</th>
+          <th class="mob-hide" style="width:9%">Ед. изм.</th>
           <th style="width:13%">Цена</th>
-          <th style="width:20%">Поставщик</th>
+          <th class="mob-hide" style="width:20%">Поставщик</th>
           <th class="ta-c" style="width:8%" title="Кол-во рецептов, где используется">Рецепты</th>
           <th style="width:20%">Действия</th>
         </tr>
@@ -2927,8 +2935,8 @@ function renderCost() {
           <thead>
             <tr>
               <th style="width:33%">Название</th>
-              <th style="width:12%">Выход</th>
-              <th style="width:8%">Ед.</th>
+              <th class="mob-hide" style="width:12%">Выход</th>
+              <th class="mob-hide" style="width:8%">Ед.</th>
               <th style="width:17%">Себестоимость/ед.</th>
               <th class="ta-c" style="width:8%" title="Кол-во рецептов, где используется">Рецепты</th>
               <th style="width:22%">Действия</th>
@@ -2954,8 +2962,8 @@ function renderCost() {
                 : `<span class="usage-badge usage-badge-zero">0</span>`;
               return `<tr class="mat-row" title="Состав: ${recipe}" style="cursor:pointer" onclick="openEditSemi(${s.id})">
                 <td class="mat-td-name">${s.name}</td>
-                <td class="mat-td-unit">${s.yield}</td>
-                <td class="mat-td-unit">${s.unit}</td>
+                <td class="mat-td-unit mob-hide">${s.yield}</td>
+                <td class="mat-td-unit mob-hide">${s.unit}</td>
                 <td class="mat-td-price" style="font-weight:700;color:var(--green)">${rubSemi(cost, s.unit)}</td>
                 <td class="mat-td-usage">${semiUsageBadge}</td>
                 <td class="mat-td-actions">
@@ -2974,8 +2982,9 @@ function renderCost() {
   _costEl.innerHTML = `
     <div class="page-title">
       <span class="page-title-left"><i data-lucide="truck" class="icon"></i> Поставщики</span>
+      <button class="btn btn-outline sup-intro-toggle" id="sup-intro-btn" onclick="toggleSupIntro()" title="Подсказка"><i data-lucide="info" class="icon"></i> <span class="sup-btn-txt">Подсказка</span></button>
     </div>
-    <div class="tab-intro">
+    <div class="tab-intro" id="sup-intro">
       <div class="tab-intro-icon"><i data-lucide="truck" class="icon icon-lg"></i></div>
       <div>
         <div class="tab-intro-title">Что здесь?</div>
@@ -2994,15 +3003,15 @@ function renderCost() {
     <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
       <span><i data-lucide="building-2" class="icon"></i> Поставщики <span style="background:var(--border);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:4px">${supGroups.length}</span></span>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-outline" onclick="openSuppliersList()"><i data-lucide="list" class="icon"></i> Полный список</button>
-        <button class="btn btn-green" onclick="openSupplierBookModal()"><i data-lucide="plus" class="icon"></i> Поставщик</button>
+        <button class="btn btn-outline" onclick="openSuppliersList()"><i data-lucide="list" class="icon"></i><span class="sup-btn-txt"> Полный список</span></button>
+        <button class="btn btn-green" onclick="openSupplierBookModal()"><i data-lucide="plus" class="icon"></i><span class="sup-btn-txt"> Поставщик</span></button>
       </div>
     </div>
     ${suppliersHtml}
 
     <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px">
       <span><i data-lucide="banknote" class="icon"></i> Ингредиенты <span style="background:var(--border);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:4px">${Object.keys(MAT).length}</span></span>
-      <button class="btn btn-green" onclick="openModal('modal-mat')"><i data-lucide="plus" class="icon"></i> Сырьё</button>
+      <button class="btn btn-green" onclick="openModal('modal-mat')"><i data-lucide="plus" class="icon"></i><span class="sup-btn-txt"> Сырьё</span></button>
     </div>
     ${matCatTabsHtml}
     ${matCardsHtml}
@@ -3010,8 +3019,8 @@ function renderCost() {
     <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px">
       <span><i data-lucide="layers" class="icon"></i> Полуфабрикаты <span style="background:var(--border);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:4px">${SEMI.length}</span></span>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-outline" onclick="exportSemiTechCards()" title="Экспорт техкарт полуфабрикатов в PDF"><i data-lucide="file-text" class="icon"></i> PDF техкарт</button>
-        <button class="btn btn-green" onclick="openAddSemi()"><i data-lucide="plus" class="icon"></i> Полуфабрикат</button>
+        <button class="btn btn-outline" onclick="exportSemiTechCards()" title="Экспорт техкарт полуфабрикатов в PDF"><i data-lucide="file-text" class="icon"></i><span class="sup-btn-txt"> PDF техкарт</span></button>
+        <button class="btn btn-green" onclick="openAddSemi()"><i data-lucide="plus" class="icon"></i><span class="sup-btn-txt"> Полуфабрикат</span></button>
       </div>
     </div>
     ${semiHtml}
