@@ -31,6 +31,7 @@
     }
     .header-brand { display: flex; align-items: center; gap: 12px; }
     .header-logo  { font-size: 26px; }
+    .header-logo-img { height: 36px; width: auto; display: block; }
     .header-name  { font-size: 17px; font-weight: 800; }
     .header-sub   { font-size: 11px; opacity: .7; margin-top: 1px; }
 
