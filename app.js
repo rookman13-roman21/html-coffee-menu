@@ -911,12 +911,30 @@ function renderLocList() {
 }
 function toggleLocMenu(e) {
   if (e) e.stopPropagation();
-  document.getElementById('loc-menu').classList.toggle('open');
+  const menu = document.getElementById('loc-menu');
+  const isOpening = !menu.classList.contains('open');
+  if (isOpening && window.innerWidth > 768) {
+    const r = document.getElementById('loc-switcher').getBoundingClientRect();
+    menu.style.top = (r.bottom + 4) + 'px';
+    menu.style.left = r.left + 'px';
+    menu.style.right = 'auto';
+    menu.style.bottom = 'auto';
+  }
+  menu.classList.toggle('open');
   document.getElementById('export-menu')?.classList.remove('open');
 }
 function toggleExportMenu(e) {
   if (e) e.stopPropagation();
-  document.getElementById('export-menu').classList.toggle('open');
+  const menu = document.getElementById('export-menu');
+  const isOpening = !menu.classList.contains('open');
+  if (isOpening && window.innerWidth > 768) {
+    const r = document.getElementById('export-wrap').getBoundingClientRect();
+    menu.style.top = (r.bottom + 4) + 'px';
+    menu.style.right = (window.innerWidth - r.right) + 'px';
+    menu.style.left = 'auto';
+    menu.style.bottom = 'auto';
+  }
+  menu.classList.toggle('open');
   document.getElementById('loc-menu')?.classList.remove('open');
 }
 document.addEventListener('click', () => {

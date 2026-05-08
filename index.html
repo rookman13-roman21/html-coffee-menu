@@ -27,15 +27,6 @@
     <span class="loc-icon" id="loc-icon">☕</span>
     <span class="loc-name" id="loc-name">Моя кофейня</span>
     <i data-lucide="chevron-down" class="icon" style="width:14px;height:14px;opacity:.7"></i>
-    <div class="loc-menu" id="loc-menu" onclick="event.stopPropagation()">
-      <div class="loc-menu-header">Заведения</div>
-      <div class="loc-list" id="loc-list"></div>
-      <div class="loc-menu-divider"></div>
-      <button class="loc-menu-item" onclick="openAddLocation()"><i data-lucide="plus" class="icon"></i> Добавить точку</button>
-      <button class="loc-menu-item" onclick="openTemplatesModal()"><i data-lucide="sparkles" class="icon"></i> Создать из шаблона</button>
-      <button class="loc-menu-item" onclick="renameActiveLocation()"><i data-lucide="pencil" class="icon"></i> Переименовать текущую</button>
-      <button class="loc-menu-item danger" onclick="deleteActiveLocation()"><i data-lucide="trash-2" class="icon"></i> Удалить текущую</button>
-    </div>
   </div>
 
   <div class="header-actions" style="display:flex;align-items:center;gap:6px">
@@ -52,17 +43,28 @@
     <!-- Меню экспорта -->
     <div class="export-wrap" id="export-wrap">
       <button class="theme-btn" onclick="toggleExportMenu(event)" title="Экспорт"><i data-lucide="download" class="icon"></i></button>
-      <div class="export-menu" id="export-menu" onclick="event.stopPropagation()">
-        <button class="loc-menu-item" onclick="exportFullPDF()"><i data-lucide="file-text" class="icon"></i> PDF — полный отчёт</button>
-        <button class="loc-menu-item" onclick="exportFullXLSX()"><i data-lucide="file-spreadsheet" class="icon"></i> Excel (xlsx)</button>
-        <div class="loc-menu-divider"></div>
-        <button class="loc-menu-item" onclick="window.print()"><i data-lucide="printer" class="icon"></i> Печать страницы</button>
-      </div>
     </div>
 
     <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Тёмная / светлая тема"><i data-lucide="moon" class="icon" id="theme-icon"></i></button>
   </div>
 </header>
+
+<!-- Выпадающие меню (вне хедера — фикс iOS position:fixed внутри sticky) -->
+<div class="loc-menu" id="loc-menu" onclick="event.stopPropagation()">
+  <div class="loc-menu-header">Заведения</div>
+  <div class="loc-list" id="loc-list"></div>
+  <div class="loc-menu-divider"></div>
+  <button class="loc-menu-item" onclick="openAddLocation()"><i data-lucide="plus" class="icon"></i> Добавить точку</button>
+  <button class="loc-menu-item" onclick="openTemplatesModal()"><i data-lucide="sparkles" class="icon"></i> Создать из шаблона</button>
+  <button class="loc-menu-item" onclick="renameActiveLocation()"><i data-lucide="pencil" class="icon"></i> Переименовать текущую</button>
+  <button class="loc-menu-item danger" onclick="deleteActiveLocation()"><i data-lucide="trash-2" class="icon"></i> Удалить текущую</button>
+</div>
+<div class="export-menu" id="export-menu" onclick="event.stopPropagation()">
+  <button class="loc-menu-item" onclick="exportFullPDF()"><i data-lucide="file-text" class="icon"></i> PDF — полный отчёт</button>
+  <button class="loc-menu-item" onclick="exportFullXLSX()"><i data-lucide="file-spreadsheet" class="icon"></i> Excel (xlsx)</button>
+  <div class="loc-menu-divider"></div>
+  <button class="loc-menu-item" onclick="window.print()"><i data-lucide="printer" class="icon"></i> Печать страницы</button>
+</div>
 
 <!-- Нижний таббар (только mobile) -->
 <nav class="mobile-tabbar" id="mobile-tabbar">
