@@ -238,7 +238,8 @@ const GROUP_LABEL = { hot:'<i data-lucide="coffee" class="icon"></i> Горяч�
 let nextDrinkId = 27; // auto-increment id for new drinks
 let nextMatKey  = 1;  // suffix for custom mat keys
 let _editMatKey = null;
-let _pendingMatSelectEl = null; // select в строке рецепта, откуда открыли «создать ингредиент» // null = новый, string = режим редактирования
+let _pendingMatSelectEl     = null; // select в строке рецепта напитка, откуда открыли «создать ингредиент»
+let _pendingSemiMatSelectEl = null; // select в строке п/ф, откуда открыли «создать ингредиент»
 
 // ─── Полуфабрикаты ───────────────────────────────────────────────
 // { id, name, unit:'мл'|'г'|'шт', yield: number, process:'', recipe:[{mat,amt,loss?}] }
@@ -2832,6 +2833,18 @@ function saveMat() {
     }
     _pendingMatSelectEl = null;
   }
+  if (_pendingSemiMatSelectEl) {
+    _pendingSemiMatSelectEl.innerHTML = matOnlyOptions(key);
+    _pendingSemiMatSelectEl.value = key;
+    _pendingSemiMatSelectEl.dataset.prev = key;
+    const _pendingSemiRow = _pendingSemiMatSelectEl.closest('.ing-row');
+    if (_pendingSemiRow) {
+      const amtInp = _pendingSemiRow.querySelector('.ing-amt');
+      if (amtInp) { amtInp.placeholder = _semiIngPlaceholder(key); amtInp.step = _semiIngStep(key); }
+      _updateSemiIngCost(_pendingSemiMatSelectEl);
+    }
+    _pendingSemiMatSelectEl = null;
+  }
   _editMatKey = null;
   document.getElementById('mm-modal-title').innerHTML = '<i data-lucide="plus" class="icon"></i> Новая позиция сырья';
   document.getElementById('mm-name').value  = '';
@@ -2851,6 +2864,7 @@ function saveMat() {
 }
 function cancelMat() {
   _pendingMatSelectEl = null;
+  _pendingSemiMatSelectEl = null;
   closeModal('modal-mat');
 }
 function deleteMat(key) {
@@ -2867,6 +2881,7 @@ function deleteMat(key) {
 //  SEMI-FINISHED PRODUCTS CRUD
 // ════════════════════════════════════════════════════════════════════
 function matOnlyOptions(selected) {
+  const createOpt = `<option value="__create_mat__" style="font-weight:700;color:var(--green)">＋ Создать ингредиент...</option>`;
   const groups = {};
   Object.entries(MAT).forEach(([k, m]) => {
     const cat = m.category || 'other';
@@ -2876,7 +2891,7 @@ function matOnlyOptions(selected) {
   const sortedCats = Object.keys(groups).sort((a, b) =>
     ((MAT_CATEGORIES[a]||{order:99}).order) - ((MAT_CATEGORIES[b]||{order:99}).order)
   );
-  return sortedCats.map(cat => {
+  return createOpt + sortedCats.map(cat => {
     const label = (MAT_CATEGORIES[cat] || { label: cat }).label;
     const opts = groups[cat].map(([k, m]) =>
       `<option value="${k}"${k===selected?' selected':''}>${m.name} (${m.unit})</option>`
@@ -3018,6 +3033,24 @@ function _updateSemiIngCost(anyEl) {
 function _onSemiMatChange(selectEl) {
   const row = selectEl.closest('.ing-row');
   if (!row) return;
+  if (selectEl.value === '__create_mat__') {
+    // Восстановить предыдущее значение
+    selectEl.value = selectEl.dataset.prev || Object.keys(MAT)[0] || '';
+    _pendingSemiMatSelectEl = selectEl;
+    _editMatKey = null;
+    // Открыть модалку создания сырья поверх модалки п/ф
+    document.getElementById('mm-modal-title').innerHTML = '<i data-lucide="plus" class="icon"></i> Новое сырьё';
+    ['mm-name','mm-price','mm-size','mm-sup-name','mm-sup-phone','mm-sup-note'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    document.getElementById('mm-unit').value = 'шт';
+    document.getElementById('mm-category').value = 'other';
+    document.getElementById('mm-sup-book').value = '';
+    const wrap = document.getElementById('mm-sup-custom-wrap');
+    if (wrap) wrap.removeAttribute('open');
+    ['mm-kcal','mm-protein','mm-fat','mm-carbs'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    openModal('modal-mat');
+    return;
+  }
+  selectEl.dataset.prev = selectEl.value;
   const amtInp = row.querySelector('.ing-amt');
   amtInp.placeholder = _semiIngPlaceholder(selectEl.value);
   amtInp.step = _semiIngStep(selectEl.value);
