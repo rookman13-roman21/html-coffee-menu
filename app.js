@@ -1954,7 +1954,11 @@ function closeOnboarding() {
 //  MODAL HELPERS
 // ════════════════════════════════════════════════════════════════════
 function openModal(id)  {
-  document.getElementById(id).classList.add('open');
+  const el = document.getElementById(id);
+  el.classList.add('open');
+  // Сброс скролла модалки в начало
+  const modalEl = el.querySelector('.modal');
+  if (modalEl) modalEl.scrollTop = 0;
   if (id === 'modal-mat') _fillMatSupBookSelect();
   // Блокируем скролл фона (iOS Safari fix)
   const scrollY = window.scrollY;
@@ -2531,7 +2535,7 @@ function addSemiIngRow(matKey='', amt='', loss='', yieldAmt='') {
     <span class="ing-cost-hint"></span>
   `;
   wrap.appendChild(row);
-  if (window.lucide) lucide.createIcons();
+  if (window.lucide) lucide.createIcons({ nodes: [row] });
   _updateSemiCostPreview();
   if (amt) {
     const hint = row.querySelector('.ing-cost-hint');
