@@ -2330,40 +2330,37 @@ function safeCloseModal(id) {
   closeModal(id);
 }
 
-// Показывает кастомную панель предупреждения внутри модала
+// Показывает кастомный мини-диалог поверх модала (по центру экрана)
 function _showUnsavedWarning(id) {
-  const bg = document.getElementById(id);
-  if (!bg) return;
-  // Не дублируем
-  if (bg.querySelector('._unsaved-bar')) return;
-  const bar = document.createElement('div');
-  bar.className = '_unsaved-bar';
-  bar.style.cssText = [
-    'position:sticky;bottom:0;left:0;right:0',
-    'background:#fff3cd;border-top:2px solid #f0a500',
-    'padding:12px 18px',
-    'display:flex;align-items:center;gap:10px;flex-wrap:wrap',
-    'z-index:10;border-radius:0 0 12px 12px',
-    'font-size:14px;font-weight:500;color:#7a4e00'
+  if (document.getElementById('_unsaved-overlay')) return; // не дублируем
+  const overlay = document.createElement('div');
+  overlay.id = '_unsaved-overlay';
+  overlay.style.cssText = [
+    'position:fixed;inset:0',
+    'background:rgba(0,0,0,0.55)',
+    'display:flex;align-items:center;justify-content:center',
+    'z-index:9999'
   ].join(';');
-  bar.innerHTML = `
-    <span style="flex:1;min-width:160px">⚠️ Есть несохранённые изменения</span>
-    <button onclick="_dismissUnsavedWarning('${id}')" style="padding:6px 14px;border-radius:8px;border:1.5px solid #ccc;background:#fff;font-size:13px;cursor:pointer;font-weight:600">Остаться</button>
-    <button onclick="_forceCloseModal('${id}')" style="padding:6px 14px;border-radius:8px;border:none;background:#e74c3c;color:#fff;font-size:13px;cursor:pointer;font-weight:600">Закрыть без сохранения</button>
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:14px;padding:24px 28px;max-width:360px;width:90%;
+      box-shadow:0 8px 40px rgba(0,0,0,0.25);text-align:center">
+      <div style="font-size:32px;margin-bottom:10px">⚠️</div>
+      <div style="font-weight:700;font-size:17px;margin-bottom:8px">Есть несохранённые изменения</div>
+      <div style="font-size:14px;color:#666;margin-bottom:20px">Если закрыть сейчас — данные потеряются</div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button onclick="_dismissUnsavedWarning()" style="flex:1;padding:10px 0;border-radius:9px;border:1.5px solid #ccc;background:#fff;font-size:14px;font-weight:600;cursor:pointer">← Остаться</button>
+        <button onclick="_forceCloseModal('${id}')" style="flex:1;padding:10px 0;border-radius:9px;border:none;background:#e74c3c;color:#fff;font-size:14px;font-weight:600;cursor:pointer">Закрыть</button>
+      </div>
+    </div>
   `;
-  // Вставляем в конец .modal
-  const modal = bg.querySelector('.modal');
-  if (modal) {
-    modal.appendChild(bar);
-    bar.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }
+  document.body.appendChild(overlay);
 }
-function _dismissUnsavedWarning(id) {
-  const bar = document.getElementById(id)?.querySelector('._unsaved-bar');
-  if (bar) bar.remove();
+function _dismissUnsavedWarning() {
+  const el = document.getElementById('_unsaved-overlay');
+  if (el) el.remove();
 }
 function _forceCloseModal(id) {
-  _dismissUnsavedWarning(id);
+  _dismissUnsavedWarning();
   if (id === 'modal-mat')           { cancelMat(true); return; }
   if (id === 'modal-supplier-book') { cancelSupplierBookModal(true); return; }
   closeModal(id);
@@ -2742,6 +2739,7 @@ function openEditDrink(id) {
   }
   if (window.lucide) lucide.createIcons({ nodes: [delBtn] });
   openModal('modal-drink');
+  _markModalDirty('modal-drink');
 }
 function saveDrink() {
   const name  = document.getElementById('md-name').value.trim();
@@ -3226,6 +3224,7 @@ function openEditSemi(id) {
   (semi.recipe || []).forEach(r => addSemiIngRow(r.mat, r.amt, r.loss ? parseFloat((r.loss * 100).toPrecision(4)) : '', r.yieldAmt || ''));
   if (!(semi.recipe && semi.recipe.length)) addSemiIngRow();
   openModal('modal-semi');
+  _markModalDirty('modal-semi');
   _updateSemiCostPreview();
   if (window.lucide) lucide.createIcons();
 }
