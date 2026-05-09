@@ -12,7 +12,7 @@
 //  Статус модулей:
 //   ✅ src/utils/format.js  — rub, rubSemi, pct, int, fcCls, riskBadge, abcBadge, fcCombinedHtml
 //   ✅ src/utils/calc.js    — calcCost, calcNutrition, enrich, withABC, bepCalc и др.
-//   ⬜ src/utils/image.js   — _compressImageDataURL
+//   ✅ src/utils/image.js   — DRINK_IMAGES, getDrinkImage, _compressImageDataURL
 //   ⬜ src/state/store.js   — S, Loc, saveState, loadState
 //   ⬜ src/render/*.js      — renderDashboard, renderCost, renderSales, renderFinModel, renderRecipes
 //   ⬜ src/export/*.js      — pdf.js, excel.js
@@ -31,6 +31,10 @@ import {
   avgMetrics, weightedMetrics, salesMetrics, bepCalc,
 } from './utils/calc.js';
 
+import {
+  DRINK_IMAGES, getDrinkImage, _compressImageDataURL,
+} from './utils/image.js';
+
 // ─── Реэкспорт в window для обратной совместимости с public/app.js ──
 // Пока app.js не переведён на import — эти функции должны быть глобальными.
 // Когда app.js полностью разобьётся на модули — этот блок удалится.
@@ -43,4 +47,6 @@ Object.assign(window, {
   calcSemiCostPerUnit, calcCost, calcIngCost, calcNutrition,
   enrich, withABC,
   avgMetrics, weightedMetrics, salesMetrics, bepCalc,
+  // image
+  DRINK_IMAGES, getDrinkImage, _compressImageDataURL,
 });
