@@ -2546,6 +2546,7 @@ function addIngRow(selected='', amt='', loss='') {
   row.className = 'modal-ing-row';
   row.innerHTML = `
     <select class="modal-select${!selected ? ' ing-select-empty' : ''}" onchange="_onIngMatChange(this);_updateIngRowCost(this)">${matOptions(selected)}</select>
+    <div class="ing-mob-labels"><span>Кол-во</span><span>Потери</span></div>
     <input class="modal-inp" type="text" inputmode="decimal" placeholder="${ph}" value="${amt}" oninput="this.value=this.value.replace(',','.');_updateIngRowCost(this)">
     <input class="modal-inp" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="%" value="${loss}" oninput="_updateIngRowCost(this)">
     <span class="ing-cost-hint"></span>
