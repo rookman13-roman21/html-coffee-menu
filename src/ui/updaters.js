@@ -110,7 +110,13 @@ export function toggleFcCat(cat) {
 }
 
 export function flashCells() {
-  return window.flashCells();
+  const tab = document.getElementById('tab-' + window.activeTab);
+  if (!tab) return;
+  tab.querySelectorAll('tbody td:not(:first-child), .kpi-value').forEach(el => {
+    el.classList.remove('flash');
+    void el.offsetWidth;
+    el.classList.add('flash');
+  });
 }
 
 export function resetAll() {

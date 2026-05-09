@@ -596,21 +596,6 @@ function filterSales(val) {
 }
 
 // ════════════════════════════════════════════════════════════════════
-//  FLASH (visual feedback on recalc)
-// ════════════════════════════════════════════════════════════════════
-function flashCells() {
-  // Подсвечиваем все td с числами в активной вкладке
-  const tab = document.getElementById('tab-' + activeTab);
-  if (!tab) return;
-  tab.querySelectorAll('tbody td:not(:first-child), .kpi-value').forEach(el => {
-    el.classList.remove('flash');
-    // запуск через 1 мс чтобы CSS reflow
-    void el.offsetWidth;
-    el.classList.add('flash');
-  });
-}
-
-// ════════════════════════════════════════════════════════════════════
 //  LOCATIONS (multi-coffeeshop support)
 // ════════════════════════════════════════════════════════════════════
 const Loc = { list: [], activeId: null };
