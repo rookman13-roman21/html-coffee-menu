@@ -5996,7 +5996,9 @@ function buildSeasonalChart(totRevMon, varCostsMon, totalFixed, calcTax) {
   const barsSvg=data.map((d,i)=>{
     const x=cx(i), pos=d.net>=0;
     const bt=pos?cy(d.net):zero, bb=pos?zero:cy(d.net), h=Math.max(Math.abs(bb-bt),2);
-    const clr=pos?clrPos:clrNeg, labelY=pos?bt-4:bt+h+11;
+    const clr=pos?clrPos:clrNeg;
+    // Для отрицательных баров — подпись над баром (выше нуля), чтобы не перекрывать название месяца
+    const labelY=pos?bt-4:cy(d.net)-4;
     const fv=v=>Math.abs(v)>=1e6?(v/1e6).toFixed(1)+'М':Math.abs(v)>=1e3?Math.round(v/1e3)+'к':Math.round(v);
     return `<rect x="${x-barW/2}" y="${bt}" width="${barW}" height="${h}" rx="2" fill="${clr}" opacity="${d.k===1?'0.82':'0.65'}"/>
     <text x="${x}" y="${PT+ch+12}" text-anchor="middle" font-size="9" font-family="${ff}" fill="${clrTxt}">${d.m}</text>
