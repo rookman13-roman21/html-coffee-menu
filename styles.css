@@ -1235,19 +1235,21 @@
         padding: 10px 0;
         border-bottom: 1px solid var(--border);
         margin-bottom: 0;
+        width: 100%;
+        box-sizing: border-box;
       }
       /* Строка 1: селект + корзина */
       .ing-top-row {
-        display: flex; gap: 8px; align-items: center;
+        display: flex !important; gap: 8px; align-items: center;
       }
-      .ing-top-row .modal-select { flex: 1; height: 44px; }
+      .ing-top-row .modal-select { flex: 1; height: 44px; min-width: 0; }
       .ing-top-row .modal-ing-del { flex-shrink: 0; width: 44px; height: 44px; }
       /* Строка 2: поля с подписями */
       .ing-fields-row {
-        display: flex; gap: 8px;
+        display: flex !important; gap: 8px;
       }
       .ing-fields-row .ing-field-wrap { display: flex; flex-direction: column; gap: 3px; }
-      .ing-fields-row .ing-field-wrap:first-child { flex: 1; }
+      .ing-fields-row .ing-field-wrap:first-child { flex: 1; min-width: 0; }
       .ing-fields-row .ing-field-wrap:nth-child(2) { flex: 0 0 80px; }
       .ing-mob-label {
         font-size: 10px; font-weight: 700; color: var(--muted);
