@@ -183,10 +183,15 @@ import {
 //   • Когда функция УДАЛЕНА из app.js — она автоматически начнёт браться
 //     отсюда (window[k] будет undefined → присвоится наша версия).
 //
-const _srcExports = {
-  // format
+// ─── Форматирование — назначаем ВСЕГДА (app.js их больше не определяет) ──
+const _formatExports = {
   rub, rubSemi, pct, int,
   fcCls, riskBadge, abcBadge, fcCombinedHtml,
+};
+Object.assign(window, _formatExports);
+
+// ─── Остальное — не перезаписываем то, что уже определено app.js ────
+const _srcExports = {
   // calc
   _semiUnitFactor, _semiDrinkFactor,
   calcSemiCostPerUnit, calcCost, calcIngCost, calcNutrition,

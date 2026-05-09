@@ -520,39 +520,6 @@ function getEffectiveCosts(revMon) {
   });
 }
 
-// ════════════════════════════════════════════════════════════════════
-//  FORMAT HELPERS
-// ════════════════════════════════════════════════════════════════════
-const rub = v => Math.round(v).toLocaleString('ru') + '\u00a0₽';
-// Для полуфабрикатов: показывает дробные копейки если значение < 1
-const rubSemi = (v, unit='') => {
-  if (!isFinite(v) || v === 0) return '0\u00a0₽';
-  const suffix = '\u00a0₽' + (unit ? '/' + unit : '');
-  if (v >= 1)   return Math.round(v).toLocaleString('ru') + suffix;
-  if (v >= 0.1) return v.toFixed(2) + suffix;
-  return v.toPrecision(2) + suffix;
-};
-const pct = v => (v * 100).toFixed(1) + '%';
-const int = v => Math.round(v).toLocaleString('ru');
-
-function fcCls(fc) { return fc <= 0.25 ? 'good' : fc <= 0.30 ? 'ok' : 'bad'; }
-function riskBadge(fc) {
-  const c = fcCls(fc);
-  const label = c === 'good' ? '🟢 Отлично' : c === 'ok' ? '🟡 Норма' : '🔴 Риск';
-  const cls   = c === 'good' ? 'risk-good' : c === 'ok' ? 'risk-ok' : 'risk-bad';
-  return `<span class="risk ${cls}">${label}</span>`;
-}
-function abcBadge(abc, tip='') {
-  const tipAttr = tip ? ` data-tip="${tip}"` : '';
-  return `<span class="abc abc-${abc}"${tipAttr}>${abc}</span>`;
-}
-
-function fcCombinedHtml(fc) {
-  const cls = fcCls(fc);
-  const clr = cls==='bad' ? 'var(--red)' : cls==='ok' ? '#7a5800' : 'var(--navy)';
-  return `<span style="color:${clr};font-weight:700;font-size:13px">${pct(fc)}</span>`;
-}
-
 // ═══════════════════════════════════════════════════════════════════
 //  EXPORT CSV
 // ═══════════════════════════════════════════════════════════════════
