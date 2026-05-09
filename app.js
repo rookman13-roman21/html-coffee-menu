@@ -2890,19 +2890,23 @@ function addSemiIngRow(matKey='', amt='', loss='', yieldAmt='') {
   const row = document.createElement('div');
   row.className = 'ing-row';
   row.innerHTML = `
-    <select class="modal-select ing-mat" onchange="_onSemiMatChange(this);_updateSemiIngCost(this)">${matOnlyOptions(firstKey)}</select>
-    <button class="btn btn-outline ing-del-btn" onclick="this.closest('.ing-row').remove();_updateSemiCostPreview()"><i data-lucide="trash-2" class="icon"></i></button>
-    <div class="ing-field-wrap">
-      <span class="ing-field-label">Кол-во</span>
-      <input class="modal-inp ing-amt" type="text" inputmode="decimal" value="${amt}" placeholder="${_semiIngPlaceholder(firstKey)}" oninput="this.value=this.value.replace(',','.');_updateSemiCostPreview();_updateSemiIngCost(this);_autoCalcSemiIngYield(this)">
+    <div class="ing-row-header">
+      <select class="modal-select ing-mat" onchange="_onSemiMatChange(this);_updateSemiIngCost(this)">${matOnlyOptions(firstKey)}</select>
+      <button class="btn btn-outline ing-del-btn" onclick="this.closest('.ing-row').remove();_updateSemiCostPreview()"><i data-lucide="trash-2" class="icon"></i></button>
     </div>
-    <div class="ing-field-wrap">
-      <span class="ing-field-label">Потери, %</span>
-      <input class="modal-inp ing-loss" type="number" min="0" max="99" step="1" inputmode="numeric" value="${loss}" placeholder="0" oninput="_updateSemiCostPreview();_updateSemiIngCost(this);_autoCalcSemiIngYield(this)">
-    </div>
-    <div class="ing-field-wrap">
-      <span class="ing-field-label">Выход</span>
-      <input class="modal-inp ing-yield" type="text" inputmode="decimal" value="${yieldAmt}" placeholder="авто" title="Фактический выход после обработки">
+    <div class="ing-row-fields">
+      <div class="ing-field-wrap">
+        <span class="ing-field-label">Кол-во</span>
+        <input class="modal-inp ing-amt" type="text" inputmode="decimal" value="${amt}" placeholder="${_semiIngPlaceholder(firstKey)}" oninput="this.value=this.value.replace(',','.');_updateSemiCostPreview();_updateSemiIngCost(this);_autoCalcSemiIngYield(this)">
+      </div>
+      <div class="ing-field-wrap">
+        <span class="ing-field-label">Потери, %</span>
+        <input class="modal-inp ing-loss" type="number" min="0" max="99" step="1" inputmode="numeric" value="${loss}" placeholder="0" oninput="_updateSemiCostPreview();_updateSemiIngCost(this);_autoCalcSemiIngYield(this)">
+      </div>
+      <div class="ing-field-wrap">
+        <span class="ing-field-label">Выход</span>
+        <input class="modal-inp ing-yield" type="text" inputmode="decimal" value="${yieldAmt}" placeholder="авто" title="Фактический выход после обработки">
+      </div>
     </div>
     <span class="ing-cost-hint"></span>
   `;
