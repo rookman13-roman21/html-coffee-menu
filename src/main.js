@@ -21,7 +21,9 @@
   // ✅ src/render/finmodel.js — renderFinModel
 //   ✅ src/export/techcards.js — exportTechCards, exportSemiTechCards, mvdDownloadPDF/Semi/Excel
 //   ⬜ src/export/excel.js
-//   ⬜ src/modals/*.js      — drink.js, material.js, semi.js
+//   ✅ src/modals/drink.js   — openAddDrink, openEditDrink, saveDrink, deleteDrink, resetDrink
+//   ✅ src/modals/semi.js    — openAddSemi, openEditSemi, saveSemi, deleteSemi
+//   ✅ src/modals/mat.js     — openEditMat, saveMat, cancelMat, deleteMat
 // ════════════════════════════════════════════════════════════════════
 
 import {
@@ -71,6 +73,21 @@ import {
   mvdDownloadPDF, mvdDownloadSemiPDF, mvdDownloadExcel,
 } from './export/techcards.js';
 
+import {
+  openAddDrink, openEditDrink, saveDrink, deleteDrink, resetDrink,
+  mdDeleteAction, onDrinkImgChange, clearDrinkImg,
+} from './modals/drink.js';
+
+import {
+  openAddSemi, openEditSemi, saveSemi, deleteSemi,
+  addSemiIngRow, onSemiImgChange, clearSemiImg,
+  _updateSemiCostPreview, _onSemiMatChange, _autoFillSemiYield,
+} from './modals/semi.js';
+
+import {
+  openEditMat, saveMat, cancelMat, deleteMat, matOnlyOptions,
+} from './modals/mat.js';
+
 // ─── Реэкспорт в window для обратной совместимости с public/app.js ──
 //
 // ⚠️  ВАЖНО: app.js объявляет MAT, S, DRINKS, SEMI, Loc через const/let —
@@ -108,6 +125,15 @@ const _srcExports = {
   // export/techcards
   exportTechCards, exportSemiTechCards,
   mvdDownloadPDF, mvdDownloadSemiPDF, mvdDownloadExcel,
+  // modals/drink
+  openAddDrink, openEditDrink, saveDrink, deleteDrink, resetDrink,
+  mdDeleteAction, onDrinkImgChange, clearDrinkImg,
+  // modals/semi
+  openAddSemi, openEditSemi, saveSemi, deleteSemi,
+  addSemiIngRow, onSemiImgChange, clearSemiImg,
+  _updateSemiCostPreview, _onSemiMatChange, _autoFillSemiYield,
+  // modals/mat
+  openEditMat, saveMat, cancelMat, deleteMat, matOnlyOptions,
   // state/store
   saveState, loadState,
   loadLocIndex, saveLocIndex, migrateOldState,
