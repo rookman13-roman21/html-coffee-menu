@@ -2306,7 +2306,38 @@ function closeModal(id) {
     document.documentElement.classList.remove('modal-open');
     window.scrollTo(0, scrollY);
   }
+  _clearModalDirty(id);
 }
+
+// ─── Защита от потери данных при случайном закрытии модала ──────────
+const _EDITABLE_MODALS = new Set([
+  'modal-drink','modal-semi','modal-mat',
+  'modal-supplier','modal-supplier-book','modal-loc'
+]);
+const _dirtyModalSet = new Set();
+function _markModalDirty(id)  { if (_EDITABLE_MODALS.has(id)) _dirtyModalSet.add(id); }
+function _clearModalDirty(id) { _dirtyModalSet.delete(id); }
+function _isModalDirty(id)    { return _dirtyModalSet.has(id); }
+
+function safeCloseModal(id) {
+  if (_isModalDirty(id)) {
+    if (!confirm('Изменения не сохранены. Закрыть без сохранения?')) return;
+  }
+  // Специальные cancel-функции
+  if (id === 'modal-mat')           { cancelMat(true); return; }
+  if (id === 'modal-supplier-book') { cancelSupplierBookModal(true); return; }
+  closeModal(id);
+}
+
+// Делегированный слушатель: любое изменение в открытом модале → dirty
+document.addEventListener('input',  e => { const m = e.target.closest('.modal-bg'); if (m) _markModalDirty(m.id); }, true);
+document.addEventListener('change', e => { const m = e.target.closest('.modal-bg'); if (m) _markModalDirty(m.id); }, true);
+
+// Клик по подложке (не по контенту модала) → safeClose
+document.addEventListener('click', e => {
+  if (!e.target.classList.contains('modal-bg')) return;
+  safeCloseModal(e.target.id);
+});
 
 // Заполняем дропдаун книжки поставщиков в modal-mat
 function _fillMatSupBookSelect() {
@@ -2428,9 +2459,7 @@ document.addEventListener('keydown', e => {
   for (const id of all) {
     const el = document.getElementById(id);
     if (el && el.classList.contains('open')) {
-      // modal-mat может быть поверх другого — закрываем его первым
-      if (id === 'modal-mat') { cancelMat(); return; }
-      closeModal(id);
+      safeCloseModal(id);
       return;
     }
   }
@@ -2903,7 +2932,10 @@ function saveMat() {
   markDirtyDebounce();
   saveState();
 }
-function cancelMat() {
+function cancelMat(force = false) {
+  if (!force && _isModalDirty('modal-mat')) {
+    if (!confirm('Изменения не сохранены. Закрыть без сохранения?')) return;
+  }
   _pendingMatSelectEl = null;
   _pendingSemiMatSelectEl = null;
   closeModal('modal-mat');
@@ -6312,7 +6344,10 @@ function openSupplierBookModal(id, fromList) {
   openModal('modal-supplier-book');
   if (window.lucide) lucide.createIcons();
 }
-function cancelSupplierBookModal() {
+function cancelSupplierBookModal(force = false) {
+  if (!force && _isModalDirty('modal-supplier-book')) {
+    if (!confirm('Изменения не сохранены. Закрыть без сохранения?')) return;
+  }
   const fromList = _supBookFromList;
   _supBookFromList = false;
   closeModal('modal-supplier-book');
