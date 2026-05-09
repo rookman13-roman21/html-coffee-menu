@@ -595,44 +595,6 @@ function filterSales(val) {
     </tr>`;
 }
 
-// ═══════════════════════════════════════════════════════════════════
-//  RESET
-// ═══════════════════════════════════════════════════════════════════
-function resetAll() {
-  if (!confirm('Сбросить все цены и количества к исходным значениям этой точки?')) return;
-  Object.assign(S.prices,     DEFAULTS.prices);
-  Object.assign(S.salePrices, DEFAULTS.salePrices);
-  Object.assign(S.portions,   DEFAULTS.portions);
-  S.days = 30; S.targetFC = 0.25;
-  S.fixedCosts = FIXED_COSTS_DEF.map(c=>({...c}));
-  S.taxMode = 'none'; S.investment = 0;
-  S.payroll   = { rate: 250, hours: 12, shifts: 30, count: 2 };
-  S.payrollPositions = [
-    { id:1, name:'Управляющий',   rate:400, hours:12, shifts:22, count:1, empType:'white' },
-    { id:2, name:'Шеф-бариста', rate:350, hours:10, shifts:22, count:1, empType:'grey'  },
-    { id:3, name:'Бариста',       rate:250, hours:10, shifts:22, count:2, empType:'black' },
-  ];
-  S.payrollSettings = { mrot: 22440, ndfl: 13, ins: 30 };
-  S.payrollSettingsOpen = false;
-  S.fixedHintOpen = false;
-  S.seasonality = [1,1,1,1,1,1,1,1,1,1,1,1];
-  S.seasonalityOpen = false;
-  S.suppliers = {};
-  S.priceLog  = [];
-  for (let i = DRINKS.length - 1; i >= 0; i--) {
-    if (DRINKS[i].custom) DRINKS.splice(i, 1);
-    else if (DRINKS[i].modified) {
-      const orig = DRINKS_ORIG.find(o => o.id === DRINKS[i].id);
-      if (orig) DRINKS[i] = {...orig, recipe: orig.recipe.map(r=>({...r}))};
-    }
-  }
-  Object.keys(MAT).forEach(k => { if (!BASE_MAT_KEYS.has(k)) delete MAT[k]; });
-  saveState();
-  searchQuery = '';
-  Object.keys(dirty).forEach(k=>dirty[k]=true);
-  renderActive();
-}
-
 // ════════════════════════════════════════════════════════════════════
 //  FLASH (visual feedback on recalc)
 // ════════════════════════════════════════════════════════════════════
