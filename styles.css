@@ -1356,9 +1356,11 @@
     }
     .sales-preset-wrap {
       display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+      background: var(--light); border: 1.5px solid var(--border);
+      border-radius: 12px; padding: 10px 16px;
     }
     .sales-presets-label {
-      font-size: 12px; font-weight: 700; color: var(--muted);
+      font-size: 13px; font-weight: 700; color: var(--navy);
       white-space: nowrap;
     }
     .sales-preset-select {
