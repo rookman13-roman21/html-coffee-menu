@@ -2321,9 +2321,49 @@ function _isModalDirty(id)    { return _dirtyModalSet.has(id); }
 
 function safeCloseModal(id) {
   if (_isModalDirty(id)) {
-    if (!confirm('Изменения не сохранены. Закрыть без сохранения?')) return;
+    _showUnsavedWarning(id);
+    return;
   }
   // Специальные cancel-функции
+  if (id === 'modal-mat')           { cancelMat(true); return; }
+  if (id === 'modal-supplier-book') { cancelSupplierBookModal(true); return; }
+  closeModal(id);
+}
+
+// Показывает кастомную панель предупреждения внутри модала
+function _showUnsavedWarning(id) {
+  const bg = document.getElementById(id);
+  if (!bg) return;
+  // Не дублируем
+  if (bg.querySelector('._unsaved-bar')) return;
+  const bar = document.createElement('div');
+  bar.className = '_unsaved-bar';
+  bar.style.cssText = [
+    'position:sticky;bottom:0;left:0;right:0',
+    'background:#fff3cd;border-top:2px solid #f0a500',
+    'padding:12px 18px',
+    'display:flex;align-items:center;gap:10px;flex-wrap:wrap',
+    'z-index:10;border-radius:0 0 12px 12px',
+    'font-size:14px;font-weight:500;color:#7a4e00'
+  ].join(';');
+  bar.innerHTML = `
+    <span style="flex:1;min-width:160px">⚠️ Есть несохранённые изменения</span>
+    <button onclick="_dismissUnsavedWarning('${id}')" style="padding:6px 14px;border-radius:8px;border:1.5px solid #ccc;background:#fff;font-size:13px;cursor:pointer;font-weight:600">Остаться</button>
+    <button onclick="_forceCloseModal('${id}')" style="padding:6px 14px;border-radius:8px;border:none;background:#e74c3c;color:#fff;font-size:13px;cursor:pointer;font-weight:600">Закрыть без сохранения</button>
+  `;
+  // Вставляем в конец .modal
+  const modal = bg.querySelector('.modal');
+  if (modal) {
+    modal.appendChild(bar);
+    bar.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }
+}
+function _dismissUnsavedWarning(id) {
+  const bar = document.getElementById(id)?.querySelector('._unsaved-bar');
+  if (bar) bar.remove();
+}
+function _forceCloseModal(id) {
+  _dismissUnsavedWarning(id);
   if (id === 'modal-mat')           { cancelMat(true); return; }
   if (id === 'modal-supplier-book') { cancelSupplierBookModal(true); return; }
   closeModal(id);
@@ -2934,7 +2974,8 @@ function saveMat() {
 }
 function cancelMat(force = false) {
   if (!force && _isModalDirty('modal-mat')) {
-    if (!confirm('Изменения не сохранены. Закрыть без сохранения?')) return;
+    _showUnsavedWarning('modal-mat');
+    return;
   }
   _pendingMatSelectEl = null;
   _pendingSemiMatSelectEl = null;
@@ -6346,7 +6387,8 @@ function openSupplierBookModal(id, fromList) {
 }
 function cancelSupplierBookModal(force = false) {
   if (!force && _isModalDirty('modal-supplier-book')) {
-    if (!confirm('Изменения не сохранены. Закрыть без сохранения?')) return;
+    _showUnsavedWarning('modal-supplier-book');
+    return;
   }
   const fromList = _supBookFromList;
   _supBookFromList = false;
