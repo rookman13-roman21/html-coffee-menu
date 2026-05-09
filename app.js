@@ -604,6 +604,8 @@ function thSort(col, label, cls='', tip='') {
 let _matActiveCat = 'all';
 let _matCollapsed  = {}; // { [cat]: true/false }
 let _semiCollapsed = false;
+let _supCollapsed  = false;
+let _ingCollapsed  = false;
 
 function setMatCat(cat) {
   _matActiveCat = cat;
@@ -633,6 +635,28 @@ function toggleSemiCat() {
   const icon  = document.getElementById('semi-cat-icon');
   if (tbody) tbody.style.display = _semiCollapsed ? 'none' : '';
   if (icon)  icon.textContent = _semiCollapsed ? '▶' : '▼';
+}
+
+function toggleSupSection() {
+  _supCollapsed = !_supCollapsed;
+  const body = document.getElementById('cost-sup-body');
+  const icon = document.getElementById('cost-sup-icon');
+  if (body) body.style.display = _supCollapsed ? 'none' : '';
+  if (icon) icon.textContent = _supCollapsed ? '▶' : '▼';
+}
+
+function toggleIngSection() {
+  _ingCollapsed = !_ingCollapsed;
+  const body = document.getElementById('cost-ing-body');
+  const icon = document.getElementById('cost-ing-icon');
+  if (body) body.style.display = _ingCollapsed ? 'none' : '';
+  if (icon) icon.textContent = _ingCollapsed ? '▶' : '▼';
+}
+
+function scrollCostTo(sectionId) {
+  const el = document.getElementById(sectionId);
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ── Попап использования ингредиента / полуфабриката в рецептах ──
@@ -3087,22 +3111,37 @@ function renderCost() {
       </div>
     </div>
 
-    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
-      <span><i data-lucide="building-2" class="icon"></i> Поставщики <span style="background:var(--border);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:4px">${supGroups.length}</span></span>
-      <div style="display:flex;gap:8px">
+    <div class="cost-subtabs">
+      <button class="cost-subtab" onclick="scrollCostTo('cost-section-sup')"><i data-lucide="building-2" class="icon"></i> Поставщики <span>${supGroups.length}</span></button>
+      <button class="cost-subtab" onclick="scrollCostTo('cost-section-ing')"><i data-lucide="banknote" class="icon"></i> Ингредиенты <span>${Object.keys(MAT).length}</span></button>
+      <button class="cost-subtab" onclick="scrollCostTo('cost-section-semi')"><i data-lucide="layers" class="icon"></i> Полуфабрикаты <span>${SEMI.length}</span></button>
+    </div>
+
+    <div id="cost-section-sup"></div>
+    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;cursor:pointer" onclick="toggleSupSection()">
+      <span style="display:flex;align-items:center;gap:5px"><span class="mat-cat-chevron" id="cost-sup-icon">${_supCollapsed?'▶':'▼'}</span><i data-lucide="building-2" class="icon"></i> Поставщики <span style="background:var(--border);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:4px">${supGroups.length}</span></span>
+      <div style="display:flex;gap:8px" onclick="event.stopPropagation()">
         <button class="btn btn-outline" onclick="openSuppliersList()"><i data-lucide="list" class="icon"></i><span class="sup-btn-txt"> Полный список</span></button>
         <button class="btn btn-green" onclick="openSupplierBookModal()"><i data-lucide="plus" class="icon"></i><span class="sup-btn-txt"> Поставщик</span></button>
       </div>
     </div>
-    ${suppliersHtml}
-
-    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px">
-      <span><i data-lucide="banknote" class="icon"></i> Ингредиенты <span style="background:var(--border);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:4px">${Object.keys(MAT).length}</span></span>
-      <button class="btn btn-green" onclick="openModal('modal-mat')"><i data-lucide="plus" class="icon"></i><span class="sup-btn-txt"> Сырьё</span></button>
+    <div id="cost-sup-body" style="${_supCollapsed?'display:none':''}">
+      ${suppliersHtml}
     </div>
-    ${matCatTabsHtml}
-    ${matCardsHtml}
 
+    <div id="cost-section-ing"></div>
+    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px;cursor:pointer" onclick="toggleIngSection()">
+      <span style="display:flex;align-items:center;gap:5px"><span class="mat-cat-chevron" id="cost-ing-icon">${_ingCollapsed?'▶':'▼'}</span><i data-lucide="banknote" class="icon"></i> Ингредиенты <span style="background:var(--border);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:4px">${Object.keys(MAT).length}</span></span>
+      <div onclick="event.stopPropagation()">
+        <button class="btn btn-green" onclick="openModal('modal-mat')"><i data-lucide="plus" class="icon"></i><span class="sup-btn-txt"> Сырьё</span></button>
+      </div>
+    </div>
+    <div id="cost-ing-body" style="${_ingCollapsed?'display:none':''}">
+      ${matCatTabsHtml}
+      ${matCardsHtml}
+    </div>
+
+    <div id="cost-section-semi"></div>
     <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px">
       <span><i data-lucide="layers" class="icon"></i> Полуфабрикаты <span style="background:var(--border);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:4px">${SEMI.length}</span></span>
       <div style="display:flex;gap:8px">

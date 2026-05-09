@@ -181,6 +181,33 @@
     .panel-dark .pd-label { font-size: 15px; font-weight: 700; opacity: .85; }
     .panel-dark .pd-value { font-size: 26px; font-weight: 800; }
 
+    /* ── COST SECTION SUB-TABS ────────────────────────────────── */
+    .cost-subtabs {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      position: sticky; top: 62px; z-index: 50;
+      background: var(--gray, #f5f7f4);
+      padding: 10px 0 10px; margin: 0 0 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .cost-subtab {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 22px;
+      border: 1.5px solid var(--border);
+      background: white; color: var(--muted);
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s;
+      white-space: nowrap;
+    }
+    .cost-subtab span {
+      background: var(--border); border-radius: 20px;
+      padding: 0 6px; font-size: 11px; font-weight: 700;
+    }
+    .cost-subtab:hover { border-color: var(--green); color: var(--green); background: var(--light); }
+    .cost-subtab:hover span { background: var(--soft); }
+    body.dark .cost-subtabs { background: #1e1e1e; }
+    body.dark .cost-subtab { background: #2a2a2a; border-color: #444; color: #aaa; }
+    body.dark .cost-subtab:hover { border-color: var(--green); color: var(--green); background: #1e2d1a; }
+    .cost-section-collapse-hint { font-size: 11px; color: var(--muted); margin-left: 4px; opacity: .7; }
+
     /* ── MAT CATEGORY TABS ──────────────────────────────────── */
     .mat-cat-tabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
     .mat-cat-tab {
@@ -1110,6 +1137,8 @@
       .recipe-group-title { font-size:12px; padding:4px 2px 8px; }
       .page-title { font-size: 18px; margin-bottom: 16px; }
       .section-title { font-size: 13px; margin: 20px 0 10px; }
+      .cost-subtabs { top: 52px; }
+      .cost-subtab { font-size: 12px; padding: 6px 11px; }
       .tab-intro { padding: 12px 14px; gap: 12px; }
       .tab-intro-icon { display: none; }
     }
