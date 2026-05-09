@@ -323,6 +323,51 @@
     body.dark .usage-popup { background: #1e1e1e; }
     body.dark .usage-popup-ingredient { color: #e0e0e0; }
     body.dark .usage-popup-item { background: #2d2d2d; color: #d4d4d4; }
+
+    /* ── Unsaved-changes warning overlay ── */
+    #_unsaved-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999;
+    }
+    ._unsaved-box {
+      background: #fff;
+      border-radius: 14px;
+      padding: 24px 28px;
+      max-width: 360px; width: 90%;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+      text-align: center;
+    }
+    ._unsaved-icon  { font-size: 32px; margin-bottom: 10px; }
+    ._unsaved-title { font-weight: 700; font-size: 17px; margin-bottom: 8px; color: #1a1a1a; }
+    ._unsaved-sub   { font-size: 14px; color: #666; margin-bottom: 20px; }
+    ._unsaved-btns  { display: flex; gap: 10px; justify-content: center; }
+    ._unsaved-stay {
+      flex: 1; padding: 10px 0;
+      border-radius: 9px; border: 1.5px solid #ccc;
+      background: #fff; color: #1a1a1a;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    ._unsaved-stay:hover  { background: #f5f5f5; border-color: #aaa; }
+    ._unsaved-close {
+      flex: 1; padding: 10px 0;
+      border-radius: 9px; border: none;
+      background: #e74c3c; color: #fff;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: background .15s;
+    }
+    ._unsaved-close:hover { background: #c0392b; }
+
+    /* dark */
+    body.dark ._unsaved-box   { background: #1e1e1e; box-shadow: 0 8px 40px rgba(0,0,0,.55); }
+    body.dark ._unsaved-title { color: #e8e8e8; }
+    body.dark ._unsaved-sub   { color: #888; }
+    body.dark ._unsaved-stay  { background: #2a2a2a; border-color: #444; color: #d4d4d4; }
+    body.dark ._unsaved-stay:hover  { background: #333; border-color: #666; }
+    body.dark ._unsaved-close { background: #c0392b; }
+    body.dark ._unsaved-close:hover { background: #a93226; }
     /* legacy – kept for other uses */
     .mat-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr));

@@ -2342,21 +2342,14 @@ function _showUnsavedWarning(id) {
   if (document.getElementById('_unsaved-overlay')) return; // не дублируем
   const overlay = document.createElement('div');
   overlay.id = '_unsaved-overlay';
-  overlay.style.cssText = [
-    'position:fixed;inset:0',
-    'background:rgba(0,0,0,0.55)',
-    'display:flex;align-items:center;justify-content:center',
-    'z-index:9999'
-  ].join(';');
   overlay.innerHTML = `
-    <div style="background:#fff;border-radius:14px;padding:24px 28px;max-width:360px;width:90%;
-      box-shadow:0 8px 40px rgba(0,0,0,0.25);text-align:center">
-      <div style="font-size:32px;margin-bottom:10px">⚠️</div>
-      <div style="font-weight:700;font-size:17px;margin-bottom:8px">Есть несохранённые изменения</div>
-      <div style="font-size:14px;color:#666;margin-bottom:20px">Если закрыть сейчас — данные потеряются</div>
-      <div style="display:flex;gap:10px;justify-content:center">
-        <button onclick="_dismissUnsavedWarning()" style="flex:1;padding:10px 0;border-radius:9px;border:1.5px solid #ccc;background:#fff;font-size:14px;font-weight:600;cursor:pointer">← Остаться</button>
-        <button onclick="_forceCloseModal('${id}')" style="flex:1;padding:10px 0;border-radius:9px;border:none;background:#e74c3c;color:#fff;font-size:14px;font-weight:600;cursor:pointer">Закрыть</button>
+    <div class="_unsaved-box">
+      <div class="_unsaved-icon">⚠️</div>
+      <div class="_unsaved-title">Есть несохранённые изменения</div>
+      <div class="_unsaved-sub">Если закрыть сейчас — данные потеряются</div>
+      <div class="_unsaved-btns">
+        <button class="_unsaved-stay"  onclick="_dismissUnsavedWarning()">← Остаться</button>
+        <button class="_unsaved-close" onclick="_forceCloseModal('${id}')">Закрыть</button>
       </div>
     </div>
   `;
