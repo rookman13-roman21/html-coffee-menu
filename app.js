@@ -2291,21 +2291,18 @@ function openModal(id)  {
   const modalEl = el.querySelector('.modal');
   if (modalEl) modalEl.scrollTop = 0;
   if (id === 'modal-mat') { _fillMatSupBookSelect(); lucide.createIcons(); }
-  // Блокируем скролл фона (iOS Safari fix)
-  const scrollY = window.scrollY;
-  document.body.style.position = 'fixed';
-  document.body.style.top = `-${scrollY}px`;
-  document.body.style.width = '100%';
-  document.body.dataset.scrollY = scrollY;
+  // Блокируем скролл фона без position:fixed (иначе iOS Safari сдвигает координаты тачей)
+  if (!document.documentElement.classList.contains('modal-open')) {
+    document.documentElement.dataset.scrollY = window.scrollY;
+    document.documentElement.classList.add('modal-open');
+  }
 }
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
   // Разблокируем фон только если больше нет открытых модалов
   if (!document.querySelector('.modal-bg.open')) {
-    const scrollY = parseInt(document.body.dataset.scrollY || '0');
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.width = '';
+    const scrollY = parseInt(document.documentElement.dataset.scrollY || '0');
+    document.documentElement.classList.remove('modal-open');
     window.scrollTo(0, scrollY);
   }
 }

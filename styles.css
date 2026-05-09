@@ -863,6 +863,8 @@
     /* modal-mat поверх modal-drink при создании ингредиента из рецепта */
     #modal-mat.open { z-index: 1100; }
     .modal-bg.open { display: flex; }
+    /* Блокировка скролла фона без position:fixed (iOS Safari — координаты не смещаются) */
+    html.modal-open { overflow: hidden; }
     .modal {
       background: white; border-radius: 16px; padding: 28px 28px 24px;
       width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto;
