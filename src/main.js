@@ -28,6 +28,13 @@
 //   ✅ src/ui/sort.js        — sortDrinks, setSort, thSort, filterSales, setSalesSort
 //   ✅ src/ui/updaters.js    — onMatPrice, onSalePrice, onPortions, renderTab, resetAll...
 //   ✅ src/ui/payroll.js     — calcPositionCosts, payrollTotal, onPayrollPos...
+//   ✅ src/ui/locations.js   — switchLocation, openAddLocation, saveLocation...
+//   ✅ src/ui/modals.js      — openModal, closeModal, safeCloseModal...
+//   ✅ src/ui/cost-table.js  — setMatCat, toggleMatCat, openMatUsage...
+//   ✅ src/ui/ingredients.js — matOptions, addIngRow, _searchClear...
+//   ✅ src/ui/suppliers.js   — openSupplierModal, saveSupplier...
+//   ✅ src/ui/recipe-view.js — openViewDrink, setRecipeGroup, filterRecipes...
+//   ✅ src/ui/misc.js        — openTemplatesModal, generateInsights, exportFullPDF...
 // ════════════════════════════════════════════════════════════════════
 
 import {
@@ -118,6 +125,51 @@ import {
   scrollToPayroll,
 } from './ui/payroll.js';
 
+import {
+  renderLocSwitcherUI, renderLocList, toggleLocMenu, toggleExportMenu,
+  switchLocation, openAddLocation, renameActiveLocation, deleteActiveLocation,
+  saveLocation,
+} from './ui/locations.js';
+
+import {
+  openModal, closeModal, safeCloseModal,
+  _markModalDirty, _clearModalDirty, _isModalDirty,
+  _showUnsavedWarning, _dismissUnsavedWarning, _forceCloseModal,
+  closeOnboarding, toggleTheme, toggleBurger,
+} from './ui/modals.js';
+
+import {
+  setMatCat, toggleMatCat, toggleSemiCat,
+  toggleSupSection, toggleIngSection, toggleSemiSection,
+  scrollCostTo, openMatUsage, _buildMatUsageMap, _buildSemiUsageMap,
+} from './ui/cost-table.js';
+
+import {
+  matOptions, _ingPlaceholder, _ingStep,
+  _onIngMatChange, _calcIngRowCost, _updateIngRowCost, addIngRow,
+  _searchClear, openSupQuickDrop, _fillMatSupBookSelect, _onMatSupBookChange,
+} from './ui/ingredients.js';
+
+import {
+  openSupplierInfo, siOpenEdit, openSupplierModal, editSupFromList,
+  cancelSupplierModal, saveSupplier, openSuppliersList, renderSuppliersList,
+  openSupplierBookModal, cancelSupplierBookModal, exportSuppliersPDF,
+} from './ui/suppliers.js';
+
+import {
+  openViewDrink, mvdOpenEdit, mvdToggleDownload, _mvdGetData,
+  setRecipeSort, setRecipeGroup, filterRecipes,
+  toggleRecipesIntro, toggleSupIntro, toggleSalesIntro, toggleFinIntro,
+} from './ui/recipe-view.js';
+
+import {
+  openTemplatesModal, chooseTemplate, applyTemplateData,
+  generateInsights, toggleSeasonality, openDropCandidates,
+  onWhatIf, exportFullPDF, exportMaterialsPDF, buildBEPChart,
+  applyPayrollToFixed, onPayrollSetting, togglePayrollSettings, toggleFixedHint,
+  getEffectiveCosts, _matDisplayUnit,
+} from './ui/misc.js';
+
 // ─── Реэкспорт в window для обратной совместимости с public/app.js ──
 //
 // ⚠️  ВАЖНО: app.js объявляет MAT, S, DRINKS, SEMI, Loc через const/let —
@@ -181,6 +233,37 @@ const _srcExports = {
   calcPositionCosts, payrollPositionTotal, payrollTotal, payrollTotals,
   empTypeTip, onPayrollPos, addPayrollPosition, deletePayrollPosition,
   scrollToPayroll,
+  // ui/locations
+  renderLocSwitcherUI, renderLocList, toggleLocMenu, toggleExportMenu,
+  switchLocation, openAddLocation, renameActiveLocation, deleteActiveLocation,
+  saveLocation,
+  // ui/modals
+  openModal, closeModal, safeCloseModal,
+  _markModalDirty, _clearModalDirty, _isModalDirty,
+  _showUnsavedWarning, _dismissUnsavedWarning, _forceCloseModal,
+  closeOnboarding, toggleTheme, toggleBurger,
+  // ui/cost-table
+  setMatCat, toggleMatCat, toggleSemiCat,
+  toggleSupSection, toggleIngSection, toggleSemiSection,
+  scrollCostTo, openMatUsage, _buildMatUsageMap, _buildSemiUsageMap,
+  // ui/ingredients
+  matOptions, _ingPlaceholder, _ingStep,
+  _onIngMatChange, _calcIngRowCost, _updateIngRowCost, addIngRow,
+  _searchClear, openSupQuickDrop, _fillMatSupBookSelect, _onMatSupBookChange,
+  // ui/suppliers
+  openSupplierInfo, siOpenEdit, openSupplierModal, editSupFromList,
+  cancelSupplierModal, saveSupplier, openSuppliersList, renderSuppliersList,
+  openSupplierBookModal, cancelSupplierBookModal, exportSuppliersPDF,
+  // ui/recipe-view
+  openViewDrink, mvdOpenEdit, mvdToggleDownload, _mvdGetData,
+  setRecipeSort, setRecipeGroup, filterRecipes,
+  toggleRecipesIntro, toggleSupIntro, toggleSalesIntro, toggleFinIntro,
+  // ui/misc
+  openTemplatesModal, chooseTemplate, applyTemplateData,
+  generateInsights, toggleSeasonality, openDropCandidates,
+  onWhatIf, exportFullPDF, exportMaterialsPDF, buildBEPChart,
+  applyPayrollToFixed, onPayrollSetting, togglePayrollSettings, toggleFixedHint,
+  getEffectiveCosts, _matDisplayUnit,
   // state/store
   saveState, loadState,
   loadLocIndex, saveLocIndex, migrateOldState,
