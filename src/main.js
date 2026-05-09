@@ -47,6 +47,7 @@ import {
   calcSemiCostPerUnit, calcCost, calcIngCost, calcNutrition,
   enrich, withABC,
   avgMetrics, weightedMetrics, salesMetrics, bepCalc,
+  getEffectiveCosts,
 } from './utils/calc.js';
 
 import {
@@ -167,7 +168,7 @@ import {
   generateInsights, toggleSeasonality, openDropCandidates,
   onWhatIf, exportFullPDF, exportMaterialsPDF, buildBEPChart,
   applyPayrollToFixed, onPayrollSetting, togglePayrollSettings, toggleFixedHint,
-  getEffectiveCosts, _matDisplayUnit,
+  _matDisplayUnit,
 } from './ui/misc.js';
 
 // ─── Реэкспорт в window для обратной совместимости с public/app.js ──
@@ -190,15 +191,22 @@ const _formatExports = {
 };
 Object.assign(window, _formatExports);
 
-// ─── Остальное — не перезаписываем то, что уже определено app.js ────
-const _srcExports = {
-  // calc
+const _calcExports = {
   _semiUnitFactor, _semiDrinkFactor,
   calcSemiCostPerUnit, calcCost, calcIngCost, calcNutrition,
   enrich, withABC,
   avgMetrics, weightedMetrics, salesMetrics, bepCalc,
-  // image
+  getEffectiveCosts,
+};
+Object.assign(window, _calcExports);
+
+const _imageExports = {
   DRINK_IMAGES, getDrinkImage, _compressImageDataURL,
+};
+Object.assign(window, _imageExports);
+
+// ─── Остальное — не перезаписываем то, что уже определено app.js ────
+const _srcExports = {
   // render/dashboard
   renderDashboard, filterDashboard, toggleDashIntro,
   // render/cost
@@ -268,7 +276,7 @@ const _srcExports = {
   generateInsights, toggleSeasonality, openDropCandidates,
   onWhatIf, exportFullPDF, exportMaterialsPDF, buildBEPChart,
   applyPayrollToFixed, onPayrollSetting, togglePayrollSettings, toggleFixedHint,
-  getEffectiveCosts, _matDisplayUnit,
+  _matDisplayUnit,
   // state/store
   saveState, loadState,
   loadLocIndex, saveLocIndex, migrateOldState,
