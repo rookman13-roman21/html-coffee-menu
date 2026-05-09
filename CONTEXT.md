@@ -1,7 +1,7 @@
 # CONTEXT — MBS* Coffee Menu
 
 > CFO-инструментарий для владельца кофейни. Один HTML-файл без зависимостей и сборки.
-> Последнее обновление: 9 мая 2026 (сессия 22)
+> Последнее обновление: 9 мая 2026 (сессия 24)
 
 ---
 
@@ -416,6 +416,8 @@ resetAll()  // confirm → восстанавливает S из DEFAULTS + FIXE
 | На мобиле выпадалка «Моя кофейня» открывалась внизу экрана | `top: 58px !important` в мобильном медиа-запросе — меню прижато к шапке |
 | `.btn-green` не был определён в CSS | Добавлен `.btn-green { background: var(--green); color: #fff; border: none; }` + hover + dark override |
 | Десктопная строка ингредиента переносилась на 2-й ряд | Мобильный `@media` устанавливал `grid-row: 2` → десктоп должен явно указывать `grid-row: 1` на всех 5 дочерних. Переключить с `nth-of-type` на `nth-child`. |
+| Предупреждение о несохранённых изменениях показывалось при открытии модала | `_markModalDirty` вызывался в `openEditDrink`/`openEditSemi` — убрать эти вызовы; метить dirty только через делегированный `input`/`change` на документе |
+| Предупреждение не адаптировалось под тёмную тему | Инлайн-стили заменены на CSS-классы (`._unsaved-box` и др.) с правилами `body.dark` |
 
 ---
 
@@ -1260,3 +1262,65 @@ child 5: <span class="ing-cost-hint">    → grid-column: 4
 ```
 
 **Итог:** десктоп — одна строка: Ингредиент | Кол-во | Потери | Цена | 🗑. Мобильный — 3 ряда с метками. Оба работают корректно.
+
+
+---
+
+### Сессия 23 (9 мая 2026) — защита модалов от случайного закрытия
+
+**Цель:** предупреждать пользователя перед закрытием модала, если в форме были изменения.
+
+#### Система «dirty tracking»
+
+```js
+const _EDITABLE_MODALS = new Set(['modal-drink','modal-semi','modal-mat','modal-supplier','modal-supplier-book','modal-loc']);
+const _dirtyModalSet   = new Set();
+```
+
+API: `_markModalDirty(id)` / `_clearModalDirty(id)` / `_isModalDirty(id)`
+
+Делегированные слушатели на документе — любое `input`/`change` внутри `.modal-bg` → `_markModalDirty(modal.id)`. При открытии модала (`openEditDrink`, `openEditSemi`) `_markModalDirty` **не вызывается** — dirty только от реальных действий пользователя.
+
+#### Перехват закрытия
+
+`closeModal(id)` — первым делом проверяет `_isModalDirty(id)`, показывает `_showUnsavedWarning(id)` и делает `return` (модал остаётся открытым). Аналогично `safeCloseModal(id)` — для кнопок «×»/«Отмена»/Escape.
+
+Клик по backdrop: делегированный `document.addEventListener('click', ...)` вызывает `safeCloseModal(e.target.id)`.
+
+#### Оверлей предупреждения
+
+HTML с классами `._unsaved-box`, `._unsaved-stay`, `._unsaved-close`. Функции: `_dismissUnsavedWarning()`, `_forceCloseModal(id)` (clear + close).
+
+Все функции сохранения/удаления вызывают `_clearModalDirty(id)` до `closeModal`.
+
+Кнопки «×»/«Отмена» в `modal-drink`, `modal-semi`, `modal-loc`, `modal-supplier` → `safeCloseModal('...')`.
+
+#### Коммиты
+
+| Коммит | Описание |
+|--------|---------|
+| `dee65c2` | feat: warn before closing modals with unsaved changes |
+| `c2d2555` | feat: custom inline unsaved warning bar |
+| `3fc7c86` | fix: warning as centered overlay |
+| `42be2ab` | fix: dirty check inside closeModal itself |
+| `957e83e` | fix: don't mark dirty on modal open — only on actual user input |
+
+---
+
+### Сессия 24 (9 мая 2026) — адаптация предупреждения под тёмную тему
+
+**Коммит:** `1dadd82`
+
+Инлайн-стили оверлея вынесены в CSS-классы `styles.css`. Добавлены правила `body.dark`:
+
+```css
+body.dark ._unsaved-box   { background: #1e1e1e; box-shadow: 0 8px 40px rgba(0,0,0,.55); }
+body.dark ._unsaved-title { color: #e8e8e8; }
+body.dark ._unsaved-sub   { color: #888; }
+body.dark ._unsaved-stay  { background: #2a2a2a; border-color: #444; color: #d4d4d4; }
+body.dark ._unsaved-stay:hover  { background: #333; border-color: #666; }
+body.dark ._unsaved-close { background: #c0392b; }
+body.dark ._unsaved-close:hover { background: #a93226; }
+```
+
+Добавлены hover-эффекты для светлой темы (`._unsaved-stay:hover`, `._unsaved-close:hover`).
