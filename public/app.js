@@ -659,34 +659,6 @@ const OLD_STATE_KEY  = 'mbs_coffee_s';
 
 function locDataKey(id) { return LOC_DATA_PREFIX + id; }
 
-function loadLocIndex() {
-  try {
-    const raw = localStorage.getItem(LOC_INDEX_KEY);
-    if (raw) {
-      const arr = JSON.parse(raw);
-      if (Array.isArray(arr) && arr.length) Loc.list = arr;
-    }
-    const aid = localStorage.getItem(LOC_ACTIVE_KEY);
-    if (aid && Loc.list.some(l => l.id === aid)) Loc.activeId = aid;
-  } catch(e) {}
-}
-function saveLocIndex() {
-  try {
-    localStorage.setItem(LOC_INDEX_KEY, JSON.stringify(Loc.list));
-    if (Loc.activeId) localStorage.setItem(LOC_ACTIVE_KEY, Loc.activeId);
-  } catch(e) {}
-}
-function migrateOldState() {
-  try {
-    const old = localStorage.getItem(OLD_STATE_KEY);
-    const id = 'loc_default';
-    Loc.list = [{ id, name: 'Моя кофейня', icon: '☕' }];
-    Loc.activeId = id;
-    if (old) localStorage.setItem(locDataKey(id), old);
-    localStorage.removeItem(OLD_STATE_KEY);
-    saveLocIndex();
-  } catch(e) {}
-}
 function resetGlobalsToBase() {
   DRINKS.length = 0;
   DRINKS_ORIG.forEach(d => DRINKS.push({...d, recipe: d.recipe.map(r=>({...r}))}));
@@ -713,18 +685,6 @@ function resetGlobalsToBase() {
   S.suppliers = {};
   S.priceLog  = [];
   nextMatKey = 1;
-}
-function activeLoc() { return Loc.list.find(l => l.id === Loc.activeId); }
-
-function getOrgInfo() {
-  const loc = activeLoc() || {};
-  return {
-    name:      loc.name      || 'Кофейня',
-    legalName: loc.legalName || loc.name || 'Кофейня',
-    ceoTitle:  loc.ceoTitle  || 'Руководитель',
-    ceoName:   loc.ceoName   || '',
-    address:   loc.address   || '',
-  };
 }
 function renderLocSwitcherUI() {
   const loc = activeLoc();
@@ -6935,6 +6895,31 @@ if (mobileTabbar) {
 }
 
 // ════════════════════════════════════════════════════════════════════
+//  EXPOSE GLOBALS FOR ES MODULES (src/*)
+//  Должно быть ДО INIT чтобы src/-функции (loadLocIndex и др.) читали
+//  актуальные ссылки на объекты (Loc, S, MAT, SEMI...).
+// ════════════════════════════════════════════════════════════════════
+Object.assign(window, {
+  // Справочники (статика)
+  MAT, MAT_NUTRITION, MAT_CATEGORIES,
+  DRINKS, DRINKS_ORIG, DRINK_QUALITY,
+  SEMI, SALES_PRESETS,
+  FIXED_COSTS_DEF, FIXED_COSTS_CATS,
+  GROUP_LABEL, BASE_DRINK_IDS, BASE_MAT_KEYS,
+  // Мутируемый стейт
+  S, Loc,
+  // Render-стейт вкладки Рецептуры
+  recipeSort, recipeGroup, recipeSearch,
+  // Служебные
+  dirty, activeTab, searchQuery, sortState,
+  nextDrinkId, nextSemiId, nextMatKey, _nextCostId,
+  // const-переменные, нужные render-модулям
+  _wif, EMP_TYPE_LABELS,
+  // Ключи локаций
+  LOC_INDEX_KEY, LOC_ACTIVE_KEY, LOC_DATA_PREFIX, OLD_STATE_KEY,
+});
+
+// ════════════════════════════════════════════════════════════════════
 //  INIT
 // ════════════════════════════════════════════════════════════════════
 // Восстанавливаем сохранённое состояние
@@ -7045,28 +7030,3 @@ if ('ontouchstart' in window) {
   }, true);
 }
 
-// ════════════════════════════════════════════════════════════════════
-//  EXPOSE GLOBALS FOR ES MODULES (src/*)
-//  const/let в обычном <script> не попадают в window — делаем это явно,
-//  чтобы src/render/*.js и src/utils/*.js могли читать актуальные данные.
-//  Эта секция удалится когда app.js будет полностью переведён на модули.
-// ════════════════════════════════════════════════════════════════════
-Object.assign(window, {
-  // Справочники (статика)
-  MAT, MAT_NUTRITION, MAT_CATEGORIES,
-  DRINKS, DRINKS_ORIG, DRINK_QUALITY,
-  SEMI, SALES_PRESETS,
-  FIXED_COSTS_DEF, FIXED_COSTS_CATS,
-  GROUP_LABEL, BASE_DRINK_IDS, BASE_MAT_KEYS,
-  // Мутируемый стейт
-  S, Loc,
-  // Render-стейт вкладки Рецептуры
-  recipeSort, recipeGroup, recipeSearch,
-  // Служебные
-  dirty, activeTab, searchQuery, sortState,
-  nextDrinkId, nextSemiId, nextMatKey, _nextCostId,
-  // const-переменные, нужные render-модулям
-  _wif, EMP_TYPE_LABELS,
-  // Функции (уже есть в window через hoisting function declarations,
-  // но const-функции нужно добавить явно если такие появятся)
-});

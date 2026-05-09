@@ -205,6 +205,13 @@ const _imageExports = {
 };
 Object.assign(window, _imageExports);
 
+// ─── state/store — удалены из app.js — назначаем безусловно ───────────────
+const _storeExports = {
+  loadLocIndex, saveLocIndex, migrateOldState,
+  activeLoc, getOrgInfo,
+};
+Object.assign(window, _storeExports);
+
 // ─── Остальное — не перезаписываем то, что уже определено app.js ────
 const _srcExports = {
   // render/dashboard
@@ -277,10 +284,8 @@ const _srcExports = {
   onWhatIf, exportFullPDF, exportMaterialsPDF, buildBEPChart,
   applyPayrollToFixed, onPayrollSetting, togglePayrollSettings, toggleFixedHint,
   _matDisplayUnit,
-  // state/store
+  // state/store (saveState/loadState ещё в app.js)
   saveState, loadState,
-  loadLocIndex, saveLocIndex, migrateOldState,
-  activeLoc, getOrgInfo,
 };
 // Не перезаписываем то, что уже определено app.js
 Object.entries(_srcExports).forEach(([k, v]) => {
