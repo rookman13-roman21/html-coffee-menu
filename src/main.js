@@ -13,7 +13,7 @@
 //   ✅ src/utils/format.js  — rub, rubSemi, pct, int, fcCls, riskBadge, abcBadge, fcCombinedHtml
 //   ✅ src/utils/calc.js    — calcCost, calcNutrition, enrich, withABC, bepCalc и др.
 //   ✅ src/utils/image.js   — DRINK_IMAGES, getDrinkImage, _compressImageDataURL
-//   ⬜ src/state/store.js   — S, Loc, saveState, loadState
+//   ✅ src/state/store.js   — saveState, loadState, loadLocIndex, saveLocIndex, migrateOldState, activeLoc, getOrgInfo
 //   ⬜ src/render/*.js      — renderDashboard, renderCost, renderSales, renderFinModel, renderRecipes
 //   ⬜ src/export/*.js      — pdf.js, excel.js
 //   ⬜ src/modals/*.js      — drink.js, material.js, semi.js
@@ -35,6 +35,12 @@ import {
   DRINK_IMAGES, getDrinkImage, _compressImageDataURL,
 } from './utils/image.js';
 
+import {
+  saveState, loadState,
+  loadLocIndex, saveLocIndex, migrateOldState,
+  activeLoc, getOrgInfo,
+} from './state/store.js';
+
 // ─── Реэкспорт в window для обратной совместимости с public/app.js ──
 // Пока app.js не переведён на import — эти функции должны быть глобальными.
 // Когда app.js полностью разобьётся на модули — этот блок удалится.
@@ -49,4 +55,8 @@ Object.assign(window, {
   avgMetrics, weightedMetrics, salesMetrics, bepCalc,
   // image
   DRINK_IMAGES, getDrinkImage, _compressImageDataURL,
+  // state/store
+  saveState, loadState,
+  loadLocIndex, saveLocIndex, migrateOldState,
+  activeLoc, getOrgInfo,
 });
