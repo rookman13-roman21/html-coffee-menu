@@ -1101,6 +1101,7 @@ function saveLocation() {
     }
     saveLocIndex();
     renderLocSwitcherUI();
+    _clearModalDirty('modal-loc');
     closeModal('modal-loc');
     return;
   }
@@ -1137,6 +1138,7 @@ function saveLocation() {
   Object.keys(dirty).forEach(k=>dirty[k]=true);
   renderActive();
   renderLocSwitcherUI();
+  _clearModalDirty('modal-loc');
   closeModal('modal-loc');
 }
 
@@ -2299,6 +2301,11 @@ function openModal(id)  {
   }
 }
 function closeModal(id) {
+  // Защита: если есть несохранённые изменения — показать предупреждение вместо закрытия
+  if (_isModalDirty && _isModalDirty(id)) {
+    _showUnsavedWarning(id);
+    return;
+  }
   document.getElementById(id).classList.remove('open');
   // Разблокируем фон только если больше нет открытых модалов
   if (!document.querySelector('.modal-bg.open')) {
@@ -2361,6 +2368,7 @@ function _dismissUnsavedWarning() {
 }
 function _forceCloseModal(id) {
   _dismissUnsavedWarning();
+  _clearModalDirty(id); // снимаем dirty чтобы closeModal не заблокировал
   if (id === 'modal-mat')           { cancelMat(true); return; }
   if (id === 'modal-supplier-book') { cancelSupplierBookModal(true); return; }
   closeModal(id);
@@ -2797,6 +2805,7 @@ function saveDrink() {
     S.salePrices[id] = price;
     S.portions[id]   = 5;
   }
+  _clearModalDirty('modal-drink');
   closeModal('modal-drink');
   markDirtyDebounce();
   saveState();
@@ -2858,6 +2867,7 @@ function clearSemiImg() {
 function mdDeleteAction() {
   const id = parseInt(document.getElementById('md-edit-id').value);
   const action = document.getElementById('md-delete-btn').dataset.action;
+  _clearModalDirty('modal-drink');
   closeModal('modal-drink');
   if (action === 'delete') deleteDrink(id);
   else if (action === 'reset') resetDrink(id);
@@ -2927,6 +2937,7 @@ function saveMat() {
     if (!S.suppliers) S.suppliers = {};
     S.suppliers[key] = { name: supName, phone: supPhone, note: supNote, site: '' };
   }
+  _clearModalDirty('modal-mat');
   closeModal('modal-mat');
   // Если открыто из строки рецепта — вставить новый ингредиент в тот select
   if (_pendingMatSelectEl) {
@@ -2977,6 +2988,7 @@ function cancelMat(force = false) {
   }
   _pendingMatSelectEl = null;
   _pendingSemiMatSelectEl = null;
+  _clearModalDirty('modal-mat');
   closeModal('modal-mat');
 }
 function deleteMat(key) {
@@ -3266,6 +3278,7 @@ function saveSemi() {
   } else {
     SEMI.push({ id: nextSemiId++, name, unit, yield: yieldV, process, image, storage_temp, storage_life, appearance, taste, consistency, recipe });
   }
+  _clearModalDirty('modal-semi');
   closeModal('modal-semi');
   markDirtyDebounce();
   saveState();
@@ -3278,6 +3291,7 @@ function deleteSemi(idRaw) {
   if (usedInDrink) { alert('Полуфабрикат используется в рецептурах напитков — сначала удалите его из напитков'); return; }
   if (!confirm('Удалить полуфабрикат?')) return;
   SEMI = SEMI.filter(s => s.id !== id);
+  _clearModalDirty('modal-semi');
   closeModal('modal-semi');
   markDirtyDebounce();
   saveState();
@@ -6237,6 +6251,7 @@ function editSupFromList(matKey) {
 function cancelSupplierModal() {
   const fromList = _supplierFromList;
   _supplierFromList = false;
+  _clearModalDirty('modal-supplier');
   closeModal('modal-supplier');
   if (fromList) openSuppliersList();
 }
@@ -6255,6 +6270,7 @@ function saveSupplier() {
   saveState();
   const fromList = _supplierFromList;
   _supplierFromList = false;
+  _clearModalDirty('modal-supplier');
   closeModal('modal-supplier');
   renderCost();
   if (fromList) openSuppliersList();
@@ -6391,6 +6407,7 @@ function cancelSupplierBookModal(force = false) {
   }
   const fromList = _supBookFromList;
   _supBookFromList = false;
+  _clearModalDirty('modal-supplier-book');
   closeModal('modal-supplier-book');
   if (fromList) openSuppliersList();
 }
@@ -6411,6 +6428,7 @@ function saveSupplierBook() {
   saveState();
   const fromList = _supBookFromList;
   _supBookFromList = false;
+  _clearModalDirty('modal-supplier-book');
   closeModal('modal-supplier-book');
   renderCost();
   if (fromList) openSuppliersList();
@@ -6422,6 +6440,7 @@ function deleteSupplierBook() {
   saveState();
   const fromList = _supBookFromList;
   _supBookFromList = false;
+  _clearModalDirty('modal-supplier-book');
   closeModal('modal-supplier-book');
   renderCost();
   if (fromList) openSuppliersList();
