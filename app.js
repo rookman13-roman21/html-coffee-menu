@@ -3380,7 +3380,7 @@ function renderCost() {
       const usageBadge = usedIn.length
         ? `<button class="usage-badge" onclick="openMatUsage('mat','${key}')" title="Нажмите, чтобы увидеть рецепты">${usedIn.length}</button>`
         : `<span class="usage-badge usage-badge-zero">0</span>`;
-      return `<tr style="${collapsed ? 'display:none' : ''}" class="mat-row" data-cat="${cat}">
+      return `<tr style="${collapsed ? 'display:none' : ''}" class="mat-row${m.custom ? ' mat-row-custom' : ''}" data-cat="${cat}"${m.custom ? ` onclick="openEditMat('${key}')" title="Нажмите для редактирования" style="cursor:pointer"` : ''}>
         <td class="mat-td-name">${m.name}</td>
         <td class="mat-td-unit mob-hide">${m.unit}</td>
         <td class="mat-td-price">
@@ -3388,15 +3388,15 @@ function renderCost() {
             id="mat-inp-${key}" value="${S.prices[key]}"
             onfocus="onMatPriceFocus('${key}')"
             oninput="onMatPriceInput('${key}',this.value)"
-            onblur="onMatPriceCommit('${key}',this.value)"> <span style="font-size:12px;color:var(--muted)">₽</span>
+            onblur="onMatPriceCommit('${key}',this.value)"
+            onclick="event.stopPropagation()"> <span style="font-size:12px;color:var(--muted)">₽</span>
         </td>
         <td class="mat-td-sup mob-hide">${supCell}</td>
         <td class="mat-td-usage">${usageBadge}</td>
         <td class="mat-td-actions">
-          <button class="mat-del" onclick="openSupQuickDrop('${key}',this)" title="${supTitle}" style="color:${supClr}"><i data-lucide="truck" class="icon"></i></button>
-          <button class="mat-del" onclick="openPriceHistory('${key}')" title="История цен"><i data-lucide="history" class="icon"></i></button>
-          ${m.custom ? `<button class="mat-del" onclick="openEditMat('${key}')" title="Редактировать"><i data-lucide="pencil" class="icon"></i></button>` : ''}
-          ${m.custom ? `<button class="mat-del" onclick="deleteMat('${key}')" title="Удалить" style="color:var(--red)"><i data-lucide="trash-2" class="icon"></i></button>` : ''}
+          <button class="mat-del" onclick="event.stopPropagation();openSupQuickDrop('${key}',this)" title="${supTitle}" style="color:${supClr}"><i data-lucide="truck" class="icon"></i></button>
+          <button class="mat-del" onclick="event.stopPropagation();openPriceHistory('${key}')" title="История цен"><i data-lucide="history" class="icon"></i></button>
+          ${m.custom ? `<button class="mat-del" onclick="event.stopPropagation();deleteMat('${key}')" title="Удалить" style="color:var(--red)"><i data-lucide="trash-2" class="icon"></i></button>` : ''}
         </td>
       </tr>`;
     }).join('');
@@ -3468,7 +3468,6 @@ function renderCost() {
                 <td class="mat-td-price" style="font-weight:700;color:var(--green)">${rubSemi(cost, s.unit)}</td>
                 <td class="mat-td-usage">${semiUsageBadge}</td>
                 <td class="mat-td-actions">
-                  <button class="mat-del" onclick="event.stopPropagation();openEditSemi(${s.id})" title="Редактировать"><i data-lucide="pencil" class="icon"></i></button>
                   <button class="mat-del" onclick="event.stopPropagation();deleteSemi(${s.id})" title="Удалить" style="color:var(--red)"><i data-lucide="trash-2" class="icon"></i></button>
                 </td>
               </tr>`;

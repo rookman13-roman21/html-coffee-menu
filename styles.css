@@ -911,6 +911,7 @@
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
     }
+    .mat-row-custom:hover td { background: var(--light); }
     .ing-row {
       display: grid; grid-template-columns: 1fr 90px 70px 70px 52px 32px;
       gap: 8px; align-items: center; margin-bottom: 8px;
