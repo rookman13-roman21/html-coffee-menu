@@ -5042,12 +5042,12 @@ function mvdDownloadSemiPDF() {
     .map(r => SEMI.find(s => s.id === r.semi))
     .filter(Boolean);
   if (!usedSemis.length) return;
-  const orgName = getOrgInfo().name;
+  const org = getOrgInfo();
   const pages = usedSemis.map((s, idx) =>
-    _buildSemiTechCardBlock(s, orgName, idx + 1, idx === usedSemis.length - 1)
+    _buildSemiTechCardBlock(s, org, idx + 1, idx === usedSemis.length - 1)
   ).join('\n');
   _openTechCardsWindow(
-    `Техкарты п/ф — ${d.name}`,
+    `Техкарты п/ф — ${d.name} (${org.name})`,
     `${usedSemis.length} карт · ${new Date().toLocaleDateString('ru')}`,
     pages,
     400
@@ -6734,19 +6734,21 @@ function openDropCandidates() {
 // ════════════════════════════════════════════════════════════════════
 function exportSemiTechCards() {
   if (!SEMI.length) { alert('Нет полуфабрикатов для печати.'); return; }
-  const orgName = getOrgInfo().name;
+  const org = getOrgInfo();
   const pages = SEMI.map((s, idx) =>
-    _buildSemiTechCardBlock(s, orgName, idx + 1, idx === SEMI.length - 1)
+    _buildSemiTechCardBlock(s, org, idx + 1, idx === SEMI.length - 1)
   ).join('\n');
   _openTechCardsWindow(
-    `Техкарты полуфабрикатов — ${orgName}`,
+    `Техкарты полуфабрикатов — ${org.name}`,
     `${SEMI.length} карт · ${new Date().toLocaleDateString('ru')}`,
     pages,
     400
   );
 }
 
-function _buildSemiTechCardBlock(s, orgName, cardNum, isLast) {
+function _buildSemiTechCardBlock(s, org, cardNum, isLast) {
+  if (typeof org === 'string') org = { name: org, legalName: org, ceoTitle: 'Руководитель', ceoName: '', address: '' };
+  const orgName = org.name || 'Кофейня';
   const today = new Date().toLocaleDateString('ru');
   const year  = new Date().getFullYear();
   const semiCostPer = calcSemiCostPerUnit(s);
@@ -6790,10 +6792,16 @@ function _buildSemiTechCardBlock(s, orgName, cardNum, isLast) {
 
   return `<div class="card${isLast ? '' : ' pb'}">
   <div class="card-header-inner">
-    <div></div>
+    <div class="org-block">
+      ${org.legalName ? `<div style="font-weight:700;font-size:10pt">${org.legalName}</div>` : ''}
+      ${orgName !== org.legalName ? `<div style="font-size:9pt;color:#555">${orgName}</div>` : ''}
+      ${org.address ? `<div style="font-size:8.5pt;color:#666">${org.address}</div>` : ''}
+    </div>
     <div class="approve">
-      <div><b>Утверждаю:</b> руководитель ${orgName}</div>
-      <div style="margin-top:10px">_______________________</div>
+      <div><b>УТВЕРЖДАЮ:</b></div>
+      <div>${org.ceoTitle || 'Руководитель'} ${org.legalName || orgName}</div>
+      <div style="margin-top:8px">${org.ceoName || '_______________________'}</div>
+      <div style="margin-top:4px;color:#888">(${org.ceoName ? 'подпись' : 'Ф.И.О.'})</div>
       <div style="margin-top:6px">«__» ____________ ${year} г.</div>
     </div>
   </div>
