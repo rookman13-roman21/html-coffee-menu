@@ -203,6 +203,31 @@ export function salesMetrics(drinks) {
 }
 
 /**
+ * Возвращает массив постоянных расходов с подставленными значениями:
+ * – ФОТ-строки заменяются на реальный payrollTotal()
+ * – %-строки пересчитываются от текущей выручки
+ */
+export function getEffectiveCosts(revMon) {
+  const S          = window.S;
+  const payrollTot = window.payrollTotal;
+  if (revMon === undefined) {
+    const { totRevMon } = salesMetrics(enrich());
+    revMon = totRevMon;
+  }
+  const fotVal = typeof payrollTot === 'function' ? payrollTot() : 0;
+  return S.fixedCosts.map(c => {
+    if (/^фот|зарплат|зп$|оплата.?труда/i.test(c.name.trim())) {
+      return { ...c, value: fotVal, _fromPayroll: true };
+    }
+    if (c.isPercent && c.pct) {
+      const share = (c.pctShare != null ? c.pctShare : 100) / 100;
+      return { ...c, value: Math.round(revMon * share * c.pct / 100) };
+    }
+    return c;
+  });
+}
+
+/**
  * Расчёт точки безубыточности (ТБУ).
  * Зависит от weightedMetrics, salesMetrics, getEffectiveCosts, payrollTotal.
  */

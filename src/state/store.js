@@ -222,7 +222,8 @@ export function loadState() {
       });
     }
     if (sv.semiItems && sv.semiItems.length > 0) {
-      window.SEMI = sv.semiItems;
+      // Мутируем массив in-place чтобы app.js видел изменения через shared reference
+      window.SEMI.splice(0, window.SEMI.length, ...sv.semiItems);
       window.nextSemiId = Math.max(...window.SEMI.map(s => s.id), 0) + 1;
     }
   } catch(e) {}

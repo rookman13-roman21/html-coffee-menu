@@ -14,7 +14,6 @@
 //   ✅ src/utils/calc.js    — calcCost, calcNutrition, enrich, withABC, bepCalc и др.
 //   ✅ src/utils/image.js   — DRINK_IMAGES, getDrinkImage, _compressImageDataURL
 //   ✅ src/state/store.js   — saveState, loadState, loadLocIndex, saveLocIndex, migrateOldState, activeLoc, getOrgInfo
-//   // ✅ src/render/dashboard.js — renderDashboard, filterDashboard, toggleDashIntro
   // ✅ src/render/cost.js — renderCost
   // ✅ src/render/sales.js — renderSales
   // ✅ src/render/recipes.js — renderRecipes
@@ -209,6 +208,7 @@ Object.assign(window, _imageExports);
 const _storeExports = {
   loadLocIndex, saveLocIndex, migrateOldState,
   activeLoc, getOrgInfo,
+  saveState, loadState,
 };
 Object.assign(window, _storeExports);
 
@@ -284,8 +284,8 @@ const _srcExports = {
   onWhatIf, exportFullPDF, exportMaterialsPDF, buildBEPChart,
   applyPayrollToFixed, onPayrollSetting, togglePayrollSettings, toggleFixedHint,
   _matDisplayUnit,
-  // state/store (saveState/loadState ещё в app.js)
-  saveState, loadState,
+  // state/store
+  // saveState/loadState перенесены в _storeExports выше
 };
 // Не перезаписываем то, что уже определено app.js
 Object.entries(_srcExports).forEach(([k, v]) => {
