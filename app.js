@@ -6428,11 +6428,22 @@ document.addEventListener('focus', e => {
 if ('ontouchstart' in window) {
   document.addEventListener('focus', e => {
     const el = e.target;
-    if (el.matches('input, textarea') && !_kbNav) {
-      const len = el.value.length;
-      requestAnimationFrame(() => {
-        try { el.setSelectionRange(len, len); } catch(_) {}
-      });
+    if (!el.matches('input, textarea') || _kbNav) return;
+    const val = el.value;
+    const origType = el.type;
+    // type="number" не поддерживает setSelectionRange на iOS — временно меняем на text
+    if (origType === 'number') {
+      el.type = 'text';
     }
+    requestAnimationFrame(() => {
+      try {
+        const len = el.value.length;
+        el.setSelectionRange(len, len);
+      } catch(_) {}
+      if (origType === 'number') {
+        el.type = 'number';
+        el.value = val;
+      }
+    });
   }, true);
 }
