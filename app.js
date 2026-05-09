@@ -2515,6 +2515,7 @@ function addSemiIngRow(matKey='', amt='', loss='', yieldAmt='') {
   row.className = 'ing-row';
   row.innerHTML = `
     <select class="modal-select ing-mat" onchange="_onSemiMatChange(this);_updateSemiIngCost(this)">${matOnlyOptions(firstKey)}</select>
+    <button class="btn btn-outline ing-del-btn" onclick="this.closest('.ing-row').remove();_updateSemiCostPreview()"><i data-lucide="trash-2" class="icon"></i></button>
     <div class="ing-field-wrap">
       <span class="ing-field-label">Кол-во</span>
       <input class="modal-inp ing-amt" type="text" inputmode="decimal" value="${amt}" placeholder="${_semiIngPlaceholder(firstKey)}" oninput="this.value=this.value.replace(',','.');_updateSemiCostPreview();_updateSemiIngCost(this);_autoCalcSemiIngYield(this)">
@@ -2528,7 +2529,6 @@ function addSemiIngRow(matKey='', amt='', loss='', yieldAmt='') {
       <input class="modal-inp ing-yield" type="text" inputmode="decimal" value="${yieldAmt}" placeholder="авто" title="Фактический выход после обработки">
     </div>
     <span class="ing-cost-hint"></span>
-    <button class="btn btn-outline ing-del-btn" onclick="this.closest('.ing-row').remove();_updateSemiCostPreview()"><i data-lucide="trash-2" class="icon"></i></button>
   `;
   wrap.appendChild(row);
   if (window.lucide) lucide.createIcons();

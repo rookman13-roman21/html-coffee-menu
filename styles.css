@@ -1223,13 +1223,9 @@
         align-items: start;
       }
       /* Селект ингредиента — вся строка */
-      .ing-row .ing-mat { grid-column: 1 / -1; height: 44px; font-size: 15px !important; }
-      /* Обёртки с лейблами — первая колонка */
-      .ing-field-wrap { display: flex; flex-direction: column; gap: 3px; grid-column: 1; }
-      .ing-field-label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-      .ing-field-wrap .modal-inp { height: 40px; margin: 0; }
-      /* Кнопка удаления — вторая колонка, по центру */
-      .ing-row .ing-del-btn { grid-column: 2; grid-row: 2 / 5; align-self: center; width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; color: var(--red); }
+      .ing-row .ing-mat { grid-column: 1; height: 44px; font-size: 15px !important; }
+      /* Кнопка удаления — рядом с селектом в первой строке */
+      .ing-row .ing-del-btn { grid-column: 2; grid-row: 1; align-self: center; width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; color: var(--red); }
       /* Подсказка стоимости */
       .ing-row .ing-cost-hint { grid-column: 1 / -1; text-align: left; }
 
