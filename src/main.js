@@ -42,9 +42,19 @@ import {
 } from './state/store.js';
 
 // ─── Реэкспорт в window для обратной совместимости с public/app.js ──
-// Пока app.js не переведён на import — эти функции должны быть глобальными.
-// Когда app.js полностью разобьётся на модули — этот блок удалится.
-Object.assign(window, {
+//
+// ⚠️  ВАЖНО: app.js объявляет MAT, S, DRINKS, SEMI, Loc через const/let —
+//     они НЕ попадают в window.*. Наши функции из src/ читают window.MAT
+//     и т.д., поэтому они сломают рендеры, если перезапишут рабочие версии
+//     из app.js (которые замыкаются на локальные const-переменные).
+//
+//  Стратегия переходного периода:
+//   • Пока функция есть в app.js — НЕ перезаписываем её на window.
+//   • Присваиваем в window только то, чего ещё нет (window[k] === undefined).
+//   • Когда функция УДАЛЕНА из app.js — она автоматически начнёт браться
+//     отсюда (window[k] будет undefined → присвоится наша версия).
+//
+const _srcExports = {
   // format
   rub, rubSemi, pct, int,
   fcCls, riskBadge, abcBadge, fcCombinedHtml,
@@ -59,4 +69,8 @@ Object.assign(window, {
   saveState, loadState,
   loadLocIndex, saveLocIndex, migrateOldState,
   activeLoc, getOrgInfo,
+};
+// Не перезаписываем то, что уже определено app.js
+Object.entries(_srcExports).forEach(([k, v]) => {
+  if (window[k] === undefined) window[k] = v;
 });
