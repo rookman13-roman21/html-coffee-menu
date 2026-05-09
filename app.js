@@ -2546,11 +2546,13 @@ function addIngRow(selected='', amt='', loss='') {
   const row = document.createElement('div');
   row.className = 'modal-ing-row';
   row.innerHTML = `
-    <select class="modal-select${!selected ? ' ing-select-empty' : ''}" onchange="_onIngMatChange(this);_updateIngRowCost(this)">${matOptions(selected)}</select>
+    <div class="ing-top-row">
+      <select class="modal-select${!selected ? ' ing-select-empty' : ''}" onchange="_onIngMatChange(this);_updateIngRowCost(this)">${matOptions(selected)}</select>
+      <button class="modal-ing-del" title="Удалить ингредиент" onclick="this.closest('.modal-ing-row').remove()"><i data-lucide="trash-2" class="icon"></i></button>
+    </div>
     <div class="ing-fields-row">
       <div class="ing-field-wrap"><span class="ing-mob-label">Кол-во</span><input class="modal-inp" type="text" inputmode="decimal" placeholder="${ph}" value="${amt}" oninput="this.value=this.value.replace(',','.');_updateIngRowCost(this)"></div>
       <div class="ing-field-wrap"><span class="ing-mob-label">Потери</span><input class="modal-inp" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="%" value="${loss}" oninput="_updateIngRowCost(this)"></div>
-      <button class="modal-ing-del" title="Удалить ингредиент" onclick="this.closest('.modal-ing-row').remove()"><i data-lucide="trash-2" class="icon"></i></button>
     </div>
     <span class="ing-cost-hint"></span>
   `;
