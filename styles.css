@@ -909,6 +909,9 @@
       display: grid; grid-template-columns: 1fr 90px 70px 70px 52px 32px;
       gap: 8px; align-items: center; margin-bottom: 8px;
     }
+    .ing-field-wrap { display: contents; }
+    .ing-field-label { display: none; }
+    .ing-del-btn { padding: 6px 8px; color: var(--red); }
     .ing-row select, .ing-row input {
       padding: 7px 10px; border: 1.5px solid var(--border);
       border-radius: 8px; font-family: var(--font); font-size: 12px;
@@ -1211,21 +1214,23 @@
 
       /* ── .ing-row (полуфабрикаты) на мобильном ── */
       .ing-row {
+        display: grid;
         grid-template-columns: 1fr 44px;
-        grid-template-rows: auto auto auto;
         gap: 6px;
         padding: 10px 0;
         border-bottom: 1px solid var(--border);
         margin-bottom: 0;
+        align-items: start;
       }
       /* Селект ингредиента — вся строка */
       .ing-row .ing-mat { grid-column: 1 / -1; height: 44px; font-size: 15px !important; }
-      /* Кнопка удаления — справа от числовых полей */
-      .ing-row button { grid-row: 2 / 4; grid-column: 2; align-self: stretch; height: auto; width: 44px; }
-      /* Поля кол-во, потери, выход — в одну строку */
-      .ing-row .ing-amt   { grid-column: 1; }
-      .ing-row .ing-loss  { grid-column: 1; }
-      .ing-row .ing-yield { grid-column: 1; }
+      /* Обёртки с лейблами — первая колонка */
+      .ing-field-wrap { display: flex; flex-direction: column; gap: 3px; grid-column: 1; }
+      .ing-field-label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+      .ing-field-wrap .modal-inp { height: 40px; margin: 0; }
+      /* Кнопка удаления — вторая колонка, по центру */
+      .ing-row .ing-del-btn { grid-column: 2; grid-row: 2 / 5; align-self: center; width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; color: var(--red); }
+      /* Подсказка стоимости */
       .ing-row .ing-cost-hint { grid-column: 1 / -1; text-align: left; }
 
       /* ── Кнопки в футере модалки ── */
