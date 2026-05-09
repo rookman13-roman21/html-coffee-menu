@@ -1959,7 +1959,7 @@ function openModal(id)  {
   // Сброс скролла модалки в начало
   const modalEl = el.querySelector('.modal');
   if (modalEl) modalEl.scrollTop = 0;
-  if (id === 'modal-mat') _fillMatSupBookSelect();
+  if (id === 'modal-mat') { _fillMatSupBookSelect(); lucide.createIcons(); }
   // Блокируем скролл фона (iOS Safari fix)
   const scrollY = window.scrollY;
   document.body.style.position = 'fixed';
@@ -1985,13 +1985,23 @@ function _fillMatSupBookSelect() {
   if (!sel) return;
   const book = S.supplierBook || [];
   sel.innerHTML = '<option value="">— Не указан —</option>' +
-    book.map(b => `<option value="${b.id}">${b.name}${b.phone ? ' · ' + b.phone : ''}</option>`).join('');
+    book.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
 }
 function _onMatSupBookChange(sel) {
   const id = parseInt(sel.value);
   const book = S.supplierBook || [];
   const b = book.find(x => x.id === id);
-  if (!b) return;
+  const wrap = document.getElementById('mm-sup-custom-wrap');
+  if (!b) {
+    // Сброс — сворачиваем блок «Завести нового»
+    if (wrap) wrap.removeAttribute('open');
+    document.getElementById('mm-sup-name').value  = '';
+    document.getElementById('mm-sup-phone').value = '';
+    document.getElementById('mm-sup-note').value  = '';
+    return;
+  }
+  // Выбрали из справочника — раскрываем детали чтобы показать данные
+  if (wrap) wrap.setAttribute('open', '');
   document.getElementById('mm-sup-name').value  = b.name  || '';
   document.getElementById('mm-sup-phone').value = b.phone || '';
   document.getElementById('mm-sup-note').value  = b.note  || '';
