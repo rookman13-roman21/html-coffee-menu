@@ -19,7 +19,8 @@
   // ✅ src/render/sales.js — renderSales
   // ✅ src/render/recipes.js — renderRecipes
   // ✅ src/render/finmodel.js — renderFinModel
-//   ⬜ src/export/*.js      — pdf.js, excel.js
+//   ✅ src/export/techcards.js — exportTechCards, exportSemiTechCards, mvdDownloadPDF/Semi/Excel
+//   ⬜ src/export/excel.js
 //   ⬜ src/modals/*.js      — drink.js, material.js, semi.js
 // ════════════════════════════════════════════════════════════════════
 
@@ -65,6 +66,11 @@ import {
   renderFinModel,
 } from './render/finmodel.js';
 
+import {
+  exportTechCards, exportSemiTechCards,
+  mvdDownloadPDF, mvdDownloadSemiPDF, mvdDownloadExcel,
+} from './export/techcards.js';
+
 // ─── Реэкспорт в window для обратной совместимости с public/app.js ──
 //
 // ⚠️  ВАЖНО: app.js объявляет MAT, S, DRINKS, SEMI, Loc через const/let —
@@ -99,6 +105,9 @@ const _srcExports = {
   renderRecipes,
   // render/finmodel
   renderFinModel,
+  // export/techcards
+  exportTechCards, exportSemiTechCards,
+  mvdDownloadPDF, mvdDownloadSemiPDF, mvdDownloadExcel,
   // state/store
   saveState, loadState,
   loadLocIndex, saveLocIndex, migrateOldState,
