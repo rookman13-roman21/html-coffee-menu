@@ -6797,6 +6797,7 @@ function _buildSemiTechCardBlock(s, orgName, cardNum, isLast) {
       <div style="margin-top:6px">«__» ____________ ${year} г.</div>
     </div>
   </div>
+  ${s.image ? `<img src="${s.image}" alt="${s.name}" class="drink-photo" style="display:block;margin:0 auto 8px;width:160px;height:120px;object-fit:cover;border-radius:4px;border:1px solid #ccc" onerror="this.style.display='none'">` : ''}
   <h1>ТЕХНОЛОГИЧЕСКАЯ КАРТА ПОЛУФАБРИКАТА № ${cardNum}</h1>
   <p class="gost">(по ГОСТ Р 53105-2008)</p>
   <table class="info">
