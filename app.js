@@ -2773,9 +2773,9 @@ function openEditMat(key) {
 function saveMat() {
   const name  = document.getElementById('mm-name').value.trim();
   const unit  = document.getElementById('mm-unit').value || 'шт';
-  const price = parseFloat(document.getElementById('mm-price').value);
+  const price = parseFloat(document.getElementById('mm-price').value) || 0;
   const size  = parseFloat(document.getElementById('mm-size').value);
-  if (!name || isNaN(price) || price < 0 || !(size > 0)) { alert('Заполните все поля'); return; }
+  if (!name || !(size > 0)) { alert('Заполните название и объём'); return; }
   const key = _editMatKey || ('custom_' + (nextMatKey++));
   if (!_editMatKey) nextMatKey; // счётчик уже увеличенся
   const category = document.getElementById('mm-category').value || 'other';
