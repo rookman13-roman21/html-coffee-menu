@@ -1358,7 +1358,10 @@
       display: flex; flex-direction: column; gap: 4px; flex-shrink: 0;
     }
     .sales-preset-select {
-      min-width: 180px;
+      min-width: 180px; height: 38px; box-sizing: border-box;
+    }
+    .sales-controls-row .search-inp {
+      height: 38px; box-sizing: border-box;
     }
     .sales-scale-btn    { font-size: 12px; padding: 5px 12px; white-space: nowrap; }
     .sales-scale-btn.red   { color: var(--red); }
