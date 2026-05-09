@@ -2765,6 +2765,29 @@ function clearDrinkImg() {
   document.getElementById('md-img-placeholder').style.display = '';
   document.getElementById('md-img-clear').style.display = 'none';
 }
+
+// ── Изображение полуфабриката ───────────────────────────────────
+function onSemiImgChange(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  if (file.size > 5 * 1024 * 1024) { alert('Файл слишком большой. Максимум 5 МБ.'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('ms-img-preview');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    document.getElementById('ms-img-placeholder').style.display = 'none';
+    document.getElementById('ms-img-clear').style.display = '';
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+function clearSemiImg() {
+  const preview = document.getElementById('ms-img-preview');
+  preview.src = ''; preview.style.display = 'none';
+  document.getElementById('ms-img-placeholder').style.display = '';
+  document.getElementById('ms-img-clear').style.display = 'none';
+}
 function mdDeleteAction() {
   const id = parseInt(document.getElementById('md-edit-id').value);
   const action = document.getElementById('md-delete-btn').dataset.action;
@@ -3088,6 +3111,11 @@ function openAddSemi() {
   document.getElementById('ms-consistency').value  = '';
   document.getElementById('ms-edit-id').value = '';
   document.getElementById('ms-delete-btn').style.display = 'none';
+  // Сброс изображения
+  const _mp = document.getElementById('ms-img-preview');
+  _mp.src = ''; _mp.style.display = 'none';
+  document.getElementById('ms-img-placeholder').style.display = '';
+  document.getElementById('ms-img-clear').style.display = 'none';
   document.getElementById('ms-ings').innerHTML = '';
   addSemiIngRow();
   openModal('modal-semi');
@@ -3110,6 +3138,17 @@ function openEditSemi(id) {
   document.getElementById('ms-consistency').value  = semi.consistency || '';
   document.getElementById('ms-edit-id').value = semi.id;
   document.getElementById('ms-delete-btn').style.display = '';
+  // Изображение
+  const _sp = document.getElementById('ms-img-preview');
+  const _sph = document.getElementById('ms-img-placeholder');
+  const _scb = document.getElementById('ms-img-clear');
+  if (semi.image) {
+    _sp.src = semi.image; _sp.style.display = 'block';
+    _sph.style.display = 'none'; _scb.style.display = '';
+  } else {
+    _sp.src = ''; _sp.style.display = 'none';
+    _sph.style.display = ''; _scb.style.display = 'none';
+  }
   document.getElementById('ms-ings').innerHTML = '';
   (semi.recipe || []).forEach(r => addSemiIngRow(r.mat, r.amt, r.loss ? parseFloat((r.loss * 100).toPrecision(4)) : '', r.yieldAmt || ''));
   if (!(semi.recipe && semi.recipe.length)) addSemiIngRow();
@@ -3131,6 +3170,8 @@ function saveSemi() {
   const editId  = document.getElementById('ms-edit-id').value;
   if (!name) { alert('Введите название'); return; }
   if (!(yieldV > 0)) { alert('Введите выход (> 0)'); return; }
+  const imgEl = document.getElementById('ms-img-preview');
+  const image = (imgEl && imgEl.style.display !== 'none' && imgEl.src) ? imgEl.src : '';
 
   const recipe = [];
   document.querySelectorAll('#ms-ings .ing-row').forEach(row => {
@@ -3149,9 +3190,9 @@ function saveSemi() {
 
   if (editId) {
     const idx = SEMI.findIndex(s => s.id === parseInt(editId));
-    if (idx >= 0) SEMI[idx] = { id: parseInt(editId), name, unit, yield: yieldV, process, storage_temp, storage_life, appearance, taste, consistency, recipe };
+    if (idx >= 0) SEMI[idx] = { id: parseInt(editId), name, unit, yield: yieldV, process, image, storage_temp, storage_life, appearance, taste, consistency, recipe };
   } else {
-    SEMI.push({ id: nextSemiId++, name, unit, yield: yieldV, process, storage_temp, storage_life, appearance, taste, consistency, recipe });
+    SEMI.push({ id: nextSemiId++, name, unit, yield: yieldV, process, image, storage_temp, storage_life, appearance, taste, consistency, recipe });
   }
   closeModal('modal-semi');
   markDirtyDebounce();
