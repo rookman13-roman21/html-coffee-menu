@@ -5205,6 +5205,7 @@ function applySalesPreset(key) {
   });
   dirty.finmodel = true;
   renderSales(); saveState();
+  if (window.lucide) lucide.createIcons();
 }
 
 function scaleSalesPortions(factor) {
@@ -5213,6 +5214,7 @@ function scaleSalesPortions(factor) {
   });
   dirty.finmodel = true;
   renderSales(); saveState();
+  if (window.lucide) lucide.createIcons();
 }
 function onFixedCost(i, v)   { const n=parseFloat(v); if(n>=0){ S.fixedCosts[i].value=n; debounce(()=>{ renderFinModel(); saveState(); }); } }
 function onFixedCostName(i, v) { if(v.trim()){ S.fixedCosts[i].name=v.trim(); saveState(); } }
