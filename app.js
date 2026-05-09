@@ -3231,8 +3231,8 @@ function renderSales() {
     </div>
     <div class="sales-controls-row">
       <div class="sales-preset-wrap">
-        <span class="sales-presets-label">Пресет:</span>
-        <select class="sales-preset-select" onchange="applySalesPreset(this.value)">
+        <div class="modal-label">Пресет</div>
+        <select class="modal-select sales-preset-select" onchange="applySalesPreset(this.value)">  
           <option value="">— выбрать —</option>
           ${Object.entries(SALES_PRESETS).map(([k,p])=>`<option value="${k}"${S.activePreset===k?' selected':''}>${p.label}</option>`).join('')}
         </select>
