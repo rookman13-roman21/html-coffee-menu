@@ -957,10 +957,11 @@
       margin-bottom: 6px;
     }
     .ing-mob-labels { display: none; }
-    /* На десктопе обёртки прозрачные — дети попадают в grid */
-    .ing-fields-row { display: contents; }
     .ing-top-row { display: contents; }
+    .ing-fields-row { display: contents; }
     .ing-mob-label { display: none; }
+    /* ing-inp-wrap на десктопе прозрачный — input попадает в grid */
+    .ing-inp-wrap { display: contents; }
     .modal-ing-row .modal-inp, .modal-ing-row .modal-select {
       width: 100%; margin: 0;
     }
@@ -1227,36 +1228,51 @@
       }
       textarea.modal-inp { height: auto; }
 
-      /* ── Строка ингредиента в модалке — перекомпоновка ── */
+      /* ── Строка ингредиента ── */
       .modal-ings-header { display: none; }
       .modal-ing-row {
-        display: flex; flex-direction: column;
-        gap: 6px;
+        display: grid;
+        grid-template-columns: 1fr 44px;
+        grid-template-rows: auto auto auto;
+        gap: 4px 8px;
         padding: 10px 0;
         border-bottom: 1px solid var(--border);
         margin-bottom: 0;
-        width: 100%;
-        box-sizing: border-box;
+        align-items: start;
       }
-      /* Строка 1: селект + корзина */
-      .ing-top-row {
-        display: flex !important; gap: 8px; align-items: center;
+      /* select — вся ширина первой колонки */
+      .modal-ing-row .modal-select {
+        grid-column: 1; grid-row: 1;
+        width: 100%; height: 44px;
       }
-      .ing-top-row .modal-select { flex: 1; height: 44px; min-width: 0; }
-      .ing-top-row .modal-ing-del { flex-shrink: 0; width: 44px; height: 44px; }
-      /* Строка 2: поля с подписями */
-      .ing-fields-row {
-        display: flex !important; gap: 8px;
+      /* Корзина — рядом с селектом */
+      .modal-ing-row .modal-ing-del {
+        grid-column: 2; grid-row: 1;
+        width: 44px; height: 44px;
+        align-self: center;
       }
-      .ing-fields-row .ing-field-wrap { display: flex; flex-direction: column; gap: 3px; }
-      .ing-fields-row .ing-field-wrap:first-child { flex: 1; min-width: 0; }
-      .ing-fields-row .ing-field-wrap:nth-child(2) { flex: 0 0 80px; }
-      .ing-mob-label {
+      /* Обёртки инпутов — вторая строка, обе колонки */
+      .modal-ing-row .ing-inp-wrap {
+        display: flex; flex-direction: column; gap: 3px;
+      }
+      .modal-ing-row .ing-inp-wrap:nth-of-type(1) {
+        grid-column: 1; grid-row: 2; 
+      }
+      .modal-ing-row .ing-inp-wrap:nth-of-type(2) {
+        grid-column: 2; grid-row: 2;
+      }
+      /* Подпись через data-label */
+      .modal-ing-row .ing-inp-wrap::before {
+        content: attr(data-label);
         font-size: 10px; font-weight: 700; color: var(--muted);
         text-transform: uppercase; letter-spacing: .04em;
       }
-      .ing-fields-row .modal-inp { height: 40px; margin: 0; width: 100%; }
-      .ing-cost-hint { text-align: left; font-size: 12px; }
+      .modal-ing-row .ing-inp-wrap .modal-inp { height: 40px; margin: 0; width: 100%; }
+      /* Цена — третья строка */
+      .modal-ing-row .ing-cost-hint {
+        grid-column: 1 / -1; grid-row: 3;
+        text-align: left; font-size: 12px;
+      }
 
       /* ── .ing-row (полуфабрикаты) на мобильном — чистый flex, без grid ── */
       .ing-row {
