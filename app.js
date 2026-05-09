@@ -657,6 +657,14 @@ function toggleIngSection() {
   if (icon) icon.textContent = _ingCollapsed ? '▶' : '▼';
 }
 
+function toggleSemiSection() {
+  _semiCollapsed = !_semiCollapsed;
+  const body = document.getElementById('cost-semi-body');
+  const icon = document.getElementById('cost-semi-icon');
+  if (body) body.style.display = _semiCollapsed ? 'none' : '';
+  if (icon) icon.textContent = _semiCollapsed ? '▶' : '▼';
+}
+
 function scrollCostTo(sectionId) {
   const el = document.getElementById(sectionId);
   if (!el) return;
@@ -3527,14 +3535,16 @@ function renderCost() {
     </div>
 
     <div id="cost-section-semi"></div>
-    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px">
-      <span><i data-lucide="layers" class="icon"></i> Полуфабрикаты <span style="background:var(--border);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:4px">${SEMI.length}</span></span>
-      <div style="display:flex;gap:8px">
+    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px;cursor:pointer" onclick="toggleSemiSection()">
+      <span style="display:flex;align-items:center;gap:5px"><span class="mat-cat-chevron" id="cost-semi-icon">${_semiCollapsed?'▶':'▼'}</span><i data-lucide="layers" class="icon"></i> Полуфабрикаты <span style="background:var(--border);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:4px">${SEMI.length}</span></span>
+      <div style="display:flex;gap:8px" onclick="event.stopPropagation()">
         <button class="btn btn-outline" onclick="exportSemiTechCards()" title="Экспорт техкарт полуфабрикатов в PDF"><i data-lucide="file-text" class="icon"></i><span class="sup-btn-txt"> PDF техкарт</span></button>
         <button class="btn btn-green" onclick="openAddSemi()"><i data-lucide="plus" class="icon"></i><span class="sup-btn-txt"> Полуфабрикат</span></button>
       </div>
     </div>
-    ${semiHtml}
+    <div id="cost-semi-body" style="${_semiCollapsed?'display:none':''}">
+      ${semiHtml}
+    </div>
   `;
   if (window.lucide) lucide.createIcons();
   if (_costScroll) _costEl.scrollTop = _costScroll;
