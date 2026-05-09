@@ -93,7 +93,9 @@
       <span id="mvd-title"></span>
       <button class="modal-close" onclick="closeModal('modal-drink-view')">&times;</button>
     </div>
-    <div id="mvd-content" style="overflow-y:auto;max-height:68vh;padding-right:10px;scrollbar-gutter:stable"></div>
+    <div class="modal-body">
+    <div id="mvd-content" style="padding-right:10px;scrollbar-gutter:stable"></div>
+    </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-drink-view')">Закрыть</button>
       <div class="mvd-download-wrap">
@@ -114,6 +116,7 @@
       <span id="modal-drink-title"><i data-lucide="plus" class="icon"></i> Новый напиток</span>
       <button class="modal-close" onclick="closeModal('modal-drink')">&times;</button>
     </div>
+    <div class="modal-body">
     <div class="modal-row">
       <div>
         <div class="modal-label">Название</div>
@@ -188,7 +191,8 @@
     <textarea class="modal-inp" id="md-taste" rows="2" placeholder="Мягкий, кофейный, без посторонних привкусов..." style="resize:vertical;font-family:inherit;line-height:1.6"></textarea>
     <div class="modal-label" style="font-weight:500;font-size:12px;margin-top:8px;margin-bottom:4px">Консистенция</div>
     <textarea class="modal-inp" id="md-consistency" rows="2" placeholder="Жидкая, однородная, лёгкая пена..." style="resize:vertical;font-family:inherit;line-height:1.6"></textarea>
-    <div class="modal-footer" style="justify-content:space-between;align-items:center;border-top:1.5px solid var(--border);padding-top:16px">
+    </div><!-- /.modal-body -->
+    <div class="modal-footer" style="justify-content:space-between;align-items:center">
       <button id="md-delete-btn" class="btn btn-outline" style="color:var(--red);border-color:#f4b8c4;display:none" onclick="mdDeleteAction()"><i data-lucide="trash-2" class="icon"></i> <span id="md-delete-label">Удалить</span></button>
       <div style="display:flex;gap:8px;margin-left:auto">
         <button class="btn btn-outline" onclick="closeModal('modal-drink')">Отмена</button>
@@ -205,6 +209,7 @@
       <span id="mm-modal-title"><i data-lucide="plus" class="icon"></i> Новая позиция сырья</span>
       <button class="modal-close" onclick="cancelMat()">&times;</button>
     </div>
+    <div class="modal-body">
     <div class="modal-row">
       <div style="flex:2">
         <div class="modal-label">Название</div>
@@ -275,6 +280,7 @@
         </div>
       </div>
     </details>
+    </div><!-- /.modal-body -->
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="cancelMat()">Отмена</button>
       <button class="btn-primary" onclick="saveMat()">✔ Сохранить</button>
@@ -289,6 +295,7 @@
       <span id="modal-semi-title"><i data-lucide="layers" class="icon"></i> Новый полуфабрикат</span>
       <button class="modal-close" onclick="closeModal('modal-semi')">&times;</button>
     </div>
+    <div class="modal-body">
     <div class="modal-row">
       <div style="flex:2">
         <div class="modal-label">Название</div>
@@ -346,6 +353,7 @@
     <textarea class="modal-inp" id="ms-consistency" rows="2" placeholder="Густая, однородная" style="resize:vertical;font-family:inherit;line-height:1.6"></textarea>
 
     <input type="hidden" id="ms-edit-id" value="">
+    </div><!-- /.modal-body -->
     <div class="modal-footer">
       <button id="ms-delete-btn" class="btn btn-outline" style="color:var(--red);border-color:#f4b8c4;display:none" onclick="deleteSemi(document.getElementById('ms-edit-id').value)"><i data-lucide="trash-2" class="icon"></i> Удалить</button>
       <div style="display:flex;gap:8px;margin-left:auto">
