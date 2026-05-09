@@ -237,7 +237,8 @@ const GROUP_LABEL = { hot:'<i data-lucide="coffee" class="icon"></i> Горяч�
 
 let nextDrinkId = 27; // auto-increment id for new drinks
 let nextMatKey  = 1;  // suffix for custom mat keys
-let _editMatKey = null; // null = новый, string = режим редактирования
+let _editMatKey = null;
+let _pendingMatSelectEl = null; // select в строке рецепта, откуда открыли «создать ингредиент» // null = новый, string = режим редактирования
 
 // ─── Полуфабрикаты ───────────────────────────────────────────────
 // { id, name, unit:'мл'|'г'|'шт', yield: number, process:'', recipe:[{mat,amt,loss?}] }
@@ -2424,6 +2425,7 @@ document.addEventListener('click', e => {
 // ════════════════════════════════════════════════════════════════════
 // Значение select для MAT: "mat:coffee", для SEMI: "semi:5"
 function matOptions(selected='') {
+  const createOpt = `<option value="__create_mat__" style="font-weight:700;color:var(--green)">＋ Создать ингредиент...</option>`;
   // Группируем MAT по категориям
   const groups = {};
   Object.entries(MAT).forEach(([k, m]) => {
@@ -2444,7 +2446,7 @@ function matOptions(selected='') {
   const semiOpts = SEMI.length ? `<optgroup label="── Полуфабрикаты ──">${
     SEMI.map(s => `<option value="semi:${s.id}" ${selected===`semi:${s.id}`?'selected':''}>${s.name} (п/ф, ${s.yield}${s.unit})</option>`).join('')
   }</optgroup>` : '';
-  return matOpts + semiOpts;
+  return createOpt + matOpts + semiOpts;
 }
 function _ingPlaceholder(val) {
   if (!val) return '0';
@@ -2476,6 +2478,25 @@ function _ingStep(val) {
 function _onIngMatChange(selectEl) {
   const row = selectEl.closest('.modal-ing-row');
   if (!row) return;
+  if (selectEl.value === '__create_mat__') {
+    // Восстановить предыдущее значение
+    selectEl.value = selectEl.dataset.prev || Object.keys(MAT).map(k=>'mat:'+k)[0] || '';
+    // Открыть модалку создания ингредиента поверх модалки рецепта
+    _pendingMatSelectEl = selectEl;
+    _editMatKey = null;
+    // Очистить поля модалки сырья
+    document.getElementById('mm-modal-title').innerHTML = '<i data-lucide="plus" class="icon"></i> Новое сырьё';
+    ['mm-name','mm-price','mm-size','mm-sup-name','mm-sup-phone','mm-sup-note'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    document.getElementById('mm-unit').value = 'шт';
+    document.getElementById('mm-category').value = 'other';
+    document.getElementById('mm-sup-book').value = '';
+    const wrap = document.getElementById('mm-sup-custom-wrap');
+    if (wrap) wrap.removeAttribute('open');
+    ['mm-kcal','mm-protein','mm-fat','mm-carbs'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    openModal('modal-mat');
+    return;
+  }
+  selectEl.dataset.prev = selectEl.value;
   const amtInp = row.querySelector('input[type="number"]');
   const val = selectEl.value;
   amtInp.placeholder = _ingPlaceholder(val);
@@ -2532,6 +2553,9 @@ function addIngRow(selected='', amt='', loss='') {
     <button class="modal-ing-del" title="Удалить ингредиент" onclick="this.closest('.modal-ing-row').remove()"><i data-lucide="trash-2" class="icon"></i></button>
   `;
   document.getElementById('md-ings').appendChild(row);
+  // Сохранить начальное значение для восстановления при отмене создания ингредиента
+  const selEl = row.querySelector('select');
+  if (selEl) selEl.dataset.prev = selEl.value;
   if (window.lucide) lucide.createIcons({ nodes: [row] });
   // Показать цену сразу если редактируем существующий напиток
   if (amt) {
@@ -2795,6 +2819,19 @@ function saveMat() {
     S.suppliers[key] = { name: supName, phone: supPhone, note: supNote, site: '' };
   }
   closeModal('modal-mat');
+  // Если открыто из строки рецепта — вставить новый ингредиент в тот select
+  if (_pendingMatSelectEl) {
+    _pendingMatSelectEl.innerHTML = matOptions('mat:' + key);
+    _pendingMatSelectEl.value = 'mat:' + key;
+    _pendingMatSelectEl.dataset.prev = 'mat:' + key;
+    const _pendingRow = _pendingMatSelectEl.closest('.modal-ing-row');
+    if (_pendingRow) {
+      const amtInp = _pendingRow.querySelector('input[type="number"]');
+      if (amtInp) { amtInp.placeholder = _ingPlaceholder('mat:' + key); amtInp.step = _ingStep('mat:' + key); }
+      _updateIngRowCost(_pendingMatSelectEl);
+    }
+    _pendingMatSelectEl = null;
+  }
   _editMatKey = null;
   document.getElementById('mm-modal-title').innerHTML = '<i data-lucide="plus" class="icon"></i> Новая позиция сырья';
   document.getElementById('mm-name').value  = '';
@@ -2811,6 +2848,10 @@ function saveMat() {
   ['mm-kcal','mm-protein','mm-fat','mm-carbs'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   markDirtyDebounce();
   saveState();
+}
+function cancelMat() {
+  _pendingMatSelectEl = null;
+  closeModal('modal-mat');
 }
 function deleteMat(key) {
   const used = DRINKS.some(d => d.recipe.some(r => r.mat === key));

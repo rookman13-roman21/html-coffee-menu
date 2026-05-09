@@ -203,7 +203,7 @@
   <div class="modal">
     <div class="modal-title">
       <span id="mm-modal-title"><i data-lucide="plus" class="icon"></i> Новая позиция сырья</span>
-      <button class="modal-close" onclick="closeModal('modal-mat')">&times;</button>
+      <button class="modal-close" onclick="cancelMat()">&times;</button>
     </div>
     <div class="modal-row">
       <div style="flex:2">
@@ -276,7 +276,7 @@
       </div>
     </details>
     <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('modal-mat')">Отмена</button>
+      <button class="btn btn-outline" onclick="cancelMat()">Отмена</button>
       <button class="btn-primary" onclick="saveMat()">✔ Сохранить</button>
     </div>
   </div>
