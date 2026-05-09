@@ -14,8 +14,9 @@
 //   ✅ src/utils/calc.js    — calcCost, calcNutrition, enrich, withABC, bepCalc и др.
 //   ✅ src/utils/image.js   — DRINK_IMAGES, getDrinkImage, _compressImageDataURL
 //   ✅ src/state/store.js   — saveState, loadState, loadLocIndex, saveLocIndex, migrateOldState, activeLoc, getOrgInfo
-//   // src/render/dashboard.js — renderDashboard, filterDashboard, toggleDashIntro
-   // src/render/cost.js — renderCost
+//   // ✅ src/render/dashboard.js — renderDashboard, filterDashboard, toggleDashIntro
+  // ✅ src/render/cost.js — renderCost
+  // ✅ src/render/sales.js — renderSales
 //   ⬜ src/export/*.js      — pdf.js, excel.js
 //   ⬜ src/modals/*.js      — drink.js, material.js, semi.js
 // ════════════════════════════════════════════════════════════════════
@@ -50,6 +51,10 @@ import {
   renderCost,
 } from './render/cost.js';
 
+import {
+  renderSales,
+} from './render/sales.js';
+
 // ─── Реэкспорт в window для обратной совместимости с public/app.js ──
 //
 // ⚠️  ВАЖНО: app.js объявляет MAT, S, DRINKS, SEMI, Loc через const/let —
@@ -78,6 +83,8 @@ const _srcExports = {
   renderDashboard, filterDashboard, toggleDashIntro,
   // render/cost
   renderCost,
+  // render/sales
+  renderSales,
   // state/store
   saveState, loadState,
   loadLocIndex, saveLocIndex, migrateOldState,
