@@ -1,7 +1,7 @@
 # CONTEXT — MBS* Coffee Menu
 
 > CFO-инструментарий для владельца кофейни. Один HTML-файл без зависимостей и сборки.
-> Последнее обновление: 9 мая 2026 (сессия 19)
+> Последнее обновление: 9 мая 2026 (сессия 22)
 
 ---
 
@@ -415,6 +415,7 @@ resetAll()  // confirm → восстанавливает S из DEFAULTS + FIXE
 | `position: fixed` не работает внутри `position: sticky` на iOS | `#loc-menu` и `#export-menu` вынесены из хедера в DOM после `</header>`; JS позиционирует через `getBoundingClientRect()` |
 | На мобиле выпадалка «Моя кофейня» открывалась внизу экрана | `top: 58px !important` в мобильном медиа-запросе — меню прижато к шапке |
 | `.btn-green` не был определён в CSS | Добавлен `.btn-green { background: var(--green); color: #fff; border: none; }` + hover + dark override |
+| Десктопная строка ингредиента переносилась на 2-й ряд | Мобильный `@media` устанавливал `grid-row: 2` → десктоп должен явно указывать `grid-row: 1` на всех 5 дочерних. Переключить с `nth-of-type` на `nth-child`. |
 
 ---
 
@@ -1200,3 +1201,62 @@ function toggleExportMenu(e) {
 | `bdae501` | fix: ing row mobile — select+trash on top, labeled qty/loss below |
 | `a11a93c` | fix: ing row full width on mobile |
 | `32ee8db` | fix: ing row mobile — CSS grid, no wrapper divs, labels via ::before |
+
+---
+
+### Сессия 22 (9 мая 2026) — фикс десктопной вёрстки строки ингредиента
+
+**Коммит:** `e1ffd59`
+
+**Проблема:** после мобильных правок сессии 21 десктопная строка ингредиента ломалась — элементы переносились на вторую строку вместо одной горизонтальной линии.
+
+**Причина:** мобильный `@media` устанавливал явный `grid-row: 2` на `nth-child(3)` и `nth-child(4)`. Десктопные правила не имели `grid-row: 1` — grid auto-placement сохранял row-2 из медиа-каскада.
+
+**Структура строки (напоминание):**
+```
+child 1: <select class="modal-select">    → grid-column: 1
+child 2: <button class="modal-ing-del">  → grid-column: 5
+child 3: <div class="ing-inp-wrap" data-label="Кол-во"> → grid-column: 2
+child 4: <div class="ing-inp-wrap" data-label="Потери"> → grid-column: 3
+child 5: <span class="ing-cost-hint">    → grid-column: 4
+```
+
+**Десктопный grid:** `grid-template-columns: 1fr 90px 90px 52px 32px`
+
+**Финальный CSS десктопа (вне media-query):**
+```css
+.modal-ing-row {
+  display: grid;
+  grid-template-columns: 1fr 90px 90px 52px 32px;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.ing-inp-wrap { display: block; }
+.modal-ing-row > :nth-child(1) { grid-column: 1; grid-row: 1; }
+.modal-ing-row > :nth-child(2) { grid-column: 5; grid-row: 1; }
+.modal-ing-row > :nth-child(3) { grid-column: 2; grid-row: 1; }
+.modal-ing-row > :nth-child(4) { grid-column: 3; grid-row: 1; }
+.modal-ing-row > :nth-child(5) { grid-column: 4; grid-row: 1; }
+.modal-ing-row .modal-inp, .modal-ing-row .modal-select { width: 100%; margin: 0; }
+.modal-ing-row .ing-inp-wrap .modal-inp { width: 100%; margin: 0; }
+```
+
+**Ключевые правила:**
+- `grid-row: 1` явно на всех 5 дочерних элементах — нейтрализует row-2 из мобильного каскада
+- Переход с `nth-of-type` на `nth-child` — надёжнее для смешанных типов элементов (div/span/button/select)
+- `display: block` на `.ing-inp-wrap` (не `display: contents`) — избегает ненадёжного поведения contents в некоторых браузерах
+
+**Мобильный CSS (НЕ изменялся):**
+```css
+@media (max-width: 768px) {
+  .modal-ing-row { grid-template-columns: 1fr 44px; grid-template-rows: auto auto auto; }
+  .modal-ing-row > :nth-child(3) { grid-column: 1; grid-row: 2; }
+  .modal-ing-row > :nth-child(4) { grid-column: 2; grid-row: 2; }
+  .modal-ing-row .ing-inp-wrap { display: flex; flex-direction: column; gap: 3px; }
+  .modal-ing-row .ing-inp-wrap::before { content: attr(data-label); … }
+  .modal-ing-row .ing-cost-hint { grid-column: 1/-1; grid-row: 3; }
+}
+```
+
+**Итог:** десктоп — одна строка: Ингредиент | Кол-во | Потери | Цена | 🗑. Мобильный — 3 ряда с метками. Оба работают корректно.
