@@ -2425,6 +2425,7 @@ document.addEventListener('click', e => {
 // ════════════════════════════════════════════════════════════════════
 // Значение select для MAT: "mat:coffee", для SEMI: "semi:5"
 function matOptions(selected='') {
+  const placeholderOpt = `<option value="" disabled ${!selected ? 'selected' : ''} style="color:var(--muted)">— Выберите ингредиент —</option>`;
   const createOpt = `<option value="__create_mat__" style="font-weight:700;color:var(--green)">＋ Создать ингредиент...</option>`;
   // Группируем MAT по категориям
   const groups = {};
@@ -2446,7 +2447,7 @@ function matOptions(selected='') {
   const semiOpts = SEMI.length ? `<optgroup label="── Полуфабрикаты ──">${
     SEMI.map(s => `<option value="semi:${s.id}" ${selected===`semi:${s.id}`?'selected':''}>${s.name} (п/ф, ${s.yield}${s.unit})</option>`).join('')
   }</optgroup>` : '';
-  return createOpt + matOpts + semiOpts;
+  return placeholderOpt + createOpt + matOpts + semiOpts;
 }
 function _ingPlaceholder(val) {
   if (!val) return '0';
@@ -2497,6 +2498,7 @@ function _onIngMatChange(selectEl) {
     return;
   }
   selectEl.dataset.prev = selectEl.value;
+  selectEl.classList.remove('ing-select-empty');
   const amtInp = row.querySelector('input[type="number"]');
   const val = selectEl.value;
   amtInp.placeholder = _ingPlaceholder(val);
@@ -2546,7 +2548,7 @@ function addIngRow(selected='', amt='', loss='') {
   const row = document.createElement('div');
   row.className = 'modal-ing-row';
   row.innerHTML = `
-    <select class="modal-select" onchange="_onIngMatChange(this);_updateIngRowCost(this)">${matOptions(selected)}</select>
+    <select class="modal-select${!selected ? ' ing-select-empty' : ''}" onchange="_onIngMatChange(this);_updateIngRowCost(this)">${matOptions(selected)}</select>
     <input class="modal-inp" type="text" inputmode="decimal" placeholder="${ph}" value="${amt}" oninput="this.value=this.value.replace(',','.');_updateIngRowCost(this)">
     <input class="modal-inp" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="%" value="${loss}" oninput="_updateIngRowCost(this)">
     <span class="ing-cost-hint"></span>

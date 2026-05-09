@@ -899,6 +899,7 @@
       cursor: pointer; line-height: normal;
     }
     .modal-inp:focus, .modal-select:focus { outline: none; border-color: var(--green); }
+    .ing-select-empty { color: var(--muted); border-style: dashed; }
     textarea.modal-inp { height: auto; line-height: 1.5; padding: 8px 12px; }
     .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
     .btn-primary {
