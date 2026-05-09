@@ -7283,3 +7283,25 @@ if ('ontouchstart' in window) {
     });
   }, true);
 }
+
+// ════════════════════════════════════════════════════════════════════
+//  EXPOSE GLOBALS FOR ES MODULES (src/*)
+//  const/let в обычном <script> не попадают в window — делаем это явно,
+//  чтобы src/render/*.js и src/utils/*.js могли читать актуальные данные.
+//  Эта секция удалится когда app.js будет полностью переведён на модули.
+// ════════════════════════════════════════════════════════════════════
+Object.assign(window, {
+  // Справочники (статика)
+  MAT, MAT_NUTRITION, MAT_CATEGORIES,
+  DRINKS, DRINKS_ORIG, DRINK_IMAGES, DRINK_QUALITY,
+  SEMI, SALES_PRESETS,
+  FIXED_COSTS_DEF, FIXED_COSTS_CATS,
+  GROUP_LABEL, BASE_DRINK_IDS, BASE_MAT_KEYS,
+  // Мутируемый стейт
+  S, Loc,
+  // Служебные
+  dirty, activeTab, searchQuery, sortState,
+  nextDrinkId, nextSemiId, nextMatKey, _nextCostId,
+  // Функции (уже есть в window через hoisting function declarations,
+  // но const-функции нужно добавить явно если такие появятся)
+});
