@@ -957,6 +957,9 @@
       margin-bottom: 6px;
     }
     .ing-mob-labels { display: none; }
+    /* На десктопе ing-fields-row — прозрачная обёртка, чтобы дети попали в grid */
+    .ing-fields-row { display: contents; }
+    .ing-mob-label { display: none; }
     .modal-ing-row .modal-inp, .modal-ing-row .modal-select {
       width: 100%; margin: 0;
     }
@@ -1226,30 +1229,27 @@
       /* ── Строка ингредиента в модалке — перекомпоновка ── */
       .modal-ings-header { display: none; }
       .modal-ing-row {
-        grid-template-columns: 1fr 80px 44px;
-        grid-template-rows: auto auto auto;
-        gap: 4px 6px;
+        display: flex; flex-direction: column;
+        gap: 6px;
         padding: 10px 0;
         border-bottom: 1px solid var(--border);
         margin-bottom: 0;
       }
-      /* Подписи над полями кол-ва и потерь — pseudo через data */
-      .modal-ing-row .modal-select { grid-column: 1 / -1; height: 44px; }
-      /* Лейблы под селектом */
-      .modal-ing-row .ing-mob-labels {
-        grid-column: 1 / -1;
-        display: flex;
-        gap: 6px;
+      .modal-ing-row .modal-select { width: 100%; height: 44px; }
+      /* Ряд с полями + корзина */
+      .ing-fields-row {
+        display: flex; gap: 8px; align-items: flex-end;
       }
-      .modal-ing-row .ing-mob-labels span {
+      .ing-fields-row .ing-field-wrap { display: flex; flex-direction: column; gap: 3px; }
+      .ing-fields-row .ing-field-wrap:first-child { flex: 1; }
+      .ing-fields-row .ing-field-wrap:nth-child(2) { flex: 0 0 72px; }
+      .ing-mob-label {
         font-size: 10px; font-weight: 700; color: var(--muted);
         text-transform: uppercase; letter-spacing: .04em;
       }
-      .modal-ing-row .ing-mob-labels span:first-child { flex: 0 0 80px; }
-      .modal-ing-row .ing-mob-labels span:last-child  { flex: 0 0 44px; }
-      .modal-ing-row .modal-inp   { height: 40px; }
-      .ing-cost-hint { text-align: left; }
-      .modal-ing-del { width: 44px; height: 44px; }
+      .ing-fields-row .modal-inp { height: 40px; margin: 0; width: 100%; }
+      .modal-ing-del { width: 44px; height: 40px; flex-shrink: 0; align-self: flex-end; }
+      .ing-cost-hint { text-align: left; font-size: 12px; }
 
       /* ── .ing-row (полуфабрикаты) на мобильном — чистый flex, без grid ── */
       .ing-row {

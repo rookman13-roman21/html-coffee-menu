@@ -2505,8 +2505,9 @@ function _onIngMatChange(selectEl) {
 function _calcIngRowCost(row) {
   if (!row) return null;
   const val  = row.querySelector('select').value || '';
-  const amtInp = row.querySelectorAll('input')[0];
-  const lossInp = row.querySelectorAll('input')[1];
+  const inputs = row.querySelectorAll('input');
+  const amtInp  = inputs[0];
+  const lossInp = inputs[1];
   const amt  = parseFloat(amtInp ? amtInp.value : 0) || 0;
   const loss = (parseFloat(lossInp ? lossInp.value : 0) || 0) / 100;
   if (!val || !(amt > 0)) return null;
@@ -2546,11 +2547,12 @@ function addIngRow(selected='', amt='', loss='') {
   row.className = 'modal-ing-row';
   row.innerHTML = `
     <select class="modal-select${!selected ? ' ing-select-empty' : ''}" onchange="_onIngMatChange(this);_updateIngRowCost(this)">${matOptions(selected)}</select>
-    <div class="ing-mob-labels"><span>Кол-во</span><span>Потери</span></div>
-    <input class="modal-inp" type="text" inputmode="decimal" placeholder="${ph}" value="${amt}" oninput="this.value=this.value.replace(',','.');_updateIngRowCost(this)">
-    <input class="modal-inp" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="%" value="${loss}" oninput="_updateIngRowCost(this)">
+    <div class="ing-fields-row">
+      <div class="ing-field-wrap"><span class="ing-mob-label">Кол-во</span><input class="modal-inp" type="text" inputmode="decimal" placeholder="${ph}" value="${amt}" oninput="this.value=this.value.replace(',','.');_updateIngRowCost(this)"></div>
+      <div class="ing-field-wrap"><span class="ing-mob-label">Потери</span><input class="modal-inp" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="%" value="${loss}" oninput="_updateIngRowCost(this)"></div>
+      <button class="modal-ing-del" title="Удалить ингредиент" onclick="this.closest('.modal-ing-row').remove()"><i data-lucide="trash-2" class="icon"></i></button>
+    </div>
     <span class="ing-cost-hint"></span>
-    <button class="modal-ing-del" title="Удалить ингредиент" onclick="this.closest('.modal-ing-row').remove()"><i data-lucide="trash-2" class="icon"></i></button>
   `;
   document.getElementById('md-ings').appendChild(row);
   // Сохранить начальное значение для восстановления при отмене создания ингредиента
