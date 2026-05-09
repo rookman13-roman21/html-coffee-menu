@@ -24,6 +24,10 @@
 //   ✅ src/modals/drink.js   — openAddDrink, openEditDrink, saveDrink, deleteDrink, resetDrink
 //   ✅ src/modals/semi.js    — openAddSemi, openEditSemi, saveSemi, deleteSemi
 //   ✅ src/modals/mat.js     — openEditMat, saveMat, cancelMat, deleteMat
+//   ✅ src/export/csv.js     — exportCSV, exportDashboard, exportSales
+//   ✅ src/ui/sort.js        — sortDrinks, setSort, thSort, filterSales, setSalesSort
+//   ✅ src/ui/updaters.js    — onMatPrice, onSalePrice, onPortions, renderTab, resetAll...
+//   ✅ src/ui/payroll.js     — calcPositionCosts, payrollTotal, onPayrollPos...
 // ════════════════════════════════════════════════════════════════════
 
 import {
@@ -88,6 +92,32 @@ import {
   openEditMat, saveMat, cancelMat, deleteMat, matOnlyOptions,
 } from './modals/mat.js';
 
+import {
+  exportCSV, exportDashboard, exportSales,
+} from './export/csv.js';
+
+import {
+  sortDrinks, setSort, thSort,
+  setSalesSort, thSalesSort, filterSales,
+} from './ui/sort.js';
+
+import {
+  markDirty, markDirtyDebounce, renderActive, renderTab,
+  onMatPriceFocus, onMatPriceInput, onMatPriceCommit, onMatPrice,
+  onSalePrice, onTargetFCSilent, onTargetFC, onPortions, onDays,
+  applySalesPreset, scaleSalesPortions,
+  onFixedCost, onFixedCostName, addFixedCost, addFixedCostInCat, delFixedCost,
+  onTaxMode, onInvestment,
+  openCostEditor, closeCostEditor, saveCostEditor, deleteCostFromEditor,
+  toggleFcCat, flashCells, resetAll, switchTab,
+} from './ui/updaters.js';
+
+import {
+  calcPositionCosts, payrollPositionTotal, payrollTotal, payrollTotals,
+  empTypeTip, onPayrollPos, addPayrollPosition, deletePayrollPosition,
+  scrollToPayroll,
+} from './ui/payroll.js';
+
 // ─── Реэкспорт в window для обратной совместимости с public/app.js ──
 //
 // ⚠️  ВАЖНО: app.js объявляет MAT, S, DRINKS, SEMI, Loc через const/let —
@@ -134,6 +164,23 @@ const _srcExports = {
   _updateSemiCostPreview, _onSemiMatChange, _autoFillSemiYield,
   // modals/mat
   openEditMat, saveMat, cancelMat, deleteMat, matOnlyOptions,
+  // export/csv
+  exportCSV, exportDashboard, exportSales,
+  // ui/sort
+  sortDrinks, setSort, thSort, setSalesSort, thSalesSort, filterSales,
+  // ui/updaters
+  markDirty, markDirtyDebounce, renderActive, renderTab,
+  onMatPriceFocus, onMatPriceInput, onMatPriceCommit, onMatPrice,
+  onSalePrice, onTargetFCSilent, onTargetFC, onPortions, onDays,
+  applySalesPreset, scaleSalesPortions,
+  onFixedCost, onFixedCostName, addFixedCost, addFixedCostInCat, delFixedCost,
+  onTaxMode, onInvestment,
+  openCostEditor, closeCostEditor, saveCostEditor, deleteCostFromEditor,
+  toggleFcCat, flashCells, resetAll, switchTab,
+  // ui/payroll
+  calcPositionCosts, payrollPositionTotal, payrollTotal, payrollTotals,
+  empTypeTip, onPayrollPos, addPayrollPosition, deletePayrollPosition,
+  scrollToPayroll,
   // state/store
   saveState, loadState,
   loadLocIndex, saveLocIndex, migrateOldState,
