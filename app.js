@@ -2811,18 +2811,37 @@ function deleteDrink(id) {
   markDirtyDebounce();
   saveState();
 }
+function _compressImageDataURL(dataURL, maxPx, quality, callback) {
+  const img = new Image();
+  img.onload = () => {
+    let w = img.naturalWidth, h = img.naturalHeight;
+    if (w > maxPx || h > maxPx) {
+      if (w >= h) { h = Math.round(h * maxPx / w); w = maxPx; }
+      else        { w = Math.round(w * maxPx / h); h = maxPx; }
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    callback(canvas.toDataURL('image/jpeg', quality));
+  };
+  img.onerror = () => callback(dataURL); // на случай сбоя — оставляем как есть
+  img.src = dataURL;
+}
+
 function onDrinkImgChange(input) {
   if (!input.files || !input.files[0]) return;
   const file = input.files[0];
   if (file.size > 5 * 1024 * 1024) { alert('Файл слишком большой. Максимум 5 МБ.'); return; }
   const reader = new FileReader();
   reader.onload = e => {
-    const preview = document.getElementById('md-img-preview');
-    const placeholder = document.getElementById('md-img-placeholder');
-    preview.src = e.target.result;
-    preview.style.display = 'block';
-    placeholder.style.display = 'none';
-    document.getElementById('md-img-clear').style.display = '';
+    _compressImageDataURL(e.target.result, 800, 0.82, compressed => {
+      const preview = document.getElementById('md-img-preview');
+      const placeholder = document.getElementById('md-img-placeholder');
+      preview.src = compressed;
+      preview.style.display = 'block';
+      placeholder.style.display = 'none';
+      document.getElementById('md-img-clear').style.display = '';
+    });
   };
   reader.readAsDataURL(file);
   input.value = '';
@@ -2841,11 +2860,13 @@ function onSemiImgChange(input) {
   if (file.size > 5 * 1024 * 1024) { alert('Файл слишком большой. Максимум 5 МБ.'); return; }
   const reader = new FileReader();
   reader.onload = e => {
-    const preview = document.getElementById('ms-img-preview');
-    preview.src = e.target.result;
-    preview.style.display = 'block';
-    document.getElementById('ms-img-placeholder').style.display = 'none';
-    document.getElementById('ms-img-clear').style.display = '';
+    _compressImageDataURL(e.target.result, 800, 0.82, compressed => {
+      const preview = document.getElementById('ms-img-preview');
+      preview.src = compressed;
+      preview.style.display = 'block';
+      document.getElementById('ms-img-placeholder').style.display = 'none';
+      document.getElementById('ms-img-clear').style.display = '';
+    });
   };
   reader.readAsDataURL(file);
   input.value = '';
