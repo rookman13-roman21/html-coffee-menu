@@ -920,15 +920,23 @@
     }
     .mat-row-custom:hover td { background: var(--light); }
     .ing-row {
-      display: grid; grid-template-columns: 1fr 90px 70px 70px 52px 32px;
+      display: grid; grid-template-columns: 1fr 90px 70px 70px 32px 52px;
       gap: 8px; align-items: center; margin-bottom: 8px;
     }
     .ing-row-header { display: contents; }
     .ing-row-fields  { display: contents; }
     .ing-field-wrap { display: contents; }
     .ing-field-label { display: none; }
+    /* Явное размещение: grid-row:1 на всех — чтобы auto-placement не переносил в row 2 */
+    .ing-row .ing-mat      { grid-column: 1; grid-row: 1; } /* Сырьё */
+    .ing-row .ing-amt      { grid-column: 2; grid-row: 1; } /* Кол-во */
+    .ing-row .ing-loss     { grid-column: 3; grid-row: 1; } /* Потери */
+    .ing-row .ing-yield    { grid-column: 4; grid-row: 1; } /* Выход */
+    .ing-row .ing-del-btn  { grid-column: 5; grid-row: 1; } /* Корзина */
+    .ing-row .ing-cost-hint { grid-column: 6; grid-row: 1; } /* Цена */
     .ing-del-btn { padding: 6px 8px; color: var(--red); }
     .ing-row select, .ing-row input {
+      width: 100%; margin: 0;
       padding: 7px 10px; border: 1.5px solid var(--border);
       border-radius: 8px; font-family: var(--font); font-size: 12px;
       font-weight: 500; background: white; color: var(--text);
@@ -943,7 +951,7 @@
       margin-bottom: 4px;
     }
     .modal-ings-header.semi {
-      grid-template-columns: 1fr 90px 70px 70px 52px 32px;
+      grid-template-columns: 1fr 90px 70px 70px 32px 52px;
     }
     .modal-ings-header span {
       font-size: 11px; font-weight: 700; color: var(--muted);
