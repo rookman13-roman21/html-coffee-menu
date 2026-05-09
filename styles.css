@@ -1193,6 +1193,8 @@
 
       /* ── Форма в модалке — один столбец ── */
       .modal-row { grid-template-columns: 1fr; gap: 10px; }
+      /* KBZHU: 2 колонки на мобильном вместо 4 */
+      .modal-row.kbzhu-row { grid-template-columns: 1fr 1fr; gap: 8px; }
 
       /* ── Предотвращаем zoom на iOS при фокусе на любом поле ввода ── */
       input, select, textarea,
