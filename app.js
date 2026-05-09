@@ -1954,7 +1954,6 @@ function exportMaterialsPDF() {
         <td class="c">${m.unit}</td>
         <td class="r">${m.size ? m.size : '—'}</td>
         <td class="r">${m.price ? Math.round(m.price)+' ₽' : '—'}</td>
-        <td class="r">${m.price && m.size ? (m.price/m.size).toFixed(2)+' ₽/'+m.unit : '—'}</td>
         <td>${sup ? sup.name : '—'}</td>
       </tr>`;
     });
@@ -2008,7 +2007,7 @@ td.bold{font-weight:700}
 </div>
 <div class="sec-title">☕ Ингредиенты</div>
 <table>
-  <thead><tr><th>#</th><th>Название</th><th class="c">Ед.</th><th class="r">Объём ед.</th><th class="r">Цена ед.</th><th class="r">₽/ед.</th><th>Поставщик</th></tr></thead>
+  <thead><tr><th>#</th><th>Название</th><th class="c">Ед.</th><th class="r">Объём ед.</th><th class="r">Цена ед.</th><th>Поставщик</th></tr></thead>
   <tbody>${matRows}</tbody>
 </table>
 ${SEMI.length ? `
@@ -2042,7 +2041,6 @@ async function exportMaterialsXLSX() {
     { header:'Ед.',         key:'unit',    width:8  },
     { header:'Объём ед.',   key:'size',    width:12 },
     { header:'Цена ед., ₽', key:'price',   width:14 },
-    { header:'₽/ед.',       key:'ppu',     width:12 },
     { header:'Поставщик',   key:'sup',     width:24 },
   ];
   const fillG  = argb => ({ type:'pattern', pattern:'solid', fgColor:{ argb } });
@@ -2066,14 +2064,12 @@ async function exportMaterialsXLSX() {
     items.forEach(([key, m]) => {
       globalN++;
       const sup  = sups[key];
-      const ppu  = m.price && m.size ? +(m.price/m.size).toFixed(2) : '';
-      const r    = ws1.addRow({ n:globalN, cat:'', name:m.name, unit:m.unit, size:m.size||'', price:m.price||'', ppu, sup:sup?sup.name:'' });
+      const r    = ws1.addRow({ n:globalN, cat:'', name:m.name, unit:m.unit, size:m.size||'', price:m.price||'', sup:sup?sup.name:'' });
       r.height   = 17;
       r.eachCell(c => { c.border={ bottom:{style:'thin',color:{argb:'d0e4c8'}} }; c.alignment={vertical:'middle'}; });
       if (globalN%2===0) r.eachCell(c=>{ c.fill=fillG('f4f8f2'); });
       // Числа — формат
       r.getCell('price').numFmt = '#,##0.00';
-      r.getCell('ppu').numFmt   = '#,##0.00';
       r.getCell('n').alignment  = { horizontal:'center', vertical:'middle' };
       r.getCell('unit').alignment = { horizontal:'center', vertical:'middle' };
     });
