@@ -237,6 +237,7 @@ const GROUP_LABEL = { hot:'<i data-lucide="coffee" class="icon"></i> Горяч�
 
 let nextDrinkId = 27; // auto-increment id for new drinks
 let nextMatKey  = 1;  // suffix for custom mat keys
+let _editMatKey = null; // null = новый, string = режим редактирования
 
 // ─── Полуфабрикаты ───────────────────────────────────────────────
 // { id, name, unit:'мл'|'г'|'шт', yield: number, process:'', recipe:[{mat,amt,loss?}] }
@@ -2734,13 +2735,41 @@ function resetDrink(id) {
 // ════════════════════════════════════════════════════════════════════
 //  ADD MATERIAL MODAL
 // ════════════════════════════════════════════════════════════════════
+function openEditMat(key) {
+  const m = MAT[key];
+  if (!m) return;
+  _editMatKey = key;
+  document.getElementById('mm-modal-title').innerHTML = '<i data-lucide="pencil" class="icon"></i> Редактировать сырьё';
+  document.getElementById('mm-name').value     = m.name || '';
+  document.getElementById('mm-unit').value     = m.unit || 'шт';
+  document.getElementById('mm-category').value = m.category || 'other';
+  document.getElementById('mm-price').value    = S.prices[key] ?? m.price ?? '';
+  document.getElementById('mm-size').value     = m.size || '';
+  const sup = (S.suppliers||{})[key];
+  document.getElementById('mm-sup-book').value  = '';
+  document.getElementById('mm-sup-name').value  = sup?.name  || '';
+  document.getElementById('mm-sup-phone').value = sup?.phone || '';
+  document.getElementById('mm-sup-note').value  = sup?.note  || '';
+  // если есть данные поставщика — разорнуть блок
+  const wrap = document.getElementById('mm-sup-custom-wrap');
+  if (wrap) { if (sup?.name) wrap.setAttribute('open',''); else wrap.removeAttribute('open'); }
+  const n = m.nutrition || {};
+  ['kcal','protein','fat','carbs'].forEach(f => {
+    const el = document.getElementById('mm-' + f);
+    if (el) el.value = n[f] || '';
+  });
+  openModal('modal-mat');
+  lucide.createIcons();
+}
+
 function saveMat() {
   const name  = document.getElementById('mm-name').value.trim();
   const unit  = document.getElementById('mm-unit').value || 'шт';
   const price = parseFloat(document.getElementById('mm-price').value);
   const size  = parseFloat(document.getElementById('mm-size').value);
-  if (!name || !(price>0) || !(size>0)) { alert('Заполните все поля'); return; }
-  const key = 'custom_' + (nextMatKey++);
+  if (!name || isNaN(price) || price < 0 || !(size > 0)) { alert('Заполните все поля'); return; }
+  const key = _editMatKey || ('custom_' + (nextMatKey++));
+  if (!_editMatKey) nextMatKey; // счётчик уже увеличенся
   const category = document.getElementById('mm-category').value || 'other';
   const kcal   = parseFloat(document.getElementById('mm-kcal').value)   || 0;
   const protein= parseFloat(document.getElementById('mm-protein').value)|| 0;
@@ -2758,6 +2787,8 @@ function saveMat() {
     S.suppliers[key] = { name: supName, phone: supPhone, note: supNote, site: '' };
   }
   closeModal('modal-mat');
+  _editMatKey = null;
+  document.getElementById('mm-modal-title').innerHTML = '<i data-lucide="plus" class="icon"></i> Новая позиция сырья';
   document.getElementById('mm-name').value  = '';
   document.getElementById('mm-unit').value  = 'шт';
   document.getElementById('mm-price').value = '';
@@ -2767,6 +2798,8 @@ function saveMat() {
   document.getElementById('mm-sup-phone').value = '';
   document.getElementById('mm-sup-note').value  = '';
   document.getElementById('mm-sup-book').value  = '';
+  const wrap2 = document.getElementById('mm-sup-custom-wrap');
+  if (wrap2) wrap2.removeAttribute('open');
   ['mm-kcal','mm-protein','mm-fat','mm-carbs'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   markDirtyDebounce();
   saveState();
@@ -3350,6 +3383,8 @@ function renderCost() {
         <td class="mat-td-actions">
           <button class="mat-del" onclick="openSupQuickDrop('${key}',this)" title="${supTitle}" style="color:${supClr}"><i data-lucide="truck" class="icon"></i></button>
           <button class="mat-del" onclick="openPriceHistory('${key}')" title="История цен"><i data-lucide="history" class="icon"></i></button>
+          ${m.custom ? `<button class="mat-del" onclick="openEditMat('${key}')" title="Редактировать"><i data-lucide="pencil" class="icon"></i></button>` : ''}
+          ${m.custom ? `<button class="mat-del" onclick="openEditMat('${key}')" title="Редактировать"><i data-lucide="pencil" class="icon"></i></button>` : ''}
           ${m.custom ? `<button class="mat-del" onclick="deleteMat('${key}')" title="Удалить" style="color:var(--red)"><i data-lucide="trash-2" class="icon"></i></button>` : ''}
         </td>
       </tr>`;
