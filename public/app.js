@@ -7299,6 +7299,8 @@ Object.assign(window, {
   GROUP_LABEL, BASE_DRINK_IDS, BASE_MAT_KEYS,
   // Мутируемый стейт
   S, Loc,
+  // Render-стейт вкладки Рецептуры
+  recipeSort, recipeGroup, recipeSearch,
   // Служебные
   dirty, activeTab, searchQuery, sortState,
   nextDrinkId, nextSemiId, nextMatKey, _nextCostId,
