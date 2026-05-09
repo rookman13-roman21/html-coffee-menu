@@ -18,6 +18,7 @@
   // ✅ src/render/cost.js — renderCost
   // ✅ src/render/sales.js — renderSales
   // ✅ src/render/recipes.js — renderRecipes
+  // ✅ src/render/finmodel.js — renderFinModel
 //   ⬜ src/export/*.js      — pdf.js, excel.js
 //   ⬜ src/modals/*.js      — drink.js, material.js, semi.js
 // ════════════════════════════════════════════════════════════════════
@@ -60,6 +61,10 @@ import {
   renderRecipes,
 } from './render/recipes.js';
 
+import {
+  renderFinModel,
+} from './render/finmodel.js';
+
 // ─── Реэкспорт в window для обратной совместимости с public/app.js ──
 //
 // ⚠️  ВАЖНО: app.js объявляет MAT, S, DRINKS, SEMI, Loc через const/let —
@@ -92,6 +97,8 @@ const _srcExports = {
   renderSales,
   // render/recipes
   renderRecipes,
+  // render/finmodel
+  renderFinModel,
   // state/store
   saveState, loadState,
   loadLocIndex, saveLocIndex, migrateOldState,

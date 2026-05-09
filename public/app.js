@@ -7304,6 +7304,8 @@ Object.assign(window, {
   // Служебные
   dirty, activeTab, searchQuery, sortState,
   nextDrinkId, nextSemiId, nextMatKey, _nextCostId,
+  // const-переменные, нужные render-модулям
+  _wif, EMP_TYPE_LABELS,
   // Функции (уже есть в window через hoisting function declarations,
   // но const-функции нужно добавить явно если такие появятся)
 });
