@@ -6423,3 +6423,16 @@ document.addEventListener('mousedown', () => { _kbNav = false; }, true);
 document.addEventListener('focus', e => {
   if (e.target.matches('.inp') && _kbNav) e.target.select();
 }, true);
+
+// На мобильных: при тапе по любому input/textarea — курсор в конец
+if ('ontouchstart' in window) {
+  document.addEventListener('focus', e => {
+    const el = e.target;
+    if (el.matches('input, textarea') && !_kbNav) {
+      const len = el.value.length;
+      requestAnimationFrame(() => {
+        try { el.setSelectionRange(len, len); } catch(_) {}
+      });
+    }
+  }, true);
+}
