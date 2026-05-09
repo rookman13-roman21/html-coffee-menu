@@ -1073,3 +1073,130 @@ function toggleExportMenu(e) {
 | `723d457` | fix: footer dark theme force gray bg (!important) |
 | `b4e3685` | feat: redesign mobile tabbar — glass blur, pill active state |
 
+
+
+---
+
+### Сессия 21 (9 мая 2026) — мобильный UX: клик по строке, создание ингредиента, мобильная вёрстка строк
+
+---
+
+#### 1. Клик по строке для редактирования (без кнопки карандаша)
+
+**Коммит:** `3ab8cf2`
+
+- **Полуфабрикаты** (`<tr>`): карандаш-кнопка убрана — `<tr>` уже имел `onclick="openEditSemi(…)"`
+- **Сырьё** (`.mat-row-custom`): добавлен `onclick="openEditMat('${key}')"` на `<tr>`, `event.stopPropagation()` на кнопках цены/удаления/инпуте цены
+- CSS: `.mat-row-custom:hover td { background: var(--light); }` + `cursor: pointer`
+
+---
+
+#### 2. Создание ингредиента прямо из дропдауна рецептуры напитка
+
+**Коммит:** `2e8c324`
+
+- `matOptions(selected)`: добавлена опция `＋ Создать ингредиент...` (value=`__create_mat__`) в начале списка
+- `_onIngMatChange(selectEl)`: перехватывает `__create_mat__`, сохраняет `selectEl` в глобальный `_pendingMatSelectEl`, открывает `modal-mat`
+- `saveMat()`: после сохранения — если `_pendingMatSelectEl` установлен, обновляет тот select новым ингредиентом и сбрасывает переменную
+- `cancelMat()`: сбрасывает `_pendingMatSelectEl`, закрывает `modal-mat`
+- CSS: `#modal-mat.open { z-index: 1100 }` — стакируется поверх `modal-drink` (z-index 1000)
+- `index.html`: кнопки закрытия `modal-mat` заменены с `closeModal('modal-mat')` на `cancelMat()`
+
+---
+
+#### 3. Placeholder и пунктирная граница для пустых строк ингредиентов
+
+**Коммит:** `eb1bf3c`
+
+- `matOptions(selected)`: добавлена `<option disabled>— Выберите ингредиент —</option>` (selected когда нет выбранного)
+- `addIngRow()`: новая строка получает класс `ing-select-empty` при отсутствии выбора
+- CSS: `.ing-select-empty { color: var(--muted); border-style: dashed; }`
+- `_onIngMatChange()`: убирает класс `ing-select-empty` после выбора, сохраняет `dataset.prev`
+
+---
+
+#### 4. Фикс скролла/позиции на iOS Safari при открытии модальных окон
+
+**Коммит:** `a7a924c`
+
+**Проблема:** `body { position: fixed }` сбрасывал позицию прокрутки — после закрытия модала страница прыгала в начало.
+
+**Решение:**
+- `openModal()`: заменено `body.style.position = 'fixed'` на `document.documentElement.classList.add('modal-open')`; сохраняется `scrollY` в `documentElement.dataset.scrollY`
+- `closeModal()`: читает `documentElement.dataset.scrollY`, восстанавливает `window.scrollTo`, убирает класс `modal-open`
+- CSS: `html.modal-open { overflow: hidden; }` (не body)
+
+---
+
+#### 5. КБЖУ перенесён выше блока поставщика в modal-mat
+
+**Коммит:** `767b198`
+
+- В `index.html` (`modal-mat`): `<details>` с КБЖУ теперь стоит **перед** блоком поставщика
+- Блок «Нет нужного? Завести нового поставщика» раскрывается вниз к подвалу модала
+
+---
+
+#### 6. Модальные окна — flex-layout на мобильном: скролл внутри, футер прижат к низу
+
+**Коммит:** `ebdb766`
+
+**HTML (`index.html`):**
+- Контент `modal-drink`, `modal-mat`, `modal-semi`, `modal-drink-view` обёрнут в `<div class="modal-body">`
+
+**CSS (мобильный, ≤768px):**
+- `.modal { display: flex; flex-direction: column; overflow: hidden; }`
+- `.modal-title { flex-shrink: 0; border-bottom: 1px solid var(--border); }`
+- `.modal-body { flex: 1; overflow-y: auto; padding: 16px; }`
+- `.modal-footer { flex-shrink: 0; border-top: 1px solid var(--border); }`
+- Убран `position: sticky` с `.modal-footer` на мобильном
+
+**CSS (десктоп):**
+- `.modal-body { display: contents; }` — прозрачная обёртка, дети «выпадают» в поток модала
+
+---
+
+#### 7. Строка ингредиента на мобильном — CSS Grid, метки через `::before`
+
+**Финальный коммит:** `32ee8db`
+
+**Структура строки (`addIngRow` в app.js):**
+
+```
+<select class="modal-select ing-mat-select …">…</select>
+<button class="modal-ing-del">🗑</button>
+<div class="ing-inp-wrap" data-label="Кол-во"><input …></div>
+<div class="ing-inp-wrap" data-label="Потери"><input …></div>
+<span class="ing-cost-hint"></span>
+```
+
+**Десктоп CSS:** `.ing-inp-wrap { display: contents; }` — дети в 5-колоночный grid родителя
+
+**Мобильный CSS (≤768px):**
+- `modal-ing-row` = CSS Grid `1fr 44px`, 3 ряда:
+  - Ряд 1: select (col 1) + trash (col 2)
+  - Ряд 2: ing-inp-wrap:nth-of-type(1) (col 1) + ing-inp-wrap:nth-of-type(2) (col 2)
+  - Ряд 3: ing-cost-hint (col 1/-1)
+- `.ing-inp-wrap::before { content: attr(data-label); }` — метки «Кол-во» / «Потери»
+
+**Вспомогательное:**
+- `_onIngMatChange()`: ищет поле кол-ва через `row.querySelector('.ing-inp-wrap input')`
+- Промежуточные итерации (`4214a31`, `ab51a80`, `bdae501`, `a11a93c`) — попытки с обёртками div; финально — `display: contents` на десктопе и CSS Grid на мобильном без лишних обёрток
+
+---
+
+#### Итоговые коммиты сессии 21
+
+| Коммит | Описание |
+|--------|----------|
+| `3ab8cf2` | ux: click row to edit ingredient/semi, remove pencil buttons |
+| `2e8c324` | feat: create ingredient directly from recipe card dropdown |
+| `eb1bf3c` | ux: ingredient select placeholder + dashed border for empty rows |
+| `a7a924c` | fix: iOS Safari touch coords — html overflow:hidden instead of body fixed |
+| `767b198` | ux: move KBZHU block above supplier in mat modal |
+| `ebdb766` | fix: modal flex layout on mobile — scrollable body, footer pinned |
+| `4214a31` | ux: add qty/loss labels in ingredient rows on mobile |
+| `ab51a80` | fix: ingredient row mobile layout — trash inline with inputs |
+| `bdae501` | fix: ing row mobile — select+trash on top, labeled qty/loss below |
+| `a11a93c` | fix: ing row full width on mobile |
+| `32ee8db` | fix: ing row mobile — CSS grid, no wrapper divs, labels via ::before |
