@@ -3384,7 +3384,6 @@ function renderCost() {
           <button class="mat-del" onclick="openSupQuickDrop('${key}',this)" title="${supTitle}" style="color:${supClr}"><i data-lucide="truck" class="icon"></i></button>
           <button class="mat-del" onclick="openPriceHistory('${key}')" title="История цен"><i data-lucide="history" class="icon"></i></button>
           ${m.custom ? `<button class="mat-del" onclick="openEditMat('${key}')" title="Редактировать"><i data-lucide="pencil" class="icon"></i></button>` : ''}
-          ${m.custom ? `<button class="mat-del" onclick="openEditMat('${key}')" title="Редактировать"><i data-lucide="pencil" class="icon"></i></button>` : ''}
           ${m.custom ? `<button class="mat-del" onclick="deleteMat('${key}')" title="Удалить" style="color:var(--red)"><i data-lucide="trash-2" class="icon"></i></button>` : ''}
         </td>
       </tr>`;
