@@ -2747,7 +2747,6 @@ function openEditDrink(id) {
   }
   if (window.lucide) lucide.createIcons({ nodes: [delBtn] });
   openModal('modal-drink');
-  _markModalDirty('modal-drink');
 }
 function saveDrink() {
   const name  = document.getElementById('md-name').value.trim();
@@ -3236,7 +3235,6 @@ function openEditSemi(id) {
   (semi.recipe || []).forEach(r => addSemiIngRow(r.mat, r.amt, r.loss ? parseFloat((r.loss * 100).toPrecision(4)) : '', r.yieldAmt || ''));
   if (!(semi.recipe && semi.recipe.length)) addSemiIngRow();
   openModal('modal-semi');
-  _markModalDirty('modal-semi');
   _updateSemiCostPreview();
   if (window.lucide) lucide.createIcons();
 }
