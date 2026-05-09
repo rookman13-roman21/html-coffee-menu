@@ -155,42 +155,6 @@ const DRINKS = [
     process:'Смолоть 18 г зерна (помол средне-крупный). Установить фильтр Hario V60, промыть кипятком, слить. Засыпать кофе. Залить 36 мл воды 93°C для «цветения», подождать 45 сек. Затем три порции по ~78 мл с интервалом 30–40 сек круговыми движениями. Общее время: 3:00–3:30 мин.' },
 ];
 
-// ─── Изображения напитков (файлы в папке images/) ───────────────
-// Одно фото на тип, варианты по объёму используют одно изображение
-const DRINK_IMAGES = {
-   0: 'images/Эспрессо.jpg',
-   1: 'images/Американо.jpg',
-   2: 'images/Американо.jpg',
-   3: 'images/Капучино.jpg',
-   4: 'images/Капучино.jpg',
-   5: 'images/Латте.jpg',
-   6: 'images/Латте.jpg',
-   7: 'images/Флэт уайт.jpg',
-   8: 'images/Моккачино.jpg',
-   9: 'images/Моккачино.jpg',
-  10: 'images/Раф ванильный.jpg',
-  11: 'images/Раф ванильный.jpg',
-  12: 'images/Раф апельсиновый.jpg',
-  13: 'images/Раф апельсиновый.jpg',
-  14: 'images/Какао.jpg',
-  15: 'images/Какао.jpg',
-  16: 'images/Ванильное облако.jpg',
-  17: 'images/Чай.jpg',
-  18: 'images/Матча.jpg',
-  19: 'images/Матча.jpg',
-  20: 'images/Айс-латте.jpg',
-  21: 'images/Айс-латте.jpg',
-  22: 'images/Айс-какао.jpg',
-  23: 'images/Айс-какао.jpg',
-  24: 'images/Бамбл.jpg',
-  25: 'images/Бамбл.jpg',
-  26: 'images/Эспрессо -тоник.jpg',
-  27: 'images/Фильтр-кофе.jpg',
-  28: 'images/Фильтр-кофе.jpg',
-  29: 'images/Пуровер.jpg',
-};
-function getDrinkImage(d) { return d.image || DRINK_IMAGES[d.id] || null; }
-
 // ─── Пресеты плана продаж ────────────────────────────────────────
 // Ключи = id напитка, значения = порций/день
 const SALES_PRESETS = {
@@ -7090,7 +7054,7 @@ if ('ontouchstart' in window) {
 Object.assign(window, {
   // Справочники (статика)
   MAT, MAT_NUTRITION, MAT_CATEGORIES,
-  DRINKS, DRINKS_ORIG, DRINK_IMAGES, DRINK_QUALITY,
+  DRINKS, DRINKS_ORIG, DRINK_QUALITY,
   SEMI, SALES_PRESETS,
   FIXED_COSTS_DEF, FIXED_COSTS_CATS,
   GROUP_LABEL, BASE_DRINK_IDS, BASE_MAT_KEYS,
