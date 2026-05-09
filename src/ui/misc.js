@@ -122,9 +122,9 @@ export function generateInsights(drinks) {
 
   return out;
 }
-export function toggleSeasonality()     { return window.toggleSeasonality(); }
-export function openDropCandidates()    { return window.openDropCandidates(); }
-export function onWhatIf(v)             { return window.onWhatIf(v); }
+
+
+
 export function exportFullPDF() {
   document.getElementById('export-menu')?.classList.remove('open');
   const loc = window.activeLoc();
@@ -942,8 +942,116 @@ export async function exportMaterialsXLSX() {
   a.click(); setTimeout(()=>URL.revokeObjectURL(url),3000);
 }
 export function buildBEPChart(...args)  { return window.buildBEPChart(...args); }
-export function applyPayrollToFixed()   { return window.applyPayrollToFixed(); }
-export function onPayrollSetting(key,v) { return window.onPayrollSetting(key, v); }
-export function togglePayrollSettings() { return window.togglePayrollSettings(); }
-export function toggleFixedHint()       { return window.toggleFixedHint(); }
+export function applyPayrollToFixed() {
+  const tot = window.payrollTotal();
+  if (!tot) { alert('Добавьте хотя бы одну должность'); return; }
+  let idx = window.S.fixedCosts.findIndex(c => /фот|зарплат|зп|оплата труда/i.test(c.name));
+  if (idx < 0) {
+    window.S.fixedCosts.unshift({ name: 'ФОТ (персонал)', value: tot });
+  } else {
+    window.S.fixedCosts[idx].value = tot;
+  }
+  window.renderFinModel();
+  window.saveState();
+  if (window.lucide) lucide.createIcons();
+}
+export function onPayrollSetting(key, v) {
+  if (!window.S.payrollSettings) window.S.payrollSettings = {};
+  const n = parseFloat(v);
+  if (isNaN(n) || n < 0) return;
+  window.S.payrollSettings[key] = n;
+  window.saveState();
+  // Пересчитаем все строки таблицы
+  (window.S.payrollPositions||[]).forEach(p => window._refreshPayrollRow(p.id));
+  // Обновить формулы в блоке настроек (если раскрыт)
+  const wb = document.querySelector('.pts-body');
+  if (wb) { window.renderFinModel(); if (window.lucide) lucide.createIcons(); }
+}
+export function togglePayrollSettings() {
+  window.S.payrollSettingsOpen = !window.S.payrollSettingsOpen;
+  window.saveState();
+  window.renderFinModel();
+  if (window.lucide) lucide.createIcons();
+}
+export function toggleFixedHint() {
+  window.S.fixedHintOpen = !window.S.fixedHintOpen;
+  window.saveState();
+  window.renderFinModel();
+  if (window.lucide) lucide.createIcons();
+}
+// Совместимость со старым обработчиком (если где-то остался)
+export function onWhatIf(v) { window.onWhatIf3('price', v); }
+
+export function toggleSeasonality() {
+  window.S.seasonalityOpen = !window.S.seasonalityOpen;
+  window.saveState();
+  window.renderFinModel();
+  if (window.lucide) lucide.createIcons();
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  MENU CLEANUP — drop candidates
+// ════════════════════════════════════════════════════════════════════
+export function openDropCandidates() {
+  const drinks = window.withABC(window.enrich());
+  const candidates = drinks.map(d => {
+    const port = window.S.portions[d.id] || 0;
+    let score = 0;
+    const reasons = [];
+    if (d.abc === 'C') { score += 3; reasons.push('класс C'); }
+    if (d.fc > 0.30)   { score += 2; reasons.push(`FC ${window.pct(d.fc)}`); }
+    if (port <= 3)     { score += 2; reasons.push(`всего ${port} порц/день`); }
+    if (d.profit < 50) { score += 1; reasons.push(`прибыль ${window.rub(d.profit)}`); }
+    return { ...d, port, score, reasons };
+  })
+  .filter(d => d.score >= 3)
+  .sort((a,b) => b.score - a.score || a.profit - b.profit);
+
+  const grid = document.getElementById('drop-grid');
+  if (!candidates.length) {
+    grid.innerHTML = `<div style="padding:32px;text-align:center;color:var(--muted)">
+      <div style="font-size:42px;margin-bottom:8px">🎉</div>
+      <div style="font-weight:700;color:var(--green);margin-bottom:6px">Меню оптимизировано!</div>
+      <div>Кандидатов на удаление не найдено — все позиции работают.</div>
+    </div>`;
+  } else {
+    grid.innerHTML = `
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px">
+        Найдено <strong style="color:var(--red)">${candidates.length}</strong> позиций для пересмотра. Критерии: класс C, FC&gt;30%, &lt;3 порц/день, прибыль &lt;50₽.
+      </div>
+      <div class="table-wrap" style="max-height:60vh">
+        <table>
+          <thead><tr>
+            <th>Напиток</th>
+            <th class="ta-c">Score</th>
+            <th>Причины</th>
+            <th class="ta-r">FC%</th>
+            <th class="ta-r">Прибыль</th>
+            <th class="ta-c">Порц/день</th>
+            <th></th>
+          </tr></thead>
+          <tbody>${candidates.map(d => {
+            const sevClr = d.score >= 6 ? 'var(--red)' : d.score >= 4 ? '#b38600' : 'var(--navy)';
+            return `<tr>
+              <td class="fw7">${d.name}</td>
+              <td class="ta-c"><span style="background:${sevClr};color:white;padding:2px 8px;border-radius:8px;font-weight:800;font-size:12px">${d.score}</span></td>
+              <td style="font-size:12px;color:var(--muted)">${d.reasons.join(' · ')}</td>
+              <td class="ta-r">${window.pct(d.fc)}</td>
+              <td class="ta-r">${window.rub(d.profit)}</td>
+              <td class="ta-c">${d.port}</td>
+              <td>${d.custom
+                ? `<button class="btn btn-outline" style="padding:3px 10px;font-size:11px;color:var(--red);border-color:#f4b8c4" onclick="if(confirm('Удалить «${d.name.replace(/'/g,"\\\\'")}» из меню?')){window.deleteDrink(${d.id});openDropCandidates();}">Удалить</button>`
+                : `<span style="font-size:11px;color:var(--muted)">базовый</span>`}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>
+      <div class="hint" style="margin-top:14px"><i data-lucide="info" class="icon"></i> Базовые напитки нельзя удалить, но вы можете отредактировать их (рецепт/цену) или просто игнорировать в плане продаж.</div>`;
+  }
+  window.openModal('modal-drop');
+  if (window.lucide) lucide.createIcons();
+}
+
+
+
 export function _matDisplayUnit(matKey) { return window._matDisplayUnit(matKey); }

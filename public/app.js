@@ -4552,43 +4552,6 @@ function deletePayrollPosition(id) {
   saveState();
   if (window.lucide) lucide.createIcons();
 }
-function applyPayrollToFixed() {
-  const tot = payrollTotal();
-  if (!tot) { alert('Добавьте хотя бы одну должность'); return; }
-  let idx = S.fixedCosts.findIndex(c => /фот|зарплат|зп|оплата труда/i.test(c.name));
-  if (idx < 0) {
-    S.fixedCosts.unshift({ name: 'ФОТ (персонал)', value: tot });
-  } else {
-    S.fixedCosts[idx].value = tot;
-  }
-  renderFinModel();
-  saveState();
-  if (window.lucide) lucide.createIcons();
-}
-function onPayrollSetting(key, v) {
-  if (!S.payrollSettings) S.payrollSettings = {};
-  const n = parseFloat(v);
-  if (isNaN(n) || n < 0) return;
-  S.payrollSettings[key] = n;
-  saveState();
-  // Пересчитаем все строки таблицы
-  (S.payrollPositions||[]).forEach(p => _refreshPayrollRow(p.id));
-  // Обновить формулы в блоке настроек (если раскрыт)
-  const wb = document.querySelector('.pts-body');
-  if (wb) { renderFinModel(); if (window.lucide) lucide.createIcons(); }
-}
-function togglePayrollSettings() {
-  S.payrollSettingsOpen = !S.payrollSettingsOpen;
-  saveState();
-  renderFinModel();
-  if (window.lucide) lucide.createIcons();
-}
-function toggleFixedHint() {
-  S.fixedHintOpen = !S.fixedHintOpen;
-  saveState();
-  renderFinModel();
-  if (window.lucide) lucide.createIcons();
-}
 
 // ════════════════════════════════════════════════════════════════════
 //  SUPPLIERS & PRICE HISTORY
@@ -4996,9 +4959,6 @@ function recalcWhatIf3() {
       ${mkDelta(delta, `${sign}${rub(delta)} к базе`)}
     </div>`;
 }
-// Совместимость со старым обработчиком (если где-то остался)
-function onWhatIf(v) { onWhatIf3('price', v); }
-
 // ════════════════════════════════════════════════════════════════════
 //  SEASONAL 12-MONTH CHART
 // ════════════════════════════════════════════════════════════════════
@@ -5163,79 +5123,10 @@ function applySeasonPreset(preset) {
   if (window.lucide) lucide.createIcons();
 }
 
-function toggleSeasonality() {
-  S.seasonalityOpen = !S.seasonalityOpen;
-  saveState();
-  renderFinModel();
-  if (window.lucide) lucide.createIcons();
-}
 function onFixedCostVariable(i, checked) {
   S.fixedCosts[i].isVariable = !!checked;
   saveState();
   renderFinModel();
-  if (window.lucide) lucide.createIcons();
-}
-
-// ════════════════════════════════════════════════════════════════════
-//  MENU CLEANUP — drop candidates
-// ════════════════════════════════════════════════════════════════════
-function openDropCandidates() {
-  const drinks = withABC(enrich());
-  const candidates = drinks.map(d => {
-    const port = S.portions[d.id] || 0;
-    let score = 0;
-    const reasons = [];
-    if (d.abc === 'C') { score += 3; reasons.push('класс C'); }
-    if (d.fc > 0.30)   { score += 2; reasons.push(`FC ${pct(d.fc)}`); }
-    if (port <= 3)     { score += 2; reasons.push(`всего ${port} порц/день`); }
-    if (d.profit < 50) { score += 1; reasons.push(`прибыль ${rub(d.profit)}`); }
-    return { ...d, port, score, reasons };
-  })
-  .filter(d => d.score >= 3)
-  .sort((a,b) => b.score - a.score || a.profit - b.profit);
-
-  const grid = document.getElementById('drop-grid');
-  if (!candidates.length) {
-    grid.innerHTML = `<div style="padding:32px;text-align:center;color:var(--muted)">
-      <div style="font-size:42px;margin-bottom:8px">🎉</div>
-      <div style="font-weight:700;color:var(--green);margin-bottom:6px">Меню оптимизировано!</div>
-      <div>Кандидатов на удаление не найдено — все позиции работают.</div>
-    </div>`;
-  } else {
-    grid.innerHTML = `
-      <div style="font-size:13px;color:var(--muted);margin-bottom:12px">
-        Найдено <strong style="color:var(--red)">${candidates.length}</strong> позиций для пересмотра. Критерии: класс C, FC&gt;30%, &lt;3 порц/день, прибыль &lt;50₽.
-      </div>
-      <div class="table-wrap" style="max-height:60vh">
-        <table>
-          <thead><tr>
-            <th>Напиток</th>
-            <th class="ta-c">Score</th>
-            <th>Причины</th>
-            <th class="ta-r">FC%</th>
-            <th class="ta-r">Прибыль</th>
-            <th class="ta-c">Порц/день</th>
-            <th></th>
-          </tr></thead>
-          <tbody>${candidates.map(d => {
-            const sevClr = d.score >= 6 ? 'var(--red)' : d.score >= 4 ? '#b38600' : 'var(--navy)';
-            return `<tr>
-              <td class="fw7">${d.name}</td>
-              <td class="ta-c"><span style="background:${sevClr};color:white;padding:2px 8px;border-radius:8px;font-weight:800;font-size:12px">${d.score}</span></td>
-              <td style="font-size:12px;color:var(--muted)">${d.reasons.join(' · ')}</td>
-              <td class="ta-r">${pct(d.fc)}</td>
-              <td class="ta-r">${rub(d.profit)}</td>
-              <td class="ta-c">${d.port}</td>
-              <td>${d.custom
-                ? `<button class="btn btn-outline" style="padding:3px 10px;font-size:11px;color:var(--red);border-color:#f4b8c4" onclick="if(confirm('Удалить «${d.name.replace(/'/g,"\\\\'")}» из меню?')){deleteDrink(${d.id});openDropCandidates();}">Удалить</button>`
-                : `<span style="font-size:11px;color:var(--muted)">базовый</span>`}</td>
-            </tr>`;
-          }).join('')}</tbody>
-        </table>
-      </div>
-      <div class="hint" style="margin-top:14px"><i data-lucide="info" class="icon"></i> Базовые напитки нельзя удалить, но вы можете отредактировать их (рецепт/цену) или просто игнорировать в плане продаж.</div>`;
-  }
-  openModal('modal-drop');
   if (window.lucide) lucide.createIcons();
 }
 
