@@ -2514,7 +2514,7 @@ function addSemiIngRow(matKey='', amt='', loss='', yieldAmt='') {
   const row = document.createElement('div');
   row.className = 'ing-row';
   row.innerHTML = `
-    <select class="modal-select ing-mat" style="flex:2" onchange="_onSemiMatChange(this);_updateSemiIngCost(this)">${matOnlyOptions(firstKey)}</select>
+    <select class="modal-select ing-mat" onchange="_onSemiMatChange(this);_updateSemiIngCost(this)">${matOnlyOptions(firstKey)}</select>
     <input class="modal-inp ing-amt" type="text" inputmode="decimal" value="${amt}" placeholder="${_semiIngPlaceholder(firstKey)}" oninput="this.value=this.value.replace(',','.');_updateSemiCostPreview();_updateSemiIngCost(this);_autoCalcSemiIngYield(this)">
     <input class="modal-inp ing-loss" type="number" min="0" max="99" step="1" inputmode="numeric" value="${loss}" placeholder="%" oninput="_updateSemiCostPreview();_updateSemiIngCost(this);_autoCalcSemiIngYield(this)">
     <input class="modal-inp ing-yield" type="text" inputmode="decimal" value="${yieldAmt}" placeholder="=" title="Фактический выход после обработки">
@@ -2609,7 +2609,7 @@ function openAddSemi() {
   document.getElementById('ms-delete-btn').style.display = 'none';
   document.getElementById('ms-ings').innerHTML = '';
   addSemiIngRow();
-  document.getElementById('modal-semi').classList.add('open');
+  openModal('modal-semi');
   _updateSemiCostPreview();
   if (window.lucide) lucide.createIcons();
 }
@@ -2632,7 +2632,7 @@ function openEditSemi(id) {
   document.getElementById('ms-ings').innerHTML = '';
   (semi.recipe || []).forEach(r => addSemiIngRow(r.mat, r.amt, r.loss ? parseFloat((r.loss * 100).toPrecision(4)) : '', r.yieldAmt || ''));
   if (!(semi.recipe && semi.recipe.length)) addSemiIngRow();
-  document.getElementById('modal-semi').classList.add('open');
+  openModal('modal-semi');
   _updateSemiCostPreview();
   if (window.lucide) lucide.createIcons();
 }

@@ -1209,6 +1209,25 @@
       .ing-cost-hint { text-align: left; }
       .modal-ing-del { width: 44px; height: 44px; }
 
+      /* ── .ing-row (полуфабрикаты) на мобильном ── */
+      .ing-row {
+        grid-template-columns: 1fr 44px;
+        grid-template-rows: auto auto auto;
+        gap: 6px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 0;
+      }
+      /* Селект ингредиента — вся строка */
+      .ing-row .ing-mat { grid-column: 1 / -1; height: 44px; font-size: 15px !important; }
+      /* Кнопка удаления — справа от числовых полей */
+      .ing-row button { grid-row: 2 / 4; grid-column: 2; align-self: stretch; height: auto; width: 44px; }
+      /* Поля кол-во, потери, выход — в одну строку */
+      .ing-row .ing-amt   { grid-column: 1; }
+      .ing-row .ing-loss  { grid-column: 1; }
+      .ing-row .ing-yield { grid-column: 1; }
+      .ing-row .ing-cost-hint { grid-column: 1 / -1; text-align: left; }
+
       /* ── Кнопки в футере модалки ── */
       .modal-footer { gap: 8px; }
       .modal-footer .btn { flex: 1; justify-content: center; min-height: 44px; font-size: 14px; }
