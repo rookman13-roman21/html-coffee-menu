@@ -2418,6 +2418,24 @@ document.addEventListener('click', e => {
   });
 });
 
+// Закрыть верхний открытый модал по Escape
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  // Ищем открытый с наибольшим z-index (modal-mat поверх остальных)
+  const all = ['modal-mat','modal-drink','modal-semi','modal-supplier','modal-supplier-book',
+                'modal-loc','modal-templates','modal-price-hist','modal-drop',
+                'modal-suppliers-list','modal-drink-view'];
+  for (const id of all) {
+    const el = document.getElementById(id);
+    if (el && el.classList.contains('open')) {
+      // modal-mat может быть поверх другого — закрываем его первым
+      if (id === 'modal-mat') { cancelMat(); return; }
+      closeModal(id);
+      return;
+    }
+  }
+});
+
 // ════════════════════════════════════════════════════════════════════
 //  ADD/EDIT DRINK MODAL
 // ════════════════════════════════════════════════════════════════════
