@@ -3678,6 +3678,8 @@ function renderCost() {
                 <td class="mat-td-price" style="font-weight:700;color:var(--green)">${rubSemi(cost, s.unit)}</td>
                 <td class="mat-td-usage">${semiUsageBadge}</td>
                 <td class="mat-td-actions">
+                  <button class="mat-del" onclick="event.stopPropagation();exportSingleSemiPDF(${s.id})" title="Скачать техкарту PDF"><i data-lucide="file-text" class="icon"></i></button>
+                  <button class="mat-del" onclick="event.stopPropagation();exportSingleSemiXLSX(${s.id})" title="Скачать техкарту Excel"><i data-lucide="file-spreadsheet" class="icon"></i></button>
                   <button class="mat-del" onclick="event.stopPropagation();deleteSemi(${s.id})" title="Удалить" style="color:var(--red)"><i data-lucide="trash-2" class="icon"></i></button>
                 </td>
               </tr>`;
@@ -6818,6 +6820,192 @@ function openDropCandidates() {
 // ════════════════════════════════════════════════════════════════════
 //  TECH CARDS PDF (по ГОСТ Р 53105 / СанПиН)
 // ════════════════════════════════════════════════════════════════════
+function exportSingleSemiPDF(idRaw) {
+  const s = SEMI.find(x => x.id === Number(idRaw));
+  if (!s) return;
+  const org = getOrgInfo();
+  const cardNum = SEMI.findIndex(x => x.id === s.id) + 1;
+  const page = _buildSemiTechCardBlock(s, org, cardNum, true);
+  _openTechCardsWindow(
+    `Техкарта полуфабриката — ${s.name}`,
+    `${org.name} · ${new Date().toLocaleDateString('ru')}`,
+    page,
+    400
+  );
+}
+
+async function exportSingleSemiXLSX(idRaw) {
+  if (!window.ExcelJS) { alert('Библиотека ExcelJS не загрузилась.'); return; }
+  const s = SEMI.find(x => x.id === Number(idRaw));
+  if (!s) return;
+
+  const org      = getOrgInfo();
+  const orgName  = org.name || 'Кофейня';
+  const today    = new Date().toLocaleDateString('ru');
+  const year     = new Date().getFullYear();
+  const cardNum  = SEMI.findIndex(x => x.id === s.id) + 1;
+  const costPer  = calcSemiCostPerUnit(s);
+
+  // ── хелперы ──────────────────────────────────────────────────
+  const C_GREEN  = 'FF417033';
+  const C_LGREEN = 'FFF0F5EE';
+  const C_WHITE  = 'FFFFFFFF';
+  const C_GREY   = 'FFF5F5F5';
+  const C_BORDER = 'FFBBBBBB';
+  const F    = argb => ({ type:'pattern', pattern:'solid', fgColor:{ argb } });
+  const FONT = (bold=false, size=10, argb='FF222222') => ({ name:'Arial', size, bold, color:{ argb } });
+  const BD   = () => { const s = { style:'thin', color:{ argb:C_BORDER } }; return { top:s, bottom:s, left:s, right:s }; };
+  const AL   = (h='left', v='middle', wrap=false) => ({ horizontal:h, vertical:v, wrapText:wrap });
+  function autoH(text, colW, minH=18) {
+    if (!text) return minH;
+    const lines = String(text).split('\n').reduce((a,l) => a + Math.ceil(l.length/colW), 0);
+    return Math.max(minH, lines * 15);
+  }
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'MBS Coffee Menu';
+  const ws = wb.addWorksheet('Техкарта', {
+    pageSetup:{ paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1,
+                margins:{ left:0.47, right:0.47, top:0.59, bottom:0.59 } }
+  });
+  ws.columns = [
+    { key:'A', width:5  },
+    { key:'B', width:30 },
+    { key:'C', width:11 },
+    { key:'D', width:11 },
+    { key:'E', width:10 },
+    { key:'F', width:14 },
+  ];
+
+  let R = 1;
+  const cell  = (col, r) => ws.getCell(`${col}${r}`);
+  const merge = (r1,c1,r2,c2) => ws.mergeCells(r1,c1,r2,c2);
+
+  function sectionHeader(label, row) {
+    merge(row,1,row,6);
+    const c = cell('A',row);
+    c.value=label.toUpperCase(); c.font=FONT(true,10,C_WHITE); c.fill=F(C_GREEN); c.alignment=AL('left'); ws.getRow(row).height=20;
+  }
+  function infoRow(label, value, row) {
+    merge(row,1,row,2); merge(row,3,row,6);
+    const lc=cell('A',row); lc.value=label; lc.font=FONT(true,10); lc.fill=F(C_LGREEN); lc.alignment=AL('left','middle',true); lc.border=BD();
+    const vc=cell('C',row); vc.value=value; vc.font=FONT(false,10); vc.fill=F(C_WHITE); vc.alignment=AL('left','middle',true); vc.border=BD();
+    ws.getRow(row).height=autoH(value,46);
+  }
+
+  // ── шапка «Утверждаю» ────────────────────────────────────────
+  merge(1,4,1,6);
+  const appr1=cell('D',1); appr1.value=`Утверждаю: ${org.ceoTitle||'Руководитель'} ${org.legalName||orgName}`; appr1.font=FONT(true,10); appr1.alignment=AL('left','middle',true);
+  ws.getRow(1).height=autoH(`Утверждаю: ${org.ceoTitle||'Руководитель'} ${org.legalName||orgName}`,33,22);
+  merge(2,4,2,6); cell('D',2).value='_______________________'; cell('D',2).font=FONT(false,10,'FF888888'); ws.getRow(2).height=18;
+  merge(3,4,3,6); cell('D',3).value=`«__» ____________ ${year} г.`; cell('D',3).font=FONT(false,10,'FF888888'); ws.getRow(3).height=18;
+  for (let r=4;r<=6;r++) ws.getRow(r).height=18;
+
+  // Фото
+  if (s.image) {
+    try {
+      const raw=s.image; const ext=raw.startsWith('data:image/png')?'png':'jpeg';
+      const b64=raw.substring(raw.indexOf(',')+1);
+      const imgId=wb.addImage({ base64:b64, extension:ext });
+      ws.addImage(imgId,{ tl:{col:0,row:0}, br:{col:2.9,row:6}, editAs:'oneCell' });
+    } catch(e){}
+  }
+  R=7;
+
+  // ── заголовок ────────────────────────────────────────────────
+  merge(R,1,R,6);
+  const titleC=cell('A',R); titleC.value=`ТЕХНОЛОГИЧЕСКАЯ КАРТА ПОЛУФАБРИКАТА № ${cardNum}`; titleC.font=FONT(true,14); titleC.alignment=AL('center'); ws.getRow(R).height=26; R++;
+  merge(R,1,R,6); cell('A',R).value='(по ГОСТ Р 53105-2008)'; cell('A',R).font=FONT(false,9,'FF777777'); cell('A',R).alignment=AL('center'); ws.getRow(R).height=16; R++;
+  R++; // пустая
+
+  // ── общие сведения ────────────────────────────────────────────
+  sectionHeader('Общие сведения',R); R++;
+  infoRow('Наименование полуфабриката', s.name, R); R++;
+  infoRow('Выход готового полуфабриката', `${s.yield} ${s.unit}`, R); R++;
+  infoRow('Себестоимость единицы', `${Math.round(costPer)} ₽/${s.unit}`, R); R++;
+  infoRow('Дата составления', today, R); R++;
+  R++;
+
+  // ── рецептура ────────────────────────────────────────────────
+  sectionHeader('Рецептура',R); R++;
+
+  // шапка таблицы ингредиентов
+  const hRow=ws.getRow(R);
+  ['№','Сырьё','Брутто','Нетто','Потери','Стоимость'].forEach((h,i) => {
+    const c=hRow.getCell(i+1); c.value=h; c.font=FONT(true,9,C_WHITE); c.fill=F(C_GREEN);
+    c.alignment=AL('center'); c.border=BD();
+  });
+  hRow.height=18; R++;
+
+  let ingN=0;
+  let totalCost=0;
+  (s.recipe||[]).forEach(r => {
+    if (!MAT[r.mat]) return;
+    ingN++;
+    const m=MAT[r.mat];
+    const loss=r.loss?+(r.loss*100).toFixed(1):null;
+    const brutto=r.loss?+(r.amt/(1-r.loss)).toFixed(3):r.amt;
+    let cost=((S.prices[r.mat]||MAT[r.mat].price)/MAT[r.mat].size)*r.amt*_semiUnitFactor(r.mat);
+    if (r.loss) cost=cost/(1-r.loss);
+    totalCost+=cost;
+    const iRow=ws.getRow(R);
+    const bg=ingN%2===0?C_GREY:C_WHITE;
+    const vals=[ingN, m.name, brutto, r.amt, loss?loss+'%':'—', Math.round(cost)+' ₽'];
+    vals.forEach((v,i) => {
+      const c=iRow.getCell(i+1); c.value=v; c.font=FONT(false,9); c.fill=F(bg); c.border=BD();
+      c.alignment=AL(i===1?'left':'center');
+    });
+    iRow.height=16; R++;
+  });
+
+  // строка итого
+  const totRow=ws.getRow(R);
+  merge(R,1,R,5);
+  const tc=totRow.getCell(1); tc.value='ИТОГО сырья'; tc.font=FONT(true,10); tc.fill=F(C_LGREEN); tc.alignment=AL('right'); tc.border=BD();
+  const tc2=totRow.getCell(6); tc2.value=Math.round(totalCost)+' ₽'; tc2.font=FONT(true,10,C_GREEN); tc2.fill=F(C_LGREEN); tc2.alignment=AL('center'); tc2.border=BD();
+  totRow.height=18; R++;
+  R++;
+
+  // ── технология ────────────────────────────────────────────────
+  if (s.process) {
+    sectionHeader('Технология приготовления',R); R++;
+    merge(R,1,R,6);
+    const pc=cell('A',R); pc.value=s.process; pc.font=FONT(false,10); pc.fill=F(C_WHITE); pc.alignment=AL('left','middle',true); pc.border=BD();
+    ws.getRow(R).height=autoH(s.process,70,24); R++;
+    R++;
+  }
+
+  // ── хранение ─────────────────────────────────────────────────
+  if (s.storage_temp||s.storage_life) {
+    sectionHeader('Условия хранения',R); R++;
+    if (s.storage_temp) { infoRow('Температура хранения',s.storage_temp,R); R++; }
+    if (s.storage_life) { infoRow('Срок хранения',s.storage_life,R); R++; }
+    R++;
+  }
+
+  // ── органолептика ─────────────────────────────────────────────
+  if (s.appearance||s.taste||s.consistency) {
+    sectionHeader('Органолептические показатели',R); R++;
+    if (s.appearance)  { infoRow('Внешний вид',s.appearance,R); R++; }
+    if (s.taste)       { infoRow('Вкус и запах',s.taste,R); R++; }
+    if (s.consistency) { infoRow('Консистенция',s.consistency,R); R++; }
+    R++;
+  }
+
+  // ── подписи ────────────────────────────────────────────────────
+  merge(R,1,R,3); cell('A',R).value='Технолог: ____________________'; cell('A',R).font=FONT(false,9,'FF888888');
+  merge(R,4,R,6); cell('D',R).value='Зав. производством: ____________________'; cell('D',R).font=FONT(false,9,'FF888888');
+  ws.getRow(R).height=20;
+
+  // ── сохранение ────────────────────────────────────────────────
+  const buf  = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download=`Техкарта_${s.name.replace(/[/\\?%*:|"<>]/g,'_')}.xlsx`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
 function exportSemiTechCards() {
   if (!SEMI.length) { alert('Нет полуфабрикатов для печати.'); return; }
   const org = getOrgInfo();
