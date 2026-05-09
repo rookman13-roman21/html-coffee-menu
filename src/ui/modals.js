@@ -11,5 +11,16 @@ export function _showUnsavedWarning(id)   { return window._showUnsavedWarning(id
 export function _dismissUnsavedWarning()  { return window._dismissUnsavedWarning(); }
 export function _forceCloseModal(id)      { return window._forceCloseModal(id); }
 export function closeOnboarding()         { return window.closeOnboarding(); }
-export function toggleTheme()             { return window.toggleTheme(); }
-export function toggleBurger()            { return window.toggleBurger(); }
+export function toggleTheme() {
+  const dark = document.body.classList.toggle('dark');
+  const icon = document.getElementById('theme-icon');
+  if (icon) {
+    icon.setAttribute('data-lucide', dark ? 'sun' : 'moon');
+    if (window.lucide) lucide.createIcons({ nodes: [icon] });
+  }
+  try { localStorage.setItem('mbs_theme', dark ? 'dark' : 'light'); } catch(e) {}
+}
+export function toggleBurger() {
+  const nav = document.getElementById('main-nav');
+  nav.classList.toggle('open');
+}

@@ -1851,21 +1851,8 @@ async function exportMaterialsXLSX() {
 }
 
 // ════════════════════════════════════════════════════════════════════
-//  PERSIST & THEME  (saveState / loadState удалены → src/state/store.js)
+//  PERSIST & THEME  (saveState / loadState / toggleTheme / toggleBurger удалены → src/)
 // ════════════════════════════════════════════════════════════════════
-function toggleTheme() {
-  const dark = document.body.classList.toggle('dark');
-  const icon = document.getElementById('theme-icon');
-  if (icon) {
-    icon.setAttribute('data-lucide', dark ? 'sun' : 'moon');
-    if (window.lucide) lucide.createIcons({ nodes: [icon] });
-  }
-  try { localStorage.setItem('mbs_theme', dark ? 'dark' : 'light'); } catch(e) {}
-}
-function toggleBurger() {
-  const nav = document.getElementById('main-nav');
-  nav.classList.toggle('open');
-}
 // Закрывать бургер при клике на нав-кнопку
 document.addEventListener('click', e => {
   if (e.target.matches('.nav-btn')) document.getElementById('main-nav').classList.remove('open');
