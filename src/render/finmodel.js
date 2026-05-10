@@ -571,9 +571,9 @@ export function renderFinModel() {
 
     ${warningsBanner}
 
-    <!-- ───────────────────────────────────── БЛОК 3: МОДЕЛИРОВАНИЕ -->
-    <div class="finblock-hd finblock-hd-3" id="finblock-3">
-      <span class="finblock-num">3</span>
+    <!-- ───────────────────────────────────── БЛОК 2: МОДЕЛИРОВАНИЕ -->
+    <div class="finblock-hd finblock-hd-2" id="finblock-3">
+      <span class="finblock-num">2</span>
       <i data-lucide="sliders" class="icon"></i> Моделирование
     </div>
 
@@ -613,9 +613,9 @@ export function renderFinModel() {
       <div class="hint" style="margin-top:12px"><i data-lucide="info" class="icon"></i> Двигайте слайдеры — сразу увидите как меняются маржа, ТБУ и прибыль</div>
     </div>
 
-    <!-- ───────────────────────────────────── БЛОК 4: ПРОГНОЗ НА ГОД -->
-    <div class="finblock-hd finblock-hd-4" id="finblock-4">
-      <span class="finblock-num">4</span>
+    <!-- ───────────────────────────────────── БЛОК 3: ПРОГНОЗ НА ГОД -->
+    <div class="finblock-hd finblock-hd-3" id="finblock-4">
+      <span class="finblock-num">3</span>
       <i data-lucide="calendar" class="icon"></i> Прогноз на год
     </div>
 
