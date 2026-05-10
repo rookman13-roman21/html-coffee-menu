@@ -37,18 +37,17 @@ export function renderRecipes() {
 
   document.getElementById('tab-recipes').innerHTML = `
     <div class="page-title">
-      <span class="page-title-left"><i data-lucide="clipboard-list" class="icon"></i> Рецептуры</span>
+      <span class="page-title-left"><i data-lucide="clipboard-list" class="icon"></i> Рецептуры и структура себестоимости</span>
       <div style="display:flex;gap:8px;align-items:center">
         <button class="btn btn-outline recipes-intro-toggle recipes-intro-hdr" id="recipes-intro-btn-hdr" onclick="toggleRecipesIntro()" title="Подсказка"><i data-lucide="info" class="icon"></i> <span class="recipes-btn-txt">Подсказка</span></button>
-        <button class="btn btn-outline recipes-intro-toggle recipes-intro-mob" id="recipes-intro-btn" onclick="toggleRecipesIntro()" title="Подсказка"><i data-lucide="info" class="icon"></i></button>
         <button class="btn btn-green" onclick="openAddDrink()"><i data-lucide="plus" class="icon"></i> Напиток</button>
-        <button class="btn btn-outline" onclick="exportTechCards()" title="Экспорт техкарт по ГОСТ Р 53105 в PDF"><i data-lucide="file-text" class="icon"></i><span class="recipes-pdf-txt"> PDF техкарт</span></button>
+        <button class="btn btn-outline" onclick="exportTechCards()" title="Экспорт техкарт по ГОСТ Р 53105 в PDF"><i data-lucide="file-text" class="icon"></i> PDF техкарт</button>
       </div>
     </div>
     <div class="tab-intro" id="recipes-intro">
       <div class="tab-intro-icon"><i data-lucide="clipboard-list" class="icon icon-lg"></i></div>
       <div>
-        <div class="tab-intro-title">Рецептуры</div>
+        <div class="tab-intro-title">Рецептуры и структура себестоимости</div>
         <div class="tab-intro-text">
           Здесь хранятся рецептуры всех напитков: состав, граммовки ингредиентов и себестоимость каждой позиции.
           Карточка показывает, из чего складывается цена напитка и какую долю занимает каждый ингредиент.
@@ -63,12 +62,6 @@ export function renderRecipes() {
       </div>
     </div>
     <div class="recipes-toolbar">
-      <div class="recipes-toolbar-row recipes-toolbar-filters">
-        <div class="recipe-filter-btns">${filterBtns}</div>
-        <div class="recipes-toolbar-sort">
-          <div class="recipe-sort-btns">${sortBtns}</div>
-        </div>
-      </div>
       <div class="recipes-toolbar-row recipes-toolbar-search">
         <div class="search-wrap" style="margin-bottom:0;flex:1">
           <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
@@ -76,6 +69,13 @@ export function renderRecipes() {
             value="${recipeSearch}" oninput="filterRecipes(this.value);_searchClear(this)">
           <button class="search-clear${recipeSearch ? ' visible' : ''}" title="Очистить"
             onclick="filterRecipes('');var el=document.getElementById('recipe-search');el.value='';_searchClear(el)">✕</button>
+        </div>
+        <button class="btn btn-outline recipes-intro-toggle recipes-intro-mob" id="recipes-intro-btn" onclick="toggleRecipesIntro()" title="Подсказка" style="flex-shrink:0"><i data-lucide="info" class="icon"></i></button>
+      </div>
+      <div class="recipes-toolbar-row recipes-toolbar-filters">
+        <div class="recipe-filter-btns">${filterBtns}</div>
+        <div class="recipes-toolbar-sort">
+          <div class="recipe-sort-btns">${sortBtns}</div>
         </div>
       </div>
     </div>
