@@ -69,6 +69,19 @@ import {
 } from './state/store.js';
 
 import {
+  _editMatKey, _pendingMatSelectEl, _pendingSemiMatSelectEl,
+  searchQuery, _renderTimer,
+  dirty, sortState, salesSortState, salesSearch,
+  _matActiveCat, _matCollapsed, _semiCollapsed, _supCollapsed, _ingCollapsed,
+  recipeSearch, recipeSort, recipeGroup,
+  _mvdId, _matPriceBeforeEdit, _fceIdx,
+  PS_DEFAULTS, MAT_CATEGORY, CAT_LABELS,
+  _supplierEditKey, _supplierFromList, _supBookEditId,
+  supListSearch, supListFilter, _supQuickKey, _supQuickEl,
+  _EDITABLE_MODALS, _dirtyModalSet,
+} from './state/ui-state.js';
+
+import {
   renderDashboard, filterDashboard, toggleDashIntro,
 } from './render/dashboard.js';
 
@@ -213,7 +226,21 @@ const _imageExports = {
 };
 Object.assign(window, _imageExports);
 
-// ─── state/store — удалены из app.js — назначаем безусловно ───────────────
+// ─── state/ui-state — удалены из app.js — назначаем безусловно ───────────
+Object.assign(window, {
+  _editMatKey, _pendingMatSelectEl, _pendingSemiMatSelectEl,
+  searchQuery, _renderTimer,
+  dirty, sortState, salesSortState, salesSearch,
+  _matActiveCat, _matCollapsed, _semiCollapsed, _supCollapsed, _ingCollapsed,
+  recipeSearch, recipeSort, recipeGroup,
+  _mvdId, _matPriceBeforeEdit, _fceIdx,
+  PS_DEFAULTS, MAT_CATEGORY, CAT_LABELS,
+  _supplierEditKey, _supplierFromList, _supBookEditId,
+  supListSearch, supListFilter, _supQuickKey, _supQuickEl,
+  _EDITABLE_MODALS, _dirtyModalSet,
+});
+
+// ─── state/store — удалены из app.js — назначаем безусловно ─────────────────
 const _storeExports = {
   loadLocIndex, saveLocIndex, migrateOldState,
   activeLoc, getOrgInfo,
