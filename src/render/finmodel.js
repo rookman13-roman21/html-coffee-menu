@@ -349,6 +349,7 @@ export function renderFinModel() {
 
     <div class="fin-quicknav">
       <button class="fin-qn-btn" onclick="document.getElementById('finblock-1').scrollIntoView({behavior:'smooth'})"><i data-lucide="database" class="icon"></i> Исходные данные</button>
+      <button class="fin-qn-btn" onclick="scrollToPayroll()"><i data-lucide="users" class="icon"></i> Калькулятор ФОТ</button>
       <button class="fin-qn-btn" onclick="document.getElementById('finblock-3').scrollIntoView({behavior:'smooth'})"><i data-lucide="sliders" class="icon"></i> Моделирование</button>
       <button class="fin-qn-btn" onclick="document.getElementById('finblock-4').scrollIntoView({behavior:'smooth'})"><i data-lucide="calendar" class="icon"></i> Прогноз</button>
     </div>
