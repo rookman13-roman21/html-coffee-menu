@@ -13,6 +13,12 @@ function _toYouTubeEmbed(url) {
 }
 
 export function openVideoModal(url) {
+  // На мобильных YouTube блокирует embedded-iframe верификацией — открываем напрямую
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if (isMobile) {
+    window.open(url, '_blank', 'noopener');
+    return;
+  }
   const embedUrl = _toYouTubeEmbed(url);
   const overlay = document.getElementById('video-modal');
   const iframe  = document.getElementById('video-modal-iframe');
