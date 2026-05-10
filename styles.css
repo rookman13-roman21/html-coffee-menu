@@ -640,8 +640,9 @@
     .sc-base .sc-title { color: #7a5800; }
     .sc-opt  .sc-title { color: var(--navy); }
 
-    .sc-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 7px; }
-    .sc-row .sv { font-weight: 700; }
+    .sc-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13px; margin-bottom: 7px; }
+    .sc-row > span:first-child { flex: 1 1 0; min-width: 0; }
+    .sc-row .sv { font-weight: 700; white-space: nowrap; flex-shrink: 0; text-align: right; }
     .sc-profit {
       margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(0,0,0,.1);
       font-size: 20px; font-weight: 800; text-align: center;
