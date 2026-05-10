@@ -145,6 +145,7 @@ import {
   calcPositionCosts, payrollPositionTotal, payrollTotal, payrollTotals,
   empTypeTip, onPayrollPos, addPayrollPosition, deletePayrollPosition,
   scrollToPayroll, EMP_TYPE_LABELS, PS,
+  _refreshPayrollRow, _refreshPayrollSummary,
 } from './ui/payroll.js';
 
 import {
@@ -305,6 +306,7 @@ const _srcExports = {
   calcPositionCosts, payrollPositionTotal, payrollTotal, payrollTotals,
   empTypeTip, onPayrollPos, addPayrollPosition, deletePayrollPosition,
   scrollToPayroll, EMP_TYPE_LABELS, PS,
+  _refreshPayrollRow, _refreshPayrollSummary,
   // ui/locations
   renderLocSwitcherUI, renderLocList, toggleLocMenu, toggleExportMenu,
   switchLocation, openAddLocation, renameActiveLocation, deleteActiveLocation,
