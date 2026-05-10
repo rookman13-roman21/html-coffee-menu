@@ -188,9 +188,9 @@ import {
 import {
   openTemplatesModal, chooseTemplate, applyTemplateData,
   generateInsights, toggleSeasonality, openDropCandidates,
-  onWhatIf, exportFullPDF, exportMaterialsPDF, buildBEPChart,
-  applyPayrollToFixed, onPayrollSetting, togglePayrollSettings, toggleFixedHint,
-  _matDisplayUnit, buildSeasonalChart, recalcWhatIf3,
+  onWhatIf, exportFullPDF, exportFullXLSX, exportMaterialsPDF, exportMaterialsXLSX,
+  buildBEPChart, applyPayrollToFixed, onPayrollSetting, togglePayrollSettings,
+  toggleFixedHint, _matDisplayUnit, buildSeasonalChart, recalcWhatIf3,
 } from './ui/misc.js';
 
 // ─── Реэкспорт в window для обратной совместимости с public/app.js ──
@@ -328,9 +328,9 @@ const _srcExports = {
   // ui/misc
   openTemplatesModal, chooseTemplate, applyTemplateData,
   generateInsights, toggleSeasonality, openDropCandidates,
-  onWhatIf, exportFullPDF, exportMaterialsPDF, buildBEPChart,
-  applyPayrollToFixed, onPayrollSetting, togglePayrollSettings, toggleFixedHint,
-  _matDisplayUnit, buildSeasonalChart, recalcWhatIf3,
+  onWhatIf, exportFullPDF, exportFullXLSX, exportMaterialsPDF, exportMaterialsXLSX,
+  buildBEPChart, applyPayrollToFixed, onPayrollSetting, togglePayrollSettings,
+  toggleFixedHint, _matDisplayUnit, buildSeasonalChart, recalcWhatIf3,
   // state/store
   // saveState/loadState перенесены в _storeExports выше
 };

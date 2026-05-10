@@ -36,9 +36,21 @@ document.addEventListener('click', e => {
   });
 });
 
-// Закрыть верхний открытый модал по Escape
+// Закрыть дропдауны при клике вне их
+const DROPDOWN_IDS = ['loc-menu', 'export-menu'];
+document.addEventListener('click', () => {
+  DROPDOWN_IDS.forEach(id => document.getElementById(id)?.classList.remove('open'));
+});
+
+// Закрыть верхний открытый модал или дропдаун по Escape
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
+  // сначала проверяем дропдауны
+  for (const id of DROPDOWN_IDS) {
+    const el = document.getElementById(id);
+    if (el && el.classList.contains('open')) { el.classList.remove('open'); return; }
+  }
+  // затем модалки
   for (const id of MODAL_IDS) {
     const el = document.getElementById(id);
     if (el && el.classList.contains('open')) { safeCloseModal(id); return; }
