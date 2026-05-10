@@ -1480,11 +1480,22 @@
     }
 
     /* ── Dashboard: глобальные стили ── */
-    .dash-intro-toggle { display: none; } /* скрыто на десктопе */
-    .sup-intro-toggle { display: none; } /* скрыто на десктопе */
-    .sales-intro-toggle { display: none; } /* скрыто на десктопе */
+    /* Все intro-блоки скрыты по умолчанию, открываются кнопкой */
+    #dash-intro  { display: none !important; }
+    #dash-intro.open  { display: flex !important; }
+    .dash-intro-toggle { display: inline-flex; }
+    .dash-intro-toggle.active { background: var(--navy); color: #fff; border-color: var(--navy); }
 
-    /* Финмодель: intro скрыт везде, открывается кнопкой */
+    #sup-intro   { display: none !important; }
+    #sup-intro.open   { display: flex !important; }
+    .sup-intro-toggle { display: inline-flex; }
+    .sup-intro-toggle.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+    #sales-intro { display: none !important; }
+    #sales-intro.open { display: flex !important; }
+    .sales-intro-toggle { display: inline-flex; }
+    .sales-intro-toggle.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
     #fin-intro { display: none !important; }
     #fin-intro.open { display: flex !important; }
     .fin-intro-toggle { display: inline-flex; }
@@ -1554,24 +1565,12 @@
       /* Бар-чарт: адаптивная ширина имени */
       .dash-chart-name { width: auto; max-width: 38%; }
 
-      /* tab-intro: скрыт по умолчанию, открывается по кнопке */
-      #dash-intro { display: none !important; }
-      #dash-intro.open { display: flex !important; }
-      .dash-intro-toggle { display: inline-flex !important; }
-      .dash-intro-toggle.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+      /* tab-intro: скрыт по умолчанию, открывается по кнопке (переопределено глобально выше) */
 
-      /* Поставщики: tab-intro и кнопки */
-      #sup-intro { display: none !important; }
-      #sup-intro.open { display: flex !important; }
-      .sup-intro-toggle { display: inline-flex !important; }
-      .sup-intro-toggle.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+      /* Поставщики: скрыть текст кнопки */
       .sup-btn-txt { display: none; }
 
-      /* Продажи: tab-intro и кнопки */
-      #sales-intro { display: none !important; }
-      #sales-intro.open { display: flex !important; }
-      .sales-intro-toggle { display: inline-flex !important; }
-      .sales-intro-toggle.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+      /* Продажи: скрыть текст кнопки */
       .sales-btn-txt { display: none; }
 
       /* Рецептуры: tab-intro и кнопка */
