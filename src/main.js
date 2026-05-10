@@ -105,6 +105,7 @@ import {
   exportTechCards, exportSemiTechCards,
   mvdDownloadPDF, mvdDownloadSemiPDF, mvdDownloadExcel,
   _buildTechCardBlock, _openTechCardsWindow, _buildSemiTechCardBlock,
+  _printViaIframe,
 } from './export/techcards.js';
 
 import {
@@ -274,6 +275,7 @@ const _srcExports = {
   exportTechCards, exportSemiTechCards,
   mvdDownloadPDF, mvdDownloadSemiPDF, mvdDownloadExcel,
   _buildTechCardBlock, _openTechCardsWindow, _buildSemiTechCardBlock,
+  _printViaIframe,
   // modals/drink
   openAddDrink, openEditDrink, saveDrink, deleteDrink, resetDrink,
   mdDeleteAction, onDrinkImgChange, clearDrinkImg,
