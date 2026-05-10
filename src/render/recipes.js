@@ -28,16 +28,17 @@ export function renderRecipes() {
     { k: 'filter', l: '<i data-lucide="droplets" class="icon"></i> Пуровер' },
   ];
   const sortBtns = sortLabels.map(s =>
-    `<button class="recipe-sort-btn${recipeSort === s.k ? ' active' : ''}" onclick="setRecipeSort('${s.k}')">${s.l}</button>`
+    `<button class="recipe-sort-btn${recipeSort === s.k ? ' active' : ''}" data-srt="${s.k}" onclick="setRecipeSort('${s.k}')">${s.l}</button>`
   ).join('');
   const filterBtns = groupFilters.map(g =>
-    `<button class="recipe-filter-btn${recipeGroup === g.k ? ' active' : ''}" onclick="setRecipeGroup('${g.k}')">${g.l}</button>`
+    `<button class="recipe-filter-btn${recipeGroup === g.k ? ' active' : ''}" data-grp="${g.k}" onclick="setRecipeGroup('${g.k}')">${g.l}</button>`
   ).join('');
 
   document.getElementById('tab-recipes').innerHTML = `
     <div class="page-title">
       <span class="page-title-left"><i data-lucide="clipboard-list" class="icon"></i> Рецептуры и структура себестоимости</span>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-outline recipes-intro-toggle" id="recipes-intro-btn" onclick="toggleRecipesIntro()" title="Подсказка"><i data-lucide="info" class="icon"></i> <span class="recipes-btn-txt">Подсказка</span></button>
         <button class="btn btn-green" onclick="openAddDrink()"><i data-lucide="plus" class="icon"></i> Напиток</button>
         <button class="btn btn-outline" onclick="exportTechCards()" title="Экспорт техкарт по ГОСТ Р 53105 в PDF"><i data-lucide="file-text" class="icon"></i> PDF техкарт</button>
       </div>
@@ -68,10 +69,6 @@ export function renderRecipes() {
           <button class="search-clear${recipeSearch ? ' visible' : ''}" title="Очистить"
             onclick="filterRecipes('');var el=document.getElementById('recipe-search');el.value='';_searchClear(el)">✕</button>
         </div>
-        <button class="btn btn-outline recipes-intro-toggle" id="recipes-intro-btn"
-          onclick="toggleRecipesIntro()" title="Подсказка" style="flex-shrink:0">
-          <i data-lucide="info" class="icon"></i>
-        </button>
       </div>
       <div class="recipes-toolbar-row recipes-toolbar-filters">
         <div class="recipe-filter-btns">${filterBtns}</div>

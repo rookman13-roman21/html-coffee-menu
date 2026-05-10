@@ -1581,6 +1581,7 @@
 
       /* Рецептуры: кнопка активна */
       .recipes-intro-toggle.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+      .recipes-btn-txt { display: none; }
 
       /* Финмодель: скрываем текст кнопки на мобайле */
       .fin-intro-btn-txt { display: none; }
