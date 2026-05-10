@@ -475,7 +475,7 @@
     .cost-del-btn:hover { background: var(--red-bg); color: var(--red); }
 
     /* ── Fixed-cost table ───────────────────────────────────────── */
-    .fc-table-wrap { overflow-x: auto; margin-bottom: 4px; }
+    .fc-table-wrap { overflow-x: auto; margin-bottom: 4px; max-width: 880px; }
     .fc-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
     .fc-table thead th {
       padding: 7px 8px; text-align: left; font-weight: 700;
@@ -493,10 +493,11 @@
       display: inline-block; background: var(--border); color: var(--muted);
       font-size: 11px; font-weight: 500; border-radius: 8px; padding: 1px 7px; margin-left: 4px;
     }
+    .fc-cat-hdr-amt { display: flex; align-items: center; justify-content: flex-end; gap: 8px; white-space: nowrap; }
     .fc-cat-add {
       background: transparent; border: 1px solid var(--border); border-radius: 4px;
       color: var(--green); font-size: 14px; cursor: pointer; padding: 0 5px;
-      line-height: 1.4; margin-right: 6px;
+      line-height: 1.4; flex-shrink: 0;
     }
     .fc-cat-add:hover { background: var(--green); color: #fff; }
     .fc-item { cursor: pointer; transition: background .12s; border-bottom: 1px solid var(--border); }
