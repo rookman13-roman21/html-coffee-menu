@@ -2115,6 +2115,75 @@
     body.dark .finblock-hd-4 { border-left-color: #ce93d8; }
     body.dark .finblock-hd-4 .finblock-num { background: #ce93d8; }
 
+    /* ── FM DASHBOARD ─────────────────────────────────── */
+    .fm-dashboard { margin-bottom: 24px; display: flex; flex-direction: column; gap: 0; }
+    .fm-dash-row {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+      margin-bottom: 10px;
+    }
+    .fm-kpi-card {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
+      transition: box-shadow .15s;
+    }
+    .fm-kpi-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+    .fm-kpi-card--accent { border-width: 2px; }
+    .fm-kpi-pos { border-color: var(--green); background: #f0faf2; }
+    .fm-kpi-neg { border-color: var(--red); background: #fff5f5; }
+    .fm-kpi-icon { color: var(--muted); flex-shrink: 0; }
+    .fm-kpi-icon .icon { width: 18px; height: 18px; }
+    .fm-kpi-pos .fm-kpi-icon { color: var(--green); }
+    .fm-kpi-neg .fm-kpi-icon { color: var(--red); }
+    .fm-kpi-body { min-width: 0; }
+    .fm-kpi-label { font-size: 11px; color: var(--muted); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fm-kpi-value { font-size: 16px; font-weight: 800; color: var(--navy); white-space: nowrap; line-height: 1.2; }
+    .fm-kpi-pos .fm-kpi-value { color: var(--green); }
+    .fm-kpi-neg .fm-kpi-value { color: var(--red); }
+    .fm-kpi-badge { font-size: 10px; font-weight: 600; background: var(--gray); border-radius: 4px; padding: 1px 5px; color: var(--muted); vertical-align: middle; }
+    /* Прогресс-бар ТБУ */
+    .fm-dash-bep { background: var(--white); border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; }
+    .fm-dash-bep-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+    .fm-dash-bep-track { height: 8px; background: var(--gray); border-radius: 99px; overflow: hidden; margin-bottom: 4px; }
+    .fm-dash-bep-fill { height: 100%; border-radius: 99px; transition: width .4s ease; }
+    .fm-dash-bep-sub { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+    /* Строка окупаемости */
+    .fm-dash-payback {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      font-size: 12px; color: var(--muted);
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 9px 14px;
+    }
+    .fm-dash-payback .icon { width: 14px; height: 14px; flex-shrink: 0; }
+    .fm-dash-payback strong { color: var(--navy); }
+    .fm-dash-payback-sep { color: var(--border); font-size: 16px; }
+    .fm-dash-payback-edit {
+      border: none; background: none; padding: 2px 4px; cursor: pointer;
+      color: var(--muted); opacity: .6; transition: opacity .15s;
+    }
+    .fm-dash-payback-edit:hover { opacity: 1; }
+    .fm-dash-payback--hint { cursor: pointer; opacity: .75; }
+    .fm-dash-payback--hint:hover { opacity: 1; border-color: var(--navy); }
+    /* Dark mode */
+    body.dark .fm-kpi-card { background: #252526; border-color: #3c3c3c; }
+    body.dark .fm-kpi-pos { background: #1b2f1e; border-color: #4caf50; }
+    body.dark .fm-kpi-neg { background: #2d1a1a; border-color: #e57373; }
+    body.dark .fm-kpi-value { color: #e0e0e0; }
+    body.dark .fm-kpi-pos .fm-kpi-value { color: #81c784; }
+    body.dark .fm-kpi-neg .fm-kpi-value { color: #e57373; }
+    body.dark .fm-kpi-badge { background: #3c3c3c; color: #a0a0a0; }
+    body.dark .fm-dash-bep,
+    body.dark .fm-dash-payback { background: #252526; border-color: #3c3c3c; }
+    /* Responsive */
+    @media (max-width: 700px) {
+      .fm-dash-row { grid-template-columns: repeat(2, 1fr); }
+      .fm-kpi-value { font-size: 14px; }
+    }
+    @media (max-width: 420px) {
+      .fm-dash-row { grid-template-columns: 1fr 1fr; gap: 7px; }
+      .fm-kpi-card { padding: 10px 10px; gap: 7px; }
+    }
+
     /* ── FIN QUICKNAV ─────────────────────────────────── */
     .fin-quicknav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
     .fin-qn-btn {

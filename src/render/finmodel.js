@@ -243,6 +243,111 @@ export function renderFinModel() {
       </div>
     </div>
     <div class="fm-content">
+
+    <!-- ═══════════════════════════════════ ДАШБОРД ═══════════════════════════════════ -->
+    <div class="fm-dashboard">
+
+      <!-- Ряд 1: Финансы -->
+      <div class="fm-dash-row">
+        <div class="fm-kpi-card">
+          <div class="fm-kpi-icon"><i data-lucide="banknote" class="icon"></i></div>
+          <div class="fm-kpi-body">
+            <div class="fm-kpi-label" data-tip="Выручка = цена × порции × дней в месяце">Выручка / мес</div>
+            <div class="fm-kpi-value">${rub(totRevMon)}</div>
+          </div>
+        </div>
+        <div class="fm-kpi-card">
+          <div class="fm-kpi-icon"><i data-lucide="receipt" class="icon"></i></div>
+          <div class="fm-kpi-body">
+            <div class="fm-kpi-label" data-tip="Все расходы: сырьё + постоянные + ФОТ + налог">Расходы / мес</div>
+            <div class="fm-kpi-value">${rub(varCostsMon + fixedOnlyTotal + fotAmount + taxBase)}</div>
+          </div>
+        </div>
+        <div class="fm-kpi-card fm-kpi-card--accent ${baseNet >= 0 ? 'fm-kpi-pos' : 'fm-kpi-neg'}">
+          <div class="fm-kpi-icon"><i data-lucide="${baseNet >= 0 ? 'trending-up' : 'trending-down'}" class="icon"></i></div>
+          <div class="fm-kpi-body">
+            <div class="fm-kpi-label">Чистая прибыль</div>
+            <div class="fm-kpi-value">${rub(baseNet)}</div>
+          </div>
+        </div>
+        <div class="fm-kpi-card">
+          <div class="fm-kpi-icon"><i data-lucide="percent" class="icon"></i></div>
+          <div class="fm-kpi-body">
+            <div class="fm-kpi-label" data-tip="Рентабельность = чистая прибыль ÷ выручка&#10;Норма для кофейни: 10–20%">Рентабельность</div>
+            <div class="fm-kpi-value" style="color:${totRevMon > 0 && baseNet / totRevMon >= 0.10 ? 'var(--green)' : totRevMon > 0 && baseNet / totRevMon >= 0 ? '#b38600' : 'var(--red)'}">${totRevMon > 0 ? (baseNet / totRevMon * 100).toFixed(1) + '%' : '—'}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ряд 2: Операционные метрики -->
+      <div class="fm-dash-row">
+        <div class="fm-kpi-card">
+          <div class="fm-kpi-icon"><i data-lucide="coffee" class="icon"></i></div>
+          <div class="fm-kpi-body">
+            <div class="fm-kpi-label" data-tip="Суммарное количество порций всех напитков в день по плану продаж">Порций / день</div>
+            <div class="fm-kpi-value">${int(totalPort)}</div>
+          </div>
+        </div>
+        <div class="fm-kpi-card">
+          <div class="fm-kpi-icon"><i data-lucide="package" class="icon"></i></div>
+          <div class="fm-kpi-body">
+            <div class="fm-kpi-label" data-tip="Food Cost % — доля себестоимости сырья в выручке&#10;Отлично: <20% · Норма HoReCa: 20–28% · Высоко: >28%">FC% (себест./выручка)</div>
+            <div class="fm-kpi-value" style="color:${fcBench.clr}">${pct(avgFC)} <span class="fm-kpi-badge">${fcBench.lbl}</span></div>
+          </div>
+        </div>
+        <div class="fm-kpi-card">
+          <div class="fm-kpi-icon"><i data-lucide="scale" class="icon"></i></div>
+          <div class="fm-kpi-body">
+            <div class="fm-kpi-label" data-tip="Точка безубыточности — выручка, при которой прибыль = 0">ТБУ / мес</div>
+            <div class="fm-kpi-value">${rub(bep.revBEP)}</div>
+          </div>
+        </div>
+        <div class="fm-kpi-card">
+          <div class="fm-kpi-icon"><i data-lucide="shield" class="icon"></i></div>
+          <div class="fm-kpi-body">
+            <div class="fm-kpi-label" data-tip="Запас прочности = (выручка − ТБУ) ÷ выручка&#10;Показывает, насколько можно упасть до убытка">Запас прочности</div>
+            <div class="fm-kpi-value" style="color:${safetyAbs >= 0 ? 'var(--green)' : 'var(--red)'}">${safetyAbs >= 0 ? '+' : ''}${safetyPct.toFixed(1)}%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Прогресс-бар ТБУ -->
+      <div class="fm-dash-bep">
+        <div class="fm-dash-bep-labels">
+          <span>Покрытие ТБУ</span>
+          <span style="font-weight:700;color:${bepPClr}">${Math.min(bepProgress, 100).toFixed(0)}% ${bepProgress >= 100 ? '✓' : ''}</span>
+        </div>
+        <div class="fm-dash-bep-track">
+          <div class="fm-dash-bep-fill" style="width:${Math.min(bepProgress, 100)}%;background:${bepPClr}"></div>
+        </div>
+        <div class="fm-dash-bep-sub">
+          <span>0</span>
+          <span style="color:var(--muted);font-size:11px">${safetyAbs >= 0 ? `▲ выше ТБУ на ${rub(safetyAbs)}` : `▼ до ТБУ не хватает ${rub(-safetyAbs)}`}</span>
+          <span>${rub(bep.revBEP)}</span>
+        </div>
+      </div>
+
+      <!-- Окупаемость (если введены инвестиции) -->
+      ${investment > 0 ? `
+      <div class="fm-dash-payback">
+        <i data-lucide="clock" class="icon"></i>
+        <span>Стартовые вложения: <strong>${rub(investment)}</strong></span>
+        <span class="fm-dash-payback-sep">→</span>
+        ${paybackMon !== null
+          ? `<span>Окупаемость: <strong style="color:var(--navy)">${paybackMon.toFixed(1)} мес.</strong></span>`
+          : `<span style="color:var(--red)">Убыток — окупаемости нет</span>`
+        }
+        <button class="fm-dash-payback-edit" onclick="document.getElementById('fin-invest-input').focus();document.getElementById('finblock-1').scrollIntoView({behavior:'smooth'})" title="Изменить вложения"><i data-lucide="pencil" class="icon" style="width:12px;height:12px"></i></button>
+      </div>` : `
+      <div class="fm-dash-payback fm-dash-payback--hint" onclick="document.getElementById('fin-invest-input').focus();document.getElementById('finblock-1').scrollIntoView({behavior:'smooth'})">
+        <i data-lucide="landmark" class="icon"></i>
+        <span>Введите стартовые вложения в Блоке 1 — появится срок окупаемости</span>
+        <i data-lucide="chevron-right" class="icon" style="margin-left:auto"></i>
+      </div>`}
+
+    </div>
+    <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+
     <div class="fin-quicknav">
       <button class="fin-qn-btn" onclick="document.getElementById('finblock-1').scrollIntoView({behavior:'smooth'})"><i data-lucide="database" class="icon"></i> Исходные данные</button>
       <button class="fin-qn-btn" onclick="document.getElementById('finblock-2').scrollIntoView({behavior:'smooth'})"><i data-lucide="trending-up" class="icon"></i> Результаты</button>
@@ -254,7 +359,7 @@ export function renderFinModel() {
     <div class="fin-invest-top">
       <div class="fin-invest-top-label" data-tip="Сумма денег, вложенных в запуск:&#10;оборудование, ремонт, первый депозит...&#10;Срок окупаемости = инвестиции ÷ чистая прибыль."><i data-lucide="landmark" class="icon"></i> Стартовые вложения, ₽</div>
       <div class="fin-invest-top-row">
-        <input class="inp" type="number" min="0" step="50000" inputmode="numeric" style="width:160px;text-align:right"
+        <input class="inp" id="fin-invest-input" type="number" min="0" step="50000" inputmode="numeric" style="width:160px;text-align:right"
           value="${investment}" onchange="onInvestment(this.value)" placeholder="0">
         <span style="font-size:12px;color:var(--muted)">₽</span>
         ${paybackMon !== null
