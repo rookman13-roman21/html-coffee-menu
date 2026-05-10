@@ -452,15 +452,15 @@ export function renderFinModel() {
         <div class="pts-rates">
           <div class="pts-rate-group">
             <label class="pts-rate-label">МРОТ (ваш регион), ₽<span class="pts-rate-hint">Федеральный — 22 440 ₽. В регионах может быть ниже.</span></label>
-            <input class="inp" type="number" min="0" step="100" inputmode="numeric" value="${PS().mrot}" oninput="onPayrollSetting('mrot',this.value)" style="max-width:160px;text-align:right">
+            <input class="inp" type="number" min="0" step="100" inputmode="numeric" value="${PS().mrot}" onchange="onPayrollSetting('mrot',this.value)" style="max-width:160px;text-align:right">
           </div>
           <div class="pts-rate-group">
             <label class="pts-rate-label">НДФЛ, %<span class="pts-rate-hint">Стандартная ставка — 13%. С 2025 г. при доходе от 2.4 млн — 15%.</span></label>
-            <input class="inp" type="number" min="0" max="50" step="0.1" inputmode="decimal" value="${PS().ndfl}" oninput="onPayrollSetting('ndfl',this.value)" style="max-width:120px;text-align:right">
+            <input class="inp" type="number" min="0" max="50" step="0.1" inputmode="decimal" value="${PS().ndfl}" onchange="onPayrollSetting('ndfl',this.value)" style="max-width:120px;text-align:right">
           </div>
           <div class="pts-rate-group">
             <label class="pts-rate-label">Страховые взносы, %<span class="pts-rate-hint">Стандарт — 30%. Для МСП с зарплат свыше МРОТ — 15% (льготный тариф).</span></label>
-            <input class="inp" type="number" min="0" max="100" step="0.1" inputmode="decimal" value="${PS().ins}" oninput="onPayrollSetting('ins',this.value)" style="max-width:120px;text-align:right">
+            <input class="inp" type="number" min="0" max="100" step="0.1" inputmode="decimal" value="${PS().ins}" onchange="onPayrollSetting('ins',this.value)" style="max-width:120px;text-align:right">
           </div>
         </div>
       </div>
