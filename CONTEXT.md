@@ -1,7 +1,7 @@
 # CONTEXT — MBS* Coffee Menu
 
-> CFO-инструментарий для владельца кофейни. Один HTML-файл без зависимостей и сборки.
-> Последнее обновление: 9 мая 2026 (сессия 24)
+> CFO-инструментарий для владельца кофейни. SPA на Vite + ES-модули.
+> Последнее обновление: 10 мая 2026 (сессия 25)
 
 ---
 
@@ -21,14 +21,59 @@
 
 ```
 HTML_coffee_menu/
-├── index.html      # Разметка + подключение файлов
-├── styles.css      # Все стили (CSS Variables, Grid, Flexbox, Dark theme, Print)
-├── app.js          # Вся логика (данные, расчёты, рендер, стейт)
-├── build.py        # Одноразовый скрипт: разбил монолитный index.html на файлы
-└── CONTEXT.md      # Этот файл
+├── index.html          # Разметка + <script type="module" src="/src/main.js">
+├── styles.css          # Все стили (CSS Variables, Grid, Flexbox, Dark theme, Print)
+├── vite.config.js      # Vite 5.4 конфиг (root: '.', outDir: 'dist')
+├── package.json        # devDependency: vite
+├── build.py            # Одноразовый скрипт (исторический артефакт)
+├── CONTEXT.md          # Этот файл
+├── images/             # Фотографии напитков (16 .jpg)
+├── dist/               # Сборка Vite (gitignore)
+└── src/                # ES-модули (30 файлов, точка входа — main.js)
+    ├── main.js         # Единственная точка входа Vite; INIT, window.*, switchTab
+    ├── data/
+    │   ├── constants.js    # GROUP_LABEL, SALES_PRESETS, FIXED_COSTS_DEF, nextDrinkId/SemiId/MatKey
+    │   ├── drinks.js       # DRINKS, DRINKS_ORIG, DRINK_IMAGES, DRINK_QUALITY
+    │   └── mat.js          # MAT, MAT_ORIG
+    ├── state/
+    │   ├── store.js        # S, Loc, DEFAULTS, activeLoc, saveState, loadState, resetGlobalsToBase
+    │   └── ui-state.js     # dirty, sortState, salesSortState, _matActiveCat, PS_DEFAULTS
+    ├── utils/
+    │   ├── calc.js         # calcCost, calcIngCost, calcSemiCostPerUnit, enrich, withABC, ...
+    │   ├── format.js       # rub, pct, int, fcBarHtml, riskBadge, fcCombinedHtml, abcBadge, fcCls
+    │   └── image.js        # getDrinkImage
+    ├── render/
+    │   ├── dashboard.js    # renderDashboard
+    │   ├── cost.js         # renderCost
+    │   ├── sales.js        # renderSales
+    │   ├── finmodel.js     # renderFinModel
+    │   └── recipes.js      # renderRecipes
+    ├── modals/
+    │   ├── drink.js        # openAddDrink, openEditDrink, saveDrink, deleteDrink, resetDrink
+    │   ├── mat.js          # openAddMat, openEditMat, saveMat, deleteMat, cancelMat
+    │   └── semi.js         # openAddSemi, openEditSemi, saveSemi, deleteSemi
+    ├── export/
+    │   ├── csv.js          # exportCSV, exportDashboard, exportSales
+    │   └── techcards.js    # _techCardCSS, _buildTechCardBlock, _buildSemiTechCardBlock, exportTechCards, mvdDownload*
+    └── ui/
+        ├── updaters.js     # switchTab, flashCells, renderTab, markDirty
+        ├── events.js       # burgerNav, modalDirty, safeClose, Escape, keyboard nav
+        ├── modals.js       # openModal, closeModal, safeCloseModal, _unsaved warning
+        ├── ingredients.js  # addIngRow, matOptions, _onIngMatChange, _ingPlaceholder
+        ├── cost-table.js   # openCostEditor, _syncTargetFCInputs, setMatCat
+        ├── locations.js    # renderLocSwitcherUI, renderLocList, modal-loc
+        ├── misc.js         # exportFullPDF/XLSX, exportMaterialsPDF/XLSX, exportSuppliersPDF/XLSX,
+        │                   # buildBEPChart, buildSeasonalChart, openDropCandidates, openPriceHistory
+        ├── payroll.js      # renderPayroll, calcPositionCosts, renderPayrollSummary
+        ├── recipe-view.js  # openViewDrink
+        ├── sort.js         # setSort, sortDrinks, thSort, setSalesSort, thSalesSort, ...
+        └── suppliers.js    # renderSupplierBook, openSupplierModal, saveSupplier
 ```
 
-Нет npm, нет сборки, нет API. Открывается локально через `open index.html`.
+**Сборка Vite:**
+- Dev: `npm run dev` → `localhost:5173`
+- Build: `npm run build` → `dist/` (33 модуля, ~227 kB, 381ms)
+- `index.html` содержит только `<script type="module" src="/src/main.js">` + CDN ExcelJS
 
 ---
 
@@ -38,10 +83,12 @@ HTML_coffee_menu/
 |------|-----------|
 | Разметка | HTML5 |
 | Стили | CSS (CSS Variables, CSS Grid, Flexbox, `@media print`) — `styles.css` |
-| Логика | Vanilla JS — `app.js` |
+| Логика | Vanilla JS ES-модули — `src/` (30 файлов, точка входа `src/main.js`) |
+| Сборка | **Vite 5.4** (`vite.config.js`; dev: `localhost:5173`, build: `dist/`) |
+| Excel-экспорт | ExcelJS 4.4 (CDN `<script>` в `index.html`; **не npm**) |
 | Шрифт | Mulish (Google Fonts, CDN) |
 | Иконки | Lucide (CDN, UMD) |
-| Зависимости runtime | **нет** |
+| Зависимости runtime | **нет** (кроме CDN-ресурсов) |
 
 ---
 
@@ -1324,3 +1371,102 @@ body.dark ._unsaved-close:hover { background: #a93226; }
 ```
 
 Добавлены hover-эффекты для светлой темы (`._unsaved-stay:hover`, `._unsaved-close:hover`).
+
+
+---
+
+### Сессия 25 (10 мая 2026) — рефакторинг монолита app.js → ES-модули (Vite)
+
+**Цель:** разбить монолит `public/app.js` (7286 строк) на 30 ES-модулей в `src/`, добавить сборку через Vite 5.4.
+
+---
+
+#### Результат
+
+- **Удалён:** `public/app.js` (коммит `05a6bf2`)
+- **Создано:** 30 файлов в `src/` (дерево см. раздел 2)
+- **Сборка:** 33 модуля, ~227.57 kB, 381ms — зелёная
+- **Коммиты:** 20 штук (`9bfb9be` → `b06994b`)
+
+---
+
+#### Паттерн выставления функций в `window`
+
+Все функции, которые вызываются из inline-обработчиков HTML (`onclick="..."`, `oninput="..."`), должны быть глобальными. В `src/main.js` они выставляются двумя способами:
+
+```js
+// 1. Явный Object.assign для ключевых функций
+Object.assign(window, { switchTab, renderTab, ... });
+
+// 2. Массовый экспорт через _srcExports
+import * as _srcExports from './ui/misc.js';
+Object.entries(_srcExports).forEach(([k, v]) => { window[k] = v; });
+```
+
+**Правило:** если добавляется новая функция, вызываемая из HTML — либо добавить явно в `Object.assign`, либо убедиться, что файл попадает в `_srcExports`.
+
+---
+
+#### Инициализация в `main.js`
+
+```js
+// Восстанавливаем активную вкладку из localStorage
+const _savedTab = localStorage.getItem('mbs_active_tab') || 'dashboard';
+window.activeTab = _savedTab;   // ← ОБЯЗАТЕЛЬНО до switchTab()
+
+loadLocIndex();
+SEMI.push(...loadSemiItems());
+try { renderLocSwitcherUI(); } catch(e) { console.error(e); }
+switchTab(_savedTab);           // ← использует window.activeTab
+initTooltips();
+initKeyboardNav();
+```
+
+---
+
+#### Исправленные runtime-баги (коммит `b06994b`)
+
+| Баг | Причина | Исправление |
+|-----|---------|------------|
+| Бесконечная рекурсия `switchTab` | `src/ui/updaters.js` вызывал `window.switchTab(tab)` вместо реальной реализации | Заменён на настоящую реализацию: переключение `.active`-классов + `window.activeTab = tab` + `localStorage` |
+| `window.activeTab` не устанавливался | Нигде не присваивался до `switchTab()`, `flashCells()` читал `undefined` | Добавлено `window.activeTab = _savedTab` в `main.js` до вызова `switchTab()` |
+| Налог не считался в PDF-экспорте | В `src/ui/misc.js`: `typeof calcTax === 'function'` всегда `false` (`calcTax` — локальная функция рендер-модуля, не глобальная) | Заменён на инлайн-расчёт через `window.S.taxMode` напрямую в `exportFullPDF` и `exportMaterialsPDF` |
+
+**Ключевой факт:** `calcTax` — это локальная функция внутри каждого рендер-модуля (`render/finmodel.js`), она **не** выставляется в `window`. При написании нового кода в `misc.js` использовать инлайн-расчёт налога или импортировать явно.
+
+---
+
+#### Архитектурные правила после рефакторинга
+
+1. **`src/main.js`** — единственная точка входа. Импортирует все модули, выставляет `window.*`, вызывает INIT.
+2. **Нет циклических импортов.** Зависимости: `data/` ← `state/` ← `utils/` ← `render/` ← `ui/`.
+3. **`window.activeTab`** устанавливается в `main.js` и обновляется в `switchTab()` (`ui/updaters.js`).
+4. **ExcelJS** подключён CDN-тегом в `index.html` — **не** через `import`. Доступен как глобальный `ExcelJS`.
+5. **`public/app.js` удалён** — не восстанавливать. Весь код живёт в `src/`.
+
+---
+
+#### Коммиты сессии 25
+
+| Коммит | Описание |
+|--------|----------|
+| `9bfb9be` | refactor: move generateInsights → src/ui/misc.js |
+| `d8606f4` | refactor: move exportFullPDF/XLSX → src/ui/misc.js |
+| `e3e68d6` | refactor: move exportSuppliersPDF/XLSX + exportMaterialsPDF/XLSX → src/ui/misc.js |
+| `663dff1` | refactor: move payroll/seasonality/dropCandidates/onWhatIf → src/ui/misc.js |
+| `513f813` | refactor: move buildBEPChart → src/ui/misc.js |
+| `ec9a406` | refactor: replace _matDisplayUnit proxy with real impl in misc.js |
+| `7351b54` | refactor: move supplier modal/list functions → src/ui/suppliers.js |
+| `e813200` | refactor: move payroll functions → src/ui/payroll.js |
+| `c083517` | refactor: move cost-table UI + cost editor → src/ui/cost-table.js |
+| `45fb353` | refactor: move openPriceHistory/onWhatIf3/seasonal → src/ui/misc.js |
+| `2d5cbed` | recipe-view.js + techcards.js: openViewDrink/mvd/techCards blocks |
+| `41850bc` | modals/drink/mat/semi + ui/modals/ingredients: move 50 funcs |
+| `1e894c4` | app.js: remove 46 already-migrated funcs (−1637 lines) |
+| `7ca0205` | data: extract MAT/DRINKS/constants → src/data/*.js |
+| `22bab6b` | state: S/Loc/DEFAULTS/resetGlobalsToBase → store.js |
+| `0ce7caa` | fix: export _wif/EMP_TYPE_LABELS to window; clean Object.assign |
+| `5ce7bd8` | refactor: INIT/tooltip/kb-nav → src/main.js |
+| `d3742aa` | refactor: UI state → src/state/ui-state.js |
+| `05a6bf2` | refactor: event wiring → src/ui/events.js; **delete public/app.js** |
+| `b06994b` | fix: 3 runtime bugs — switchTab recursion, window.activeTab, calcTax in PDF export |
