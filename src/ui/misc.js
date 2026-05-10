@@ -1236,4 +1236,11 @@ export function openDropCandidates() {
 
 
 
-export function _matDisplayUnit(matKey) { return window._matDisplayUnit(matKey); }
+export function _matDisplayUnit(matKey) {
+  const m = window.MAT[matKey];
+  if (!m) return '';
+  const u = (m.unit || '').toLowerCase();
+  if (u.includes('кг')) return 'кг';
+  if (u === 'л' || u.includes(' л')) return 'л';
+  return 'шт';
+}
