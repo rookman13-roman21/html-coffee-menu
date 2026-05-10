@@ -17,7 +17,14 @@ export function sortDrinks(drinks) {
 export function setSort(col) {
   if (sortState.col === col) sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
   else { sortState.col = col; sortState.dir = 'desc'; }
-  if (window.renderDashboard) window.renderDashboard();
+  if (!window.renderDashboard) return;
+  // Сохраняем горизонтальный скролл таблицы перед ре-рендером
+  const tw = document.querySelector('#tab-dashboard .table-wrap');
+  const savedX = tw ? tw.scrollLeft : 0;
+  window.renderDashboard();
+  // Восстанавливаем после ре-рендера (новый .table-wrap уже в DOM)
+  const tw2 = document.querySelector('#tab-dashboard .table-wrap');
+  if (tw2 && savedX) tw2.scrollLeft = savedX;
 }
 
 export function thSort(col, label, cls = '', tip = '') {
