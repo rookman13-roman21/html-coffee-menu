@@ -442,12 +442,12 @@
 
 <!-- Модал: список всех поставщиков -->
 <div class="modal-bg" id="modal-suppliers-list">
-  <div class="modal" style="max-width:680px">
-    <div class="modal-title">
+  <div class="modal" style="max-width:680px;height:80vh;max-height:80vh;display:flex;flex-direction:column">
+    <div class="modal-title" style="flex-shrink:0">
       <span><i data-lucide="truck" class="icon"></i> Поставщики</span>
       <button class="modal-close" onclick="closeModal('modal-suppliers-list')">&times;</button>
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:10px">
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-shrink:0">
       <div class="search-wrap" style="flex:1;margin:0">
         <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
         <input class="search-inp" id="sup-list-search" type="text" placeholder="Поиск по названию, телефону, сырью..."
@@ -456,10 +456,10 @@
       </div>
       <button class="btn-primary" style="white-space:nowrap;padding:0 14px" onclick="openSupplierBookModal(null)"><i data-lucide="plus" class="icon"></i> Добавить</button>
     </div>
-    <div id="sup-filter-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
-    <div id="sup-list-stats" style="font-size:12px;color:var(--muted);margin-bottom:10px;padding:0 2px"></div>
-    <div id="sup-list-body" style="display:flex;flex-direction:column;gap:10px;max-height:50vh;overflow-y:auto;padding-right:4px"></div>
-    <div class="modal-footer">
+    <div id="sup-filter-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;flex-shrink:0"></div>
+    <div id="sup-list-stats" style="font-size:12px;color:var(--muted);margin-bottom:10px;padding:0 2px;flex-shrink:0"></div>
+    <div id="sup-list-body" style="display:flex;flex-direction:column;gap:10px;flex:1;min-height:0;overflow-y:auto;padding-right:4px"></div>
+    <div class="modal-footer" style="flex-shrink:0">
       <button class="btn btn-outline" style="margin-left:auto" onclick="closeModal('modal-suppliers-list')">Закрыть</button>
     </div>
   </div>
