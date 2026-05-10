@@ -1,7 +1,7 @@
 # CONTEXT — MBS* Coffee Menu
 
 > CFO-инструментарий для владельца кофейни. SPA на Vite + ES-модули.
-> Последнее обновление: 10 мая 2026 (сессия 25)
+> Последнее обновление: 10 мая 2026 (сессия 26)
 
 ---
 
@@ -465,6 +465,12 @@ resetAll()  // confirm → восстанавливает S из DEFAULTS + FIXE
 | Десктопная строка ингредиента переносилась на 2-й ряд | Мобильный `@media` устанавливал `grid-row: 2` → десктоп должен явно указывать `grid-row: 1` на всех 5 дочерних. Переключить с `nth-of-type` на `nth-child`. |
 | Предупреждение о несохранённых изменениях показывалось при открытии модала | `_markModalDirty` вызывался в `openEditDrink`/`openEditSemi` — убрать эти вызовы; метить dirty только через делегированный `input`/`change` на документе |
 | Предупреждение не адаптировалось под тёмную тему | Инлайн-стили заменены на CSS-классы (`._unsaved-box` и др.) с правилами `body.dark` |
+| Настройки налогообложения (МРОТ/НДФЛ/взносы) не пересчитывали ФОТ | `_refreshPayrollRow` не была выставлена в `window` → добавлена в `_srcExports` через `main.js` |
+| Легенда ABC выводилась в одну строку на мобильном | В `renderDashboard`: заголовок `display:block`, каждый пункт в отдельном `<div>`, обёртка `flex-direction:column` |
+| Фокус слетал с инпутов МРОТ/НДФЛ/взносы при каждой нажатой клавише | `oninput` → `onchange` в трёх инпутах `finmodel.js` — ре-рендер только при уходе из поля |
+| Настройки налогообложения (МРОТ/НДФЛ/взносы) не пересчитывались после ввода | `_refreshPayrollRow` не была выставлена в `window` → добавлены в `_srcExports` через `main.js` |
+| Легенда ABC выводилась в одну строку на мобильном | В `renderDashboard`: заголовок `display:block`, каждый пункт в отдельном `<div>`, обёртка `flex-direction:column` |
+| Фокус слетал с инпутов МРОТ/НДФЛ/взносы при каждой нажатой клавише | `oninput` → `onchange` в трёх инпутах `finmodel.js` — ре-рендер происходит только при уходе из поля |
 
 ---
 
@@ -1470,3 +1476,68 @@ initKeyboardNav();
 | `d3742aa` | refactor: UI state → src/state/ui-state.js |
 | `05a6bf2` | refactor: event wiring → src/ui/events.js; **delete public/app.js** |
 | `b06994b` | fix: 3 runtime bugs — switchTab recursion, window.activeTab, calcTax in PDF export |
+
+
+---
+
+### Сессия 26 (10 мая 2026) — три хотфикса: ФОТ, ABC-легенда, фокус инпутов
+
+#### 1. Настройки налогообложения не пересчитывали ФОТ (коммит `94d13ce`)
+
+**Проблема:** изменение МРОТ, НДФЛ% и страховых взносов в блоке «Настройки налогообложения» не давало эффекта — строки позиций ФОТ и итоговая сумма не обновлялись.
+
+**Причина:** `onPayrollSetting()` в `src/ui/misc.js` вызывала `window._refreshPayrollRow(p.id)` и `window._refreshPayrollSummary()`, однако эти функции не были выставлены в `window` — они существовали только как локальные экспорты `src/ui/payroll.js`.
+
+**Исправление:** в `src/main.js` добавлены импорт и выставление в `window`:
+```js
+import { ..., _refreshPayrollRow, _refreshPayrollSummary } from './ui/payroll.js';
+window._refreshPayrollRow    = _refreshPayrollRow;
+window._refreshPayrollSummary = _refreshPayrollSummary;
+```
+
+---
+
+#### 2. ABC-легенда в одну строку на мобильном (коммит `01e045a`)
+
+**Проблема:** на узком экране три пункта легенды ABC (A / B / C) отображались в одну горизонтальную строку — текст обрезался.
+
+**Исправление** в `src/render/dashboard.js`:
+- Заголовок «Легенда ABC» — `display:block` (не inline)
+- Каждый пункт вынесен в отдельный `<div>` вместо `<span>`
+- Обёртка легенды: `flex-direction:column; gap:4px`
+
+---
+
+#### 3. Фокус слетал при вводе в поля МРОТ/НДФЛ/взносы (коммит `fb0cbb7`)
+
+**Проблема:** при каждом нажатии клавиши в инпутах МРОТ, НДФЛ%, страховых взносов — фокус уходил с поля, невозможно было ввести многозначное число.
+
+**Причина:** инпуты имели `oninput="onPayrollSetting(...)"` → внутри вызывался `window.renderFinModel()` (полный ре-рендер финмодели) → текущий `<input>` уничтожался и пересоздавался → фокус терялся.
+
+**Исправление** в `src/render/finmodel.js` — `oninput` → `onchange` на трёх инпутах:
+```html
+<!-- БЫЛО -->
+<input ... oninput="onPayrollSetting('mrot',this.value)">
+<input ... oninput="onPayrollSetting('ndfl',this.value)">
+<input ... oninput="onPayrollSetting('ins',this.value)">
+
+<!-- СТАЛО -->
+<input ... onchange="onPayrollSetting('mrot',this.value)">
+<input ... onchange="onPayrollSetting('ndfl',this.value)">
+<input ... onchange="onPayrollSetting('ins',this.value)">
+```
+
+**Результат:** ре-рендер происходит только при уходе из поля (Tab / Enter / клик в другое место). Ввод многозначных чисел работает без потери фокуса.
+
+**Правило для будущего:**
+> ⚠️ Если `oninput` вызывает функцию с полным ре-рендером DOM — заменить на `onchange`. Иначе фокус теряется при каждом нажатии клавиши.
+
+---
+
+#### Коммиты сессии 26
+
+| Коммит | Описание |
+|--------|----------|
+| `94d13ce` | fix: export _refreshPayrollRow/_refreshPayrollSummary to window |
+| `01e045a` | fix: ABC legend — each item on new line (mobile) |
+| `fb0cbb7` | fix: oninput→onchange in payroll settings inputs (focus loss) |
