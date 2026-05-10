@@ -28,9 +28,10 @@ export function renderRecipes() {
     { k: 'filter', l: '<i data-lucide="droplets" class="icon"></i> Пуровер' },
     { k: 'author', l: '<i data-lucide="sparkles" class="icon"></i> Авторские' },
   ];
-  const sortBtns = sortLabels.map(s =>
-    `<button class="recipe-sort-btn${recipeSort === s.k ? ' active' : ''}" data-srt="${s.k}" onclick="setRecipeSort('${s.k}')">${s.l}</button>`
+  const sortOptions = sortLabels.map(s =>
+    `<option value="${s.k}"${recipeSort === s.k ? ' selected' : ''}>${s.l}</option>`
   ).join('');
+  const sortSelect = `<select id="recipe-sort-select" class="recipe-sort-select" onchange="setRecipeSort(this.value)">${sortOptions}</select>`;
   const filterBtns = groupFilters.map(g =>
     `<button class="recipe-filter-btn${recipeGroup === g.k ? ' active' : ''}" data-grp="${g.k}" onclick="setRecipeGroup('${g.k}')">${g.l}</button>`
   ).join('');
@@ -62,21 +63,17 @@ export function renderRecipes() {
       </div>
     </div>
     <div class="recipes-toolbar">
-      <div class="recipes-toolbar-row recipes-toolbar-search">
-        <div class="search-wrap" style="margin-bottom:0;flex:1">
+      <div class="recipes-toolbar-row recipes-toolbar-main">
+        <div class="search-wrap" style="margin-bottom:0;flex-shrink:0;min-width:180px;max-width:220px">
           <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
-          <input class="search-inp" id="recipe-search" type="text" placeholder="Поиск по названию..."
+          <input class="search-inp" id="recipe-search" type="text" placeholder="Поиск..."
             value="${recipeSearch}" oninput="filterRecipes(this.value);_searchClear(this)">
           <button class="search-clear${recipeSearch ? ' visible' : ''}" title="Очистить"
             onclick="filterRecipes('');var el=document.getElementById('recipe-search');el.value='';_searchClear(el)">✕</button>
         </div>
-        <button class="btn btn-outline recipes-intro-toggle recipes-intro-mob" id="recipes-intro-btn" onclick="toggleRecipesIntro()" title="Подсказка" style="flex-shrink:0"><i data-lucide="info" class="icon"></i></button>
-      </div>
-      <div class="recipes-toolbar-row recipes-toolbar-filters">
         <div class="recipe-filter-btns">${filterBtns}</div>
-        <div class="recipes-toolbar-sort">
-          <div class="recipe-sort-btns">${sortBtns}</div>
-        </div>
+        <div class="recipes-toolbar-sort" style="margin-left:auto;flex-shrink:0">${sortSelect}</div>
+        <button class="btn btn-outline recipes-intro-toggle recipes-intro-mob" id="recipes-intro-btn" onclick="toggleRecipesIntro()" title="Подсказка" style="flex-shrink:0"><i data-lucide="info" class="icon"></i></button>
       </div>
     </div>
     <div class="recipe-groups"></div>

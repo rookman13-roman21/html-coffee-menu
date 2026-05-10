@@ -5629,34 +5629,24 @@ function filterRecipes(val) {
     const imgHtml = _img
       ? `<div class="recipe-card-img"><img src="${_img}" alt="${d.name}" onerror="this.closest('.recipe-card-img').style.display='none'"></div>`
       : '';
-    const processHtml = d.process
-      ? `<div class="recipe-card-process-wrap">
-          <button class="recipe-card-process-toggle" onclick="event.stopPropagation();this.closest('.recipe-card-process-wrap').classList.toggle('open')">
-            <i data-lucide="chevron-down" class="icon"></i> Процесс приготовления
-          </button>
-          <div class="recipe-card-process-body">${d.process.replace(/\n/g,'<br>')}</div>
-        </div>`
-      : '';
-    const videoHtml = d.videoUrl
-      ? `<a class="recipe-card-video" href="${d.videoUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i data-lucide="play-circle" class="icon"></i> Смотреть видео рецепт</a>`
+    const videoIconHtml = d.videoUrl
+      ? `<a class="recipe-card-video-icon" href="${d.videoUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Смотреть видео рецепт"><i data-lucide="play-circle" class="icon"></i></a>`
       : '';
     return `<div class="recipe-card" onclick="openViewDrink(${d.id})">
       ${imgHtml}
       <div class="recipe-card-title" style="margin-top:${d.image?'10px':'0'}">
         <span>${d.name}</span>
-        <div style="display:flex;align-items:center;gap:6px">${abcBadge(abcMap[d.id]||'C', abcTipMap[d.id]||'')}${editBtn}${resetBtn}</div>
+        <div style="display:flex;align-items:center;gap:6px">${videoIconHtml}${editBtn}${resetBtn}</div>
       </div>
       <div class="recipe-card-sub">
-        <span>${d.vol} мл</span>
+        <span>${d.vol} мл</span>
         <span>·</span>
         <span style="color:${fcClr};font-weight:700">FC ${pct(fc)}</span>
       </div>
-      ${ingRows}
+      <div class="recipe-ings">${ingRows}</div>
       <div class="recipe-total"><span>Себестоимость</span><span>${rub(totalCost)}</span></div>
       <div class="recipe-total" style="font-weight:400;font-size:12px;color:var(--muted)"><span>Цена продажи</span><span>${rub(price)}</span></div>
       <div class="recipe-total" style="color:var(--navy)"><span>Прибыль</span><span>${rub(price - totalCost)}</span></div>
-      ${processHtml}
-      ${videoHtml}
     </div>`;
   }
 

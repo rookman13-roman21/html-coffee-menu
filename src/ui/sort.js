@@ -22,6 +22,7 @@ export function setSort(col) {
   const tw = document.querySelector('#tab-dashboard .table-wrap');
   const savedX = tw ? tw.scrollLeft : 0;
   window.renderDashboard();
+  if (window.lucide) window.lucide.createIcons();
   // Восстанавливаем после ре-рендера (новый .table-wrap уже в DOM)
   const tw2 = document.querySelector('#tab-dashboard .table-wrap');
   if (tw2 && savedX) tw2.scrollLeft = savedX;
