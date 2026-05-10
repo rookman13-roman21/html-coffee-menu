@@ -843,9 +843,23 @@
     .recipes-toolbar-sort { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .recipes-sort-label { font-size: 12px; color: var(--muted); font-weight: 600; white-space: nowrap; }
     @media (max-width: 700px) {
-      .recipes-toolbar-main { flex-wrap: wrap; }
-      .recipes-toolbar-main .search-wrap { min-width: 100% !important; max-width: 100% !important; }
-      .recipes-toolbar-main .recipe-filter-btns { overflow-x: auto; }
+      .recipes-toolbar-main { flex-wrap: wrap; gap: 8px; }
+      /* Табы (фильтры) — первые, на всю ширину, переносятся без скролла */
+      .recipes-toolbar-main .recipe-filter-btns {
+        order: 1;
+        width: 100%;
+        flex-wrap: wrap !important;
+        overflow-x: visible !important;
+        gap: 5px;
+      }
+      /* Поиск — под табами, на всю ширину */
+      .recipes-toolbar-main .search-wrap {
+        order: 2;
+        min-width: 100% !important;
+        max-width: 100% !important;
+      }
+      /* Сортировка — последняя */
+      .recipes-toolbar-main .recipes-toolbar-sort { order: 3; }
     }
 
     /* ── DARK THEME (VS Code palette) ────────────────── */
