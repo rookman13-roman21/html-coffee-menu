@@ -1029,7 +1029,7 @@
     /* ── INGREDIENT ROW ───────────────────────────────────────── */
     .modal-ings-header {
       display: grid;
-      grid-template-columns: 1fr 90px 90px 52px 32px;
+      grid-template-columns: 1fr 80px 80px 80px 52px 32px;
       gap: 8px;
       margin-bottom: 4px;
     }
@@ -1042,7 +1042,7 @@
     }
     .modal-ing-row {
       display: grid;
-      grid-template-columns: 1fr 90px 90px 52px 32px;
+      grid-template-columns: 1fr 80px 80px 80px 52px 32px;
       gap: 8px;
       align-items: center;
       margin-bottom: 6px;
@@ -1057,10 +1057,11 @@
        col1=select, col2=qty, col3=loss, col4=cost-hint, col5=trash
        nth-child используется вместо nth-of-type — надёжнее */
     .modal-ing-row > :nth-child(1) { grid-column: 1; grid-row: 1; } /* select */
-    .modal-ing-row > :nth-child(2) { grid-column: 5; grid-row: 1; } /* del */
+    .modal-ing-row > :nth-child(2) { grid-column: 6; grid-row: 1; } /* del */
     .modal-ing-row > :nth-child(3) { grid-column: 2; grid-row: 1; } /* qty wrap */
     .modal-ing-row > :nth-child(4) { grid-column: 3; grid-row: 1; } /* loss wrap */
-    .modal-ing-row > :nth-child(5) { grid-column: 4; grid-row: 1; } /* cost hint */
+    .modal-ing-row > :nth-child(5) { grid-column: 4; grid-row: 1; } /* yield wrap */
+    .modal-ing-row > :nth-child(6) { grid-column: 5; grid-row: 1; } /* cost hint */
     .modal-ing-row .modal-inp, .modal-ing-row .modal-select {
       width: 100%; margin: 0;
     }
@@ -1332,26 +1333,26 @@
       .modal-ings-header { display: none; }
       .modal-ing-row {
         display: grid;
-        grid-template-columns: 1fr 44px;
+        grid-template-columns: 1fr 1fr 1fr 44px;
         grid-template-rows: auto auto auto;
-        gap: 4px 8px;
+        gap: 4px 6px;
         padding: 10px 0;
         border-bottom: 1px solid var(--border);
         margin-bottom: 0;
         align-items: start;
       }
-      /* select — вся ширина первой колонки */
+      /* select — вся ширина первой строки */
       .modal-ing-row .modal-select {
-        grid-column: 1; grid-row: 1;
+        grid-column: 1 / 4; grid-row: 1;
         width: 100%; height: 44px;
       }
       /* Корзина — рядом с селектом */
       .modal-ing-row .modal-ing-del {
-        grid-column: 2; grid-row: 1;
+        grid-column: 4; grid-row: 1;
         width: 44px; height: 44px;
         align-self: center;
       }
-      /* Обёртки инпутов — вторая строка, обе колонки */
+      /* Обёртки инпутов — вторая строка, в ряд */
       .modal-ing-row .ing-inp-wrap {
         display: flex; flex-direction: column; gap: 3px;
       }
@@ -1360,6 +1361,9 @@
       }
       .modal-ing-row > :nth-child(4) {
         grid-column: 2; grid-row: 2;
+      }
+      .modal-ing-row > :nth-child(5) {
+        grid-column: 3; grid-row: 2;
       }
       /* Подпись через data-label */
       .modal-ing-row .ing-inp-wrap::before {
