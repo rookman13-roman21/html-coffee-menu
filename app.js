@@ -597,6 +597,7 @@ function setSort(col) {
   if (sortState.col === col) sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
   else { sortState.col = col; sortState.dir = 'desc'; }
   renderDashboard();
+  if (window.lucide) window.lucide.createIcons();
 }
 function thSort(col, label, cls='', tip='') {
   const active = sortState.col === col;
