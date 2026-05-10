@@ -309,3 +309,130 @@ const _srcExports = {
 Object.entries(_srcExports).forEach(([k, v]) => {
   if (window[k] === undefined) window[k] = v;
 });
+
+// ════════════════════════════════════════════════════════════════════
+//  RUNTIME COUNTERS & SEMI (перенесено из app.js)
+//  Должно быть ДО INIT — loadState читает window.SEMI/nextSemiId
+// ════════════════════════════════════════════════════════════════════
+const SEMI = [];
+window.SEMI        = SEMI;
+window.nextSemiId  = 1;
+window.nextDrinkId = 27;
+window.nextMatKey  = 1;
+
+// ════════════════════════════════════════════════════════════════════
+//  INIT (перенесено из app.js)
+// ════════════════════════════════════════════════════════════════════
+loadLocIndex();
+if (!Loc.list.length) {
+  try {
+    if (localStorage.getItem(OLD_STATE_KEY)) migrateOldState();
+  } catch(e) {}
+}
+if (!Loc.list.length) {
+  Loc.list = [{ id: 'loc_default', name: 'Моя кофейня', icon: '☕' }];
+  Loc.activeId = 'loc_default';
+  saveLocIndex();
+}
+if (!Loc.activeId) { Loc.activeId = Loc.list[0].id; saveLocIndex(); }
+loadState();
+
+try { renderLocSwitcherUI(); } catch(e) { console.error('[renderLocSwitcherUI]', e); }
+try {
+  if (localStorage.getItem('mbs_theme') === 'dark') {
+    document.body.classList.add('dark');
+    const icon = document.getElementById('theme-icon');
+    if (icon) icon.setAttribute('data-lucide', 'sun');
+  }
+  if (!localStorage.getItem('mbs_onboard')) {
+    document.getElementById('onboarding').style.display = 'block';
+  }
+} catch(e) {}
+
+// Восстанавливаем activeTab из localStorage
+const _savedTab = (() => {
+  try {
+    const saved = localStorage.getItem('mbs_active_tab');
+    const valid = ['dashboard','cost','sales','finmodel','recipes'];
+    return (saved && valid.includes(saved)) ? saved : 'dashboard';
+  } catch(e) { return 'dashboard'; }
+})();
+
+// Рендерим вкладки
+const _dirty = window.dirty || { dashboard:true, cost:true, sales:true, finmodel:true, recipes:true };
+Object.keys(_dirty).forEach(k => _dirty[k] = true);
+switchTab(_savedTab);
+if (window.lucide) window.lucide.createIcons();
+
+// ════════════════════════════════════════════════════════════════════
+//  TOOLTIP (перенесено из app.js)
+// ════════════════════════════════════════════════════════════════════
+(function() {
+  const box = document.getElementById('tip-box');
+  if (!box) return;
+  let currentEl = null;
+
+  function show(el, cx, cy) {
+    if (currentEl !== el) {
+      currentEl = el;
+      box.textContent = el.dataset.tip;
+      box.classList.remove('tip-visible');
+      box.style.left = '-9999px';
+      box.style.top  = '-9999px';
+    }
+    const bw = box.offsetWidth  || 240;
+    const bh = box.offsetHeight || 40;
+    const gap = 14;
+    const ty = (window.innerHeight - cy < bh + gap + 16)
+      ? cy - bh - gap
+      : cy + gap;
+    const tx = Math.max(8, Math.min(cx - bw / 2, window.innerWidth - bw - 8));
+    box.style.left = tx + 'px';
+    box.style.top  = ty + 'px';
+    box.classList.add('tip-visible');
+  }
+
+  function hide() {
+    currentEl = null;
+    box.classList.remove('tip-visible');
+  }
+
+  document.addEventListener('pointermove', e => {
+    const el = e.target.closest('[data-tip]');
+    if (el && el.dataset.tip) show(el, e.clientX, e.clientY);
+    else hide();
+  });
+  document.addEventListener('pointerleave', hide);
+  document.addEventListener('pointerdown',  hide);
+  document.addEventListener('scroll', hide, true);
+})();
+
+// ════════════════════════════════════════════════════════════════════
+//  KEYBOARD NAV + MOBILE FOCUS (перенесено из app.js)
+// ════════════════════════════════════════════════════════════════════
+let _kbNav = false;
+document.addEventListener('keydown',   () => { _kbNav = true;  }, true);
+document.addEventListener('mousedown', () => { _kbNav = false; }, true);
+document.addEventListener('focus', e => {
+  if (e.target.matches('.inp') && _kbNav) e.target.select();
+}, true);
+
+if ('ontouchstart' in window) {
+  document.addEventListener('focus', e => {
+    const el = e.target;
+    if (!el.matches('input, textarea') || _kbNav) return;
+    const val = el.value;
+    const origType = el.type;
+    if (origType === 'number') el.type = 'text';
+    requestAnimationFrame(() => {
+      try {
+        const len = el.value.length;
+        el.setSelectionRange(len, len);
+      } catch(_) {}
+      if (origType === 'number') {
+        el.type = 'number';
+        el.value = val;
+      }
+    });
+  }, true);
+}
