@@ -1,8 +1,17 @@
 // ════════════════════════════════════════════════════════════════════
-//  public/app.js  —  event wiring only
-//  UI state → src/state/ui-state.js  (window.* via src/main.js)
-//  Счётчики/INIT/tooltip/kb-nav → src/main.js
+//  src/ui/events.js — global event wiring
+//  Последнее, что осталось в public/app.js — перенесено сюда.
+//  Вызывается из src/main.js в конце после INIT.
 // ════════════════════════════════════════════════════════════════════
+
+import { closeModal, safeCloseModal, _markModalDirty } from './modals.js';
+import { switchTab } from './updaters.js';
+
+const MODAL_IDS = [
+  'modal-drink','modal-mat','modal-semi','modal-templates','modal-loc',
+  'modal-supplier','modal-supplier-book','modal-price-hist','modal-drop',
+  'modal-suppliers-list','modal-drink-view',
+];
 
 // Закрывать бургер при клике на нав-кнопку
 document.addEventListener('click', e => {
@@ -21,9 +30,7 @@ document.addEventListener('click', e => {
 
 // Закрыть модал при клике на фон (резервный обработчик)
 document.addEventListener('click', e => {
-  ['modal-drink','modal-mat','modal-semi','modal-templates','modal-loc',
-   'modal-supplier','modal-supplier-book','modal-price-hist','modal-drop',
-   'modal-suppliers-list','modal-drink-view'].forEach(id => {
+  MODAL_IDS.forEach(id => {
     const bg = document.getElementById(id);
     if (e.target === bg) closeModal(id);
   });
@@ -32,10 +39,7 @@ document.addEventListener('click', e => {
 // Закрыть верхний открытый модал по Escape
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
-  const all = ['modal-mat','modal-drink','modal-semi','modal-supplier','modal-supplier-book',
-               'modal-loc','modal-templates','modal-price-hist','modal-drop',
-               'modal-suppliers-list','modal-drink-view'];
-  for (const id of all) {
+  for (const id of MODAL_IDS) {
     const el = document.getElementById(id);
     if (el && el.classList.contains('open')) { safeCloseModal(id); return; }
   }
