@@ -144,7 +144,7 @@ import {
 import {
   calcPositionCosts, payrollPositionTotal, payrollTotal, payrollTotals,
   empTypeTip, onPayrollPos, addPayrollPosition, deletePayrollPosition,
-  scrollToPayroll, EMP_TYPE_LABELS,
+  scrollToPayroll, EMP_TYPE_LABELS, PS,
 } from './ui/payroll.js';
 
 import {
@@ -189,7 +189,7 @@ import {
   generateInsights, toggleSeasonality, openDropCandidates,
   onWhatIf, exportFullPDF, exportMaterialsPDF, buildBEPChart,
   applyPayrollToFixed, onPayrollSetting, togglePayrollSettings, toggleFixedHint,
-  _matDisplayUnit,
+  _matDisplayUnit, buildSeasonalChart, recalcWhatIf3,
 } from './ui/misc.js';
 
 // ─── Реэкспорт в window для обратной совместимости с public/app.js ──
@@ -297,7 +297,7 @@ const _srcExports = {
   // ui/payroll
   calcPositionCosts, payrollPositionTotal, payrollTotal, payrollTotals,
   empTypeTip, onPayrollPos, addPayrollPosition, deletePayrollPosition,
-  scrollToPayroll, EMP_TYPE_LABELS,
+  scrollToPayroll, EMP_TYPE_LABELS, PS,
   // ui/locations
   renderLocSwitcherUI, renderLocList, toggleLocMenu, toggleExportMenu,
   switchLocation, openAddLocation, renameActiveLocation, deleteActiveLocation,
@@ -328,7 +328,7 @@ const _srcExports = {
   generateInsights, toggleSeasonality, openDropCandidates,
   onWhatIf, exportFullPDF, exportMaterialsPDF, buildBEPChart,
   applyPayrollToFixed, onPayrollSetting, togglePayrollSettings, toggleFixedHint,
-  _matDisplayUnit,
+  _matDisplayUnit, buildSeasonalChart, recalcWhatIf3,
   // state/store
   // saveState/loadState перенесены в _storeExports выше
 };
