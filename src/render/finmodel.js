@@ -77,7 +77,7 @@ export function renderFinModel() {
       const items = S.fixedCosts.map((c, idx) => ({ c, idx, ev: effCosts[idx] })).filter(({ c }) => (c.category || 'other') === cat.id);
       if (!items.length) return;
       const catTotal = items.reduce((s, { ev }) => s + ((ev && ev.value) || 0), 0);
-      rows += `<tr class="fc-cat-hdr fc-cat-collapsed" onclick="toggleFcCat('${cat.id}')"><td colspan="3"><span class="fc-cat-chev" id="fc-chev-${cat.id}">▶</span> ${cat.label} <span class="fc-cat-cnt">${items.length}</span></td><td><div class="fc-cat-hdr-amt"><button class="fc-cat-add" onclick="event.stopPropagation();addFixedCostInCat('${cat.id}')" title="Добавить в эту категорию">+</button><span>${rub(catTotal)}</span></div></td></tr>`;
+      rows += `<tr class="fc-cat-hdr fc-cat-collapsed" onclick="toggleFcCat('${cat.id}')"><td colspan="2"><span class="fc-cat-chev" id="fc-chev-${cat.id}">▶</span> ${cat.label} <span class="fc-cat-cnt">${items.length}</span></td><td style="text-align:right">${rub(catTotal)}</td><td style="text-align:right"><button class="fc-cat-add" onclick="event.stopPropagation();addFixedCostInCat('${cat.id}')" title="Добавить в эту категорию">+</button></td></tr>`;
       items.forEach(({ c, idx, ev }) => {
         const isFot = !!(ev && ev._fromPayroll);
         const badge = isFot

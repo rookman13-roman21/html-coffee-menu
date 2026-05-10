@@ -475,7 +475,7 @@
     .cost-del-btn:hover { background: var(--red-bg); color: var(--red); }
 
     /* ── Fixed-cost table ───────────────────────────────────────── */
-    .fc-table-wrap { overflow-x: auto; margin-bottom: 4px; max-width: 880px; }
+    .fc-table-wrap { overflow-x: auto; margin-bottom: 4px; max-width: 880px; margin-left: auto; margin-right: auto; }
     .fc-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
     .fc-table thead th {
       padding: 7px 8px; text-align: left; font-weight: 700;
