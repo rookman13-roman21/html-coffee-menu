@@ -5681,9 +5681,8 @@ function filterRecipes(val) {
   document.querySelectorAll('#tab-recipes .recipe-filter-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.grp === recipeGroup);
   });
-  document.querySelectorAll('#tab-recipes .recipe-sort-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.srt === recipeSort);
-  });
+  const _sortSel = document.getElementById('recipe-sort-select');
+  if (_sortSel) _sortSel.value = recipeSort;
 }
 
 function renderRecipes() {
