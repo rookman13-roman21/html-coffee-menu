@@ -59,7 +59,7 @@ export function openViewDrink(id) {
       const dispAmt = ing.amt; // хранится в кг/л — показываем как есть
       const su = (s.unit || '').toLowerCase();
       const sUnit = (factor === 1000) ? (su.startsWith('г') ? 'кг' : 'л') : s.unit;
-      return { name: s.name + ' <span style="font-size:10px;background:#e8f5e9;color:var(--green);border-radius:4px;padding:1px 4px;font-weight:700">п/ф</span>', dispAmt, unit: sUnit, cost: calcIngCost(ing) };
+      return { name: s.name + ' <span style="font-size:10px;color:var(--muted);border-radius:4px;padding:1px 4px;font-weight:600">п/ф</span>', dispAmt, unit: sUnit, cost: calcIngCost(ing) };
     }
     if (!window.MAT[ing.mat]) return null;
     const factor = _semiUnitFactor(ing.mat);
@@ -220,7 +220,7 @@ export function filterRecipes(val) {
           const su = (s.unit || '').toLowerCase();
           const unit = (factor === 1000) ? (su.startsWith('г') ? 'кг' : 'л') : s.unit;
           return {
-            name: s.name + ' <span style="font-size:9px;background:#e8f5e9;color:var(--green);border-radius:3px;padding:1px 3px;font-weight:700">п/ф</span>',
+            name: s.name + ' <span style="font-size:9px;color:var(--muted);border-radius:3px;padding:1px 3px;font-weight:600">п/ф</span>',
             dispAmt, unit, cost: window.calcIngCost(ing)
           };
         }
