@@ -63,10 +63,22 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
 });
 
 // TAB NAVIGATION — mobile tabbar
+// Double-tap on active tab → scroll to top
 const _mobileTabbar = document.getElementById('mobile-tabbar');
 if (_mobileTabbar) {
+  let _lastTabTap = { tab: null, time: 0 };
   _mobileTabbar.addEventListener('click', e => {
     const btn = e.target.closest('.mobile-tab');
-    if (btn) switchTab(btn.dataset.tab);
+    if (!btn) return;
+    const tab = btn.dataset.tab;
+    const now = Date.now();
+    if (tab === window.activeTab && tab === _lastTabTap.tab && now - _lastTabTap.time < 400) {
+      // Двойной тап на активный таб — скролим наверх
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      _lastTabTap = { tab: null, time: 0 };
+    } else {
+      _lastTabTap = { tab, time: now };
+      switchTab(tab);
+    }
   });
 }
