@@ -8,7 +8,7 @@ function _toYouTubeEmbed(url) {
   if (!url) return null;
   // youtu.be/ID или youtube.com/watch?v=ID
   const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{11})/);
-  if (m) return `https://www.youtube.com/embed/${m[1]}?autoplay=1`;
+  if (m) return `https://www.youtube.com/embed/${m[1]}?autoplay=1&playsinline=1`;
   return null;
 }
 
