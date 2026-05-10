@@ -109,7 +109,7 @@
     thead th:first-child { border-radius: 12px 0 0 0; }
     thead th:last-child  { border-radius: 0 12px 0 0; }
     thead th.sortable { cursor: pointer; user-select: none; }
-    thead th.sortable:hover { background: #3d6e2f; }
+    thead th.sortable:hover { background: rgba(0,0,0,.18); }
     .sort-arrow { margin-left: 4px; opacity: .4; font-size: 11px; }
     thead th.sort-asc .sort-arrow, thead th.sort-desc .sort-arrow { opacity: 1; }
     tbody tr { border-bottom: 1px solid #f0f0f0; transition: background .1s; }
@@ -521,7 +521,7 @@
     body.dark .fc-item { border-bottom-color: #3a3a3a; }
     body.dark .fc-item:hover { background: #2d2d2d; }
     body.dark .fc-item-name { color: #d4d4d4; }
-    body.dark .fc-table thead th { background: #252526; color: #9ecb8a; border-bottom-color: #454545; }
+    body.dark .fc-table thead th { background: #252526; color: #cccccc; border-bottom-color: #454545; }
     .fc-pct-amt { color: var(--muted); font-style: italic; }
     .fc-edit-btn {
       background: transparent; border: none; color: var(--muted); cursor: pointer;
@@ -604,13 +604,13 @@
     [data-tip] { cursor: help; }
     #tip-box {
       position: fixed; z-index: 99999; pointer-events: none;
-      background: #1a2a15; color: white; font-size: 12px; font-weight: 400; line-height: 1.5;
+      background: #2c2c2c; color: #e0e0e0; font-size: 12px; font-weight: 400; line-height: 1.5;
       padding: 8px 12px; border-radius: 8px; white-space: normal; max-width: 240px;
       box-shadow: 0 4px 14px rgba(0,0,0,.28); text-align: center;
       opacity: 0; transition: opacity .15s;
     }
     #tip-box.tip-visible { opacity: 1; }
-    body.dark #tip-box { background: #2a3d25; color: #d4d4d4; }
+    body.dark #tip-box { background: #2c2c2c; color: #d4d4d4; border: 1px solid #3c3c3c; }
     .fin-param-card {
       flex: 1; min-width: 220px; background: var(--gray); border-radius: 12px;
       padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;
@@ -858,6 +858,7 @@
     body.dark .nav-btn.active { color: #d4d4d4; border-bottom-color: #007fd4; background: rgba(255,255,255,.05); }
     body.dark table { background: #252526; }
     body.dark thead th { background: #2d2d2d; color: #cccccc; border-bottom-color: rgba(255,255,255,.1); }
+    body.dark thead th.sortable:hover { background: #3a3a3a; }
     body.dark tbody tr { border-bottom-color: #3c3c3c; }
     body.dark tbody td { border-bottom-color: #3c3c3c; }
     body.dark tbody tr:hover { background: #2a2d2e; }
