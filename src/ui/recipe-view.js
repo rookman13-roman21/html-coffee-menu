@@ -271,8 +271,11 @@ export function toggleRecipesIntro() {
   const el = document.getElementById('recipes-intro');
   if (!el) return;
   el.classList.toggle('open');
-  const btn = document.getElementById('recipes-intro-btn');
-  if (btn) btn.classList.toggle('active', el.classList.contains('open'));
+  const isOpen = el.classList.contains('open');
+  ['recipes-intro-btn', 'recipes-intro-btn-hdr'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.classList.toggle('active', isOpen);
+  });
 }
 export function toggleSupIntro() {
   const el = document.getElementById('sup-intro');
