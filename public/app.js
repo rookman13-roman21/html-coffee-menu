@@ -149,12 +149,6 @@ Object.assign(window, {
   // Служебные
   dirty, activeTab, searchQuery, sortState,
   nextDrinkId, nextSemiId, nextMatKey,
-  // const-переменные, нужные render-модулям
-  _wif, EMP_TYPE_LABELS,
-  // Ключи локаций
-  LOC_INDEX_KEY, LOC_ACTIVE_KEY, LOC_DATA_PREFIX, OLD_STATE_KEY,
-  // Хелперы локаций (нужны src/ui/locations.js)
-  locDataKey, resetGlobalsToBase,
 });
 
 // ════════════════════════════════════════════════════════════════════

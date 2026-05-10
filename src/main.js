@@ -64,7 +64,7 @@ import {
   saveState, loadState,
   loadLocIndex, saveLocIndex, migrateOldState,
   activeLoc, getOrgInfo,
-  S, Loc, DEFAULTS, resetGlobalsToBase, locDataKey,
+  S, Loc, DEFAULTS, resetGlobalsToBase, locDataKey, _wif,
   LOC_INDEX_KEY, LOC_ACTIVE_KEY, LOC_DATA_PREFIX, OLD_STATE_KEY,
 } from './state/store.js';
 
@@ -131,7 +131,7 @@ import {
 import {
   calcPositionCosts, payrollPositionTotal, payrollTotal, payrollTotals,
   empTypeTip, onPayrollPos, addPayrollPosition, deletePayrollPosition,
-  scrollToPayroll,
+  scrollToPayroll, EMP_TYPE_LABELS,
 } from './ui/payroll.js';
 
 import {
@@ -218,7 +218,7 @@ const _storeExports = {
   loadLocIndex, saveLocIndex, migrateOldState,
   activeLoc, getOrgInfo,
   saveState, loadState,
-  S, Loc, DEFAULTS, resetGlobalsToBase, locDataKey,
+  S, Loc, DEFAULTS, resetGlobalsToBase, locDataKey, _wif,
   LOC_INDEX_KEY, LOC_ACTIVE_KEY, LOC_DATA_PREFIX, OLD_STATE_KEY,
 };
 Object.assign(window, _storeExports);
@@ -270,7 +270,7 @@ const _srcExports = {
   // ui/payroll
   calcPositionCosts, payrollPositionTotal, payrollTotal, payrollTotals,
   empTypeTip, onPayrollPos, addPayrollPosition, deletePayrollPosition,
-  scrollToPayroll,
+  scrollToPayroll, EMP_TYPE_LABELS,
   // ui/locations
   renderLocSwitcherUI, renderLocList, toggleLocMenu, toggleExportMenu,
   switchLocation, openAddLocation, renameActiveLocation, deleteActiveLocation,

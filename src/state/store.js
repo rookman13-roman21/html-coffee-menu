@@ -13,6 +13,9 @@ export const LOC_DATA_PREFIX = 'mbs_loc_';
 export const OLD_STATE_KEY  = 'mbs_coffee_s';
 export const locDataKey = id => LOC_DATA_PREFIX + id;
 
+// ─── WhatIf state (мутабельный объект, доступен через window._wif) ────
+export const _wif = { price: 0, cost: 0, traffic: 0 };
+
 // ─── Loc ────────────────────────────────────────────────────────────
 export const Loc = { list: [], activeId: null };
 
@@ -160,7 +163,6 @@ export function resetGlobalsToBase() {
 export function saveState() {
   if (!Loc.activeId) return;
   const SEMI = window.SEMI || [];
-  const _wif = window._wif || { price: 0, cost: 0, traffic: 0 };
   try {
     localStorage.setItem(locDataKey(Loc.activeId), JSON.stringify({
       prices: S.prices, salePrices: S.salePrices, portions: S.portions,
@@ -192,7 +194,6 @@ export function saveState() {
 
 export function loadState() {
   if (!Loc.activeId) return;
-  const _wif = window._wif || { price: 0, cost: 0, traffic: 0 };
   try {
     const raw = localStorage.getItem(locDataKey(Loc.activeId));
     if (!raw) return;
