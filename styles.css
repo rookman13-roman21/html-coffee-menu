@@ -1134,7 +1134,7 @@
       .header-sub { display: none; }
       .header-name { font-size: 15px; }
       .header-logo svg { width: 18px !important; height: 18px !important; }
-      .header-logo-img { content: url('images/MBS logo.svg'); height: 28px; }
+      .header-logo-img { height: 28px; }
 
       /* Footer mobile */
       .footer-desktop { display: none; }
