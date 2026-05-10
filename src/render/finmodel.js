@@ -77,7 +77,7 @@ export function renderFinModel() {
       const items = S.fixedCosts.map((c, idx) => ({ c, idx, ev: effCosts[idx] })).filter(({ c }) => (c.category || 'other') === cat.id);
       if (!items.length) return;
       const catTotal = items.reduce((s, { ev }) => s + ((ev && ev.value) || 0), 0);
-      rows += `<tr class="fc-cat-hdr" onclick="toggleFcCat('${cat.id}')"><td colspan="3"><span class="fc-cat-chev" id="fc-chev-${cat.id}">▼</span> ${cat.label} <span class="fc-cat-cnt">${items.length}</span></td><td style="text-align:right"><button class="fc-cat-add" onclick="event.stopPropagation();addFixedCostInCat('${cat.id}')" title="Добавить в эту категорию">+</button> ${rub(catTotal)}</td></tr>`;
+      rows += `<tr class="fc-cat-hdr fc-cat-collapsed" onclick="toggleFcCat('${cat.id}')"><td colspan="3"><span class="fc-cat-chev" id="fc-chev-${cat.id}">▶</span> ${cat.label} <span class="fc-cat-cnt">${items.length}</span></td><td style="text-align:right"><button class="fc-cat-add" onclick="event.stopPropagation();addFixedCostInCat('${cat.id}')" title="Добавить в эту категорию">+</button> ${rub(catTotal)}</td></tr>`;
       items.forEach(({ c, idx, ev }) => {
         const isFot = !!(ev && ev._fromPayroll);
         const badge = isFot
@@ -93,7 +93,7 @@ export function renderFinModel() {
           : `<button class="fc-edit-btn" onclick="event.stopPropagation();openCostEditor(${idx})" title="Изменить"><i data-lucide="pencil" class="icon" style="width:13px;height:13px"></i></button>`;
         const clickHandler = isFot ? `onclick="scrollToPayroll()"` : `onclick="openCostEditor(${idx})"`;
         const fotHint = isFot ? ` <span style="font-size:11px;color:var(--muted)"> ← из калькулятора ФОТ</span>` : '';
-        rows += `<tr class="fc-item${isFot ? ' fc-item-fot' : ''}" data-fc-cat="${cat.id}" ${clickHandler}><td class="fc-item-name">${c.name.replace(/</g, '&lt;').replace(/>/g, '&gt;')}${fotHint}</td><td>${badge}</td><td style="text-align:right">${valTxt}</td><td style="text-align:right">${actionBtn}</td></tr>`;
+        rows += `<tr class="fc-item${isFot ? ' fc-item-fot' : ''}" data-fc-cat="${cat.id}" style="display:none" ${clickHandler}><td class="fc-item-name">${c.name.replace(/</g, '&lt;').replace(/>/g, '&gt;')}${fotHint}</td><td>${badge}</td><td style="text-align:right">${valTxt}</td><td style="text-align:right">${actionBtn}</td></tr>`;
       });
     });
     return `<table class="fc-table"><colgroup><col style="width:44%"><col style="width:18%"><col style="width:26%"><col style="width:12%"></colgroup><thead><tr><th>Название</th><th>Тип</th><th style="text-align:right">₽ / мес</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
@@ -284,9 +284,6 @@ export function renderFinModel() {
       в слабые месяцы они уменьшатся, в сильные вырастут. На базовый план и ТБУ галочка не влияет.
     </div>` : ''}
     <div class="fc-table-wrap">${costTableHtml}</div>
-    <button class="btn btn-outline" style="margin:4px 0 16px;font-size:13px;display:inline-flex;align-items:center;gap:5px" onclick="addFixedCostInCat('other')">
-      <i data-lucide="plus" class="icon"></i> Добавить статью
-    </button>
     <div class="panel-dark" style="margin-bottom:20px">
       <div class="pd-label">ИТОГО постоянные расходы</div>
       <div class="pd-value">${rub(totalFixed)}</div>
