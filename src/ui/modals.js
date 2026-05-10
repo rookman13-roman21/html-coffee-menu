@@ -84,5 +84,16 @@ export function closeOnboarding() {
   try { localStorage.setItem('mbs_onboard', '1'); } catch(e) {}
 }
 
-export function toggleTheme() { return window.toggleTheme && window.toggleTheme(); }
-export function toggleBurger() { return window.toggleBurger && window.toggleBurger(); }
+export function toggleTheme() {
+  const dark = document.body.classList.toggle('dark');
+  const icon = document.getElementById('theme-icon');
+  if (icon) {
+    icon.setAttribute('data-lucide', dark ? 'sun' : 'moon');
+    if (window.lucide) window.lucide.createIcons({ nodes: [icon] });
+  }
+  try { localStorage.setItem('mbs_theme', dark ? 'dark' : 'light'); } catch(e) {}
+}
+export function toggleBurger() {
+  const nav = document.getElementById('main-nav');
+  if (nav) nav.classList.toggle('open');
+}
