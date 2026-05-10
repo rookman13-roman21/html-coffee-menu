@@ -1137,7 +1137,7 @@
     }
     .onboard {
       background: white; border-radius: 20px; padding: 36px 40px 32px;
-      width: 100%; max-width: 480px; text-align: center;
+      width: 100%; max-width: 520px; text-align: center;
       box-shadow: 0 12px 50px rgba(0,0,0,.25);
     }
     .onboard-logo { font-size: 52px; margin-bottom: 16px; }
