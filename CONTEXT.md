@@ -1,7 +1,7 @@
 # CONTEXT — MBS* Coffee Menu
 
 > CFO-инструментарий для владельца кофейни. SPA на Vite + ES-модули.
-> Последнее обновление: 10 мая 2026 (сессия 26)
+> Последнее обновление: 11 мая 2026 (сессия 27)
 
 ---
 
@@ -471,6 +471,7 @@ resetAll()  // confirm → восстанавливает S из DEFAULTS + FIXE
 | Настройки налогообложения (МРОТ/НДФЛ/взносы) не пересчитывались после ввода | `_refreshPayrollRow` не была выставлена в `window` → добавлены в `_srcExports` через `main.js` |
 | Легенда ABC выводилась в одну строку на мобильном | В `renderDashboard`: заголовок `display:block`, каждый пункт в отдельном `<div>`, обёртка `flex-direction:column` |
 | Фокус слетал с инпутов МРОТ/НДФЛ/взносы при каждой нажатой клавише | `oninput` → `onchange` в трёх инпутах `finmodel.js` — ре-рендер происходит только при уходе из поля |
+| Вкладки Дашборд / Продажи / Поставщики отображались с неправильной шириной (узко на десктопе, шире viewport на мобайле) | **Причина:** `body { display: flex; flex-direction: column }` (добавлен для sticky-footer) делает `<main class="main">` flex-child. В flex-column `margin: 0 auto` не растягивает элемент до полной ширины — он сжимается до ширины контента. **Решение:** `width: 100%` на `.main` — до применения `max-width: 1440px` и `margin: 0 auto`. **Правило:** при `body { display: flex }` все дочерние блоки-контейнеры должны иметь явный `width: 100%`. |
 
 ---
 
@@ -1541,3 +1542,31 @@ window._refreshPayrollSummary = _refreshPayrollSummary;
 | `94d13ce` | fix: export _refreshPayrollRow/_refreshPayrollSummary to window |
 | `01e045a` | fix: ABC legend — each item on new line (mobile) |
 | `fb0cbb7` | fix: oninput→onchange in payroll settings inputs (focus loss) |
+
+---
+
+### Сессия 27 (11 мая 2026) — layout fix: body flex + .main width
+
+**Проблема:** после добавления sticky-footer (`ec9c8f9`) появилась регрессия — вкладки Дашборд, Продажи, Поставщики отображались узко на десктопе и шире viewport на мобайле. Рецептуры и Финмодель выглядели корректно (широкий grid-контент распирал `.main` до полной ширины).
+
+**Корневая причина:** `body { display: flex; flex-direction: column }` превращает `<main class="main">` в flex-child. Свойство `margin: 0 auto` на flex-child **не** растягивает его до полной ширины — он сжимается до ширины содержимого.
+
+**Исправление** (`styles.css`, одна строка):
+```css
+/* БЫЛО: */
+.main { flex: 1; }
+
+/* СТАЛО: */
+.main { flex: 1; width: 100%; }
+```
+
+`width: 100%` заставляет `.main` занять всю ширину flex-контейнера, после чего `max-width: 1440px` и `margin: 0 auto` работают как ожидается.
+
+**Правило для будущего:**
+> ⚠️ При `body { display: flex; flex-direction: column }` все дочерние блоки-обёртки (`.main`, `.container` и т.п.) **обязательно** должны иметь `width: 100%`. Иначе `margin: 0 auto` будет сжимать их до ширины контента.
+
+#### Коммиты сессии 27
+
+| Коммит | Описание |
+|--------|----------|
+| `7bbfcb0` | fix: .main width 100pct — restore full-width layout on dashboard/sales/suppliers tabs |
