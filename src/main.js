@@ -82,7 +82,7 @@ import {
 } from './state/ui-state.js';
 
 import {
-  renderDashboard, filterDashboard, toggleDashIntro,
+  renderDashboard, filterDashboard, toggleDashIntro, toggleTop10, initTop10Collapse,
 } from './render/dashboard.js';
 
 import {
@@ -268,7 +268,7 @@ Object.assign(window, {
 // ─── Остальное — не перезаписываем то, что уже определено app.js ────
 const _srcExports = {
   // render/dashboard
-  renderDashboard, filterDashboard, toggleDashIntro,
+  renderDashboard, filterDashboard, toggleDashIntro, toggleTop10, initTop10Collapse,
   // render/cost
   renderCost,
   // render/sales

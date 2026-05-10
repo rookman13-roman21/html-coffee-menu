@@ -6,7 +6,7 @@ import { SALES_PRESETS } from '../data/constants.js';
 
 export function renderTab(tab) {
   try {
-    if      (tab === 'dashboard') window.renderDashboard();
+    if      (tab === 'dashboard') { window.renderDashboard(); if (window.lucide) window.lucide.createIcons(); window.initTop10Collapse(); return; }
     else if (tab === 'cost')      window.renderCost();
     else if (tab === 'sales')     window.renderSales();
     else if (tab === 'finmodel')  window.renderFinModel();

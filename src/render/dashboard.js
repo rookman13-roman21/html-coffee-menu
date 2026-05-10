@@ -19,6 +19,50 @@ export function toggleDashIntro() {
   if (btn) btn.classList.toggle('active', el.classList.contains('open'));
 }
 
+export function toggleTop10() {
+  const panel   = document.getElementById('dash-top10-panel');
+  const chevron = document.getElementById('dash-top10-chevron');
+  if (!panel) return;
+  const collapsed = panel.dataset.collapsed === '1';
+  if (collapsed) {
+    panel.style.maxHeight  = panel.scrollHeight + 'px';
+    panel.style.opacity    = '1';
+    panel.style.marginBottom = '20px';
+    panel.dataset.collapsed = '0';
+    if (chevron) chevron.style.transform = 'rotate(0deg)';
+    localStorage.setItem('dash_top10_collapsed', '0');
+    // после анимации снимаем ограничение высоты
+    setTimeout(() => { if (panel.dataset.collapsed === '0') panel.style.maxHeight = ''; }, 320);
+  } else {
+    panel.style.maxHeight  = panel.scrollHeight + 'px';
+    requestAnimationFrame(() => {
+      panel.style.maxHeight  = '0';
+      panel.style.opacity    = '0';
+      panel.style.marginBottom = '0';
+    });
+    panel.dataset.collapsed = '1';
+    if (chevron) chevron.style.transform = 'rotate(180deg)';
+    localStorage.setItem('dash_top10_collapsed', '1');
+  }
+}
+
+export function initTop10Collapse() {
+  const panel   = document.getElementById('dash-top10-panel');
+  const chevron = document.getElementById('dash-top10-chevron');
+  if (!panel) return;
+  const saved = localStorage.getItem('dash_top10_collapsed');
+  if (saved === '1') {
+    panel.style.maxHeight   = '0';
+    panel.style.opacity     = '0';
+    panel.style.marginBottom = '0';
+    panel.style.transition  = 'none'; // без анимации при инициализации
+    panel.dataset.collapsed = '1';
+    if (chevron) chevron.style.transform = 'rotate(180deg)';
+    // возвращаем transition после инициализации
+    requestAnimationFrame(() => { panel.style.transition = ''; });
+  }
+}
+
 export function renderDashboard() {
   const { withABC, enrich, avgMetrics, sortDrinks,
           rub, pct, fcCombinedHtml, abcBadge, thSort,
@@ -125,8 +169,11 @@ export function renderDashboard() {
         </div>
       </div>
     </div>
-    <div class="section-title"><i data-lucide="trending-down" class="icon"></i> Топ-10 по прибыли с чашки</div>
-    <div class="panel" style="margin-bottom:20px">${chartHtml}</div>
+    <div class="section-title dash-top10-title" onclick="toggleTop10()" style="cursor:pointer;user-select:none" title="Свернуть / развернуть">
+      <i data-lucide="trending-down" class="icon"></i> Топ-10 по прибыли с чашки
+      <i data-lucide="chevron-up" class="icon dash-top10-chevron" id="dash-top10-chevron" style="margin-left:auto;transition:transform .25s"></i>
+    </div>
+    <div class="panel dash-top10-panel" id="dash-top10-panel" style="margin-bottom:20px;overflow:hidden;transition:max-height .3s ease,opacity .25s ease,margin .25s ease">${chartHtml}</div>
     <div class="section-title"><i data-lucide="clipboard-list" class="icon"></i> Рейтинг напитков — кликните заголовок для сортировки</div>
     <div class="dash-search-row">
       <div class="search-wrap" style="margin-bottom:0;flex:1">
