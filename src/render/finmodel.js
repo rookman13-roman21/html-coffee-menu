@@ -350,7 +350,6 @@ export function renderFinModel() {
 
     <div class="fin-quicknav">
       <button class="fin-qn-btn" onclick="document.getElementById('finblock-1').scrollIntoView({behavior:'smooth'})"><i data-lucide="database" class="icon"></i> Исходные данные</button>
-      <button class="fin-qn-btn" onclick="document.getElementById('finblock-2').scrollIntoView({behavior:'smooth'})"><i data-lucide="trending-up" class="icon"></i> Результаты</button>
       <button class="fin-qn-btn" onclick="document.getElementById('finblock-3').scrollIntoView({behavior:'smooth'})"><i data-lucide="sliders" class="icon"></i> Моделирование</button>
       <button class="fin-qn-btn" onclick="document.getElementById('finblock-4').scrollIntoView({behavior:'smooth'})"><i data-lucide="calendar" class="icon"></i> Прогноз</button>
     </div>
@@ -570,44 +569,7 @@ export function renderFinModel() {
       ` : ''}
     </div>
 
-    <!-- ───────────────────────────────────── БЛОК 2: РЕЗУЛЬТАТЫ -->
-    <div class="finblock-hd finblock-hd-2" id="finblock-2">
-      <span class="finblock-num">2</span>
-      <i data-lucide="trending-up" class="icon"></i> Результаты
-    </div>
-
     ${warningsBanner}
-
-    <div class="fin-kpi-row">
-      <div class="fin-kpi-card">
-        <div class="fin-kpi-label"><i data-lucide="trending-up" class="icon"></i> Выручка / мес</div>
-        <div class="fin-kpi-val">${rub(totRevMon)}</div>
-      </div>
-      <div class="fin-kpi-card fin-kpi-costs">
-        <div class="fin-kpi-label"><i data-lucide="minus-circle" class="icon"></i> Расходы / мес</div>
-        <div class="fin-kpi-val">${rub(totRevMon - baseNet)}</div>
-      </div>
-      <div class="fin-kpi-card ${baseNet >= 0 ? 'fin-kpi-profit' : 'fin-kpi-loss'}">
-        <div class="fin-kpi-label"><i data-lucide="${baseNet >= 0 ? 'check-circle' : 'alert-circle'}" class="icon"></i> Чистая прибыль</div>
-        <div class="fin-kpi-val">${rub(baseNet)}</div>
-      </div>
-      <div class="fin-kpi-card">
-        <div class="fin-kpi-label"><i data-lucide="percent" class="icon"></i> FC% (средний)</div>
-        <div class="fin-kpi-val" style="color:${avgFC <= 0.25 ? 'var(--green)' : avgFC <= 0.30 ? '#b38600' : 'var(--red)'}">${pct(avgFC)}</div>
-      </div>
-    </div>
-
-    <div class="section-title" style="margin-top:8px"><i data-lucide="file-text" class="icon"></i> P&amp;L — Отчёт о прибылях и убытках <span style="font-size:12px;font-weight:500;color:var(--muted);margin-left:4px">(базовый план)</span></div>
-    <div class="panel" style="padding:0;overflow:hidden;margin-bottom:24px">
-      <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead><tr style="background:var(--gray)">
-          <th style="padding:10px 14px;text-align:left;font-weight:700">Статья</th>
-          <th style="padding:10px 14px;text-align:right;font-weight:700">Сумма / мес</th>
-          <th style="padding:10px 14px;text-align:right;font-weight:700">%</th>
-        </tr></thead>
-        <tbody>${plRows}</tbody>
-      </table>
-    </div>
 
     <!-- ───────────────────────────────────── БЛОК 3: МОДЕЛИРОВАНИЕ -->
     <div class="finblock-hd finblock-hd-3" id="finblock-3">
@@ -650,13 +612,6 @@ export function renderFinModel() {
       </div>
       <div class="hint" style="margin-top:12px"><i data-lucide="info" class="icon"></i> Двигайте слайдеры — сразу увидите как меняются маржа, ТБУ и прибыль</div>
     </div>
-
-    <div class="section-title"><i data-lucide="trending-up" class="icon"></i> Сценарии относительно вашего базового плана</div>
-    <div class="panel" style="margin-bottom:16px;font-size:13px;color:var(--muted)">
-      Базовый план: <strong style="color:var(--navy)">${int(totalPort)} чашек/день · Выручка ${rub(totRevMon)}/мес</strong>
-      → Чистая прибыль: <strong class="${baseNet >= 0 ? 'num-pos' : 'num-neg'}">${rub(baseNet)}</strong>
-    </div>
-    <div class="scenario-grid">${scenarioCards}</div>
 
     <!-- ───────────────────────────────────── БЛОК 4: ПРОГНОЗ НА ГОД -->
     <div class="finblock-hd finblock-hd-4" id="finblock-4">
