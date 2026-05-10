@@ -38,17 +38,17 @@ export function renderRecipes() {
 
   document.getElementById('tab-recipes').innerHTML = `
     <div class="page-title">
-      <span class="page-title-left"><i data-lucide="clipboard-list" class="icon"></i> Рецептуры и структура себестоимости</span>
+      <span class="page-title-left"><i data-lucide="clipboard-list" class="icon"></i> Рецептуры</span>
       <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn btn-outline recipes-intro-toggle recipes-intro-hdr" id="recipes-intro-btn-hdr" onclick="toggleRecipesIntro()" title="Подсказка"><i data-lucide="info" class="icon"></i> <span class="recipes-btn-txt">Подсказка</span></button>
-        <button class="btn btn-green" onclick="openAddDrink()"><i data-lucide="plus" class="icon"></i> Напиток</button>
-        <button class="btn btn-outline" onclick="exportTechCards()" title="Экспорт техкарт по ГОСТ Р 53105 в PDF"><i data-lucide="file-text" class="icon"></i> PDF техкарт</button>
+        <button class="btn btn-outline recipes-intro-toggle" id="recipes-intro-btn-hdr" onclick="toggleRecipesIntro()" title="Подсказка"><i data-lucide="info" class="icon"></i></button>
+        <button class="btn btn-green" onclick="openAddDrink()"><i data-lucide="plus" class="icon"></i> <span class="recipes-btn-txt">Напиток</span></button>
+        <button class="btn btn-outline" onclick="exportTechCards()" title="Экспорт техкарт по ГОСТ Р 53105 в PDF"><i data-lucide="download" class="icon"></i></button>
       </div>
     </div>
     <div class="tab-intro" id="recipes-intro">
       <div class="tab-intro-icon"><i data-lucide="clipboard-list" class="icon icon-lg"></i></div>
       <div>
-        <div class="tab-intro-title">Рецептуры и структура себестоимости</div>
+        <div class="tab-intro-title">Рецептуры</div>
         <div class="tab-intro-text">
           Здесь хранятся рецептуры всех напитков: состав, граммовки ингредиентов и себестоимость каждой позиции.
           Карточка показывает, из чего складывается цена напитка и какую долю занимает каждый ингредиент.
@@ -73,7 +73,6 @@ export function renderRecipes() {
         </div>
         <div class="recipe-filter-btns">${filterBtns}</div>
         <div class="recipes-toolbar-sort" style="margin-left:auto;flex-shrink:0">${sortSelect}</div>
-        <button class="btn btn-outline recipes-intro-toggle recipes-intro-mob" id="recipes-intro-btn" onclick="toggleRecipesIntro()" title="Подсказка" style="flex-shrink:0"><i data-lucide="info" class="icon"></i></button>
       </div>
     </div>
     <div class="recipe-groups"></div>

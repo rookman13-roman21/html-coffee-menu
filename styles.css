@@ -1572,7 +1572,6 @@
     #recipes-intro.open { display: flex !important; }
     .recipes-intro-toggle { display: inline-flex; }
     .recipes-intro-toggle.active { background: var(--navy); color: #fff; border-color: var(--navy); }
-    .recipes-intro-mob { display: none; } /* мобильная кнопка скрыта на десктопе */
     .sales-hdr-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
     /* ── Продажи: KPI-карточки ── */
@@ -1663,8 +1662,6 @@
       /* Рецептуры: кнопка активна */
       .recipes-intro-toggle.active { background: var(--navy); color: #fff; border-color: var(--navy); }
       .recipes-btn-txt { display: none; }
-      .recipes-intro-hdr { display: none !important; } /* скрыть десктопную на мобайле */
-      .recipes-intro-mob { display: inline-flex !important; } /* показать мобильную */
 
       /* Финмодель: скрываем текст кнопки на мобайле */
       .fin-intro-btn-txt { display: none; }
