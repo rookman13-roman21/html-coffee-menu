@@ -26,6 +26,7 @@ export function renderRecipes() {
     { k: 'tea',    l: '<i data-lucide="leaf" class="icon"></i> Чай' },
     { k: 'cold',   l: '<i data-lucide="snowflake" class="icon"></i> Холодные' },
     { k: 'filter', l: '<i data-lucide="droplets" class="icon"></i> Пуровер' },
+    { k: 'author', l: '<i data-lucide="sparkles" class="icon"></i> Авторские' },
   ];
   const sortBtns = sortLabels.map(s =>
     `<button class="recipe-sort-btn${recipeSort === s.k ? ' active' : ''}" data-srt="${s.k}" onclick="setRecipeSort('${s.k}')">${s.l}</button>`

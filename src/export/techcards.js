@@ -86,7 +86,7 @@ export function _buildTechCardBlock(d, org, cardNum, isLast) {
   const orgName = org.name || 'Кофейня';
   const today = new Date().toLocaleDateString('ru');
   const year  = new Date().getFullYear();
-  const GROUP_NAMES = { hot:'Горячие кофейные', tea:'Чай и матча', cold:'Холодные напитки', filter:'Фильтр-кофе' };
+  const GROUP_NAMES = { hot:'Горячие кофейные', tea:'Чай и матча', cold:'Холодные напитки', filter:'Фильтр-кофе', author:'Авторские' };
   const isCold = d.group === 'cold';
 
   const _dq = DRINK_QUALITY[d.id] || {};

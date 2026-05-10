@@ -101,7 +101,7 @@ export const DRINKS = [
     process:'Смолоть 18 г зерна (помол средне-крупный). Установить фильтр Hario V60, промыть кипятком, слить. Засыпать кофе. Залить 36 мл воды 93°C для «цветения», подождать 45 сек. Затем три порции по ~78 мл с интервалом 30–40 сек круговыми движениями. Общее время: 3:00–3:30 мин.' },
 ];
 
-export const GROUP_LABEL = { hot:'<i data-lucide="coffee" class="icon"></i> Горячие кофейные', tea:'<i data-lucide="leaf" class="icon"></i> Чай и матча', cold:'<i data-lucide="snowflake" class="icon"></i> Холодные напитки', filter:'<i data-lucide="filter" class="icon"></i> Фильтр-кофе' };
+export const GROUP_LABEL = { hot:'<i data-lucide="coffee" class="icon"></i> Горячие кофейные', tea:'<i data-lucide="leaf" class="icon"></i> Чай и матча', cold:'<i data-lucide="snowflake" class="icon"></i> Холодные напитки', filter:'<i data-lucide="filter" class="icon"></i> Фильтр-кофе', author:'<i data-lucide="sparkles" class="icon"></i> Авторские' };
 
 export const DRINK_QUALITY = {
   0:  { appearance: 'Коричнево-чёрный напиток с плотной рыжевато-золотистой крема 5–10 мм', consistency: 'Плотная, устойчивая пена-крема', color: 'Тёмно-коричневый с рыжево-золотистыми прожилками крема', taste: 'Насыщенный, баланс горечи и сладости, типичный кофейный аромат' },
