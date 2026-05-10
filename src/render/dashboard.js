@@ -37,16 +37,21 @@ export function renderDashboard() {
   // Mini bar chart top-10
   const top10  = [...drinks].sort((a, b) => b.profit - a.profit).slice(0, 10);
   const maxPr  = top10[0]?.profit || 1;
-  const chartHtml = top10.map(d => {
+  const chartHtml = top10.map((d, i) => {
     const w  = Math.round(d.profit / maxPr * 100);
     const bc = d.abc === 'A' ? 'var(--soft)' : d.abc === 'B' ? '#ffd84a' : 'var(--red-bg)';
     const vc = d.abc === 'A' ? 'var(--navy)' : d.abc === 'B' ? '#7a5800' : 'var(--red)';
-    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-      <div class="dash-chart-name" style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;font-weight:600">${d.name}</div>
-      <div style="flex:1;height:14px;background:#e5e7eb;border-radius:4px;overflow:hidden">
-        <div style="width:${w}%;height:100%;background:${bc};border-radius:4px;transition:width .4s"></div>
+    return `<div class="dash-top10-row">
+      <div class="dash-top10-rank" style="background:${bc};color:${vc}">${i + 1}</div>
+      <div class="dash-top10-body">
+        <div class="dash-top10-hdr">
+          <span class="dash-top10-name">${d.name}</span>
+          <span class="dash-top10-val" style="color:${vc}">${Math.round(d.profit)}\u00a0₽</span>
+        </div>
+        <div class="dash-top10-track">
+          <div class="dash-top10-bar" style="width:${w}%;background:${bc}"></div>
+        </div>
       </div>
-      <div style="width:60px;font-size:12px;font-weight:800;color:${vc};text-align:right">${Math.round(d.profit)}\u00a0₽</div>
     </div>`;
   }).join('');
 
