@@ -34,7 +34,14 @@
 //   ✅ src/ui/suppliers.js   — openSupplierModal, saveSupplier...
 //   ✅ src/ui/recipe-view.js — openViewDrink, setRecipeGroup, filterRecipes...
 //   ✅ src/ui/misc.js        — openTemplatesModal, generateInsights, exportFullPDF...
+//   ✅ src/data/mat.js       — MAT_CATEGORIES, MAT, MAT_NUTRITION, MAT_ORIG, BASE_MAT_KEYS
+//   ✅ src/data/drinks.js    — DRINKS, GROUP_LABEL, DRINK_QUALITY, DRINKS_ORIG, BASE_DRINK_IDS
+//   ✅ src/data/constants.js — SALES_PRESETS, FIXED_COSTS_CATS, FIXED_COSTS_DEF, MENU_TEMPLATES
 // ════════════════════════════════════════════════════════════════════
+
+import { MAT_CATEGORIES, MAT, MAT_NUTRITION, MAT_ORIG, BASE_MAT_KEYS } from './data/mat.js';
+import { DRINKS, GROUP_LABEL, DRINK_QUALITY, DRINKS_ORIG, BASE_DRINK_IDS } from './data/drinks.js';
+import { SALES_PRESETS, FIXED_COSTS_CATS, _nextCostId, FIXED_COSTS_DEF, MENU_TEMPLATES } from './data/constants.js';
 
 import {
   rub, rubSemi, pct, int,
@@ -211,6 +218,13 @@ const _storeExports = {
   saveState, loadState,
 };
 Object.assign(window, _storeExports);
+
+// ─── data/* — данные (удалены из app.js) — назначаем безусловно ──────────
+Object.assign(window, {
+  MAT_CATEGORIES, MAT, MAT_NUTRITION, MAT_ORIG, BASE_MAT_KEYS,
+  DRINKS, GROUP_LABEL, DRINK_QUALITY, DRINKS_ORIG, BASE_DRINK_IDS,
+  SALES_PRESETS, FIXED_COSTS_CATS, _nextCostId, FIXED_COSTS_DEF, MENU_TEMPLATES,
+});
 
 // ─── Остальное — не перезаписываем то, что уже определено app.js ────
 const _srcExports = {
