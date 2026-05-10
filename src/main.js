@@ -193,6 +193,9 @@ import {
   onWhatIf, exportFullPDF, exportFullXLSX, exportMaterialsPDF, exportMaterialsXLSX,
   buildBEPChart, applyPayrollToFixed, onPayrollSetting, togglePayrollSettings,
   toggleFixedHint, _matDisplayUnit, buildSeasonalChart, recalcWhatIf3,
+  onWhatIf3, resetWhatIf3, openPriceHistory,
+  onSeasonalMonth, openSeasonDrawer, closeSeasonDrawer, onSeasonDrawerChange,
+  applySeasonPreset, _updateDrawerRangeColor, onFixedCostVariable,
   exportSuppliersPDF,
 } from './ui/misc.js';
 
@@ -336,6 +339,10 @@ const _srcExports = {
   onWhatIf, exportFullPDF, exportFullXLSX, exportMaterialsPDF, exportMaterialsXLSX,
   buildBEPChart, applyPayrollToFixed, onPayrollSetting, togglePayrollSettings,
   toggleFixedHint, _matDisplayUnit, buildSeasonalChart, recalcWhatIf3,
+  onWhatIf3, resetWhatIf3, openPriceHistory,
+  onSeasonalMonth, openSeasonDrawer, closeSeasonDrawer, onSeasonDrawerChange,
+  applySeasonPreset, _updateDrawerRangeColor, onFixedCostVariable,
+  exportSuppliersPDF,
   // state/store
   // saveState/loadState перенесены в _storeExports выше
 };
