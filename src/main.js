@@ -197,7 +197,7 @@ import {
   onWhatIf3, resetWhatIf3, openPriceHistory,
   onSeasonalMonth, openSeasonDrawer, closeSeasonDrawer, onSeasonDrawerChange,
   applySeasonPreset, _updateDrawerRangeColor, onFixedCostVariable,
-  exportSuppliersPDF,
+  exportSuppliersPDF, exportSuppliersXLSX,
 } from './ui/misc.js';
 
 // ─── Реэкспорт в window для обратной совместимости с public/app.js ──
@@ -330,7 +330,7 @@ const _srcExports = {
   // ui/suppliers
   openSupplierInfo, siOpenEdit, openSupplierModal, editSupFromList,
   cancelSupplierModal, saveSupplier, openSuppliersList, renderSuppliersList,
-  openSupplierBookModal, cancelSupplierBookModal, exportSuppliersPDF,
+  openSupplierBookModal, cancelSupplierBookModal, exportSuppliersPDF, exportSuppliersXLSX,
   // ui/recipe-view
   openViewDrink, mvdOpenEdit, mvdToggleDownload, _mvdGetData,
   setRecipeSort, setRecipeGroup, filterRecipes,
@@ -344,7 +344,7 @@ const _srcExports = {
   onWhatIf3, resetWhatIf3, openPriceHistory,
   onSeasonalMonth, openSeasonDrawer, closeSeasonDrawer, onSeasonDrawerChange,
   applySeasonPreset, _updateDrawerRangeColor, onFixedCostVariable,
-  exportSuppliersPDF,
+  exportSuppliersPDF, exportSuppliersXLSX,
   // state/store
   // saveState/loadState перенесены в _storeExports выше
 };
