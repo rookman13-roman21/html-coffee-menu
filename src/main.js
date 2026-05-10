@@ -185,6 +185,7 @@ import {
 import {
   openViewDrink, mvdOpenEdit, mvdToggleDownload, _mvdGetData,
   setRecipeSort, setRecipeGroup, filterRecipes,
+  openVideoModal, closeVideoModal,
   toggleRecipesIntro, toggleSupIntro, toggleSalesIntro, toggleFinIntro,
 } from './ui/recipe-view.js';
 
@@ -334,6 +335,7 @@ const _srcExports = {
   // ui/recipe-view
   openViewDrink, mvdOpenEdit, mvdToggleDownload, _mvdGetData,
   setRecipeSort, setRecipeGroup, filterRecipes,
+  openVideoModal, closeVideoModal,
   toggleRecipesIntro, toggleSupIntro, toggleSalesIntro, toggleFinIntro,
   // ui/misc
   openTemplatesModal, chooseTemplate, applyTemplateData,

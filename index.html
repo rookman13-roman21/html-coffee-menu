@@ -710,5 +710,14 @@
   </div>
 </footer>
 
+<!-- Видео-плеер (встроенный) -->
+<div id="video-modal" class="video-modal-overlay" onclick="closeVideoModal()" style="display:none">
+  <div class="video-modal-box" onclick="event.stopPropagation()">
+    <button class="video-modal-close" onclick="closeVideoModal()" title="Закрыть">&times;</button>
+    <iframe id="video-modal-iframe" class="video-modal-iframe" frameborder="0"
+      allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"></iframe>
+  </div>
+</div>
+
 <script type="module" src="/src/main.js"></script>
 </html>

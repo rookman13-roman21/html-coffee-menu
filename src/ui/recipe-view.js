@@ -3,6 +3,41 @@
 
 // ── Перенесено из public/app.js ──
 
+// ── Видео-плеер ──
+function _toYouTubeEmbed(url) {
+  if (!url) return null;
+  // youtu.be/ID или youtube.com/watch?v=ID
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{11})/);
+  if (m) return `https://www.youtube.com/embed/${m[1]}?autoplay=1`;
+  return null;
+}
+
+export function openVideoModal(url) {
+  const embedUrl = _toYouTubeEmbed(url);
+  const overlay = document.getElementById('video-modal');
+  const iframe  = document.getElementById('video-modal-iframe');
+  if (!overlay || !iframe) return;
+  if (embedUrl) {
+    iframe.src = embedUrl;
+    overlay.style.display = 'flex';
+    document.addEventListener('keydown', _videoModalEsc);
+  } else {
+    window.open(url, '_blank', 'noopener');
+  }
+}
+
+export function closeVideoModal() {
+  const overlay = document.getElementById('video-modal');
+  const iframe  = document.getElementById('video-modal-iframe');
+  if (overlay) overlay.style.display = 'none';
+  if (iframe)  iframe.src = '';
+  document.removeEventListener('keydown', _videoModalEsc);
+}
+
+function _videoModalEsc(e) {
+  if (e.key === 'Escape') closeVideoModal();
+}
+
 export function openViewDrink(id) {
   const d = window.DRINKS.find(x => x.id === id);
   if (!d) return;
@@ -49,7 +84,7 @@ export function openViewDrink(id) {
     ? `<div class="mvd-section"><div class="mvd-section-title"><i data-lucide="chef-hat" class="icon"></i> Процесс приготовления</div><div class="mvd-process">${d.process.replace(/\n/g,'<br>')}</div></div>`
     : '';
   const videoHtml = d.videoUrl
-    ? `<a class="recipe-card-video" href="${d.videoUrl}" target="_blank" rel="noopener" style="margin-top:4px;display:inline-flex"><i data-lucide="play-circle" class="icon"></i> Смотреть видео рецепт</a>`
+    ? `<button class="recipe-card-video" onclick="openVideoModal('${d.videoUrl}')" style="margin-top:4px"><i data-lucide="play-circle" class="icon"></i> Смотреть видео рецепт</button>`
     : '';
   document.getElementById('mvd-title').textContent = d.name;
   document.getElementById('mvd-content').innerHTML = `
@@ -217,7 +252,7 @@ export function filterRecipes(val) {
         </div>`
       : '';
     const videoHtml = d.videoUrl
-      ? `<a class="recipe-card-video" href="${d.videoUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i data-lucide="play-circle" class="icon"></i> Смотреть видео рецепт</a>`
+      ? `<button class="recipe-card-video" onclick="event.stopPropagation();openVideoModal('${d.videoUrl}')"><i data-lucide="play-circle" class="icon"></i> Смотреть видео рецепт</button>`
       : '';
     return `<div class="recipe-card" onclick="openViewDrink(${d.id})">
       ${imgHtml}
