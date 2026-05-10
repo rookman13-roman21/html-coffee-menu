@@ -1,7 +1,7 @@
 # CONTEXT — MBS* Coffee Menu
 
 > CFO-инструментарий для владельца кофейни. SPA на Vite + ES-модули.
-> Последнее обновление: 11 мая 2026 (сессия 27)
+> Последнее обновление: 11 мая 2026 (сессия 28)
 
 ---
 
@@ -1570,3 +1570,42 @@ window._refreshPayrollSummary = _refreshPayrollSummary;
 | Коммит | Описание |
 |--------|----------|
 | `7bbfcb0` | fix: .main width 100pct — restore full-width layout on dashboard/sales/suppliers tabs |
+
+---
+
+### Сессия 28 (11 мая 2026) — инлайн SVG в строках таблицы Дашборда
+
+**Проблема:** после сортировки таблицы «Обзора» исчезали SVG-иконки в кнопках строк — корзина (🗑), сброс (↺) и карандаш (✏).
+
+**Причина:** иконки были реализованы через `<i data-lucide="trash-2">` / `<i data-lucide="rotate-ccw">` / `<i data-lucide="pencil">`. Функция `renderDashboard()` полностью перезаписывает `innerHTML` контейнера вкладки — `lucide.createIcons()` инициализирует иконки при старте, но не вызывается повторно после каждого ре-рендера.
+
+**Анатомия `app.js`:** в файле существуют **две копии** генерации HTML строк:
+- Первая (~строка 3347) — в `renderDashboard()` (основной рендер + сортировка)
+- Вторая (~строка 3502) — в `filterDashboard()` (поиск по названию)
+
+**Решение:** заменить `<i data-lucide>` на инлайн SVG в обеих копиях в `app.js` и в `src/render/dashboard.js`.
+
+**Инлайн SVG-константы (для справки):**
+```js
+// trash-2 (13×13)
+const _svgTrash = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`;
+
+// rotate-ccw (13×13)
+const _svgRotateCcw = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`;
+
+// pencil (11×11, margin-left:5px, color:var(--muted))
+const _svgPencil = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:5px;color:var(--muted)"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+```
+
+**Правило для будущего:**
+> ⚠️ При полном ре-рендере через `innerHTML` иконки Lucide (`<i data-lucide>`) не переинициализируются автоматически. Использовать **инлайн SVG** в шаблонных строках рендер-функций.
+
+**Изменённые файлы:**
+- `HTML_coffee_menu/app.js` — две копии (`renderDashboard` + `filterDashboard`): `<i data-lucide>` → инлайн SVG; в первой копии константы `_svgTrash`, `_svgRotateCcw`, `_svgPencil`; во второй — `_svgT`, `_svgR`, `_svgP` (чтобы избежать конфликта имён в одной функции)
+- `HTML_coffee_menu/src/render/dashboard.js` — аналогично (был исправлен ранее в этой же сессии)
+
+#### Коммиты сессии 28
+
+| Коммит | Описание |
+|--------|----------|
+| `fe93747` | fix: inline SVG icons in dashboard rows (no disappear on sort) |
