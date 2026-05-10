@@ -136,6 +136,7 @@ export const DRINK_QUALITY = {
   29: { appearance: 'Прозрачный янтарно-коричневый напиток, без мути и осадка', consistency: 'Жидкая, однородная, чистая', color: 'Янтарно-золотистый, светлый', taste: 'Яркий, фруктовый, с цветочными нотками, лёгкая кислотность, без горечи' },
 };
 
-DRINKS.forEach(d => { if (d.id >= nextDrinkId) nextDrinkId = d.id + 1; });
+if (window.nextDrinkId === undefined) window.nextDrinkId = 27;
+DRINKS.forEach(d => { if (d.id >= window.nextDrinkId) window.nextDrinkId = d.id + 1; });
 export const DRINKS_ORIG = DRINKS.map(d => ({...d, recipe: d.recipe.map(r=>({...r}))}));
 export const BASE_DRINK_IDS = new Set(DRINKS_ORIG.map(d => d.id));

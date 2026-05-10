@@ -34,7 +34,7 @@ export function saveMat() {
   const price = parseFloat(document.getElementById('mm-price').value) || 0;
   const size  = parseFloat(document.getElementById('mm-size').value);
   if (!name || !(size > 0)) { alert('Заполните название и объём'); return; }
-  const key = _editMatKey || ('custom_' + (nextMatKey++));
+  const key = _editMatKey || ('custom_' + (window.nextMatKey++));
   if (!_editMatKey) nextMatKey; // счётчик уже увеличенся
   const category = document.getElementById('mm-category').value || 'other';
   const kcal   = parseFloat(document.getElementById('mm-kcal').value)   || 0;

@@ -143,7 +143,7 @@ export function saveDrink() {
     }
     S.salePrices[id] = price;
   } else {
-    const id = nextDrinkId++;
+    const id = window.nextDrinkId++;
     DRINKS.push({ id, group, name, vol, recipe, process, videoUrl, image,
       storage_temp, storage_life, appearance, taste, consistency, price, custom:true });
     S.salePrices[id] = price;

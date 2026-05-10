@@ -275,7 +275,7 @@ export function saveSemi() {
     const idx = SEMI.findIndex(s => s.id === parseInt(editId));
     if (idx >= 0) SEMI[idx] = { id: parseInt(editId), name, unit, yield: yieldV, process, image, storage_temp, storage_life, appearance, taste, consistency, recipe };
   } else {
-    SEMI.push({ id: nextSemiId++, name, unit, yield: yieldV, process, image, storage_temp, storage_life, appearance, taste, consistency, recipe });
+    SEMI.push({ id: window.nextSemiId++, name, unit, yield: yieldV, process, image, storage_temp, storage_life, appearance, taste, consistency, recipe });
   }
   _clearModalDirty('modal-semi');
   closeModal('modal-semi');
