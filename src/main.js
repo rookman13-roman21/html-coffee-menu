@@ -178,7 +178,7 @@ import {
 import {
   openSupplierInfo, siOpenEdit, openSupplierModal, editSupFromList,
   cancelSupplierModal, saveSupplier, openSuppliersList, renderSuppliersList,
-  openSupplierBookModal, cancelSupplierBookModal, exportSuppliersPDF,
+  openSupplierBookModal, cancelSupplierBookModal,
 } from './ui/suppliers.js';
 
 import {
@@ -193,6 +193,7 @@ import {
   onWhatIf, exportFullPDF, exportFullXLSX, exportMaterialsPDF, exportMaterialsXLSX,
   buildBEPChart, applyPayrollToFixed, onPayrollSetting, togglePayrollSettings,
   toggleFixedHint, _matDisplayUnit, buildSeasonalChart, recalcWhatIf3,
+  exportSuppliersPDF,
 } from './ui/misc.js';
 
 // ─── Реэкспорт в window для обратной совместимости с public/app.js ──

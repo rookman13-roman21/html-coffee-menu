@@ -1,8 +1,6 @@
 // src/ui/suppliers.js
 // Модальные окна и список поставщиков
 
-export function exportSuppliersPDF()           { return window.exportSuppliersPDF(); }
-
 // ── Перенесено из public/app.js ──
 
 export function openSupplierInfo(key) {

@@ -267,9 +267,33 @@ export function filterRecipes(val) {
   if (window.lucide) lucide.createIcons({ nodes: [document.querySelector('#tab-recipes .recipe-groups')] });
 }
 
-export function toggleRecipesIntro()  { return window.toggleRecipesIntro(); }
-export function toggleSupIntro()      { return window.toggleSupIntro(); }
-export function toggleSalesIntro()    { return window.toggleSalesIntro(); }
-export function toggleFinIntro()      { return window.toggleFinIntro(); }
+export function toggleRecipesIntro() {
+  const el = document.getElementById('recipes-intro');
+  if (!el) return;
+  el.classList.toggle('open');
+  const btn = document.getElementById('recipes-intro-btn');
+  if (btn) btn.classList.toggle('active', el.classList.contains('open'));
+}
+export function toggleSupIntro() {
+  const el = document.getElementById('sup-intro');
+  if (!el) return;
+  el.classList.toggle('open');
+  const btn = document.getElementById('sup-intro-btn');
+  if (btn) btn.classList.toggle('active', el.classList.contains('open'));
+}
+export function toggleSalesIntro() {
+  const el = document.getElementById('sales-intro');
+  if (!el) return;
+  el.classList.toggle('open');
+  const btn = document.getElementById('sales-intro-btn');
+  if (btn) btn.classList.toggle('active', el.classList.contains('open'));
+}
+export function toggleFinIntro() {
+  const el = document.getElementById('fin-intro');
+  if (!el) return;
+  el.classList.toggle('open');
+  const btn = document.getElementById('fin-intro-btn');
+  if (btn) btn.classList.toggle('active', el.classList.contains('open'));
+}
 
 
