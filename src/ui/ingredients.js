@@ -121,6 +121,23 @@ export function _updateIngRowCost(anyEl) {
     : '';
 }
 
+export function _autoCalcDrinkIngYield(anyEl) {
+  const row = anyEl.closest('.modal-ing-row');
+  if (!row) return;
+  const amtEl   = row.querySelector('.ing-inp-wrap[data-label="Кол-во"] input');
+  const lossEl  = row.querySelector('.ing-inp-wrap[data-label="Потери"] input');
+  const yieldEl = row.querySelector('.ing-inp-wrap[data-label="Выход"] input');
+  if (!amtEl || !lossEl || !yieldEl) return;
+  const amt  = parseFloat(amtEl.value)  || 0;
+  const loss = parseFloat(lossEl.value) || 0;
+  if (amt > 0 && loss > 0) {
+    const y = amt * (1 - loss / 100);
+    yieldEl.value = parseFloat(y.toPrecision(4));
+  } else {
+    yieldEl.value = '';
+  }
+}
+
 export function addIngRow(selected='', amt='', loss='') {
   // selected = 'mat:coffee' | 'semi:5' | '' (legacy: plain key → convert)
   if (selected && !selected.startsWith('mat:') && !selected.startsWith('semi:')) selected = 'mat:' + selected;
@@ -131,8 +148,9 @@ export function addIngRow(selected='', amt='', loss='') {
   row.innerHTML = `
     <select class="modal-select${!selected ? ' ing-select-empty' : ''}" onchange="_onIngMatChange(this);_updateIngRowCost(this)">${matOptions(selected)}</select>
     <button class="modal-ing-del" title="Удалить" onclick="this.closest('.modal-ing-row').remove()"><i data-lucide="trash-2" class="icon"></i></button>
-    <div class="ing-inp-wrap" data-label="Кол-во"><input class="modal-inp" type="text" inputmode="decimal" placeholder="${ph}" value="${amt}" oninput="this.value=this.value.replace(',','.');_updateIngRowCost(this)"></div>
-    <div class="ing-inp-wrap" data-label="Потери"><input class="modal-inp" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="%" value="${loss}" oninput="_updateIngRowCost(this)"></div>
+    <div class="ing-inp-wrap" data-label="Кол-во"><input class="modal-inp" type="text" inputmode="decimal" placeholder="${ph}" value="${amt}" oninput="this.value=this.value.replace(',','.');_updateIngRowCost(this);_autoCalcDrinkIngYield(this)"></div>
+    <div class="ing-inp-wrap" data-label="Потери"><input class="modal-inp" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="%" value="${loss}" oninput="_updateIngRowCost(this);_autoCalcDrinkIngYield(this)"></div>
+    <div class="ing-inp-wrap" data-label="Выход"><input class="modal-inp ing-yield" type="text" inputmode="decimal" placeholder="авто" title="Фактический выход после потерь"></div>
     <span class="ing-cost-hint"></span>
   `;
   document.getElementById('md-ings').appendChild(row);
@@ -145,7 +163,16 @@ export function addIngRow(selected='', amt='', loss='') {
     const hint = row.querySelector('.ing-cost-hint');
     const cost = _calcIngRowCost(row);
     if (hint && cost != null && cost > 0)
-      hint.textContent = (cost < 1 ? cost.toFixed(2) : Math.round(cost)) + ' ₽';
+      hint.textContent = (cost < 1 ? cost.toFixed(2) : Math.round(cost)) + ' ₽';
+  }
+  // Показать выход если есть потери
+  if (amt && loss) {
+    const amtNum  = parseFloat(amt)  || 0;
+    const lossNum = parseFloat(loss) || 0;
+    if (amtNum > 0 && lossNum > 0) {
+      const yieldEl = row.querySelector('.ing-yield');
+      if (yieldEl) yieldEl.value = parseFloat((amtNum * (1 - lossNum / 100)).toPrecision(4));
+    }
   }
 }
 

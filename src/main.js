@@ -172,7 +172,7 @@ import {
 
 import {
   matOptions, _ingPlaceholder, _ingStep,
-  _onIngMatChange, _calcIngRowCost, _updateIngRowCost, addIngRow,
+  _onIngMatChange, _calcIngRowCost, _updateIngRowCost, addIngRow, _autoCalcDrinkIngYield,
   _searchClear, openSupQuickDrop, _fillMatSupBookSelect, _onMatSupBookChange,
 } from './ui/ingredients.js';
 
@@ -326,7 +326,7 @@ const _srcExports = {
   openCostEditor, closeCostEditor, saveCostEditor, deleteCostFromEditor,
   // ui/ingredients
   matOptions, _ingPlaceholder, _ingStep,
-  _onIngMatChange, _calcIngRowCost, _updateIngRowCost, addIngRow,
+  _onIngMatChange, _calcIngRowCost, _updateIngRowCost, addIngRow, _autoCalcDrinkIngYield,
   _searchClear, openSupQuickDrop, _fillMatSupBookSelect, _onMatSupBookChange,
   // ui/suppliers
   openSupplierInfo, siOpenEdit, openSupplierModal, editSupFromList,
