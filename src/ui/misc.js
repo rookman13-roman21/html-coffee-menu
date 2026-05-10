@@ -1366,7 +1366,7 @@ export function recalcWhatIf3() {
     <div class="wif-card">
       <div class="wif-card-label">FC%</div>
       <div class="wif-card-val">${pct(fc2)}</div>
-      ${mkDelta(dFCpp, `${s(dFCpp)}${dFCpp.toFixed(1)} pp к базе`, true)}
+      ${mkDelta(dFCpp, `${s(dFCpp)}${dFCpp.toFixed(1)} п.п. к базе`, true)}
     </div>
     <div class="wif-card">
       <div class="wif-card-label">Выручка / мес</div>
