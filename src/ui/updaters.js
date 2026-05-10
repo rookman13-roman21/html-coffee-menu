@@ -162,5 +162,12 @@ export function resetAll() {
 }
 
 export function switchTab(tab) {
-  return window.switchTab(tab);
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.mobile-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  window.activeTab = tab;
+  const tabEl = document.getElementById('tab-' + tab);
+  if (tabEl) tabEl.classList.add('active');
+  if (window.dirty && window.dirty[tab]) { window.renderTab(tab); window.dirty[tab] = false; }
+  try { localStorage.setItem('mbs_active_tab', tab); } catch(e) {}
 }

@@ -148,7 +148,8 @@ export function exportFullPDF() {
   // P&L
   const varCostsMon = drinks.reduce((s,d)=>s+(d.cost*(window.S.portions[d.id]||0)*window.S.days),0);
   const ebit        = totRevMon - varCostsMon - totalFixed;
-  const taxAmt      = (typeof calcTax === 'function') ? window.calcTax(totRevMon, varCostsMon + varExtra, fixedOnly + fotAmt) : 0;
+  const _taxMode1  = window.S.taxMode || 'none';
+  const taxAmt      = _taxMode1 === 'usn6' ? totRevMon * 0.06 : _taxMode1 === 'usn15' ? Math.max(0, (totRevMon - varCostsMon - varExtra - fixedOnly - fotAmt) * 0.15) : 0;
   const netProfit   = ebit - taxAmt;
   const investment  = window.S.investment || 0;
   const paybackMon  = investment > 0 && netProfit > 0 ? (investment / netProfit) : null;
@@ -360,7 +361,8 @@ export async function exportFullXLSX() {
   const totalFixed  = fixedOnly + fotAmt + varExtra;
   const varCostsMon = drinks.reduce((s, d) => s + d.cost * (window.S.portions[d.id] || 0) * window.S.days, 0);
   const ebit        = totRevMon - varCostsMon - totalFixed;
-  const taxAmt      = (typeof calcTax === 'function') ? window.calcTax(totRevMon, varCostsMon + varExtra, fixedOnly + fotAmt) : 0;
+  const _taxMode2   = window.S.taxMode || 'none';
+  const taxAmt      = _taxMode2 === 'usn6' ? totRevMon * 0.06 : _taxMode2 === 'usn15' ? Math.max(0, (totRevMon - varCostsMon - varExtra - fixedOnly - fotAmt) * 0.15) : 0;
   const netProfit   = ebit - taxAmt;
   const investment  = window.S.investment || 0;
   const paybackMon  = investment > 0 && netProfit > 0 ? investment / netProfit : null;

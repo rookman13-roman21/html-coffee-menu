@@ -386,6 +386,7 @@ const _savedTab = (() => {
 })();
 
 // Рендерим вкладки
+window.activeTab = _savedTab;
 const _dirty = window.dirty || { dashboard:true, cost:true, sales:true, finmodel:true, recipes:true };
 Object.keys(_dirty).forEach(k => _dirty[k] = true);
 switchTab(_savedTab);
