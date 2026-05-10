@@ -147,10 +147,12 @@ export function renderDashboard() {
       </table>
     </div>
     <div class="panel" style="font-size:13px;color:var(--muted)">
-      <strong style="color:var(--navy);margin-right:8px">ABC-классификация:</strong>
-      ${abcBadge('A')} <span style="margin-right:16px">Топ-20% по прибыли — приоритет продаж</span>
-      ${abcBadge('B')} <span style="margin-right:16px">Следующие 30% — рабочий ассортимент</span>
-      ${abcBadge('C')} Остальные 50% — пересмотреть цену или себестоимость
+      <strong style="color:var(--navy);display:block;margin-bottom:6px">ABC-классификация:</strong>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div>${abcBadge('A')} Топ-20% по прибыли — приоритет продаж</div>
+        <div>${abcBadge('B')} Следующие 30% — рабочий ассортимент</div>
+        <div>${abcBadge('C')} Остальные 50% — пересмотреть цену или себестоимость</div>
+      </div>
     </div>
   `;
 }
