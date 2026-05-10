@@ -14,9 +14,9 @@ export function filterDashboard(query) {
 export function toggleDashIntro() {
   const el = document.getElementById('dash-intro');
   if (!el) return;
-  el.classList.toggle('collapsed');
+  el.classList.toggle('open');
   const btn = document.getElementById('dash-intro-btn');
-  if (btn) btn.classList.toggle('active', !el.classList.contains('collapsed'));
+  if (btn) btn.classList.toggle('active', el.classList.contains('open'));
 }
 
 export function renderDashboard() {
