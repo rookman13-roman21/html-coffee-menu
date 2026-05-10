@@ -54,7 +54,7 @@ export function renderSales() {
       </div>
     </div>
 
-    <div class="sales-kpi-row1">
+    <div class="sales-kpi-row">
       <div class="sales-kpi-card sales-kpi-wide">
         <div class="sales-kpi-label">Выручка / мес</div>
         <div class="sales-kpi-val">${rub(totRevMon)}</div>
@@ -67,8 +67,6 @@ export function renderSales() {
         <div class="sales-kpi-label">Чашек / день</div>
         <div class="sales-kpi-val">${int(totalPort)}</div>
       </div>
-    </div>
-    <div class="sales-kpi-row2">
       <div class="sales-kpi-card sales-kpi-compact" style="border-color:${fcBrd}">
         <div class="sales-kpi-label">Food-cost %</div>
         <div class="sales-kpi-val" style="color:${fcClr}">${pct(wFC)}</div>

@@ -1526,18 +1526,17 @@
     .sales-hdr-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
     /* ── Продажи: KPI-карточки ── */
-    .sales-kpi-row1 {
-      display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;
-    }
-    .sales-kpi-row2 {
-      display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: stretch;
+    .sales-kpi-row {
+      display: flex; gap: 10px; margin-bottom: 14px;
+      flex-wrap: nowrap; align-items: stretch;
     }
     .sales-kpi-card {
       background: var(--light); border: 1.5px solid var(--border);
       border-radius: 12px; padding: 10px 16px;
     }
-    .sales-kpi-wide   { flex: 1; min-width: 150px; }
-    .sales-kpi-compact { flex: 0 0 auto; min-width: 110px; }
+    /* Выручка и Прибыль — фиксированная ширина, чтобы не прыгали при больших числах */
+    .sales-kpi-wide   { flex: 0 0 220px; min-width: 0; }
+    .sales-kpi-compact { flex: 0 0 120px; min-width: 0; }
     .sales-kpi-green  { border-color: var(--green); }
     .sales-kpi-label  {
       font-size: 11px; color: var(--muted); font-weight: 600;
@@ -1606,8 +1605,9 @@
       .fin-intro-btn-txt { display: none; }
 
       /* Продажи: KPI и контролы на мобильном */
-      .sales-kpi-wide   { min-width: 120px; }
-      .sales-kpi-compact { min-width: 90px; }
+      .sales-kpi-row    { flex-wrap: wrap; }
+      .sales-kpi-wide   { flex: 1 1 140px; }
+      .sales-kpi-compact { flex: 1 1 90px; }
       .sales-kpi-val    { font-size: 17px; }
       .sales-preset-select { min-width: 140px; font-size: 12px; }
       .sales-scale-btn  { font-size: 11px; padding: 5px 9px; }
