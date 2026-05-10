@@ -1,6 +1,9 @@
 // src/ui/updaters.js
 // Обработчики изменения состояния: цены, порции, финмодель
 
+import { _matPriceBeforeEdit } from '../state/ui-state.js';
+import { SALES_PRESETS } from '../data/constants.js';
+
 export function renderTab(tab) {
   try {
     if      (tab === 'dashboard') window.renderDashboard();
@@ -31,95 +34,105 @@ export function markDirtyDebounce() {
 }
 
 export function onMatPriceFocus(key) {
-  return window.onMatPriceFocus(key);
+  if (!Object.prototype.hasOwnProperty.call(_matPriceBeforeEdit, key)) {
+    _matPriceBeforeEdit[key] = window.S.prices[key];
+  }
 }
 
 export function onMatPriceInput(key, v) {
-  return window.onMatPriceInput(key, v);
+  const n = parseFloat(v);
+  if (!(n > 0)) return;
+  window.S.prices[key] = n;
 }
 
 export function onMatPriceCommit(key, v) {
-  return window.onMatPriceCommit(key, v);
+  const n = parseFloat(v);
+  if (!(n > 0)) return;
+  window.S.prices[key] = n;
+  const old = _matPriceBeforeEdit[key];
+  if (old !== undefined && old !== n) {
+    if (!Array.isArray(window.S.priceLog)) window.S.priceLog = [];
+    window.S.priceLog.push({ matKey: key, oldPrice: old, newPrice: n, date: new Date().toISOString() });
+    if (window.S.priceLog.length > 500) window.S.priceLog = window.S.priceLog.slice(-500);
+  }
+  delete _matPriceBeforeEdit[key];
+  markDirtyDebounce();
 }
 
-export function onMatPrice(key, v) {
-  return window.onMatPrice(key, v);
-}
+export function onMatPrice(key, v) { onMatPriceInput(key, v); }
 
 export function onSalePrice(id, v) {
-  return window.onSalePrice(id, v);
+  const n = parseFloat(v);
+  if (n > 0) { window.S.salePrices[id] = n; markDirtyDebounce(); }
+}
+
+function _syncTargetFCInputs(val) {
+  const v = Math.round(val * 100);
+  ['kpi-target-fc', 'dash-target-fc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el !== document.activeElement) el.value = v;
+  });
 }
 
 export function onTargetFCSilent(v) {
-  return window.onTargetFCSilent(v);
+  const n = parseFloat(v) / 100;
+  if (n > 0 && n < 1) { window.S.targetFC = n; _syncTargetFCInputs(n); }
 }
 
 export function onTargetFC(v) {
-  return window.onTargetFC(v);
+  const n = parseFloat(v) / 100;
+  if (n > 0 && n < 1) { window.S.targetFC = n; _syncTargetFCInputs(n); markDirtyDebounce(); }
 }
 
 export function onPortions(id, v) {
-  return window.onPortions(id, v);
+  const n = parseInt(v);
+  if (n >= 0) {
+    window.S.portions[id] = n;
+    if (window.dirty) window.dirty.finmodel = true;
+    markDirtyDebounce();
+  }
 }
 
 export function onDays(v) {
-  return window.onDays(v);
+  const n = parseInt(v);
+  if (n > 0) {
+    window.S.days = n;
+    if (window.dirty) window.dirty.finmodel = true;
+    markDirtyDebounce();
+  }
 }
 
 export function applySalesPreset(key) {
-  return window.applySalesPreset(key);
+  const preset = SALES_PRESETS[key];
+  if (!preset) return;
+  window.S.activePreset = key;
+  const baseIds = new Set(window.DRINKS.map(d => d.id));
+  Object.entries(preset.portions).forEach(([id, val]) => {
+    if (baseIds.has(Number(id))) window.S.portions[Number(id)] = val;
+  });
+  if (window.dirty) window.dirty.finmodel = true;
+  window.renderSales();
+  window.saveState();
+  if (window.lucide) window.lucide.createIcons();
 }
 
 export function scaleSalesPortions(factor) {
-  return window.scaleSalesPortions(factor);
+  Object.keys(window.S.portions).forEach(id => {
+    window.S.portions[Number(id)] = Math.max(0, Math.round(window.S.portions[Number(id)] * factor));
+  });
+  if (window.dirty) window.dirty.finmodel = true;
+  window.renderSales();
+  window.saveState();
+  if (window.lucide) window.lucide.createIcons();
 }
 
 export function onFixedCost(i, v) {
-  return window.onFixedCost(i, v);
+  const n = parseFloat(v);
+  if (n >= 0) { window.S.fixedCosts[i].value = n; markDirtyDebounce(); }
 }
 
 export function onFixedCostName(i, v) {
-  return window.onFixedCostName(i, v);
-}
-
-export function addFixedCost() {
-  return window.addFixedCost();
-}
-
-export function addFixedCostInCat(cat) {
-  return window.addFixedCostInCat(cat);
-}
-
-export function delFixedCost(i) {
-  return window.delFixedCost(i);
-}
-
-export function onTaxMode(v) {
-  return window.onTaxMode(v);
-}
-
-export function onInvestment(v) {
-  return window.onInvestment(v);
-}
-
-export function openCostEditor(idx) {
-  return window.openCostEditor(idx);
-}
-
-export function closeCostEditor() {
-  return window.closeCostEditor();
-}
-
-export function saveCostEditor() {
-  return window.saveCostEditor();
-}
-
-export function deleteCostFromEditor() {
-  return window.deleteCostFromEditor();
-}
-
-export function toggleFcCat(cat) {
-  return window.toggleFcCat(cat);
+  if (v.trim()) { window.S.fixedCosts[i].name = v.trim(); window.saveState(); }
 }
 
 export function flashCells() {

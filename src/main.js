@@ -137,10 +137,8 @@ import {
   onMatPriceFocus, onMatPriceInput, onMatPriceCommit, onMatPrice,
   onSalePrice, onTargetFCSilent, onTargetFC, onPortions, onDays,
   applySalesPreset, scaleSalesPortions,
-  onFixedCost, onFixedCostName, addFixedCost, addFixedCostInCat, delFixedCost,
-  onTaxMode, onInvestment,
-  openCostEditor, closeCostEditor, saveCostEditor, deleteCostFromEditor,
-  toggleFcCat, flashCells, resetAll, switchTab,
+  onFixedCost, onFixedCostName,
+  flashCells, resetAll, switchTab,
 } from './ui/updaters.js';
 
 import {
@@ -166,6 +164,9 @@ import {
   setMatCat, toggleMatCat, toggleSemiCat,
   toggleSupSection, toggleIngSection, toggleSemiSection,
   scrollCostTo, openMatUsage, _buildMatUsageMap, _buildSemiUsageMap,
+  addFixedCost, addFixedCostInCat, delFixedCost,
+  onTaxMode, onInvestment, toggleFcCat,
+  openCostEditor, closeCostEditor, saveCostEditor, deleteCostFromEditor,
 } from './ui/cost-table.js';
 
 import {
@@ -294,10 +295,8 @@ const _srcExports = {
   onMatPriceFocus, onMatPriceInput, onMatPriceCommit, onMatPrice,
   onSalePrice, onTargetFCSilent, onTargetFC, onPortions, onDays,
   applySalesPreset, scaleSalesPortions,
-  onFixedCost, onFixedCostName, addFixedCost, addFixedCostInCat, delFixedCost,
-  onTaxMode, onInvestment,
-  openCostEditor, closeCostEditor, saveCostEditor, deleteCostFromEditor,
-  toggleFcCat, flashCells, resetAll, switchTab,
+  onFixedCost, onFixedCostName,
+  flashCells, resetAll, switchTab,
   // ui/payroll
   calcPositionCosts, payrollPositionTotal, payrollTotal, payrollTotals,
   empTypeTip, onPayrollPos, addPayrollPosition, deletePayrollPosition,
@@ -315,6 +314,9 @@ const _srcExports = {
   setMatCat, toggleMatCat, toggleSemiCat,
   toggleSupSection, toggleIngSection, toggleSemiSection,
   scrollCostTo, openMatUsage, _buildMatUsageMap, _buildSemiUsageMap,
+  addFixedCost, addFixedCostInCat, delFixedCost,
+  onTaxMode, onInvestment, toggleFcCat,
+  openCostEditor, closeCostEditor, saveCostEditor, deleteCostFromEditor,
   // ui/ingredients
   matOptions, _ingPlaceholder, _ingStep,
   _onIngMatChange, _calcIngRowCost, _updateIngRowCost, addIngRow,
