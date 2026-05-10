@@ -42,8 +42,9 @@ export const PS_DEFAULTS = { mrot: 22440, ndfl: 13, ins: 30 };
 
 // ─── Категоризация сырья ─────────────────────────────────────────
 export const MAT_CATEGORY = {
-  coffee:'coffee', milk:'dairy', cream:'dairy',
-  cocoa:'other',   matcha:'tea',   tea:'tea',
+  coffee:'coffee', filter_coffee:'coffee',
+  milk:'dairy', cream:'dairy',
+  cocoa:'other', matcha:'tea', tea:'tea',
   sugar:'sugar', sugar_van:'sugar', sugar_org:'sugar',
   cup250:'pack', cup350:'pack', cup450:'pack', cup_p300:'pack', cup_p500:'pack',
   orange:'other', tonic:'other', lime:'other',

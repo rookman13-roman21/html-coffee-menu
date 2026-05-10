@@ -96,6 +96,12 @@ export function openSuppliersList() {
   openModal('modal-suppliers-list');
   if (window.lucide) lucide.createIcons();
 }
+function _getMatCat(key) {
+  if (window.MAT_CATEGORY && window.MAT_CATEGORY[key]) return window.MAT_CATEGORY[key];
+  const matEntry = (window.MAT && window.MAT[key]) || (window.S && window.S.materials && window.S.materials[key]);
+  return (matEntry && matEntry.category) || 'other';
+}
+
 export function renderSuppliersList() {
   const sups = window.S.suppliers || {};
   const book = window.S.supplierBook || [];
@@ -135,7 +141,7 @@ export function renderSuppliersList() {
     filtered = filtered.filter(g => g.mats.length === 0);
   } else if (supListFilter !== 'all') {
     filtered = filtered.filter(g =>
-      g.mats.some(m => (window.MAT_CATEGORY[m.key] || 'other') === supListFilter));
+      g.mats.some(m => _getMatCat(m.key) === supListFilter));
   }
 
   // Статистика
