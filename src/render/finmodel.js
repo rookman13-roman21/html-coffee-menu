@@ -242,6 +242,7 @@ export function renderFinModel() {
         </div>
       </div>
     </div>
+    <div class="fm-content">
     <div class="fin-quicknav">
       <button class="fin-qn-btn" onclick="document.getElementById('finblock-1').scrollIntoView({behavior:'smooth'})"><i data-lucide="database" class="icon"></i> Исходные данные</button>
       <button class="fin-qn-btn" onclick="document.getElementById('finblock-2').scrollIntoView({behavior:'smooth'})"><i data-lucide="trending-up" class="icon"></i> Результаты</button>
@@ -597,6 +598,8 @@ export function renderFinModel() {
       <div id="seasonal-chart">
         ${buildSeasonalChart(totRevMon, varCostsMon, totalFixed, calcTax)}
       </div>
+    </div>
+
     </div>
   `;
   // Инициализируем результат What-if со стартовыми значениями
