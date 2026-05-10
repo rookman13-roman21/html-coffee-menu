@@ -671,7 +671,23 @@
     .theme-btn .icon { width:16px; height:16px; }
 
     /* ── RECIPE CARDS ────────────────────────────────────────── */
+    @keyframes recipe-card-in {
+      from { opacity:0; transform:translateY(10px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
     .recipe-groups { display:flex; flex-direction:column; gap:0; }
+    .recipe-groups.recipe-animate .recipe-card {
+      animation: recipe-card-in .22s ease both;
+    }
+    .recipe-groups.recipe-animate .recipe-card:nth-child(1)  { animation-delay:.00s; }
+    .recipe-groups.recipe-animate .recipe-card:nth-child(2)  { animation-delay:.04s; }
+    .recipe-groups.recipe-animate .recipe-card:nth-child(3)  { animation-delay:.08s; }
+    .recipe-groups.recipe-animate .recipe-card:nth-child(4)  { animation-delay:.12s; }
+    .recipe-groups.recipe-animate .recipe-card:nth-child(5)  { animation-delay:.16s; }
+    .recipe-groups.recipe-animate .recipe-card:nth-child(6)  { animation-delay:.20s; }
+    .recipe-groups.recipe-animate .recipe-card:nth-child(7)  { animation-delay:.24s; }
+    .recipe-groups.recipe-animate .recipe-card:nth-child(8)  { animation-delay:.28s; }
+    .recipe-groups.recipe-animate .recipe-card:nth-child(n+9) { animation-delay:.32s; }
     .recipe-group-title {
       font-size:13px; font-weight:800; color:var(--navy);
       text-transform:uppercase; letter-spacing:.05em;

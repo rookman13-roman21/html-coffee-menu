@@ -254,7 +254,13 @@ export function filterRecipes(val) {
   }
 
   const container = document.querySelector('#tab-recipes .recipe-groups');
-  if (container) container.innerHTML = html;
+  if (container) {
+    container.innerHTML = html;
+    container.classList.remove('recipe-animate');
+    // eslint-disable-next-line no-unused-expressions
+    container.offsetWidth; // force reflow
+    container.classList.add('recipe-animate');
+  }
 
   // Обновляем классы активных кнопок фильтра и сортировки
   document.querySelectorAll('#tab-recipes .recipe-filter-btn').forEach(btn => {
