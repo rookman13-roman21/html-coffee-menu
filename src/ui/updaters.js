@@ -1,20 +1,33 @@
 // src/ui/updaters.js
 // Обработчики изменения состояния: цены, порции, финмодель
 
-export function markDirty() {
-  return window.markDirty();
-}
-
-export function markDirtyDebounce() {
-  return window.markDirtyDebounce();
+export function renderTab(tab) {
+  try {
+    if      (tab === 'dashboard') window.renderDashboard();
+    else if (tab === 'cost')      window.renderCost();
+    else if (tab === 'sales')     window.renderSales();
+    else if (tab === 'finmodel')  window.renderFinModel();
+    else if (tab === 'recipes')   window.renderRecipes();
+    if (window.lucide) window.lucide.createIcons();
+  } catch(e) {
+    console.error('[renderTab ' + tab + ']', e);
+  }
 }
 
 export function renderActive() {
-  return window.renderActive();
+  renderTab(window.activeTab);
+  if (window.dirty) window.dirty[window.activeTab] = false;
 }
 
-export function renderTab(tab) {
-  return window.renderTab(tab);
+export function markDirty() {
+  if (window.dirty) Object.keys(window.dirty).forEach(k => window.dirty[k] = true);
+  renderActive();
+}
+
+export function markDirtyDebounce() {
+  if (window.dirty) Object.keys(window.dirty).forEach(k => window.dirty[k] = true);
+  clearTimeout(window._renderTimer);
+  window._renderTimer = setTimeout(() => renderActive(), 400);
 }
 
 export function onMatPriceFocus(key) {
@@ -168,6 +181,6 @@ export function switchTab(tab) {
   window.activeTab = tab;
   const tabEl = document.getElementById('tab-' + tab);
   if (tabEl) tabEl.classList.add('active');
-  if (window.dirty && window.dirty[tab]) { window.renderTab(tab); window.dirty[tab] = false; }
+  if (window.dirty && window.dirty[tab]) { renderTab(tab); window.dirty[tab] = false; }
   try { localStorage.setItem('mbs_active_tab', tab); } catch(e) {}
 }
