@@ -64,6 +64,8 @@ import {
   saveState, loadState,
   loadLocIndex, saveLocIndex, migrateOldState,
   activeLoc, getOrgInfo,
+  S, Loc, DEFAULTS, resetGlobalsToBase, locDataKey,
+  LOC_INDEX_KEY, LOC_ACTIVE_KEY, LOC_DATA_PREFIX, OLD_STATE_KEY,
 } from './state/store.js';
 
 import {
@@ -216,6 +218,8 @@ const _storeExports = {
   loadLocIndex, saveLocIndex, migrateOldState,
   activeLoc, getOrgInfo,
   saveState, loadState,
+  S, Loc, DEFAULTS, resetGlobalsToBase, locDataKey,
+  LOC_INDEX_KEY, LOC_ACTIVE_KEY, LOC_DATA_PREFIX, OLD_STATE_KEY,
 };
 Object.assign(window, _storeExports);
 
