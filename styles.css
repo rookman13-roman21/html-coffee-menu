@@ -705,7 +705,7 @@
       background:white; border:1px solid var(--border); border-radius:12px;
       padding:16px 18px; box-shadow:0 1px 4px rgba(0,0,0,.06); cursor:pointer;
       transition:box-shadow .22s ease,transform .22s ease,border-color .22s ease;
-      overflow:hidden; position:relative;
+      position:relative;
       display:flex; flex-direction:column;
     }
     .recipe-ings { flex:1; }
