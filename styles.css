@@ -1680,14 +1680,36 @@
       .fin-intro-btn-txt { display: none; }
 
       /* Продажи: KPI и контролы на мобильном */
-      .sales-kpi-row    { flex-wrap: wrap; }
-      .sales-kpi-wide   { flex: 1 1 140px; }
-      .sales-kpi-compact { flex: 1 1 90px; }
-      .sales-kpi-val    { font-size: 17px; }
-      .sales-preset-select { min-width: 140px; font-size: 12px; }
+      .sales-kpi-val    { font-size: 16px; }
+      .sales-kpi-label  { font-size: 10px; }
+      .sales-preset-select { font-size: 12px; }
       .sales-scale-btn  { font-size: 11px; padding: 5px 9px; }
-      .sales-days-label { font-size: 12px; }
-      .sales-days-scale { padding: 8px 12px; }
+      .sales-days-label { font-size: 11px; }
+      .sales-days-scale {
+        padding: 8px 10px; flex: unset;
+        flex-direction: column; align-items: flex-start; gap: 3px;
+      }
+      .sales-days-scale .inp { width: 64px; }
+      /* 3-колоночный grid для телефонов */
+      @media (max-width: 700px) {
+        .sales-kpi-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          gap: 8px;
+        }
+        .sales-kpi-wide, .sales-kpi-compact { flex: unset; min-width: unset; }
+        .sales-kpi-card { padding: 8px 10px; }
+        .sales-controls-row {
+          display: grid;
+          grid-template-columns: 1fr auto auto;
+          grid-template-rows: auto auto;
+          gap: 8px;
+          align-items: end;
+        }
+        .sales-preset-wrap { grid-column: 1; grid-row: 1; }
+        .sales-controls-row > .sales-scale-btn { grid-row: 1; align-self: end; height: 38px; padding: 0 14px; font-size: 13px; }
+        .sales-controls-row .search-wrap { grid-column: 1 / -1; grid-row: 2; min-width: unset !important; max-width: unset !important; }
+      }
 
       /* Заголовок: только иконки */
       .dash-btn-txt { display: none; }

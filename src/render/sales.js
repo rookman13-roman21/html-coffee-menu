@@ -78,8 +78,6 @@ export function renderSales() {
       <div class="sales-days-scale">
         <span class="sales-days-label">Дней в месяце:</span>
         <input class="inp sm" type="number" min="1" max="31" inputmode="numeric" value="${S.days}" onchange="onDays(this.value)">
-        <button class="btn btn-outline sales-scale-btn red" onclick="scaleSalesPortions(0.90)">−10%</button>
-        <button class="btn btn-outline sales-scale-btn green" onclick="scaleSalesPortions(1.10)">+10%</button>
       </div>
     </div>
     <div class="sales-controls-row">
@@ -92,6 +90,8 @@ export function renderSales() {
           ).join('')}
         </select>
       </div>
+      <button class="btn btn-outline sales-scale-btn red" onclick="scaleSalesPortions(0.90)">−10%</button>
+      <button class="btn btn-outline sales-scale-btn green" onclick="scaleSalesPortions(1.10)">+10%</button>
       <div class="search-wrap" style="margin-bottom:0;flex:1;min-width:140px">
         <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
         <input class="search-inp" id="sales-search" type="text" placeholder="Поиск по названию..."
