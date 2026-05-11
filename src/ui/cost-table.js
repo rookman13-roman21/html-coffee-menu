@@ -6,6 +6,7 @@
 
 // Переменные состояния (объявлены в app.js, используются здесь через closure)
 let _fceIdx = -1;
+let _fceIsNew = false;
 
 export function setMatCat(cat) {
   _matActiveCat = cat;
@@ -152,10 +153,10 @@ export function onInvestment(v) { const n=parseFloat(v); if(n>=0){ S.investment=
 
 
 export function addFixedCostInCat(cat) {
-  window.S.fixedCosts.push({ id: ++_nextCostId, name:'Новая статья', value:0, category: cat || 'other', isVariable:false });
-  renderFinModel();
-  saveState();
+  window.S.fixedCosts.push({ id: ++_nextCostId, name:'', value:0, category: cat || 'other', isVariable:false });
   const idx = window.S.fixedCosts.length - 1;
+  _fceIsNew = true;
+  renderFinModel();
   setTimeout(() => { openCostEditor(idx); if(window.lucide) lucide.createIcons(); }, 80);
 }
 
@@ -253,7 +254,12 @@ export function openCostEditor(idx) {
 export function closeCostEditor() {
   const ov = document.getElementById('fc-editor-overlay');
   if (ov) ov.style.display = 'none';
+  if (_fceIsNew && _fceIdx >= 0 && _fceIdx < window.S.fixedCosts.length) {
+    window.S.fixedCosts.splice(_fceIdx, 1);
+    renderFinModel();
+  }
   _fceIdx = -1;
+  _fceIsNew = false;
 }
 
 export function _fceTypeChange() {
@@ -317,6 +323,7 @@ export function saveCostEditor() {
     c.value      = parseFloat(document.getElementById('fce-value').value) || 0;
     c.isVariable = document.getElementById('fce-variable').checked;
   }
+  _fceIsNew = false;
   closeCostEditor();
   renderFinModel();
   saveState();
@@ -327,6 +334,7 @@ export function deleteCostFromEditor() {
   if (_fceIdx < 0 || window.window.S.fixedCosts.length <= 1) return;
   if (!confirm(`Удалить «${window.window.S.fixedCosts[_fceIdx].name}»?`)) return;
   window.window.S.fixedCosts.splice(_fceIdx, 1);
+  _fceIsNew = false;
   closeCostEditor();
   renderFinModel();
   saveState();
