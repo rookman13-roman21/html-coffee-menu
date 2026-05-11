@@ -1609,3 +1609,85 @@ const _svgPencil = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="1
 | Коммит | Описание |
 |--------|----------|
 | `fe93747` | fix: inline SVG icons in dashboard rows (no disappear on sort) |
+
+---
+
+### Сессия 29 (11 мая 2026) — мобильный тулбар рецептур + карточки с фото
+
+#### 1. Порядок элементов в мобильном тулбаре рецептур
+
+**Проблема:** на мобильном экране (≤700px) элементы тулбара отображались в неудобном порядке — сначала поиск, потом фильтры (табы категорий), потом сортировка. Оптимальный порядок: сортировка → фильтры → поиск.
+
+Дополнительно: фильтр-кнопки (табы категорий) горизонтально скроллились, выезжая за пределы экрана.
+
+**Решение** — CSS `order` без изменений HTML (`src/render/recipes.js`):
+
+```css
+@media (max-width: 700px) {
+  .recipes-toolbar-main { flex-wrap: wrap; gap: 8px; }
+
+  /* Сортировка — первая, над табами */
+  .recipes-toolbar-main .recipes-toolbar-sort { order: 1; margin-left: 0; }
+
+  /* Табы (фильтры) — вторые, на всю ширину, flex-wrap */
+  .recipes-toolbar-main .recipe-filter-btns {
+    order: 2; width: 100%;
+    flex-wrap: wrap !important; overflow-x: visible !important; gap: 5px;
+  }
+
+  /* Поиск — последний, на всю ширину */
+  .recipes-toolbar-main .search-wrap {
+    order: 3; min-width: 100% !important; max-width: 100% !important;
+  }
+}
+```
+
+**Коммиты:** `cf444a3` (фильтры выше поиска, без горизонтального скролла), `74cd780` (сортировка над табами)
+
+---
+
+#### 2. Внешний вид карточки рецепта с фото
+
+**Проблема:**
+1. Название напитка вплотную прилегало к фотографии — `margin-bottom: 0` у `.recipe-card-img`
+2. Углы фотографии в карточке были скруглены по отдельному `border-radius: 12px 12px 0 0` — избыточно, т.к. `overflow: hidden` на карточке уже обрезает углы по скруглению карточки
+
+**Исправление** (`styles.css`):
+
+```css
+/* БЫЛО: */
+.recipe-card-img { margin: -16px -18px 0; aspect-ratio: 4/3; overflow: hidden; border-radius: 12px 12px 0 0; }
+
+/* СТАЛО: */
+.recipe-card-img { margin: -16px -18px 14px; aspect-ratio: 4/3; overflow: hidden; border-radius: 0; }
+```
+
+- `margin-bottom: 0` → `14px` — отступ между фото и названием
+- `border-radius: 12px 12px 0 0` → `0` — скругление не нужно, `overflow: hidden` на `.recipe-card` обрезает фото по углам карточки
+
+**Коммит:** `fd6d897`
+
+---
+
+#### 3. Реверт: `overflow: hidden` на `.recipe-card` нельзя убирать
+
+**Проблема:** попытка убрать `overflow: hidden` с `.recipe-card` приводила к тому, что фотографии в карточках перестают обрезаться по скруглённым углам карточки (выступают за границы `border-radius: 12px`).
+
+**Причина:** `overflow: hidden` — единственный механизм, который заставляет фото соблюдать `border-radius` родительской карточки. Без него фото квадратные углы выходят за скруглённую рамку карточки.
+
+**Действие:** реверт коммита `78d2391` через коммит `476686a`.
+
+**Правило для будущего:**
+> ⚠️ `overflow: hidden` на `.recipe-card` нельзя убирать — именно он обрезает фотографию по скруглённым углам карточки (`border-radius: 12px`). Без него фото будет выступать за пределы карточки.
+
+---
+
+#### Итоговые коммиты сессии 29
+
+| Коммит | Описание |
+|--------|----------|
+| `cf444a3` | fix: recipe toolbar mobile — filter-btns above search, no hscroll |
+| `74cd780` | fix: recipe toolbar mobile — sort above filter tabs |
+| `fd6d897` | fix: recipe-card-img — remove border-radius, add margin-bottom 14px |
+| `78d2391` | fix: remove overflow:hidden from .recipe-card (ошибочный) |
+| `476686a` | revert: restore overflow:hidden on .recipe-card (обрезка фото по углам) |
