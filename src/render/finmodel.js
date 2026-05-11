@@ -571,6 +571,22 @@ export function renderFinModel() {
 
     ${warningsBanner}
 
+    <!-- ───────────────────────────────────── P&L ТАБЛИЦА -->
+    <div class="section-title" style="margin-top:8px"><i data-lucide="table-2" class="icon"></i> Отчёт о прибылях и убытках (P&amp;L) <span style="font-size:12px;font-weight:500;color:var(--muted);margin-left:6px">базовый сценарий</span></div>
+    <div class="panel" style="padding:0;overflow:hidden;margin-bottom:24px">
+      <table style="width:100%;border-collapse:collapse">
+        <colgroup><col style="width:58%"><col style="width:24%"><col style="width:18%"></colgroup>
+        <thead>
+          <tr style="background:var(--light)">
+            <th style="padding:9px 14px;text-align:left;font-size:12px;font-weight:700;color:var(--muted)">Статья</th>
+            <th style="padding:9px 14px;text-align:right;font-size:12px;font-weight:700;color:var(--muted)">₽ / мес</th>
+            <th style="padding:9px 14px;text-align:right;font-size:12px;font-weight:700;color:var(--muted)">% выручки</th>
+          </tr>
+        </thead>
+        <tbody>${plRows}</tbody>
+      </table>
+    </div>
+
     <!-- ───────────────────────────────────── БЛОК 2: МОДЕЛИРОВАНИЕ -->
     <div class="finblock-hd finblock-hd-2" id="finblock-3">
       <span class="finblock-num">2</span>
