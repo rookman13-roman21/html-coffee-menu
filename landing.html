@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CaféDesk — управление кофейней</title>
+  <meta name="description" content="CaféDesk — инструмент управления кофейней: себестоимость, рецептуры, финмодель, ФОТ и экспорт. Бесплатно, без Excel, без хаоса." />
+  <meta property="og:title" content="CaféDesk — управление кофейней" />
+  <meta property="og:description" content="Себестоимость, рецептуры, финмодель и ФОТ — в одном инструменте. Бесплатно." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://cafedeck.app/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="CaféDesk — управление кофейней" />
+  <meta name="twitter:description" content="Себестоимость, рецептуры, финмодель — в одном инструменте. Бесплатно." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☕</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <style>
+    :root {
+      --navy:   #417033;
+      --green:  #4F883E;
+      --light:  #E7F2E3;
+      --soft:   #B6D8AB;
+      --red:    #CC2841;
+      --border: #cde3c5;
+      --text:   #1a1a1a;
+      --muted:  #6b7280;
+      --font:   'Mulish', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      color: var(--text);
+      background: #fff;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      height: 62px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px;
+    }
+    .header-brand {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 18px; font-weight: 900; color: var(--navy);
+      text-decoration: none;
+    }
+    .header-brand-icon { font-size: 24px; }
+    .header-nav { display: flex; align-items: center; gap: 8px; }
+    .btn-outline {
+      background: none; border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 8px 20px;
+      font-family: var(--font); font-size: 14px; font-weight: 700;
+      color: var(--navy); cursor: pointer;
+      transition: border-color .15s, background .15s;
+      text-decoration: none;
+    }
+    .btn-outline:hover { border-color: var(--green); background: var(--light); }
+    .btn-outline:visited { color: var(--navy); }
+    .btn-primary {
+      background: var(--navy); border: 1.5px solid var(--navy);
+      border-radius: 10px; padding: 8px 20px;
+      font-family: var(--font); font-size: 14px; font-weight: 700;
+      color: #fff; cursor: pointer;
+      transition: background .15s;
+      text-decoration: none;
+    }
+    .btn-primary:visited { color: #fff; }
+    .btn-primary:hover { background: var(--green); border-color: var(--green); }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 140px 40px 100px;
+      background: linear-gradient(160deg, #fff 0%, var(--light) 100%);
+      min-height: 100vh;
+      display: flex; align-items: center;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 70% 40%, rgba(79,136,62,.08) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(65,112,51,.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      max-width: 1200px; margin: 0 auto; width: 100%;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+      position: relative;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--light); border: 1px solid var(--border);
+      border-radius: 999px; padding: 5px 14px;
+      font-size: 12px; font-weight: 700; color: var(--navy);
+      margin-bottom: 20px; width: fit-content;
+    }
+    .hero-badge-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .5; transform: scale(.8); }
+    }
+    .hero-title {
+      font-size: clamp(36px, 4.5vw, 56px);
+      font-weight: 900; line-height: 1.1;
+      color: var(--navy); margin-bottom: 20px;
+      letter-spacing: -.02em;
+    }
+    .hero-title span { color: var(--green); }
+    .hero-desc {
+      font-size: 17px; color: var(--muted); line-height: 1.7;
+      margin-bottom: 36px; max-width: 480px;
+    }
+    .hero-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .btn-hero {
+      background: var(--navy); border: none; border-radius: 12px;
+      padding: 14px 32px; font-family: var(--font);
+      font-size: 15px; font-weight: 800; color: #fff; cursor: pointer;
+      transition: background .15s, transform .12s, box-shadow .15s;
+      box-shadow: 0 4px 20px rgba(65,112,51,.35);
+    }
+    .btn-hero:hover {
+      background: var(--green);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(65,112,51,.40);
+    }
+    .btn-hero-ghost {
+      background: none; border: 1.5px solid var(--border);
+      border-radius: 12px; padding: 13px 28px;
+      font-family: var(--font); font-size: 15px; font-weight: 700;
+      color: var(--navy); cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .btn-hero-ghost:hover { border-color: var(--green); background: var(--light); }
+    .hero-note {
+      margin-top: 16px; font-size: 12px; color: var(--muted);
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* Hero card preview */
+    .hero-visual {
+      position: relative;
+    }
+    .hero-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.1), 0 4px 16px rgba(0,0,0,.06);
+      overflow: hidden;
+    }
+    .hc-header {
+      background: var(--navy); padding: 14px 20px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .hc-dots { display: flex; gap: 6px; }
+    .hc-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: rgba(255,255,255,.3);
+    }
+    .hc-title { color: rgba(255,255,255,.8); font-size: 13px; font-weight: 700; margin-left: 4px; }
+    .hc-nav {
+      display: flex; gap: 0; padding: 0 20px;
+      border-bottom: 1px solid var(--border); background: #fff;
+    }
+    .hc-nav-item {
+      padding: 10px 14px; font-size: 12px; font-weight: 700;
+      color: var(--muted); border-bottom: 2px solid transparent; cursor: default;
+    }
+    .hc-nav-item.active { color: var(--navy); border-bottom-color: var(--navy); }
+    .hc-body { padding: 16px 20px; }
+    .hc-kpi-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 14px; }
+    .hc-kpi {
+      background: var(--light); border-radius: 10px; padding: 12px 14px;
+    }
+    .hc-kpi-label { font-size: 10px; font-weight: 700; color: var(--navy); opacity: .65; margin-bottom: 4px; }
+    .hc-kpi-val { font-size: 18px; font-weight: 900; color: var(--navy); }
+    .hc-kpi.accent { background: var(--navy); }
+    .hc-kpi.accent .hc-kpi-label { color: rgba(255,255,255,.65); }
+    .hc-kpi.accent .hc-kpi-val { color: #fff; }
+    .hc-table-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid #f0f5ee; font-size: 12px;
+    }
+    .hc-table-row:last-child { border-bottom: none; }
+    .hc-drink-icon { font-size: 18px; width: 28px; text-align: center; }
+    .hc-drink-name { flex: 1; font-weight: 700; color: var(--text); }
+    .hc-drink-price { font-weight: 800; color: var(--navy); font-size: 13px; }
+    .hc-drink-margin {
+      font-size: 11px; font-weight: 700; padding: 2px 7px;
+      border-radius: 999px; background: var(--green); color: #fff;
+    }
+    /* Floating badges */
+    .hero-float {
+      position: absolute;
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 12px; padding: 10px 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.1);
+      font-size: 12px; font-weight: 700;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .hero-float-1 { top: -18px; right: -18px; color: var(--green); }
+    .hero-float-2 { bottom: -16px; left: -18px; color: var(--navy); }
+    .hero-float-icon { font-size: 20px; }
+
+    /* ── FEATURES ── */
+    .features {
+      padding: 100px 40px;
+      background: #fff;
+    }
+    .section-label {
+      text-align: center; font-size: 12px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: .1em;
+      color: var(--green); margin-bottom: 12px;
+    }
+    .section-title {
+      text-align: center;
+      font-size: clamp(26px, 3vw, 38px); font-weight: 900;
+      color: var(--navy); margin-bottom: 16px; letter-spacing: -.02em;
+    }
+    .section-sub {
+      text-align: center; font-size: 16px; color: var(--muted);
+      max-width: 520px; margin: 0 auto 60px; line-height: 1.7;
+    }
+    .features-grid {
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    }
+    .feat-card {
+      background: #fafcf9; border: 1px solid var(--border);
+      border-radius: 18px; padding: 28px 26px;
+      transition: box-shadow .2s, transform .18s;
+    }
+    .feat-card:hover {
+      box-shadow: 0 12px 36px rgba(65,112,51,.12);
+      transform: translateY(-3px);
+    }
+    .feat-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      background: var(--light); display: flex; align-items: center; justify-content: center;
+      font-size: 24px; margin-bottom: 18px;
+    }
+    .feat-title { font-size: 16px; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
+    .feat-desc { font-size: 14px; color: var(--muted); line-height: 1.65; }
+
+    /* ── STATS ── */
+    .stats {
+      background: var(--navy);
+      padding: 70px 40px;
+    }
+    .stats-inner {
+      max-width: 900px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px;
+      text-align: center;
+    }
+    .stat-val {
+      font-size: clamp(32px, 4vw, 48px); font-weight: 900;
+      color: #fff; line-height: 1;
+    }
+    .stat-label { font-size: 13px; color: rgba(255,255,255,.6); margin-top: 6px; font-weight: 600; }
+
+    /* ── AUTH SECTION ── */
+    .auth-section {
+      padding: 100px 40px;
+      background: linear-gradient(160deg, var(--light) 0%, #fff 100%);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .auth-wrap {
+      max-width: 1100px; width: 100%; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+    }
+    .auth-left h2 {
+      font-size: clamp(28px, 3vw, 40px); font-weight: 900;
+      color: var(--navy); margin-bottom: 16px; letter-spacing: -.02em;
+    }
+    .auth-left p { font-size: 16px; color: var(--muted); line-height: 1.7; margin-bottom: 28px; }
+    .auth-perks { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .auth-perk {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 14px; font-weight: 600; color: var(--text);
+    }
+    .auth-perk-icon {
+      width: 26px; height: 26px; border-radius: 8px;
+      background: var(--light); display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
+    }
+
+    /* Auth card */
+    .auth-card {
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 22px; padding: 40px;
+      box-shadow: 0 12px 48px rgba(0,0,0,.08);
+    }
+    .auth-tabs {
+      display: flex; border-radius: 12px; background: #f5f5f5;
+      padding: 4px; margin-bottom: 28px; gap: 4px;
+    }
+    .auth-tab {
+      flex: 1; padding: 9px; border: none; border-radius: 9px;
+      background: none; font-family: var(--font); font-size: 14px; font-weight: 700;
+      color: var(--muted); cursor: pointer; transition: all .15s;
+    }
+    .auth-tab.active {
+      background: #fff; color: var(--navy);
+      box-shadow: 0 1px 6px rgba(0,0,0,.1);
+    }
+    .auth-form { display: flex; flex-direction: column; gap: 14px; }
+    .form-label {
+      font-size: 12px; font-weight: 800; color: var(--navy);
+      text-transform: uppercase; letter-spacing: .05em;
+      margin-bottom: 6px; display: block;
+    }
+    .form-input {
+      width: 100%; padding: 12px 16px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-family: var(--font); font-size: 14px; color: var(--text);
+      background: #fff; outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .form-input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(79,136,62,.12);
+    }
+    .form-input::placeholder { color: #b0b8b4; }
+    .form-divider {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 12px; color: var(--muted); font-weight: 600;
+      margin: 4px 0;
+    }
+    .form-divider::before, .form-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .btn-submit {
+      background: var(--navy); color: #fff; border: none;
+      border-radius: 12px; padding: 14px; width: 100%;
+      font-family: var(--font); font-size: 15px; font-weight: 800;
+      cursor: pointer; transition: background .15s, transform .12s, box-shadow .15s;
+      box-shadow: 0 4px 16px rgba(65,112,51,.3);
+      margin-top: 4px;
+    }
+    .btn-submit:hover {
+      background: var(--green);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(65,112,51,.35);
+    }
+    .btn-google {
+      background: #fff; color: var(--text); border: 1.5px solid var(--border);
+      border-radius: 12px; padding: 12px; width: 100%;
+      font-family: var(--font); font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: border-color .15s, background .15s;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .btn-google:hover { border-color: var(--green); background: var(--light); }
+    .google-icon { width: 18px; height: 18px; }
+    .auth-footer-note {
+      text-align: center; font-size: 12px; color: var(--muted); margin-top: 16px; line-height: 1.6;
+    }
+    .auth-footer-note a { color: var(--green); text-decoration: none; font-weight: 700; }
+    .auth-footer-note a:hover { text-decoration: underline; }
+
+    /* ── FOOTER ── */
+    .footer {
+      background: var(--navy); padding: 40px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-brand {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 16px; font-weight: 900; color: rgba(255,255,255,.9);
+    }
+    .footer-copy { font-size: 13px; color: rgba(255,255,255,.45); }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-link { font-size: 13px; color: rgba(255,255,255,.55); text-decoration: none; font-weight: 600; }
+    .footer-link:hover { color: rgba(255,255,255,.9); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .hero { padding: 120px 24px 80px; }
+      .hero-inner { grid-template-columns: 1fr; gap: 50px; }
+      .hero-visual { order: -1; }
+      .features { padding: 70px 24px; }
+      .features-grid { grid-template-columns: repeat(2,1fr); }
+      .stats { padding: 50px 24px; }
+      .stats-inner { grid-template-columns: repeat(2,1fr); gap: 30px; }
+      .auth-section { padding: 70px 24px; }
+      .auth-wrap { grid-template-columns: 1fr; gap: 40px; }
+      .header { padding: 0 20px; }
+    }
+    @media (max-width: 580px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .stats-inner { grid-template-columns: repeat(2,1fr); }
+      .header-nav .btn-outline { display: none; }
+    }
+
+    /* ── JS-переключение формы ── */
+    .auth-panel { display: none; }
+    .auth-panel.active { display: flex; flex-direction: column; gap: 14px; }
+
+    /* ── MOBILE MENU ── */
+    .burger {
+      display: none; flex-direction: column; justify-content: center; gap: 5px;
+      background: none; border: none; cursor: pointer; padding: 6px;
+      width: 36px; height: 36px;
+    }
+    .burger-line {
+      width: 22px; height: 2px; background: var(--navy); border-radius: 2px;
+      transition: transform .2s, opacity .2s;
+    }
+    .burger.open .burger-line:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .burger.open .burger-line:nth-child(2) { opacity: 0; }
+    .burger.open .burger-line:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .mobile-nav {
+      display: none; position: fixed; top: 62px; left: 0; right: 0; z-index: 98;
+      background: rgba(255,255,255,.97); backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px; flex-direction: column; gap: 8px;
+    }
+    .mobile-nav.open { display: flex; }
+    .mobile-nav .btn-outline, .mobile-nav .btn-primary { text-align: center; width: 100%; }
+    @media (max-width: 580px) {
+      .burger { display: flex; }
+      .header-nav .btn-outline, .header-nav .btn-primary { display: none; }
+    }
+
+    /* ── FADE-IN SCROLL ANIMATION ── */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity .55s ease, transform .55s ease;
+    }
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── PRICING ── */
+    .pricing { padding: 100px 40px; background: var(--light); }
+    .pricing-cards {
+      max-width: 900px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;
+    }
+    .pricing-card {
+      background: #fff; border: 1.5px solid var(--border);
+      border-radius: 24px; padding: 36px;
+      position: relative; overflow: hidden;
+    }
+    .pricing-card.featured {
+      background: var(--navy); border-color: var(--navy);
+    }
+    .pricing-top-badge {
+      display: inline-block; background: var(--green); color: #fff;
+      font-size: 11px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .08em; padding: 3px 10px; border-radius: 999px;
+      margin-bottom: 16px;
+    }
+    .pricing-plan { font-size: 14px; font-weight: 800; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .06em; }
+    .pricing-card.featured .pricing-plan { color: rgba(255,255,255,.55); }
+    .pricing-price { font-size: 52px; font-weight: 900; color: var(--navy); line-height: 1; margin-bottom: 4px; }
+    .pricing-card.featured .pricing-price { color: #fff; }
+    .pricing-price sup { font-size: 22px; vertical-align: top; margin-top: 10px; display: inline-block; }
+    .pricing-period { font-size: 13px; color: var(--muted); margin-bottom: 24px; font-weight: 600; }
+    .pricing-card.featured .pricing-period { color: rgba(255,255,255,.55); }
+    .pricing-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .pricing-list li { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: var(--text); }
+    .pricing-card.featured .pricing-list li { color: rgba(255,255,255,.85); }
+    .pricing-check { color: var(--green); font-size: 15px; flex-shrink: 0; }
+    .pricing-card.featured .pricing-check { color: #a8e89c; }
+    .btn-pricing {
+      width: 100%; padding: 13px; border: 1.5px solid var(--border);
+      border-radius: 12px; background: none;
+      font-family: var(--font); font-size: 14px; font-weight: 800;
+      color: var(--navy); cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .btn-pricing:hover { border-color: var(--green); background: var(--light); }
+    .btn-pricing.white {
+      background: #fff; color: var(--navy); border-color: rgba(255,255,255,.3);
+      box-shadow: 0 4px 16px rgba(0,0,0,.15);
+    }
+    .btn-pricing.white:hover { background: var(--light); }
+    @media (max-width: 680px) {
+      .pricing-cards { grid-template-columns: 1fr; }
+      .pricing { padding: 70px 24px; }
+    }
+
+    /* ── CTA SECTION ── */
+    .cta-section {
+      padding: 100px 40px;
+      background: linear-gradient(135deg, var(--navy) 0%, #2d5022 100%);
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(79,136,62,.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-inner { position: relative; max-width: 640px; margin: 0 auto; }
+    .cta-section h2 {
+      font-size: clamp(28px, 3.5vw, 44px); font-weight: 900;
+      color: #fff; margin-bottom: 16px; letter-spacing: -.02em;
+    }
+    .cta-section p { font-size: 17px; color: rgba(255,255,255,.65); margin-bottom: 36px; line-height: 1.7; }
+    .btn-hero-white {
+      background: #fff; border: none; border-radius: 12px;
+      padding: 15px 40px; font-family: var(--font);
+      font-size: 15px; font-weight: 800; color: var(--navy); cursor: pointer;
+      transition: background .15s, transform .12s, box-shadow .15s;
+      box-shadow: 0 4px 24px rgba(0,0,0,.25);
+    }
+    .btn-hero-white:hover {
+      background: var(--light);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,0,0,.3);
+    }
+    .cta-note { margin-top: 16px; font-size: 12px; color: rgba(255,255,255,.4); }
+    @media (max-width: 580px) { .cta-section { padding: 70px 24px; } }
+
+    /* ── FORM STATES ── */
+    .form-success { text-align: center; padding: 28px 0; }
+    .form-success-icon { font-size: 56px; margin-bottom: 16px; }
+    .form-success h3 { font-size: 20px; font-weight: 900; color: var(--navy); margin-bottom: 8px; }
+    .form-success p { font-size: 14px; color: var(--muted); line-height: 1.65; }
+    .btn-submit.loading { opacity: .6; pointer-events: none; cursor: default; }
+    .form-input.error { border-color: var(--red); }
+    .field-error { font-size: 11px; color: var(--red); font-weight: 700; margin-top: 4px; display: none; }
+    .field-error.show { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <a class="header-brand" href="#">
+    <span class="header-brand-icon">☕</span>
+    CaféDesk
+  </a>
+  <nav class="header-nav">
+    <a href="#features" class="btn-outline">Возможности</a>
+    <button class="btn-primary" onclick="document.getElementById('auth').scrollIntoView({behavior:'smooth'}); setTimeout(()=>switchTab(document.querySelectorAll('.auth-tab')[1],'login'),350)">Войти</button>
+  </nav>
+  <button class="burger" id="burger" aria-label="Меню" onclick="toggleMobileNav()">
+    <span class="burger-line"></span>
+    <span class="burger-line"></span>
+    <span class="burger-line"></span>
+  </button>
+</header>
+<nav class="mobile-nav" id="mobile-nav">
+  <a href="#features" class="btn-outline" onclick="toggleMobileNav()">Возможности</a>
+  <button class="btn-primary" onclick="toggleMobileNav(); document.getElementById('auth').scrollIntoView({behavior:'smooth'}); setTimeout(()=>switchTab(document.querySelectorAll('.auth-tab')[1],'login'),350)">Войти →</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Для тех, кто открывает кофейню
+      </div>
+      <h1 class="hero-title">
+        Откройте кофейню<br>
+        с <span>чёткими цифрами</span>
+      </h1>
+      <p class="hero-desc">
+        Рецептуры напитков, финмодель, расчёт себестоимости и база поставщиков —
+        всё что нужно до открытия, в одном инструменте. Бесплатно.
+      </p>
+      <div class="hero-actions">
+        <button class="btn-hero" onclick="document.getElementById('auth').scrollIntoView({behavior:'smooth'})">
+          Начать бесплатно →
+        </button>
+        <button class="btn-hero-ghost" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">
+          Что внутри?
+        </button>
+      </div>
+      <p class="hero-note">✓ Бесплатно · ✓ Без кредитной карты · ✓ Готово за 5 минут</p>
+    </div>
+
+    <div class="hero-visual">
+      <div class="hero-float hero-float-1">
+        <span class="hero-float-icon">🚀</span>
+        До открытия — 30+ расчётов
+      </div>
+      <div class="hero-card">
+        <div class="hc-header">
+          <div class="hc-dots">
+            <div class="hc-dot"></div>
+            <div class="hc-dot"></div>
+            <div class="hc-dot"></div>
+          </div>
+          <span class="hc-title">☕ CaféDesk — Дашборд</span>
+        </div>
+        <div class="hc-nav">
+          <div class="hc-nav-item active" onclick="switchHcTab('dashboard')" style="cursor:pointer">Дашборд</div>
+          <div class="hc-nav-item" onclick="switchHcTab('cost')" style="cursor:pointer">Себестоимость</div>
+          <div class="hc-nav-item" onclick="switchHcTab('finmodel')" style="cursor:pointer">Финмодель</div>
+        </div>
+        <div class="hc-body" id="hc-body">
+          <div class="hc-kpi-row">
+            <div class="hc-kpi accent">
+              <div class="hc-kpi-label">Выручка / мес</div>
+              <div class="hc-kpi-val">480 000 ₽</div>
+            </div>
+            <div class="hc-kpi">
+              <div class="hc-kpi-label">Средняя маржа</div>
+              <div class="hc-kpi-val">72%</div>
+            </div>
+            <div class="hc-kpi">
+              <div class="hc-kpi-label">Напитков</div>
+              <div class="hc-kpi-val">24</div>
+            </div>
+          </div>
+          <div class="hc-table-row">
+            <span class="hc-drink-icon">☕</span>
+            <span class="hc-drink-name">Флэт уайт</span>
+            <span class="hc-drink-price">220 ₽</span>
+            <span class="hc-drink-margin">75%</span>
+          </div>
+          <div class="hc-table-row">
+            <span class="hc-drink-icon">🧋</span>
+            <span class="hc-drink-name">Матча латте</span>
+            <span class="hc-drink-price">280 ₽</span>
+            <span class="hc-drink-margin">68%</span>
+          </div>
+          <div class="hc-table-row">
+            <span class="hc-drink-icon">🍋</span>
+            <span class="hc-drink-name">Лимонад</span>
+            <span class="hc-drink-price">190 ₽</span>
+            <span class="hc-drink-margin">81%</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-float hero-float-2">
+        <span class="hero-float-icon">📋</span>
+        Рецептуры готовы к печати
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <p class="section-label">Возможности</p>
+  <h2 class="section-title">Всё что нужно до открытия кофейни</h2>
+  <p class="section-sub">Спланируйте меню, просчитайте финмодель и узнайте реальную себестоимость каждого напитка — прежде чем вложить деньги.</p>
+  <div class="features-grid">
+    <div class="feat-card">
+      <div class="feat-icon">📋</div>
+      <div class="feat-title">Готовые рецептуры и техкарты</div>
+      <div class="feat-desc">База рецептур кофейных и некофейных напитков. Редактируйте под себя, распечатывайте техкарты для персонала.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">📊</div>
+      <div class="feat-title">Себестоимость каждой позиции</div>
+      <div class="feat-desc">Узнайте реальную стоимость приготовления напитка с учётом потерь и цен конкретных поставщиков — до первой чашки.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">💹</div>
+      <div class="feat-title">Финансовая модель кофейни</div>
+      <div class="feat-desc">Прогноз выручки, точка безубыточности, расчёт налогов: УСН 6%, УСН 15%, патент. Покажет, сработает ли идея.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🏬</div>
+      <div class="feat-title">База поставщиков</div>
+      <div class="feat-desc">Контакты, цены и условия работы с поставщиками. Сравнивайте и выбирайте лучшее ещё на этапе планирования.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">👥</div>
+      <div class="feat-title">Зарплатный фонд</div>
+      <div class="feat-desc">Посчитайте ФОТ с учётом МРОТ, НДФЛ и страховых взносов. Сразу видно, сколько реально стоит команда.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">📤</div>
+      <div class="feat-title">Экспорт для инвесторов</div>
+      <div class="feat-desc">Выгружайте финмодель, техкарты и отчёты по себестоимости в PDF и Excel — для презентаций и согласований.</div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats">
+  <div class="stats-inner">
+    <div>
+      <div class="stat-val">50+</div>
+      <div class="stat-label">рецептур в базе</div>
+    </div>
+    <div>
+      <div class="stat-val">4</div>
+      <div class="stat-label">налоговых режима</div>
+    </div>
+    <div>
+      <div class="stat-val">5 мин</div>
+      <div class="stat-label">до первого расчёта</div>
+    </div>
+    <div>
+      <div class="stat-val">0 ₽</div>
+      <div class="stat-label">чтобы начать</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <p class="section-label">Тарифы</p>
+  <h2 class="section-title">Просто и честно</h2>
+  <p class="section-sub">Начните бесплатно. Никаких скрытых платежей — все базовые инструменты навсегда бесплатны.</p>
+  <div class="pricing-cards">
+    <div class="pricing-card fade-in">
+      <p class="pricing-plan">Бесплатно</p>
+      <div class="pricing-price">0 <sup>₽</sup></div>
+      <p class="pricing-period">навсегда</p>
+      <ul class="pricing-list">
+        <li><span class="pricing-check">✓</span> До 30 позиций меню</li>
+        <li><span class="pricing-check">✓</span> Себестоимость и рецептуры</li>
+        <li><span class="pricing-check">✓</span> Финансовая модель</li>
+        <li><span class="pricing-check">✓</span> Экспорт PDF и Excel</li>
+        <li><span class="pricing-check">✓</span> Все 4 налоговых режима</li>
+      </ul>
+      <button class="btn-pricing" onclick="document.getElementById('auth').scrollIntoView({behavior:'smooth'})">Начать бесплатно →</button>
+    </div>
+    <div class="pricing-card featured fade-in">
+      <span class="pricing-top-badge">Скоро</span>
+      <p class="pricing-plan">Команда</p>
+      <div class="pricing-price">990 <sup>₽</sup></div>
+      <p class="pricing-period">в месяц · на 3 пользователей</p>
+      <ul class="pricing-list">
+        <li><span class="pricing-check">✓</span> Безлимитное меню</li>
+        <li><span class="pricing-check">✓</span> Облачное хранение данных</li>
+        <li><span class="pricing-check">✓</span> Несколько локаций</li>
+        <li><span class="pricing-check">✓</span> Совместный доступ для команды</li>
+        <li><span class="pricing-check">✓</span> Приоритетная поддержка</li>
+      </ul>
+      <button class="btn-pricing white" onclick="document.getElementById('auth').scrollIntoView({behavior:'smooth'})">Оставить заявку →</button>
+    </div>
+  </div>
+</section>
+
+<!-- AUTH -->
+<section class="auth-section" id="auth">
+  <div class="auth-wrap">
+    <div class="auth-left">
+      <h2>Начните считать до того, как вложите деньги</h2>
+      <p>Зарегистрируйтесь за 30 секунд и получите доступ к рецептурам, финмодели и расчёту себестоимости.</p>
+      <ul class="auth-perks">
+        <li class="auth-perk">
+          <span class="auth-perk-icon">📋</span>
+          Готовые рецептуры — редактируйте под себя
+        </li>
+        <li class="auth-perk">
+          <span class="auth-perk-icon">💹</span>
+          Финмодель покажет точку безубыточности
+        </li>
+        <li class="auth-perk">
+          <span class="auth-perk-icon">🏬</span>
+          База поставщиков с ценами
+        </li>
+        <li class="auth-perk">
+          <span class="auth-perk-icon">📤</span>
+          Экспорт для инвесторов и партнёров
+        </li>
+        <li class="auth-perk">
+          <span class="auth-perk-icon">🚀</span>
+          Бесплатно на старте — без карты
+        </li>
+      </ul>
+    </div>
+
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab(this,'register')">Регистрация</button>
+        <button class="auth-tab" onclick="switchTab(this,'login')">Войти</button>
+      </div>
+
+      <!-- Регистрация -->
+      <div class="auth-panel active" id="panel-register">
+        <button class="btn-google" type="button" onclick="signInWithGoogle()">
+          <svg class="google-icon" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Продолжить через Google
+        </button>
+        <div class="form-divider">или</div>
+        <div>
+          <label class="form-label">Имя</label>
+          <input class="form-input" type="text" placeholder="Как вас зовут?" />
+        </div>
+        <div>
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" placeholder="you@example.com" />
+        </div>
+        <div>
+          <label class="form-label">Пароль</label>
+          <input class="form-input" type="password" placeholder="Минимум 8 символов" />
+        </div>
+        <button class="btn-submit" type="button">Создать аккаунт →</button>
+        <p class="auth-footer-note">
+          Регистрируясь, вы соглашаетесь с <a href="#">условиями использования</a><br>и <a href="#">политикой конфиденциальности</a>.
+        </p>
+      </div>
+
+      <!-- Вход -->
+      <div class="auth-panel" id="panel-login">
+        <button class="btn-google" type="button" onclick="signInWithGoogle()">
+          <svg class="google-icon" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Войти через Google
+        </button>
+        <div class="form-divider">или</div>
+        <div>
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" placeholder="you@example.com" />
+        </div>
+        <div>
+          <label class="form-label">Пароль</label>
+          <input class="form-input" type="password" placeholder="Ваш пароль" />
+        </div>
+        <button class="btn-submit" type="button">Войти →</button>
+        <p class="auth-footer-note">
+          <a href="#">Забыли пароль?</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-inner fade-in">
+    <h2>Готовитесь открыть кофейню?</h2>
+    <p>Просчитайте всё до копейки — ещё до первой аренды и закупки.<br>Первый расчёт займёт меньше 5 минут.</p>
+    <button class="btn-hero-white" onclick="document.getElementById('auth').scrollIntoView({behavior:'smooth'})">
+      Начать бесплатно →
+    </button>
+    <p class="cta-note">✓ Бесплатно · ✓ Без кредитной карты · ✓ Готово за 5 минут</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-brand">
+    <span>☕</span> CaféDesk
+  </div>
+  <div style="width:100%;border-top:1px solid rgba(255,255,255,.12);padding-top:20px;margin-top:4px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <p class="footer-copy">© 2026 CaféDesk. Все права защищены.</p>
+    <p style="font-size:13px;color:rgba(255,255,255,.45);">Партнёр проекта: <a href="https://baristaschool.ru" target="_blank" style="color:rgba(255,255,255,.7);font-weight:700;text-decoration:none;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.7)'">Московская школа бариста baristaschool.ru</a></p>
+  </div>
+</footer>
+
+<script>
+  // ─────────────────────────────────────────────────────────────
+  // 🔥 FIREBASE CONFIG — вставьте ваши значения из Project Settings
+  // ─────────────────────────────────────────────────────────────
+  const firebaseConfig = {
+    apiKey:            "AIzaSyDRTEsHw86KbgjGh14xPU-n3Ig7NM2s2Rg",
+    authDomain:        "moscow-barista-school.firebaseapp.com",
+    projectId:         "moscow-barista-school",
+    storageBucket:     "moscow-barista-school.firebasestorage.app",
+    messagingSenderId: "112056142363",
+    appId:             "1:112056142363:web:977d88a95209654cbb06be",
+    measurementId:     "G-FL1V0S6J73"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+
+  // ── Google Sign-In ──
+  function signInWithGoogle() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider)
+      .then(result => onAuthSuccess(result.user))
+      .catch(err => showAuthError(err.message));
+  }
+
+  // ── Email/Password ──
+  function submitForm(panelId) {
+    if (!validateForm(panelId)) return;
+    const panel = document.getElementById('panel-' + panelId);
+    const inputs = panel.querySelectorAll('.form-input');
+    const btn = panel.querySelector('.btn-submit');
+    btn.textContent = '⏳ Подождите...';
+    btn.classList.add('loading');
+
+    // Находим email и password
+    let email = '', password = '';
+    inputs.forEach(inp => {
+      if (inp.type === 'email')    email    = inp.value.trim();
+      if (inp.type === 'password') password = inp.value;
+    });
+
+    const promise = panelId === 'register'
+      ? auth.createUserWithEmailAndPassword(email, password)
+      : auth.signInWithEmailAndPassword(email, password);
+
+    promise
+      .then(result => onAuthSuccess(result.user))
+      .catch(err => {
+        btn.textContent = panelId === 'register' ? 'Создать аккаунт →' : 'Войти →';
+        btn.classList.remove('loading');
+        const msg = firebaseErrorRu(err.code);
+        showAuthError(msg, panel);
+      });
+  }
+
+  function onAuthSuccess(user) {
+    // Закрываем обе панели и показываем success
+    ['register','login'].forEach(id => {
+      const p = document.getElementById('panel-' + id);
+      if (p) p.innerHTML = `
+        <div class="form-success">
+          <div class="form-success-icon">🎉</div>
+          <h3>Добро пожаловать${user.displayName ? ', ' + user.displayName.split(' ')[0] : ''}!</h3>
+          <p>Вы вошли как <b>${user.email}</b>.<br>Сейчас откроется приложение.</p>
+        </div>
+      `;
+    });
+    // Через 1.5с переходим в приложение
+    setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+  }
+
+  function showAuthError(msg, panel) {
+    let errEl = panel && panel.querySelector('.firebase-error');
+    if (!errEl) {
+      errEl = document.createElement('p');
+      errEl.className = 'firebase-error';
+      errEl.style.cssText = 'color:var(--red);font-size:13px;font-weight:700;text-align:center;margin-top:8px;';
+      if (panel) panel.appendChild(errEl);
+    }
+    errEl.textContent = msg;
+  }
+
+  function firebaseErrorRu(code) {
+    const map = {
+      'auth/email-already-in-use':   'Этот email уже зарегистрирован',
+      'auth/invalid-email':          'Некорректный email',
+      'auth/weak-password':          'Пароль слишком простой',
+      'auth/user-not-found':         'Пользователь не найден',
+      'auth/wrong-password':         'Неверный пароль',
+      'auth/too-many-requests':      'Слишком много попыток. Попробуйте позже',
+      'auth/popup-closed-by-user':   'Окно входа закрыто',
+      'auth/network-request-failed': 'Ошибка сети. Проверьте интернет',
+    };
+    return map[code] || 'Ошибка входа. Попробуйте ещё раз';
+  }
+
+  // ── Auth tabs ──
+  function switchTab(btn, panel) {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + panel).classList.add('active');
+  }
+
+  // ── Mobile nav ──
+  function toggleMobileNav() {
+    const nav = document.getElementById('mobile-nav');
+    const burger = document.getElementById('burger');
+    nav.classList.toggle('open');
+    burger.classList.toggle('open');
+  }
+  document.addEventListener('click', function(e) {
+    const nav = document.getElementById('mobile-nav');
+    const burger = document.getElementById('burger');
+    if (nav.classList.contains('open') && !nav.contains(e.target) && !burger.contains(e.target)) {
+      nav.classList.remove('open');
+      burger.classList.remove('open');
+    }
+  });
+
+  // ── Hero demo tabs ──
+  const HC_CONTENT = {
+    dashboard: `
+      <div class="hc-kpi-row">
+        <div class="hc-kpi accent"><div class="hc-kpi-label">Выручка / мес</div><div class="hc-kpi-val">480 000 ₽</div></div>
+        <div class="hc-kpi"><div class="hc-kpi-label">Средняя маржа</div><div class="hc-kpi-val">72%</div></div>
+        <div class="hc-kpi"><div class="hc-kpi-label">Напитков</div><div class="hc-kpi-val">24</div></div>
+      </div>
+      <div class="hc-table-row"><span class="hc-drink-icon">☕</span><span class="hc-drink-name">Флэт уайт</span><span class="hc-drink-price">220 ₽</span><span class="hc-drink-margin">75%</span></div>
+      <div class="hc-table-row"><span class="hc-drink-icon">🧋</span><span class="hc-drink-name">Матча латте</span><span class="hc-drink-price">280 ₽</span><span class="hc-drink-margin">68%</span></div>
+      <div class="hc-table-row"><span class="hc-drink-icon">🍋</span><span class="hc-drink-name">Лимонад</span><span class="hc-drink-price">190 ₽</span><span class="hc-drink-margin">81%</span></div>
+    `,
+    cost: `
+      <div class="hc-kpi-row">
+        <div class="hc-kpi accent"><div class="hc-kpi-label">Ср. себестоим.</div><div class="hc-kpi-val">54 ₽</div></div>
+        <div class="hc-kpi"><div class="hc-kpi-label">Макс. маржа</div><div class="hc-kpi-val">81%</div></div>
+        <div class="hc-kpi"><div class="hc-kpi-label">Мин. маржа</div><div class="hc-kpi-val">62%</div></div>
+      </div>
+      <div class="hc-table-row"><span class="hc-drink-icon">☕</span><span class="hc-drink-name">Флэт уайт</span><span class="hc-drink-price">54 ₽</span><span class="hc-drink-margin">75%</span></div>
+      <div class="hc-table-row"><span class="hc-drink-icon">🧋</span><span class="hc-drink-name">Матча латте</span><span class="hc-drink-price">90 ₽</span><span class="hc-drink-margin" style="background:#fff3cd;color:#92650a">62%</span></div>
+      <div class="hc-table-row"><span class="hc-drink-icon">🍋</span><span class="hc-drink-name">Лимонад</span><span class="hc-drink-price">36 ₽</span><span class="hc-drink-margin">81%</span></div>
+    `,
+    finmodel: `
+      <div class="hc-kpi-row">
+        <div class="hc-kpi accent"><div class="hc-kpi-label">Прибыль / мес</div><div class="hc-kpi-val">87 000 ₽</div></div>
+        <div class="hc-kpi"><div class="hc-kpi-label">Точка безубыт.</div><div class="hc-kpi-val">180k ₽</div></div>
+        <div class="hc-kpi"><div class="hc-kpi-label">Налог УСН 6%</div><div class="hc-kpi-val">28 800 ₽</div></div>
+      </div>
+      <div class="hc-table-row"><span class="hc-drink-icon">🏠</span><span class="hc-drink-name">Аренда</span><span class="hc-drink-price">90 000 ₽</span><span class="hc-drink-margin" style="background:#f0f0f0;color:#6b7280">расход</span></div>
+      <div class="hc-table-row"><span class="hc-drink-icon">👥</span><span class="hc-drink-name">ФОТ</span><span class="hc-drink-price">120 000 ₽</span><span class="hc-drink-margin" style="background:#f0f0f0;color:#6b7280">расход</span></div>
+      <div class="hc-table-row"><span class="hc-drink-icon">☕</span><span class="hc-drink-name">Материалы</span><span class="hc-drink-price">74 000 ₽</span><span class="hc-drink-margin" style="background:#f0f0f0;color:#6b7280">расход</span></div>
+    `
+  };
+
+  function switchHcTab(tabName) {
+    const tabs = ['dashboard', 'cost', 'finmodel'];
+    document.querySelectorAll('.hc-nav-item').forEach((el, i) => {
+      el.classList.toggle('active', tabs[i] === tabName);
+    });
+    const body = document.getElementById('hc-body');
+    if (body && HC_CONTENT[tabName]) body.innerHTML = HC_CONTENT[tabName];
+  }
+
+  // ── Form validation ──
+  function validateForm(panelId) {
+    const panel = document.getElementById('panel-' + panelId);
+    let valid = true;
+    panel.querySelectorAll('.form-input').forEach(input => {
+      const errEl = input.parentElement.querySelector('.field-error');
+      input.classList.remove('error');
+      if (errEl) errEl.classList.remove('show');
+      if (input.type === 'email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(input.value.trim())) {
+        input.classList.add('error');
+        if (errEl) { errEl.textContent = 'Введите корректный email'; errEl.classList.add('show'); }
+        valid = false;
+      } else if (input.type === 'password' && input.value.length < 8) {
+        input.classList.add('error');
+        if (errEl) { errEl.textContent = 'Минимум 8 символов'; errEl.classList.add('show'); }
+        valid = false;
+      } else if (input.type === 'text' && !input.value.trim()) {
+        input.classList.add('error');
+        if (errEl) { errEl.textContent = 'Заполните поле'; errEl.classList.add('show'); }
+        valid = false;
+      }
+    });
+    return valid;
+  }
+
+  // Навешиваем обработчики на кнопки submit
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn-submit').forEach(btn => {
+      const panel = btn.closest('.auth-panel');
+      if (!panel) return;
+      const panelId = panel.id.replace('panel-', '');
+      btn.addEventListener('click', () => submitForm(panelId));
+    });
+    // Добавляем field-error после каждого input
+    document.querySelectorAll('.auth-panel .form-input').forEach(input => {
+      const err = document.createElement('span');
+      err.className = 'field-error';
+      input.parentElement.appendChild(err);
+    });
+  });
+
+  // ── IntersectionObserver (fade-in) ──
+  document.addEventListener('DOMContentLoaded', function() {
+    // Добавляем класс fade-in к нужным элементам
+    document.querySelectorAll('.feat-card, .stat-val, .stat-label').forEach(el => {
+      el.classList.add('fade-in');
+    });
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  });
+</script>
+</body>
+</html>
