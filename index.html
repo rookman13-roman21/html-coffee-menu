@@ -254,7 +254,16 @@
         <input class="modal-inp" id="mm-size" type="number" min="1" inputmode="numeric" placeholder="1000">
       </div>
     </div>
-    <details style="margin-top:12px">
+    <div class="modal-row" style="margin-top:4px">
+      <div style="flex:1">
+        <div class="modal-label">🔗 Ссылка на покупку <span style="font-size:11px;font-weight:400;color:var(--muted)">(необязательно)</span></div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input class="modal-inp" id="mm-purchase-url" type="url" inputmode="url" placeholder="https://..." style="flex:1" oninput="onMatPurchaseUrlInput(this)">
+          <a id="mm-purchase-link" href="#" target="_blank" rel="noopener" title="Открыть ссылку" style="display:none;color:var(--green);font-size:18px;text-decoration:none;line-height:1">↗</a>
+        </div>
+      </div>
+    </div>
+    <details id="mm-kbzhu-details" style="margin-top:12px">
       <summary style="font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;user-select:none">КБЖУ на 100 г/мл <span style="font-size:11px;font-weight:400">(необязательно)</span></summary>
       <div class="modal-row kbzhu-row" style="margin-top:8px">
         <div><div class="modal-label">Ккал</div><input class="modal-inp" id="mm-kcal" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></div>
@@ -289,6 +298,7 @@
     </details>
     </div><!-- /.modal-body -->
     <div class="modal-footer">
+      <button class="btn btn-outline" id="mm-delete-btn" onclick="deleteEditingMat()" style="display:none;color:var(--red)">🗑️ Удалить</button>
       <button class="btn btn-outline" onclick="cancelMat()">Отмена</button>
       <button class="btn-primary" onclick="saveMat()">✔ Сохранить</button>
     </div>

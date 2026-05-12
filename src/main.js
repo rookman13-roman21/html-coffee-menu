@@ -123,6 +123,7 @@ import {
 
 import {
   openEditMat, saveMat, cancelMat, deleteMat, matOnlyOptions,
+  deleteEditingMat, onMatPurchaseUrlInput,
 } from './modals/mat.js';
 
 import {
@@ -298,6 +299,7 @@ const _srcExports = {
   _updateSemiIngCost, _autoCalcSemiIngYield,
   // modals/mat
   openEditMat, saveMat, cancelMat, deleteMat, matOnlyOptions,
+  deleteEditingMat, onMatPurchaseUrlInput,
   // export/csv
   exportCSV, exportDashboard, exportSales,
   // ui/sort

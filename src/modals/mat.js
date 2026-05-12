@@ -11,6 +11,11 @@ export function openEditMat(key) {
   document.getElementById('mm-category').value = m.category || 'other';
   document.getElementById('mm-price').value    = S.prices[key] ?? m.price ?? '';
   document.getElementById('mm-size').value     = m.size || '';
+  // ссылка на покупку
+  const urlInp = document.getElementById('mm-purchase-url');
+  const urlLink = document.getElementById('mm-purchase-link');
+  if (urlInp) urlInp.value = m.purchaseUrl || '';
+  if (urlLink) { if (m.purchaseUrl) { urlLink.href = m.purchaseUrl; urlLink.style.display = ''; } else { urlLink.style.display = 'none'; } }
   const sup = (S.suppliers||{})[key];
   document.getElementById('mm-sup-book').value  = '';
   document.getElementById('mm-sup-name').value  = sup?.name  || '';
@@ -19,11 +24,19 @@ export function openEditMat(key) {
   // если есть данные поставщика — разорнуть блок
   const wrap = document.getElementById('mm-sup-custom-wrap');
   if (wrap) { if (sup?.name) wrap.setAttribute('open',''); else wrap.removeAttribute('open'); }
-  const n = m.nutrition || {};
+  // КБЖУ: у базовых ингредиентов берём из MAT_NUTRITION
+  const baseNutr = (window.MAT_NUTRITION || {})[key];
+  const n = m.nutrition || baseNutr || {};
   ['kcal','protein','fat','carbs'].forEach(f => {
     const el = document.getElementById('mm-' + f);
-    if (el) el.value = n[f] || '';
+    if (el) el.value = (n[f] != null && n[f] !== 0) ? n[f] : '';
   });
+  // авто-открыть блок КБЖУ если есть данные
+  const kbzhuDetails = document.getElementById('mm-kbzhu-details');
+  if (kbzhuDetails) { if (n.kcal || n.protein || n.fat || n.carbs) kbzhuDetails.setAttribute('open',''); }
+  // кнопка «Удалить» — только для кастомных
+  const delBtn = document.getElementById('mm-delete-btn');
+  if (delBtn) delBtn.style.display = m.custom ? '' : 'none';
   openModal('modal-mat');
   lucide.createIcons();
 }
@@ -44,7 +57,9 @@ export function saveMat() {
   const fat    = parseFloat(document.getElementById('mm-fat').value)    || 0;
   const carbs  = parseFloat(document.getElementById('mm-carbs').value)  || 0;
   const nutrition = (kcal || protein || fat || carbs) ? { kcal, protein, fat, carbs } : undefined;
-  MAT[key] = { name, unit, price, size, custom:true, category, ...(nutrition ? { nutrition } : {}) };
+  const purchaseUrl = (document.getElementById('mm-purchase-url')?.value || '').trim();
+  const isBase = !!(window.BASE_MAT_KEYS && window.BASE_MAT_KEYS.has(key));
+  MAT[key] = { name, unit, price, size, ...(isBase ? {} : { custom: true }), category, ...(nutrition ? { nutrition } : {}), ...(purchaseUrl ? { purchaseUrl } : {}) };
   S.prices[key] = price;
   // поставщик
   const supName  = document.getElementById('mm-sup-name').value.trim();
@@ -96,6 +111,14 @@ export function saveMat() {
   document.getElementById('mm-sup-book').value  = '';
   const wrap2 = document.getElementById('mm-sup-custom-wrap');
   if (wrap2) wrap2.removeAttribute('open');
+  const urlInp2 = document.getElementById('mm-purchase-url');
+  const urlLink2 = document.getElementById('mm-purchase-link');
+  if (urlInp2) urlInp2.value = '';
+  if (urlLink2) urlLink2.style.display = 'none';
+  const delBtn2 = document.getElementById('mm-delete-btn');
+  if (delBtn2) delBtn2.style.display = 'none';
+  const kbzhuDet2 = document.getElementById('mm-kbzhu-details');
+  if (kbzhuDet2) kbzhuDet2.removeAttribute('open');
   ['mm-kcal','mm-protein','mm-fat','mm-carbs'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   markDirtyDebounce();
   saveState();
@@ -110,6 +133,17 @@ export function cancelMat(force = false) {
   _pendingSemiMatSelectEl = null;
   _clearModalDirty('modal-mat');
   closeModal('modal-mat');
+}
+
+export function deleteEditingMat() {
+  if (_editMatKey) deleteMat(_editMatKey);
+}
+
+export function onMatPurchaseUrlInput(inp) {
+  const link = document.getElementById('mm-purchase-link');
+  if (!link) return;
+  const v = inp.value.trim();
+  if (v) { link.href = v; link.style.display = ''; } else { link.style.display = 'none'; }
 }
 
 export function deleteMat(key) {
