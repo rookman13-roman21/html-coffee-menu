@@ -239,6 +239,46 @@
   .cd-float-2 { bottom: -14px; left: -16px; color: #417033; }
   .cd-float-icon { font-size: 19px; }
 
+  /* ── ENTRANCE ANIMATIONS ── */
+  @keyframes cd-fade-up {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes cd-fade-scale {
+    from { opacity: 0; transform: scale(.93) translateY(16px); }
+    to   { opacity: 1; transform: scale(1)  translateY(0); }
+  }
+  .cd-hero-text {
+    opacity: 0;
+    animation: cd-fade-up .65s cubic-bezier(.22,.68,0,1.2) .1s forwards;
+  }
+  .cd-hero-visual {
+    opacity: 0;
+    animation: cd-fade-scale .7s cubic-bezier(.22,.68,0,1.2) .35s forwards;
+  }
+  /* Stagger внутренних элементов текста */
+  .cd-hero-badge   { animation: cd-fade-up .5s ease .2s both; }
+  .cd-hero-text h1 { animation: cd-fade-up .5s ease .3s both; }
+  .cd-hero-sub     { animation: cd-fade-up .5s ease .4s both; }
+  .cd-hero-price   { animation: cd-fade-up .5s ease .48s both; }
+  .cd-hero-actions { animation: cd-fade-up .5s ease .56s both; }
+  .cd-hero-note    { animation: cd-fade-up .5s ease .64s both; }
+
+  /* Прогресс-бар авто-ротации */
+  .cd-app-progress {
+    height: 2px;
+    background: #e7f2e3;
+    position: relative;
+    overflow: hidden;
+  }
+  .cd-app-progress-bar {
+    position: absolute;
+    left: 0; top: 0; height: 100%;
+    background: #4F883E;
+    width: 0%;
+    transition: width linear;
+  }
+
   @media (max-width: 960px) {
     .cd-hero-inner { grid-template-columns: 1fr; gap: 48px; }
     .cd-hero-visual { order: -1; max-width: 480px; margin: 0 auto; width: 100%; }
@@ -315,6 +355,7 @@
           <div class="cd-app-tab" id="cdtab-cost" onclick="cdSwitchTab('cost')" style="cursor:pointer">Себестоимость</div>
           <div class="cd-app-tab" id="cdtab-finmodel" onclick="cdSwitchTab('finmodel')" style="cursor:pointer">Финмодель</div>
         </div>
+        <div class="cd-app-progress"><div class="cd-app-progress-bar" id="cd-progress-bar"></div></div>
         <div class="cd-app-body" id="cd-app-body">
           <!-- Dashboard (default) -->
           <div class="cd-app-kpis">
@@ -402,7 +443,54 @@
     }
   };
 
-  window.cdSwitchTab = function(tab) {
+  /* ── АВТО-РОТАЦИЯ ── */
+  var CD_ORDER = ['dashboard', 'cost', 'finmodel'];
+  var cdCurrent = 0;
+  var cdTimer = null;
+  var CD_INTERVAL = 3200;
+  var bar = document.getElementById('cd-progress-bar');
+
+  function cdStartProgress() {
+    if (!bar) return;
+    bar.style.transition = 'none';
+    bar.style.width = '0%';
+    /* форс-репейнт */
+    bar.getBoundingClientRect();
+    bar.style.transition = 'width ' + CD_INTERVAL + 'ms linear';
+    bar.style.width = '100%';
+  }
+
+  function cdAutoNext() {
+    cdCurrent = (cdCurrent + 1) % CD_ORDER.length;
+    cdSwitchTabInternal(CD_ORDER[cdCurrent]);
+    cdStartProgress();
+  }
+
+  function cdStartAuto() {
+    cdStopAuto();
+    cdStartProgress();
+    cdTimer = setInterval(cdAutoNext, CD_INTERVAL);
+  }
+
+  function cdStopAuto() {
+    clearInterval(cdTimer);
+    cdTimer = null;
+    if (bar) { bar.style.transition = 'none'; bar.style.width = '0%'; }
+  }
+
+  /* Пауза при наведении на макет */
+  var visual = document.querySelector('.cd-hero-visual');
+  if (visual) {
+    visual.addEventListener('mouseenter', cdStopAuto);
+    visual.addEventListener('mouseleave', function() {
+      cdStartAuto();
+    });
+  }
+
+  /* Запуск после анимации появления */
+  setTimeout(cdStartAuto, 900);
+
+  function cdSwitchTabInternal(tab) {
     ['dashboard','cost','finmodel'].forEach(function(t) {
       var el = document.getElementById('cdtab-' + t);
       if (el) el.classList.toggle('active', t === tab);
@@ -424,6 +512,12 @@
     }).join('');
     var body = document.getElementById('cd-app-body');
     if (body) body.innerHTML = kpiHtml + rowsHtml;
+  }
+
+  window.cdSwitchTab = function(tab) {
+    cdCurrent = CD_ORDER.indexOf(tab);
+    cdSwitchTabInternal(tab);
+    cdStartAuto();
   };
 })();
 </script>
