@@ -332,12 +332,13 @@ export function saveCostEditor() {
 
 export function deleteCostFromEditor() {
   if (_fceIdx < 0 || window.window.S.fixedCosts.length <= 1) return;
-  if (!confirm(`Удалить «${window.window.S.fixedCosts[_fceIdx].name}»?`)) return;
-  window.window.S.fixedCosts.splice(_fceIdx, 1);
-  _fceIsNew = false;
-  closeCostEditor();
-  renderFinModel();
-  saveState();
-  if (window.lucide) lucide.createIcons();
+  window.showConfirm(`Удалить «${window.window.S.fixedCosts[_fceIdx].name}»?`, () => {
+    window.window.S.fixedCosts.splice(_fceIdx, 1);
+    _fceIsNew = false;
+    closeCostEditor();
+    renderFinModel();
+    saveState();
+    if (window.lucide) lucide.createIcons();
+  }, { icon: '🗑️', okText: 'Удалить' });
 }
 

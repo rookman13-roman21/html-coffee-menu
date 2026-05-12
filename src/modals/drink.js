@@ -100,10 +100,10 @@ export function saveDrink() {
   const vol   = parseInt(document.getElementById('md-vol').value) || 0;
   const group = document.getElementById('md-group').value;
   const editId = document.getElementById('md-edit-id').value;
-  if (!name || !(price>0)) { alert('Заполните название и цену'); return; }
+  if (!name || !(price>0)) { window.showAlert('Заполните название и цену'); return; }
   const _editIdNum = editId !== '' ? parseInt(editId) : null;
   const _dupDrink = DRINKS.find(d => d.name.trim().toLowerCase() === name.toLowerCase() && d.id !== _editIdNum);
-  if (_dupDrink) { alert(`Напиток с названием «${name}» уже существует`); return; }
+  if (_dupDrink) { window.showAlert(`Напиток с названием «${name}» уже существует`); return; }
   const recipe = [];
   document.querySelectorAll('#md-ings .modal-ing-row').forEach(row => {
     const selEl  = row.querySelector('select');
@@ -124,7 +124,7 @@ export function saveDrink() {
       recipe.push(ing);
     }
   });
-  if (recipe.length === 0) { alert('Добавьте хотя бы один ингредиент'); return; }
+  if (recipe.length === 0) { window.showAlert('Добавьте хотя бы один ингредиент'); return; }
   const process  = document.getElementById('md-process').value.trim();
   const videoUrl = document.getElementById('md-video').value.trim();
   const storage_temp  = document.getElementById('md-storage-temp').value.trim();
@@ -160,13 +160,14 @@ export function saveDrink() {
 }
 
 export function deleteDrink(id) {
-  if (!confirm('Удалить напиток?')) return;
-  const idx = DRINKS.findIndex(d=>d.id===id);
-  if (idx>=0) DRINKS.splice(idx,1);
-  delete S.salePrices[id];
-  delete S.portions[id];
-  markDirtyDebounce();
-  saveState();
+  window.showConfirm('Удалить напиток?', () => {
+    const idx = DRINKS.findIndex(d=>d.id===id);
+    if (idx>=0) DRINKS.splice(idx,1);
+    delete S.salePrices[id];
+    delete S.portions[id];
+    markDirtyDebounce();
+    saveState();
+  }, { icon: '🗑️', okText: 'Удалить' });
 }
 
 export function _compressImageDataURL(dataURL, maxPx, quality, callback) {
@@ -189,7 +190,7 @@ export function _compressImageDataURL(dataURL, maxPx, quality, callback) {
 export function onDrinkImgChange(input) {
   if (!input.files || !input.files[0]) return;
   const file = input.files[0];
-  if (file.size > 5 * 1024 * 1024) { alert('Файл слишком большой. Максимум 5 МБ.'); return; }
+  if (file.size > 5 * 1024 * 1024) { window.showAlert('Файл слишком большой. Максимум 5 МБ.'); return; }
   const reader = new FileReader();
   reader.onload = e => {
     _compressImageDataURL(e.target.result, 800, 0.82, compressed => {
@@ -215,7 +216,7 @@ export function clearDrinkImg() {
 export function onSemiImgChange(input) {
   if (!input.files || !input.files[0]) return;
   const file = input.files[0];
-  if (file.size > 5 * 1024 * 1024) { alert('Файл слишком большой. Максимум 5 МБ.'); return; }
+  if (file.size > 5 * 1024 * 1024) { window.showAlert('Файл слишком большой. Максимум 5 МБ.'); return; }
   const reader = new FileReader();
   reader.onload = e => {
     _compressImageDataURL(e.target.result, 800, 0.82, compressed => {
@@ -247,12 +248,13 @@ export function mdDeleteAction() {
 }
 
 export function resetDrink(id) {
-  if (!confirm('Вернуть напиток к исходным значениям?')) return;
-  const orig = DRINKS_ORIG.find(d => d.id === id);
-  if (!orig) return;
-  const idx = DRINKS.findIndex(d => d.id === id);
-  if (idx >= 0) DRINKS[idx] = {...orig}; // снимает флаг modified
-  S.salePrices[id] = orig.price;
-  markDirtyDebounce();
-  saveState();
+  window.showConfirm('Вернуть напиток к исходным значениям?', () => {
+    const orig = DRINKS_ORIG.find(d => d.id === id);
+    if (!orig) return;
+    const idx = DRINKS.findIndex(d => d.id === id);
+    if (idx >= 0) DRINKS[idx] = {...orig}; // снимает флаг modified
+    S.salePrices[id] = orig.price;
+    markDirtyDebounce();
+    saveState();
+  }, { icon: '🔄', okText: 'Сбросить', danger: false });
 }

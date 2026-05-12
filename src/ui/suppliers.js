@@ -251,14 +251,15 @@ export function saveSupplierBook() {
 }
 export function deleteSupplierBook() {
   if (!_supBookEditId || !window.S.supplierBook) return;
-  if (!confirm('Удалить поставщика из справочника?')) return;
-  window.S.supplierBook = window.S.supplierBook.filter(b => String(b.id) !== String(_supBookEditId));
-  saveState();
-  const fromList = _supBookFromList;
-  _supBookFromList = false;
-  _clearModalDirty('modal-supplier-book');
-  closeModal('modal-supplier-book');
-  renderCost();
-  if (fromList) openSuppliersList();
+  window.showConfirm('Удалить поставщика из справочника?', () => {
+    window.S.supplierBook = window.S.supplierBook.filter(b => String(b.id) !== String(_supBookEditId));
+    saveState();
+    const fromList = _supBookFromList;
+    _supBookFromList = false;
+    _clearModalDirty('modal-supplier-book');
+    closeModal('modal-supplier-book');
+    renderCost();
+    if (fromList) openSuppliersList();
+  }, { icon: '🗑️', okText: 'Удалить' });
 }
 

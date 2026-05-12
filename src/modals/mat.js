@@ -33,9 +33,9 @@ export function saveMat() {
   const unit  = document.getElementById('mm-unit').value || 'шт';
   const price = parseFloat(document.getElementById('mm-price').value) || 0;
   const size  = parseFloat(document.getElementById('mm-size').value);
-  if (!name || !(size > 0)) { alert('Заполните название и объём'); return; }
+  if (!name || !(size > 0)) { window.showAlert('Заполните название и объём'); return; }
   const _dupMat = Object.entries(MAT).find(([k, m]) => m.name.trim().toLowerCase() === name.toLowerCase() && k !== _editMatKey);
-  if (_dupMat) { alert(`Ингредиент с названием «${name}» уже существует`); return; }
+  if (_dupMat) { window.showAlert(`Ингредиент с названием «${name}» уже существует`); return; }
   const key = _editMatKey || ('custom_' + (window.nextMatKey++));
   if (!_editMatKey) nextMatKey; // счётчик уже увеличенся
   const category = document.getElementById('mm-category').value || 'other';
@@ -114,11 +114,12 @@ export function cancelMat(force = false) {
 
 export function deleteMat(key) {
   const used = DRINKS.some(d => d.recipe.some(r => r.mat === key));
-  if (used) { alert('Сырьё используется в рецептурах — сначала удалите напитки с этим сырьём'); return; }
-  if (!confirm('Удалить позицию сырья?')) return;
-  delete MAT[key];
-  delete S.prices[key];
-  markDirtyDebounce();
-  saveState();
+  if (used) { window.showAlert('Сырьё используется в рецептурах — сначала удалите напитки с этим сырьём'); return; }
+  window.showConfirm('Удалить позицию сырья?', () => {
+    delete MAT[key];
+    delete S.prices[key];
+    markDirtyDebounce();
+    saveState();
+  }, { icon: '🗑️', okText: 'Удалить' });
 }
 export { matOnlyOptions, _semiIngPlaceholder, _semiIngStep, _updateSemiCostPreview, addSemiIngRow, _autoCalcSemiIngYield, _autoFillSemiYield, _calcSemiIngCost, _updateSemiIngCost, _onSemiMatChange } from './semi.js';

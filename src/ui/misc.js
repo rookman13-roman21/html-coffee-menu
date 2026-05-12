@@ -340,7 +340,7 @@ ${investment > 0 ? `
 
 export async function exportFullXLSX() {
   document.getElementById('export-menu')?.classList.remove('open');
-  if (!window.ExcelJS) { alert('Библиотека ExcelJS не загрузилась. Проверьте интернет.'); return; }
+  if (!window.ExcelJS) { window.showAlert('Библиотека ExcelJS не загрузилась. Проверьте интернет.'); return; }
 
   const loc    = window.activeLoc();
   const drinks = window.withABC(window.enrich());
@@ -695,7 +695,7 @@ td.bold{font-weight:700}
 }
 
 export async function exportSuppliersXLSX() {
-  if (!window.ExcelJS) { alert('Библиотека ExcelJS не загрузилась.'); return; }
+  if (!window.ExcelJS) { window.showAlert('Библиотека ExcelJS не загрузилась.'); return; }
   const book   = window.S.supplierBook || [];
   const sups   = window.S.suppliers   || {};
   const loc    = window.activeLoc();
@@ -851,7 +851,7 @@ ${SEMI.length ? `
 }
 
 export async function exportMaterialsXLSX() {
-  if (!window.ExcelJS) { alert('Библиотека ExcelJS не загрузилась.'); return; }
+  if (!window.ExcelJS) { window.showAlert('Библиотека ExcelJS не загрузилась.'); return; }
   const loc      = window.activeLoc();
   const locName  = loc?.name || 'Кофейня';
   const todayISO = new Date().toISOString().slice(0,10);
@@ -1128,7 +1128,7 @@ export function buildBEPChart(cupsMonth, revBEP, avgPrice, avgCost, totalFixed, 
 }
 export function applyPayrollToFixed() {
   const tot = window.payrollTotal();
-  if (!tot) { alert('Добавьте хотя бы одну должность'); return; }
+  if (!tot) { window.showAlert('Добавьте хотя бы одну должность'); return; }
   let idx = window.S.fixedCosts.findIndex(c => /фот|зарплат|зп|оплата труда/i.test(c.name));
   if (idx < 0) {
     window.S.fixedCosts.unshift({ name: 'ФОТ (персонал)', value: tot });
@@ -1234,6 +1234,13 @@ export function openDropCandidates() {
   }
   window.openModal('modal-drop');
   if (window.lucide) lucide.createIcons();
+}
+
+export function _confirmDeleteDropDrink(id, name) {
+  window.showConfirm(`Удалить «${name}» из меню?`, () => {
+    window.deleteDrink(id);
+    window.openDropCandidates();
+  }, { icon: '🗑️', okText: 'Удалить' });
 }
 
 

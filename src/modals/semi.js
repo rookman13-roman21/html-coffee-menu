@@ -420,11 +420,11 @@ export function saveSemi() {
   const taste         = document.getElementById('ms-taste').value.trim();
   const consistency   = document.getElementById('ms-consistency').value.trim();
   const editId  = document.getElementById('ms-edit-id').value;
-  if (!name) { alert('Введите название'); return; }
-  if (!(yieldV > 0)) { alert('Введите выход (> 0)'); return; }
+  if (!name) { window.showAlert('Введите название'); return; }
+  if (!(yieldV > 0)) { window.showAlert('Введите выход (> 0)'); return; }
   const _editSemiIdNum = editId ? parseInt(editId) : null;
   const _dupSemi = SEMI.find(s => s.name.trim().toLowerCase() === name.toLowerCase() && s.id !== _editSemiIdNum);
-  if (_dupSemi) { alert(`Полуфабрикат с названием «${name}» уже существует`); return; }
+  if (_dupSemi) { window.showAlert(`Полуфабрикат с названием «${name}» уже существует`); return; }
   const imgEl = document.getElementById('ms-img-preview');
   const image = (imgEl && imgEl.style.display !== 'none' && imgEl.src) ? imgEl.src : '';
 
@@ -443,7 +443,7 @@ export function saveSemi() {
       recipe.push(r);
     }
   });
-  if (!recipe.length) { alert('Добавьте хотя бы один ингредиент'); return; }
+  if (!recipe.length) { window.showAlert('Добавьте хотя бы один ингредиент'); return; }
 
   if (editId) {
     const idx = SEMI.findIndex(s => s.id === parseInt(editId));
@@ -471,14 +471,15 @@ export function saveSemi() {
 export function deleteSemi(idRaw) {
   const id = parseInt(idRaw);
   const usedInDrink = DRINKS.some(d => d.recipe.some(r => r.semi === id));
-  if (usedInDrink) { alert('Полуфабрикат используется в рецептурах напитков — сначала удалите его из напитков'); return; }
-  if (!confirm('Удалить полуфабрикат?')) return;
-  SEMI = SEMI.filter(s => s.id !== id);
-  _clearModalDirty('modal-semi');
-  closeModal('modal-semi');
-  markDirtyDebounce();
-  saveState();
-  renderCost();
+  if (usedInDrink) { window.showAlert('Полуфабрикат используется в рецептурах напитков — сначала удалите его из напитков'); return; }
+  window.showConfirm('Удалить полуфабрикат?', () => {
+    SEMI = SEMI.filter(s => s.id !== id);
+    _clearModalDirty('modal-semi');
+    closeModal('modal-semi');
+    markDirtyDebounce();
+    saveState();
+    renderCost();
+  }, { icon: '🗑️', okText: 'Удалить' });
 }
 
 export { onSemiImgChange, clearSemiImg } from './drink.js';

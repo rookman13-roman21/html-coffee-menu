@@ -370,6 +370,57 @@
     body.dark ._unsaved-stay:hover  { background: #333; border-color: #666; }
     body.dark ._unsaved-close { background: #c0392b; }
     body.dark ._unsaved-close:hover { background: #a93226; }
+
+    /* ── Generic alert / confirm dialog overlay ── */
+    #_dialog-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999;
+    }
+    ._dialog-box {
+      background: #fff;
+      border-radius: 14px;
+      padding: 24px 28px;
+      max-width: 380px; width: 90%;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+      text-align: center;
+    }
+    ._dialog-icon { font-size: 32px; margin-bottom: 10px; }
+    ._dialog-msg  { font-size: 15px; color: #1a1a1a; margin-bottom: 20px; line-height: 1.5; }
+    ._dialog-btns { display: flex; gap: 10px; justify-content: center; }
+    ._dialog-ok {
+      flex: 1; padding: 10px 0;
+      border-radius: 9px; border: none;
+      background: var(--blue, #4a7cf6); color: #fff;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: opacity .15s;
+    }
+    ._dialog-ok:hover { opacity: .85; }
+    ._dialog-cancel {
+      flex: 1; padding: 10px 0;
+      border-radius: 9px; border: 1.5px solid #ccc;
+      background: #fff; color: #1a1a1a;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    ._dialog-cancel:hover { background: #f5f5f5; border-color: #aaa; }
+    ._dialog-confirm {
+      flex: 1; padding: 10px 0;
+      border-radius: 9px; border: none;
+      background: #e74c3c; color: #fff;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: opacity .15s;
+    }
+    ._dialog-confirm:hover { opacity: .85; }
+    body.dark #_dialog-overlay  { background: rgba(0,0,0,.65); }
+    body.dark ._dialog-box      { background: #1e1e1e; box-shadow: 0 8px 40px rgba(0,0,0,.55); }
+    body.dark ._dialog-msg      { color: #e8e8e8; }
+    body.dark ._dialog-cancel   { background: #2a2a2a; border-color: #444; color: #d4d4d4; }
+    body.dark ._dialog-cancel:hover { background: #333; border-color: #666; }
+    body.dark ._dialog-confirm  { background: #c0392b; }
+    body.dark ._dialog-confirm:hover { background: #a93226; }
+
     /* legacy – kept for other uses */
     .mat-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr));

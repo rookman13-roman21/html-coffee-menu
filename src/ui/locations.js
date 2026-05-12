@@ -108,27 +108,28 @@ export function renameActiveLocation() {
 
 export function deleteActiveLocation() {
   const Loc = window.Loc;
-  if (Loc.list.length <= 1) { alert('Нельзя удалить единственную точку. Сначала добавьте ещё одну.'); return; }
+  if (Loc.list.length <= 1) { window.showAlert('Нельзя удалить единственную точку. Сначала добавьте ещё одну.', 'ℹ️'); return; }
   const loc = window.activeLoc(); if (!loc) return;
-  if (!confirm(`Удалить «${loc.name}»? Все её данные будут безвозвратно потеряны.`)) return;
-  try { localStorage.removeItem(window.locDataKey(loc.id)); } catch(e) {}
-  Loc.list = Loc.list.filter(l => l.id !== loc.id);
-  Loc.activeId = Loc.list[0].id;
-  window.saveLocIndex();
-  window.resetGlobalsToBase();
-  window.loadState();
-  window.searchQuery = '';
-  Object.keys(window.dirty).forEach(k=>window.dirty[k]=true);
-  window.renderActive();
-  renderLocSwitcherUI();
-  document.getElementById('loc-menu')?.classList.remove('open');
+  window.showConfirm(`Удалить «${loc.name}»? Все её данные будут безвозвратно потеряны.`, () => {
+    try { localStorage.removeItem(window.locDataKey(loc.id)); } catch(e) {}
+    Loc.list = Loc.list.filter(l => l.id !== loc.id);
+    Loc.activeId = Loc.list[0].id;
+    window.saveLocIndex();
+    window.resetGlobalsToBase();
+    window.loadState();
+    window.searchQuery = '';
+    Object.keys(window.dirty).forEach(k=>window.dirty[k]=true);
+    window.renderActive();
+    renderLocSwitcherUI();
+    document.getElementById('loc-menu')?.classList.remove('open');
+  }, { icon: '🗑️', okText: 'Удалить' });
 }
 
 export function saveLocation() {
   const Loc = window.Loc;
   const name = document.getElementById('ml-name').value.trim();
   const icon = document.getElementById('ml-icon').value.trim() || '☕';
-  if (!name) { alert('Введите название точки'); return; }
+  if (!name) { window.showAlert('Введите название точки'); return; }
 
   if (window._locModalMode === 'rename') {
     const loc = window.activeLoc(); if (loc) {

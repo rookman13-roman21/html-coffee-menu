@@ -160,6 +160,7 @@ import {
   openModal, closeModal, safeCloseModal,
   _markModalDirty, _clearModalDirty, _isModalDirty,
   _showUnsavedWarning, _dismissUnsavedWarning, _forceCloseModal,
+  showAlert, showConfirm,
   closeOnboarding, toggleTheme, toggleBurger,
 } from './ui/modals.js';
 
@@ -181,7 +182,7 @@ import {
 import {
   openSupplierInfo, siOpenEdit, openSupplierModal, editSupFromList,
   cancelSupplierModal, saveSupplier, openSuppliersList, renderSuppliersList,
-  openSupplierBookModal, cancelSupplierBookModal,
+  openSupplierBookModal, cancelSupplierBookModal, deleteSupplierBook,
 } from './ui/suppliers.js';
 
 import {
@@ -193,7 +194,7 @@ import {
 
 import {
   openTemplatesModal, chooseTemplate, applyTemplateData,
-  generateInsights, toggleSeasonality, openDropCandidates,
+  generateInsights, toggleSeasonality, openDropCandidates, _confirmDeleteDropDrink,
   onWhatIf, exportFullPDF, exportFullXLSX, exportMaterialsPDF, exportMaterialsXLSX,
   buildBEPChart, applyPayrollToFixed, onPayrollSetting, togglePayrollSettings,
   toggleFixedHint, _matDisplayUnit, buildSeasonalChart, recalcWhatIf3,
@@ -320,6 +321,7 @@ const _srcExports = {
   openModal, closeModal, safeCloseModal,
   _markModalDirty, _clearModalDirty, _isModalDirty,
   _showUnsavedWarning, _dismissUnsavedWarning, _forceCloseModal,
+  showAlert, showConfirm,
   closeOnboarding, toggleTheme, toggleBurger,
   // ui/cost-table
   setMatCat, toggleMatCat, toggleSemiCat,
@@ -335,7 +337,7 @@ const _srcExports = {
   // ui/suppliers
   openSupplierInfo, siOpenEdit, openSupplierModal, editSupFromList,
   cancelSupplierModal, saveSupplier, openSuppliersList, renderSuppliersList,
-  openSupplierBookModal, cancelSupplierBookModal, exportSuppliersPDF, exportSuppliersXLSX,
+  openSupplierBookModal, cancelSupplierBookModal, deleteSupplierBook, exportSuppliersPDF, exportSuppliersXLSX,
   // ui/recipe-view
   openViewDrink, mvdOpenEdit, mvdToggleDownload, _mvdGetData,
   setRecipeSort, setRecipeGroup, filterRecipes,
@@ -343,7 +345,7 @@ const _srcExports = {
   toggleRecipesIntro, toggleSupIntro, toggleSalesIntro, toggleFinIntro,
   // ui/misc
   openTemplatesModal, chooseTemplate, applyTemplateData,
-  generateInsights, toggleSeasonality, openDropCandidates,
+  generateInsights, toggleSeasonality, openDropCandidates, _confirmDeleteDropDrink,
   onWhatIf, exportFullPDF, exportFullXLSX, exportMaterialsPDF, exportMaterialsXLSX,
   buildBEPChart, applyPayrollToFixed, onPayrollSetting, togglePayrollSettings,
   toggleFixedHint, _matDisplayUnit, buildSeasonalChart, recalcWhatIf3,

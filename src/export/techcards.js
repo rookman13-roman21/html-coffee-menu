@@ -12,7 +12,7 @@ export function exportTechCards() {
   const recipeSearch = window.recipeSearch;
   if (recipeGroup !== 'all') list = list.filter(d => d.group === recipeGroup);
   if (recipeSearch) list = list.filter(d => d.name.toLowerCase().includes(recipeSearch.toLowerCase()));
-  if (!list.length) { alert('Нет напитков для печати с текущими фильтрами.'); return; }
+  if (!list.length) { window.showAlert('Нет напитков для печати с текущими фильтрами.', 'ℹ️'); return; }
 
   const pages = list.map((d, idx) => {
     const cardNum = DRINKS.findIndex(x => x.id === d.id) + 1;
@@ -29,7 +29,7 @@ export function exportTechCards() {
 
 export function exportSemiTechCards() {
   const { getOrgInfo, SEMI, _buildSemiTechCardBlock, _openTechCardsWindow } = window;
-  if (!SEMI.length) { alert('Нет полуфабрикатов для печати.'); return; }
+  if (!SEMI.length) { window.showAlert('Нет полуфабрикатов для печати.', 'ℹ️'); return; }
   const org = getOrgInfo();
   const pages = SEMI.map((s, idx) =>
     _buildSemiTechCardBlock(s, org, idx + 1, idx === SEMI.length - 1)
@@ -266,7 +266,7 @@ export function _printViaIframe(html, filename) {
       cw.focus();
       cw.print();
     } catch(e) {
-      alert('Не удалось открыть диалог печати: ' + e.message);
+      window.showAlert('Не удалось открыть диалог печати: ' + e.message);
     }
     // Удаляем iframe позже — после закрытия диалога
     setTimeout(() => { iframe.remove(); }, 2000);
@@ -341,7 +341,7 @@ export function mvdDownloadPDF() {
 }
 export async function mvdDownloadExcel() {
   document.getElementById('mvd-download-menu').classList.remove('open');
-  if (!window.ExcelJS) { alert('Библиотека ExcelJS не загрузилась. Проверьте интернет.'); return; }
+  if (!window.ExcelJS) { window.showAlert('Библиотека ExcelJS не загрузилась. Проверьте интернет.'); return; }
   const data = _mvdGetData(); if (!data) return;
   const { d, ings, totalCost, price, profit, fc, nut, groupName } = data;
   const today  = new Date().toLocaleDateString('ru');
@@ -743,7 +743,7 @@ export function exportSingleSemiPDF(idRaw) {
 }
 
 export async function exportSingleSemiXLSX(idRaw) {
-  if (!window.ExcelJS) { alert('Библиотека ExcelJS не загрузилась.'); return; }
+  if (!window.ExcelJS) { window.showAlert('Библиотека ExcelJS не загрузилась.'); return; }
   const s = window.SEMI.find(x => x.id === Number(idRaw));
   if (!s) return;
 

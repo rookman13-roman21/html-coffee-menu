@@ -79,6 +79,48 @@ export function _forceCloseModal(id) {
   closeModal(id);
 }
 
+export function showAlert(msg, icon = '⚠️') {
+  if (document.getElementById('_dialog-overlay')) return;
+  const overlay = document.createElement('div');
+  overlay.id = '_dialog-overlay';
+  overlay.innerHTML = `
+    <div class="_dialog-box">
+      <div class="_dialog-icon">${icon}</div>
+      <div class="_dialog-msg">${msg}</div>
+      <div class="_dialog-btns">
+        <button class="_dialog-ok" id="_dialog-ok-btn">ОК</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.getElementById('_dialog-ok-btn').addEventListener('click', () => overlay.remove());
+}
+
+export function showConfirm(msg, onConfirm, opts = {}) {
+  if (document.getElementById('_dialog-overlay')) return;
+  const icon    = opts.icon    || '❓';
+  const okText  = opts.okText  || 'Подтвердить';
+  const danger  = opts.danger !== false;
+  const overlay = document.createElement('div');
+  overlay.id = '_dialog-overlay';
+  overlay.innerHTML = `
+    <div class="_dialog-box">
+      <div class="_dialog-icon">${icon}</div>
+      <div class="_dialog-msg">${msg}</div>
+      <div class="_dialog-btns">
+        <button class="_dialog-cancel" id="_dialog-cancel-btn">Отмена</button>
+        <button class="${danger ? '_dialog-confirm' : '_dialog-ok'}" id="_dialog-confirm-btn">${okText}</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.getElementById('_dialog-cancel-btn').addEventListener('click', () => overlay.remove());
+  document.getElementById('_dialog-confirm-btn').addEventListener('click', () => {
+    overlay.remove();
+    onConfirm();
+  });
+}
+
 export function closeOnboarding() {
   document.getElementById('onboarding').style.display = 'none';
   try { localStorage.setItem('mbs_onboard', '1'); } catch(e) {}
