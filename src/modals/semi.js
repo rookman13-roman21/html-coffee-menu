@@ -25,14 +25,13 @@ export function _semiIngPlaceholder(matKey) {
   const m = MAT[matKey];
   if (!m) return '0';
   const u = (m.unit || '').toLowerCase();
-  return (u.includes('кг') || u.includes('л')) ? '0.000' : '0';
+  if (u.includes('кг')) return 'г';
+  if (u === 'л' || u.includes(' л')) return 'мл';
+  return '0';
 }
 
 export function _semiIngStep(matKey) {
-  const m = MAT[matKey];
-  if (!m) return '1';
-  const u = (m.unit || '').toLowerCase();
-  return (u.includes('кг') || u.includes('л')) ? '0.001' : '1';
+  return '1'; // ввод всегда в г/мл/шт
 }
 
 export function _updateSemiCostPreview() {
@@ -45,7 +44,7 @@ export function _updateSemiCostPreview() {
     const m = MAT[matKey];
     if (!m || !(amt > 0)) return;
     const pricePerUnit = (S.prices[matKey] || m.price) / m.size;
-    totalRaw += pricePerUnit * amt * _semiUnitFactor(matKey) * (1 + loss);
+    totalRaw += pricePerUnit * amt * (1 + loss); // amt в г/мл, pricePerUnit в руб/г
   });
   const unit = document.getElementById('ms-unit').value || 'ед.';
   const perUnit = (yieldV > 0 && totalRaw > 0) ? (totalRaw / yieldV) : null;
@@ -149,9 +148,8 @@ export function _autoFillSemiYield() {
     const matKey  = (row.querySelector('.ing-mat') || {}).value || '';
     const amtVal  = parseFloat((row.querySelector('.ing-amt')  || {}).value) || 0;
     const yldVal  = parseFloat((row.querySelector('.ing-yield')|| {}).value);
-    const factor  = _semiUnitFactor(matKey);
-    // если есть выход ингредиента — берём его, иначе берём кол-во
-    const contrib = isFinite(yldVal) ? yldVal * factor : amtVal * factor;
+    // значения в г/мл (пользователь вводит в г), суммируем напрямую
+    const contrib = isFinite(yldVal) ? yldVal : amtVal;
     if (amtVal > 0 || isFinite(yldVal)) { total += contrib; hasAny = true; }
   });
   if (hasAny && total > 0) yieldInp.value = Math.round(total);
@@ -164,9 +162,8 @@ export function _calcSemiIngCost(row) {
   const loss = (parseFloat((row.querySelector('.ing-loss') || {}).value) || 0) / 100;
   const m = MAT[key];
   if (!m || !(amt > 0)) return 0;
-  const factor = _semiUnitFactor(key);
-  const pricePerUnit = (S.prices[key] || m.price) / m.size;
-  let cost = pricePerUnit * amt * factor;
+  const pricePerUnit = (S.prices[key] || m.price) / m.size; // руб/г
+  let cost = pricePerUnit * amt; // amt в г/мл
   if (loss > 0) cost = cost / (1 - loss);
   return cost;
 }
@@ -259,7 +256,12 @@ export function openEditSemi(id) {
     _sph.style.display = ''; _scb.style.display = 'none';
   }
   document.getElementById('ms-ings').innerHTML = '';
-  (semi.recipe || []).forEach(r => addSemiIngRow(r.mat, r.amt, r.loss ? parseFloat((r.loss * 100).toPrecision(4)) : '', r.yieldAmt || ''));
+  (semi.recipe || []).forEach(r => {
+    const _f = _semiUnitFactor(r.mat);
+    const _dAmt = r.amt * _f; // кг→г для отображения
+    const _dYield = (r.yieldAmt && _f > 1) ? r.yieldAmt * _f : (r.yieldAmt || '');
+    addSemiIngRow(r.mat, _dAmt, r.loss ? parseFloat((r.loss * 100).toPrecision(4)) : '', _dYield);
+  });
   if (!(semi.recipe && semi.recipe.length)) addSemiIngRow();
   openModal('modal-semi');
   _updateSemiCostPreview();
@@ -289,9 +291,11 @@ export function saveSemi() {
     const loss = (parseFloat(row.querySelector('.ing-loss').value) || 0) / 100;
     const yieldAmt = parseFloat(row.querySelector('.ing-yield').value);
     if (mat && amt > 0) {
-      const r = { mat, amt };
+      const _f = _semiUnitFactor(mat);
+      const storedAmt = _f > 1 ? amt / _f : amt; // г→кг для хранения
+      const r = { mat, amt: storedAmt };
       if (loss > 0 && loss < 1) r.loss = loss;
-      if (isFinite(yieldAmt) && yieldAmt > 0) r.yieldAmt = yieldAmt;
+      if (isFinite(yieldAmt) && yieldAmt > 0) r.yieldAmt = (_f > 1 ? yieldAmt / _f : yieldAmt);
       recipe.push(r);
     }
   });

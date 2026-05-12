@@ -56,15 +56,14 @@ export function openViewDrink(id) {
       const s = window.SEMI.find(x => x.id === ing.semi);
       if (!s) return null;
       const factor = _semiDrinkFactor(s);
-      const dispAmt = ing.amt; // хранится в кг/л — показываем как есть
+      const dispAmt = factor > 1 ? ing.amt * factor : ing.amt; // кг→г для отображения
       const su = (s.unit || '').toLowerCase();
-      const sUnit = (factor === 1000) ? (su.startsWith('г') ? 'кг' : 'л') : s.unit;
+      const sUnit = (factor === 1000) ? (su.startsWith('г') ? 'г' : 'мл') : s.unit;
       return { name: s.name + ' <span style="font-size:10px;color:var(--muted);border-radius:4px;padding:1px 4px;font-weight:600">п/ф</span>', dispAmt, unit: sUnit, cost: calcIngCost(ing) };
     }
     if (!window.MAT[ing.mat]) return null;
-    const factor = _semiUnitFactor(ing.mat);
-    const dispAmt = parseFloat((ing.amt / factor).toPrecision(4));
-    const unit = _matDisplayUnit(ing.mat);
+    const dispAmt = ing.amt; // хранится в г/мл, показываем напрямую
+    const unit = _matDisplayUnit(ing.mat); // теперь возвращает г/мл
     return { name: window.MAT[ing.mat].name, dispAmt, unit, cost: calcIngCost(ing) };
   }).filter(Boolean);
   const totalCost = ings.reduce((s,i) => s + i.cost, 0);
@@ -216,17 +215,16 @@ export function filterRecipes(val) {
         if (ing.semi != null) {
           const s = SEMI.find(x => x.id === ing.semi);
           const factor = window._semiDrinkFactor(s);
-          const dispAmt = ing.amt;
+          const dispAmt = factor > 1 ? ing.amt * factor : ing.amt; // кг→г
           const su = (s.unit || '').toLowerCase();
-          const unit = (factor === 1000) ? (su.startsWith('г') ? 'кг' : 'л') : s.unit;
+          const unit = (factor === 1000) ? (su.startsWith('г') ? 'г' : 'мл') : s.unit;
           return {
             name: s.name + ' <span style="font-size:9px;color:var(--muted);border-radius:3px;padding:1px 3px;font-weight:600">п/ф</span>',
             dispAmt, unit, cost: window.calcIngCost(ing)
           };
         }
-        const factor = window._semiUnitFactor(ing.mat);
-        const dispAmt = parseFloat((ing.amt / factor).toPrecision(4));
-        const unit = window._matDisplayUnit(ing.mat);
+          const dispAmt = ing.amt; // хранится в г/мл
+          const unit = window._matDisplayUnit(ing.mat); // теперь возвращает г/мл
         return { name: MAT[ing.mat].name, dispAmt, unit, cost: window.calcIngCost(ing) };
       });
     const totalCost = ings.reduce((s, i) => s + i.cost, 0);

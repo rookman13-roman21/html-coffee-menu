@@ -33,25 +33,19 @@ export function _ingPlaceholder(val) {
   if (type === 'semi') {
     const s = SEMI.find(x => x.id === parseInt(key));
     if (!s) return '0';
-    return _semiDrinkFactor(s) === 1000 ? '0.000' : '0';
+    const su = (s.unit || '').toLowerCase();
+    return _semiDrinkFactor(s) === 1000 ? (su.startsWith('г') ? 'г' : 'мл') : '0';
   }
   const m = MAT[key];
   if (!m) return '0';
   const u = (m.unit || '').toLowerCase();
-  return (u.includes('кг') || u.includes('л')) ? '0.000' : '0';
+  if (u.includes('кг')) return 'г';
+  if (u === 'л' || u.includes(' л')) return 'мл';
+  return '0';
 }
 
 export function _ingStep(val) {
-  if (!val) return '1';
-  const [type, key] = val.split(':');
-  if (type === 'semi') {
-    const s = SEMI.find(x => x.id === parseInt(key));
-    return (s && _semiDrinkFactor(s) === 1000) ? '0.001' : '1';
-  }
-  const m = MAT[key];
-  if (!m) return '1';
-  const u = (m.unit || '').toLowerCase();
-  return (u.includes('кг') || u.includes('л')) ? '0.001' : '1';
+  return '1'; // ввод всегда в г/мл/шт
 }
 
 export function _onIngMatChange(selectEl) {
@@ -96,15 +90,14 @@ export function _calcIngRowCost(row) {
   if (val.startsWith('semi:')) {
     const sid = parseInt(val.slice(5));
     const s = SEMI.find(x => x.id === sid);
-    if (s) cost = calcSemiCostPerUnit(s) * amt * _semiDrinkFactor(s);
+    if (s) cost = calcSemiCostPerUnit(s) * amt; // amt в г/мл, calcSemiCostPerUnit → руб/г
     if (loss > 0) cost = cost / (1 - loss);
   } else {
     const key = val.startsWith('mat:') ? val.slice(4) : val;
     const m = MAT[key];
     if (!m) return null;
-    const factor = _semiUnitFactor(key);
-    const pricePerUnit = (S.prices[key] || m.price) / m.size;
-    cost = pricePerUnit * amt * factor;
+    const pricePerUnit = (S.prices[key] || m.price) / m.size; // руб/г
+    cost = pricePerUnit * amt; // amt в г/мл
     if (loss > 0) cost = cost / (1 - loss);
   }
   return cost;

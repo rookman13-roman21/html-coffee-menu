@@ -63,9 +63,10 @@ export function openEditDrink(id) {
     const sel = r.semi != null ? `semi:${r.semi}` : `mat:${r.mat}`;
     let displayAmt = r.amt;
     if (r.semi != null) {
-      displayAmt = r.amt;
+      const _s = SEMI.find(x => x.id === r.semi);
+      displayAmt = _s ? r.amt * window._semiDrinkFactor(_s) : r.amt;
     } else if (r.mat) {
-      displayAmt = parseFloat((r.amt / _semiUnitFactor(r.mat)).toPrecision(6));
+      displayAmt = r.amt; // хранится в г/мл, показываем напрямую
     }
     const displayLoss = r.loss ? parseFloat((r.loss * 100).toPrecision(4)) : '';
     addIngRow(sel, displayAmt, displayLoss);
@@ -110,12 +111,12 @@ export function saveDrink() {
     const [type, key] = selEl.value.split(':');
     if (type === 'semi') {
       const s = SEMI.find(x => x.id === parseInt(key));
-      const ing = { semi: parseInt(key), amt };
+      const _f = s ? window._semiDrinkFactor(s) : 1;
+      const ing = { semi: parseInt(key), amt: _f > 1 ? amt / _f : amt };
       if (l > 0 && l < 1) ing.loss = l;
       recipe.push(ing);
     } else {
-      const factor = _semiUnitFactor(key);
-      const ing = { mat: key, amt: amt * factor };
+      const ing = { mat: key, amt }; // пользователь вводит в г/мл, храним напрямую
       if (l > 0 && l < 1) ing.loss = l;
       recipe.push(ing);
     }

@@ -131,9 +131,13 @@ export function _buildTechCardBlock(d, org, cardNum, isLast) {
     const rows = (s.recipe||[]).filter(r => window.MAT[r.mat]).map(r => {
       const m = window.MAT[r.mat];
       const loss = r.loss ? (r.loss*100).toFixed(0)+'%' : '—';
-      const brutto = r.loss ? (r.amt/(1-r.loss)).toFixed(1) : r.amt.toString();
+      const _sf = _semiUnitFactor(r.mat);
+      const netto_d = r.amt * _sf; // кг→г для отображения
+      const brutto = r.loss ? (netto_d / (1-r.loss)).toFixed(1) : netto_d.toString();
       const cost = _semiIngCostPDF(r);
-      return `<tr><td>${m.name}</td><td class="c">${m.unit.replace(/^1\s*/,'')}</td><td class="r">${brutto}</td><td class="r">${r.amt}</td><td class="c">${loss}</td><td class="r b">${Math.round(cost)} ₽</td></tr>`;
+      const _mu = (m.unit||'').toLowerCase();
+      const unitDisp = _mu.includes('кг') ? 'г' : (_mu==='л'||_mu.includes(' л')) ? 'мл' : m.unit.replace(/^1\s*/,'');
+      return `<tr><td>${m.name}</td><td class="c">${unitDisp}</td><td class="r">${brutto}</td><td class="r">${netto_d}</td><td class="c">${loss}</td><td class="r b">${Math.round(cost)} ₽</td></tr>`;
     }).join('');
     const semiTotal = (s.recipe||[]).reduce((sum,r) => sum + _semiIngCostPDF(r), 0);
     return `<p style="font-weight:700;margin:8pt 0 3pt">${s.name} — выход ${s.yield} ${s.unit}, себест. ${Math.round(semiCostPer)} ₽/${s.unit}</p>
@@ -356,9 +360,11 @@ export async function mvdDownloadExcel() {
   const recipeRows = d.recipe.filter(r => window.MAT[r.mat]).map(r => {
     const m      = window.MAT[r.mat];
     const loss   = r.loss ? +(r.loss * 100).toFixed(1) : null;
-    const brutto = r.loss ? +(r.amt / (1 - r.loss)).toFixed(1) : r.amt;
+    const brutto = r.loss ? +(r.amt / (1 - r.loss)).toFixed(1) : r.amt; // r.amt уже в г
     const cost   = calcIngCost(r);
-    return { name: m.name, unit: m.unit.replace(/^1\s*/,''), brutto, netto: r.amt, loss, cost };
+    const _mu = (m.unit||'').toLowerCase();
+    const unitDisp = _mu.includes('кг') ? 'г' : (_mu==='л'||_mu.includes(' л')) ? 'мл' : m.unit.replace(/^1\s*/,'');
+    return { name: m.name, unit: unitDisp, brutto, netto: r.amt, loss, cost };
   });
 
 
@@ -846,13 +852,17 @@ export async function exportSingleSemiXLSX(idRaw) {
     ingN++;
     const m=window.MAT[r.mat];
     const loss=r.loss?+(r.loss*100).toFixed(1):null;
-    const brutto=r.loss?+(r.amt/(1-r.loss)).toFixed(3):r.amt;
+    const _sf=_semiUnitFactor(r.mat);
+    const netto_d=r.amt*_sf; // кг→г для отображения
+    const brutto=r.loss?+(netto_d/(1-r.loss)).toFixed(1):netto_d;
     let cost=((window.S.prices[r.mat]||window.MAT[r.mat].price)/window.MAT[r.mat].size)*r.amt*_semiUnitFactor(r.mat);
     if (r.loss) cost=cost/(1-r.loss);
     totalCost+=cost;
+    const _mu=(m.unit||'').toLowerCase();
+    const unitDisp=_mu.includes('кг')?'г':(_mu==='л'||_mu.includes(' л'))?'мл':m.unit.replace(/^1\s*/,'');
     const iRow=ws.getRow(R);
     const bg=ingN%2===0?C_GREY:C_WHITE;
-    const vals=[ingN, m.name, brutto, r.amt, loss?loss+'%':'—', Math.round(cost)+' ₽'];
+    const vals=[ingN, m.name, brutto, netto_d, loss?loss+'%':'—', Math.round(cost)+' ₽'];
     vals.forEach((v,i) => {
       const c=iRow.getCell(i+1); c.value=v; c.font=FONT(false,9); c.fill=F(bg); c.border=BD();
       c.alignment=AL(i===1?'left':'center');
@@ -928,9 +938,13 @@ export function _buildSemiTechCardBlock(s, org, cardNum, isLast) {
     if (!window.MAT[r.mat]) return '';
     const m      = window.MAT[r.mat];
     const loss   = r.loss ? (r.loss * 100).toFixed(0) + '%' : '—';
-    const brutto = r.loss ? (r.amt / (1 - r.loss)).toFixed(3) : r.amt.toString();
+    const _sf    = _semiUnitFactor(r.mat);
+    const netto_d = r.amt * _sf; // кг→г для отображения
+    const brutto = r.loss ? (netto_d / (1 - r.loss)).toFixed(1) : netto_d.toString();
     const cost   = _semiIngCost(r);
-    return `<tr><td>${m.name}</td><td class="c">${m.unit.replace(/^1\s*/,'')}</td><td class="r">${brutto}</td><td class="r">${r.amt}</td><td class="c">${loss}</td><td class="r">${r.yieldAmt||'—'}</td><td class="r b">${Math.round(cost)} ₽</td></tr>`;
+    const _mu = (m.unit||'').toLowerCase();
+    const unitDisp = _mu.includes('кг') ? 'г' : (_mu==='л'||_mu.includes(' л')) ? 'мл' : m.unit.replace(/^1\s*/,'');
+    return `<tr><td>${m.name}</td><td class="c">${unitDisp}</td><td class="r">${brutto}</td><td class="r">${netto_d}</td><td class="c">${loss}</td><td class="r">${r.yieldAmt ? (r.yieldAmt * _sf).toFixed(1) : '—'}</td><td class="r b">${Math.round(cost)} ₽</td></tr>`;
   }).join('');
 
   const processBlock = s.process
