@@ -472,6 +472,8 @@ resetAll()  // confirm → восстанавливает S из DEFAULTS + FIXE
 | Легенда ABC выводилась в одну строку на мобильном | В `renderDashboard`: заголовок `display:block`, каждый пункт в отдельном `<div>`, обёртка `flex-direction:column` |
 | Фокус слетал с инпутов МРОТ/НДФЛ/взносы при каждой нажатой клавише | `oninput` → `onchange` в трёх инпутах `finmodel.js` — ре-рендер происходит только при уходе из поля |
 | Вкладки Дашборд / Продажи / Поставщики отображались с неправильной шириной (узко на десктопе, шире viewport на мобайле) | **Причина:** `body { display: flex; flex-direction: column }` (добавлен для sticky-footer) делает `<main class="main">` flex-child. В flex-column `margin: 0 auto` не растягивает элемент до полной ширины — он сжимается до ширины контента. **Решение:** `width: 100%` на `.main` — до применения `max-width: 1440px` и `margin: 0 auto`. **Правило:** при `body { display: flex }` все дочерние блоки-контейнеры должны иметь явный `width: 100%`. |
+| В модалке «Новый полуфабрикат» поле «Цена» не обновлялось при вводе кол-ва; ячейка «Потери» не работала | **Причина:** `addSemiIngRow` строила HTML с inline `oninput="_updateSemiIngCost(this)"`. В Vite-сборке имена функций минифицируются → `window._updateSemiIngCost` не находилась. **Решение:** убрать все inline-обработчики из HTML-строки; после `wrap.appendChild(row)` навесить `addEventListener('input'/'change'/'click')` напрямую на DOM-элементы внутри замыкания. **Правило:** в Vite ES-модулях не использовать `oninput="moduleFn(this)"` — только `addEventListener`. |
+| В модалке «Новый полуфабрикат» поле «Цена» не обновлялось при вводе кол-ва / потерь; ячейка «Потери» не работала | **Причина:** `addSemiIngRow` строила HTML через innerHTML со строками `oninput="_updateSemiIngCost(this)"` и `onchange="_onSemiMatChange(this)"`. В Vite-сборке имена функций минифицируются → `window._updateSemiIngCost` не находилась. **Решение:** убрать все inline-обработчики из HTML-строки; после `wrap.appendChild(row)` навесить `addEventListener('input')` / `addEventListener('change')` / `addEventListener('click')` напрямую на DOM-элементы внутри замыкания функции. **Правило:** в Vite ES-модулях нельзя использовать `oninput="moduleFn(this)"` для функций из модулей — они не гарантированно попадают в `window`. Использовать `addEventListener`. |
 
 ---
 
@@ -1678,3 +1680,35 @@ const _svgPencil = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="1
 | `fd6d897` | fix: recipe-card-img — remove border-radius, add margin-bottom 14px |
 | `78d2391` | fix: remove overflow:hidden from .recipe-card (ошибочный) |
 | `476686a` | revert: restore overflow:hidden on .recipe-card (обрезка фото по углам) |
+
+---
+
+### Сессия 30 (12 мая 2026) — fix: модалка полуфабриката
+
+**Проблема:** в модалке «Новый полуфабрикат» при вводе количества ингредиента поле «Цена» оставалось пустым, ячейка «Потери» не пересчитывала данные.
+
+**Причина:** `addSemiIngRow` генерировала HTML-строку с inline-обработчиками:
+```html
+<input oninput="_updateSemiIngCost(this);_autoCalcSemiIngYield(this)">
+<select onchange="_onSemiMatChange(this);_updateSemiIngCost(this)">
+```
+В Vite-сборке модульные функции не гарантированно попадают в `window`, имена могут минифицироваться — inline-строки не находили функций.
+
+**Исправление** (`src/modals/semi.js`):
+- Убраны все `oninput=`, `onchange=`, `onclick=` из HTML-строки
+- После `wrap.appendChild(row)` навешены `addEventListener` напрямую на DOM-элементы внутри замыкания функции:
+```js
+matSel.addEventListener('change', () => { _onSemiMatChange(matSel); _updateSemiIngCost(matSel); });
+amtInp.addEventListener('input', () => { amtInp.value = amtInp.value.replace(',','.'); _updateSemiCostPreview(); _updateSemiIngCost(amtInp); _autoCalcSemiIngYield(amtInp); });
+lossInp.addEventListener('input', () => { _updateSemiCostPreview(); _updateSemiIngCost(lossInp); _autoCalcSemiIngYield(lossInp); });
+delBtn.addEventListener('click', () => { row.remove(); _updateSemiCostPreview(); });
+```
+
+**Правило (добавлено в copilot-instructions):** в Vite ES-модулях избегать inline `oninput="moduleFn(this)"` для функций из модулей. Использовать `addEventListener` внутри замыкания — функции вызываются напрямую, без зависимости от `window`.
+
+**Коммиты:**
+
+| Коммит | Описание |
+|--------|----------|
+| `f5acd41` | fix: add _updateSemiIngCost and _autoCalcSemiIngYield to window exports |
+| `864eb24` | fix: use addEventListener in addSemiIngRow instead of inline oninput globals |
