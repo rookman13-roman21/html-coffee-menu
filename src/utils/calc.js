@@ -85,11 +85,14 @@ export function calcIngCost(ing) {
  */
 export function calcNutrition(d) {
   const MAT_NUTRITION = window.MAT_NUTRITION;
+  // У полуфабрикатов amt хранится в кг/л — нужно перевести в г/мл
+  const isSemi = d.yield !== undefined;
   let kcal = 0, protein = 0, fat = 0, carbs = 0;
   (d.recipe || []).forEach(ing => {
     const n = MAT_NUTRITION[ing.mat];
     if (!n) return;
-    const amt = ing.amt * (1 - (ing.loss || 0));
+    const factor = isSemi ? _semiUnitFactor(ing.mat) : 1;
+    const amt = ing.amt * factor * (1 - (ing.loss || 0));
     kcal    += n.kcal    * amt / 100;
     protein += n.protein * amt / 100;
     fat     += n.fat     * amt / 100;
