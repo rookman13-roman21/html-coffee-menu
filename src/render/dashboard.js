@@ -190,15 +190,15 @@ export function renderDashboard() {
     </div>
     <div class="panel dash-top10-panel" id="dash-top10-panel" style="margin-bottom:20px;overflow:hidden;transition:max-height .3s ease,opacity .25s ease,margin .25s ease">${chartHtml}</div>
     <div class="section-title"><i data-lucide="clipboard-list" class="icon"></i> Рейтинг напитков — кликните заголовок для сортировки</div>
-    <div class="recipe-filter-btns">
-      <button class="recipe-filter-btn${dg==='all'?' active':''}" onclick="setDashGroup('all')">Все</button>
-      <button class="recipe-filter-btn${dg==='hot'?' active':''}" onclick="setDashGroup('hot')">Горячие</button>
-      <button class="recipe-filter-btn${dg==='tea'?' active':''}" onclick="setDashGroup('tea')">Чай</button>
-      <button class="recipe-filter-btn${dg==='cold'?' active':''}" onclick="setDashGroup('cold')">Холодные</button>
-      <button class="recipe-filter-btn${dg==='filter'?' active':''}" onclick="setDashGroup('filter')">Пуровер</button>
-      <button class="recipe-filter-btn${dg==='author'?' active':''}" onclick="setDashGroup('author')">Авторские</button>
-    </div>
     <div class="dash-search-row">
+      <div class="recipe-filter-btns dash-group-tabs">
+        <button class="recipe-filter-btn${dg==='all'?' active':''}" onclick="setDashGroup('all')">Все</button>
+        <button class="recipe-filter-btn${dg==='hot'?' active':''}" onclick="setDashGroup('hot')">Горячие</button>
+        <button class="recipe-filter-btn${dg==='tea'?' active':''}" onclick="setDashGroup('tea')">Чай</button>
+        <button class="recipe-filter-btn${dg==='cold'?' active':''}" onclick="setDashGroup('cold')">Холодные</button>
+        <button class="recipe-filter-btn${dg==='filter'?' active':''}" onclick="setDashGroup('filter')">Пуровер</button>
+        <button class="recipe-filter-btn${dg==='author'?' active':''}" onclick="setDashGroup('author')">Авторские</button>
+      </div>
       <div class="search-wrap" style="margin-bottom:0;flex:1">
         <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
         <input class="search-inp" id="dash-search" type="text" placeholder="Поиск по названию..."
