@@ -147,6 +147,8 @@ function _makeSemiSearchSelect(wrap, selectEl) {
     searchInp.value = '';
     renderOptions();
     searchInp.focus();
+    scrollListenerActive = false;
+    setTimeout(() => { scrollListenerActive = true; }, 200);
     requestAnimationFrame(() => {
       const active = optsList.querySelector('.ing-sel-opt--active');
       if (active) active.scrollIntoView({ block: 'nearest' });
@@ -185,11 +187,14 @@ function _makeSemiSearchSelect(wrap, selectEl) {
 
   selectEl.addEventListener('change', () => updateTrigger());
 
+  let scrollListenerActive = false;
+  function onScroll() { if (scrollListenerActive) closePanel(); }
+
   document.addEventListener('click', e => {
     if (!wrap.contains(e.target) && !panel.contains(e.target)) closePanel();
   }, true);
 
-  window.addEventListener('scroll', closePanel, true);
+  window.addEventListener('scroll', onScroll, true);
 }
 
 export function addSemiIngRow(matKey='', amt='', loss='', yieldAmt='') {

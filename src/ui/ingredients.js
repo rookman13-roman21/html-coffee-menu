@@ -217,6 +217,8 @@ export function _makeIngSearchSelect(wrap, selectEl) {
     searchInp.value = '';
     renderOptions();
     searchInp.focus();
+    scrollListenerActive = false;
+    setTimeout(() => { scrollListenerActive = true; }, 200);
     requestAnimationFrame(() => {
       const active = optsList.querySelector('.ing-sel-opt--active');
       if (active) active.scrollIntoView({ block: 'nearest' });
@@ -256,11 +258,14 @@ export function _makeIngSearchSelect(wrap, selectEl) {
   // Обновлять триггер при внешнем изменении select (напр. _pendingMatSelectEl)
   selectEl.addEventListener('change', () => updateTrigger());
 
+  let scrollListenerActive = false;
+  function onScroll() { if (scrollListenerActive) closePanel(); }
+
   document.addEventListener('click', e => {
     if (!wrap.contains(e.target) && !panel.contains(e.target)) closePanel();
   }, true);
 
-  window.addEventListener('scroll', closePanel, true);
+  window.addEventListener('scroll', onScroll, true);
 }
 
 export function addIngRow(selected='', amt='', loss='') {
