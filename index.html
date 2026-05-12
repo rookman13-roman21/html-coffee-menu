@@ -750,5 +750,32 @@
   </div>
 </div>
 
+<!-- Модал: добавить категорию сырья -->
+<div class="modal-bg" id="modal-add-cat">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title">
+      <span><i data-lucide="tag" class="icon"></i> Новая категория</span>
+      <button class="modal-close" onclick="closeModal('modal-add-cat')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-row">
+        <div style="flex:0 0 80px">
+          <div class="modal-label">Эмодзи</div>
+          <input class="modal-inp" id="mac-emoji" maxlength="4" placeholder="📦" style="text-align:center;font-size:1.4em">
+        </div>
+        <div style="flex:1">
+          <div class="modal-label">Название категории</div>
+          <input class="modal-inp" id="mac-name" placeholder="Например: Алкоголь">
+        </div>
+      </div>
+      <p id="mac-error" style="color:var(--red,#e74c3c);font-size:12px;margin:4px 0 0"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-cat')">Отмена</button>
+      <button class="btn-primary" onclick="saveCategory()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
 <script type="module" src="/src/main.js"></script>
 </html>

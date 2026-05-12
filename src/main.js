@@ -124,6 +124,7 @@ import {
 import {
   openEditMat, saveMat, cancelMat, deleteMat, matOnlyOptions,
   deleteEditingMat, onMatPurchaseUrlInput,
+  openAddCategory, saveCategory, _refreshMatCategorySelect,
 } from './modals/mat.js';
 
 import {
@@ -301,6 +302,7 @@ const _srcExports = {
   // modals/mat
   openEditMat, saveMat, cancelMat, deleteMat, matOnlyOptions,
   deleteEditingMat, onMatPurchaseUrlInput,
+  openAddCategory, saveCategory,
   // export/csv
   exportCSV, exportDashboard, exportSales,
   // ui/sort
@@ -499,3 +501,39 @@ if ('ontouchstart' in window) {
 //  GLOBAL EVENT WIRING (перенесено из public/app.js)
 // ════════════════════════════════════════════════════════════════════
 import './ui/events.js';
+
+// ── Дропдаун "+ Добавить" для ингредиентов ──────────────────────────
+function toggleAddMatMenu(btn) {
+  const menu = document.getElementById('add-mat-menu');
+  if (!menu) return;
+  const isOpen = menu.style.display !== 'none';
+  menu.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    // закрыть при клике вне
+    const close = (e) => {
+      if (!menu.contains(e.target) && e.target !== btn) {
+        menu.style.display = 'none';
+        document.removeEventListener('click', close);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', close), 0);
+  }
+}
+function closeAddMatMenu() {
+  const menu = document.getElementById('add-mat-menu');
+  if (menu) menu.style.display = 'none';
+}
+function openAddMatModal() {
+  _refreshMatCategorySelect();
+  // Сбросить форму на «новый ингредиент»
+  document.getElementById('mm-modal-title').innerHTML = '<i data-lucide="plus" class="icon"></i> Новая позиция сырья';
+  document.getElementById('mm-name').value  = '';
+  document.getElementById('mm-unit').value  = 'шт';
+  document.getElementById('mm-price').value = '';
+  document.getElementById('mm-size').value  = '';
+  document.getElementById('mm-category').value = 'other';
+  const delBtn = document.getElementById('mm-delete-btn');
+  if (delBtn) delBtn.style.display = 'none';
+  openModal('modal-mat');
+}
+Object.assign(window, { toggleAddMatMenu, closeAddMatMenu, openAddMatModal });

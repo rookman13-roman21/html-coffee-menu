@@ -17,6 +17,9 @@ export function renderCost() {
     setMatCat,
   } = window;
 
+  // ── Все категории (встроенные + кастомные) ───────────────────────
+  const ALL_CATS = { ...MAT_CATEGORIES, ...(S.customCategories || {}) };
+
   // ── Сырьё по категориям ──────────────────────────────────────────
   const matGroups = {};
   Object.entries(MAT).forEach(([key, m]) => {
@@ -25,7 +28,7 @@ export function renderCost() {
     matGroups[cat].push([key, m]);
   });
   const matSortedCats = Object.keys(matGroups).sort((a, b) =>
-    ((MAT_CATEGORIES[a] || { order: 99 }).order) - ((MAT_CATEGORIES[b] || { order: 99 }).order)
+    ((ALL_CATS[a] || { order: 99 }).order) - ((ALL_CATS[b] || { order: 99 }).order)
   );
 
   // По умолчанию все категории свёрнуты (если не задано иное пользователем)
@@ -84,7 +87,7 @@ export function renderCost() {
     <div class="mat-cat-tabs">
       <button class="mat-cat-tab${_matActiveCat === 'all' ? ' active' : ''}" onclick="setMatCat('all')">Всё <span>${Object.keys(MAT).length}</span></button>
       ${matSortedCats.map(cat => {
-        const lbl = (MAT_CATEGORIES[cat] || { label: cat }).label;
+        const lbl = (ALL_CATS[cat] || { label: cat }).label;
         return `<button class="mat-cat-tab${_matActiveCat === cat ? ' active' : ''}" onclick="setMatCat('${cat}')">${lbl} <span>${matGroups[cat].length}</span></button>`;
       }).join('')}
     </div>`;
@@ -94,7 +97,7 @@ export function renderCost() {
   window._matUsageMap = matUsageMap;
 
   const matRowsHtml = matSortedCats.map(cat => {
-    const catLabel  = (MAT_CATEGORIES[cat] || { label: cat }).label;
+    const catLabel  = (ALL_CATS[cat] || { label: cat }).label;
     const collapsed = !!_matCollapsed[cat];
     const catHidden = (_matActiveCat !== 'all' && _matActiveCat !== cat) ? 'display:none' : '';
     const rows = matGroups[cat].map(([key, m]) => {
@@ -256,7 +259,13 @@ export function renderCost() {
       <div onclick="event.stopPropagation()" style="display:flex;gap:8px">
         <button class="btn btn-outline" onclick="exportMaterialsPDF()" title="Ингредиенты и п/ф в PDF"><i data-lucide="file-text" class="icon"></i><span class="sup-btn-txt"> PDF</span></button>
         <button class="btn btn-outline" onclick="exportMaterialsXLSX()" title="Ингредиенты и п/ф в Excel"><i data-lucide="file-spreadsheet" class="icon"></i><span class="sup-btn-txt"> Excel</span></button>
-        <button class="btn btn-green" onclick="openModal('modal-mat')"><i data-lucide="plus" class="icon"></i><span class="sup-btn-txt"> Сырьё</span></button>
+        <div style="position:relative">
+          <button class="btn btn-green" onclick="event.stopPropagation();toggleAddMatMenu(this)"><i data-lucide="plus" class="icon"></i><span class="sup-btn-txt"> Добавить</span><i data-lucide="chevron-down" class="icon" style="margin-left:2px"></i></button>
+          <div id="add-mat-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:160px;z-index:100;overflow:hidden">
+            <button onclick="closeAddMatMenu();openAddMatModal()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;cursor:pointer;font-size:13px;color:var(--text)"><i data-lucide="package" class="icon"></i> Ингредиент</button>
+            <button onclick="closeAddMatMenu();openAddCategory()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;cursor:pointer;font-size:13px;color:var(--text)"><i data-lucide="tag" class="icon"></i> Категорию</button>
+          </div>
+        </div>
       </div>
     </div>
     <div id="cost-ing-body" style="${_ingCollapsed ? 'display:none' : ''}">

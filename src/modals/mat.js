@@ -5,6 +5,7 @@ export function openEditMat(key) {
   const m = MAT[key];
   if (!m) return;
   _editMatKey = key;
+  _refreshMatCategorySelect();
   // нормализуем единицу: "1 кг" → "кг", "1 л" → "л", всё остальное → "шт"
   const _rawUnit = (m.unit || '').toLowerCase();
   const _unit = _rawUnit.includes('кг') ? 'кг' : _rawUnit.includes(' л') || _rawUnit === 'л' ? 'л' : 'шт';
@@ -149,6 +150,55 @@ export function cancelMat(force = false) {
 
 export function deleteEditingMat() {
   if (_editMatKey) deleteMat(_editMatKey);
+}
+
+export function openAddCategory() {
+  document.getElementById('mac-emoji').value = '';
+  document.getElementById('mac-name').value  = '';
+  document.getElementById('mac-error').textContent = '';
+  openModal('modal-add-cat');
+}
+
+export function saveCategory() {
+  const emoji = document.getElementById('mac-emoji').value.trim();
+  const name  = document.getElementById('mac-name').value.trim();
+  const err   = document.getElementById('mac-error');
+  if (!name) { err.textContent = 'Введите название категории'; return; }
+  // Генерируем ключ из транслита/латиницы
+  const key = 'cat_' + name
+    .toLowerCase()
+    .replace(/[а-яёa-z0-9]/g, c => {
+      const tr = {а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'yo',ж:'zh',з:'z',и:'i',й:'j',
+        к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',
+        ц:'ts',ч:'ch',ш:'sh',щ:'sch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya'};
+      return tr[c] || c;
+    })
+    .replace(/[^a-z0-9]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '')
+    .slice(0, 20);
+  if (!key) { err.textContent = 'Не удалось создать ключ из названия'; return; }
+  const allCats = { ...MAT_CATEGORIES, ...(S.customCategories || {}) };
+  if (allCats[key]) { err.textContent = 'Категория с таким ключом уже существует'; return; }
+  const label = emoji ? `${emoji} ${name}` : name;
+  const maxOrder = Object.values(allCats).reduce((m, c) => Math.max(m, c.order || 0), 0);
+  if (!S.customCategories) S.customCategories = {};
+  S.customCategories[key] = { label, order: maxOrder + 1 };
+  // Обновляем select категорий в модалке mat
+  _refreshMatCategorySelect();
+  closeModal('modal-add-cat');
+  markDirtyDebounce();
+  saveState();
+}
+
+export function _refreshMatCategorySelect() {
+  const sel = document.getElementById('mm-category');
+  if (!sel) return;
+  const allCats = { ...MAT_CATEGORIES, ...(S.customCategories || {}) };
+  const sorted = Object.entries(allCats).sort((a,b) => (a[1].order||99)-(b[1].order||99));
+  const cur = sel.value;
+  sel.innerHTML = sorted.map(([k,v]) => `<option value="${k}">${v.label}</option>`).join('');
+  if (cur) sel.value = cur;
 }
 
 export function onMatPurchaseUrlInput(inp) {

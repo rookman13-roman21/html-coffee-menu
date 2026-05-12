@@ -117,6 +117,7 @@ export const S = {
   suppliers:   JSON.parse(JSON.stringify(_DEF_SUPPLIERS)),
   supplierBook: _DEF_SUPPLIER_BOOK.map(s=>({...s})),
   priceLog:    [],
+  customCategories: {},
 };
 
 // ─── Сброс глобального стейта к базовым значениям ───────────────────
@@ -152,6 +153,7 @@ export function resetGlobalsToBase() {
   S.suppliers         = JSON.parse(JSON.stringify(_DEF_SUPPLIERS));
   S.supplierBook      = _DEF_SUPPLIER_BOOK.map(s=>({...s}));
   S.priceLog          = [];
+  S.customCategories  = {};
 
   // Сбрасываем счётчики (через window — они ещё в app.js)
   window.nextDrinkId = 27;
@@ -187,6 +189,7 @@ export function saveState() {
         return acc;
       }, {}),
       customMats: Object.entries(MAT).filter(([,v]) => v.custom).map(([k,v]) => ({ key: k, ...v })),
+      customCategories: S.customCategories,
       semiItems: SEMI,
     }));
   } catch(e) {}
@@ -263,6 +266,8 @@ export function loadState() {
     S.supplierBook.forEach(b => { if (_noteUpdates[b.name]) b.note = _noteUpdates[b.name]; });
 
     if (sv.priceLog) S.priceLog = sv.priceLog;
+
+    if (sv.customCategories) Object.assign(S.customCategories, sv.customCategories);
 
     if (sv.customMats) {
       sv.customMats.forEach(m => {
