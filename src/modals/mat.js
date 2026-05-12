@@ -38,6 +38,15 @@ export function openEditMat(key) {
   const delBtn = document.getElementById('mm-delete-btn');
   if (delBtn) delBtn.style.display = m.custom ? '' : 'none';
   openModal('modal-mat');
+  // _fillMatSupBookSelect() вызывается внутри openModal — после неё выставляем книжного поставщика
+  if (sup?.name) {
+    const book = (S.supplierBook || []);
+    const match = book.find(b => b.name === sup.name);
+    if (match) {
+      const sel = document.getElementById('mm-sup-book');
+      if (sel) sel.value = String(match.id);
+    }
+  }
   lucide.createIcons();
 }
 
