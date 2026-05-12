@@ -195,17 +195,19 @@ export function openViewSemi(id) {
 
   const storageHtml = (s.storage_temp || s.storage_life)
     ? `<div class="mvd-section"><div class="mvd-section-title"><i data-lucide="thermometer" class="icon"></i> Условия хранения</div>
-        ${s.storage_temp ? `<div style="font-size:13px;color:var(--text);margin-bottom:4px">🌡️ ${s.storage_temp}</div>` : ''}
-        ${s.storage_life ? `<div style="font-size:13px;color:var(--text)">⏱️ ${s.storage_life}</div>` : ''}
+        <div class="mvd-info-card">
+          ${s.storage_temp ? `<div class="mvd-info-row"><span class="mvd-info-label">Температура:</span><span class="mvd-info-value">${s.storage_temp}</span></div>` : ''}
+          ${s.storage_life ? `<div class="mvd-info-row"><span class="mvd-info-label">Срок хранения:</span><span class="mvd-info-value">${s.storage_life}</span></div>` : ''}
+        </div>
       </div>`
     : '';
 
   const organoHtml = (s.appearance || s.taste || s.consistency)
-    ? `<div class="mvd-section"><div class="mvd-section-title"><i data-lucide="eye" class="icon"></i> Органолептика</div>
-        ${s.appearance   ? `<div style="font-size:13px;margin-bottom:4px"><span style="color:var(--muted)">Внешний вид: </span>${s.appearance}</div>` : ''}
-        ${s.taste        ? `<div style="font-size:13px;margin-bottom:4px"><span style="color:var(--muted)">Вкус и запах: </span>${s.taste}</div>` : ''}
-        ${s.consistency  ? `<div style="font-size:13px"><span style="color:var(--muted)">Консистенция: </span>${s.consistency}</div>` : ''}
-      </div>`
+    ? [
+        s.appearance  ? `<div class="mvd-section"><div class="mvd-section-title"><i data-lucide="eye" class="icon"></i> Внешний вид</div><div class="mvd-info-card"><div class="mvd-info-value">${s.appearance}</div></div></div>` : '',
+        s.taste       ? `<div class="mvd-section"><div class="mvd-section-title"><i data-lucide="coffee" class="icon"></i> Вкус и запах</div><div class="mvd-info-card"><div class="mvd-info-value">${s.taste}</div></div></div>` : '',
+        s.consistency ? `<div class="mvd-section"><div class="mvd-section-title"><i data-lucide="droplets" class="icon"></i> Консистенция</div><div class="mvd-info-card"><div class="mvd-info-value">${s.consistency}</div></div></div>` : '',
+      ].join('')
     : '';
 
   document.getElementById('mvd-title').textContent = s.name;
