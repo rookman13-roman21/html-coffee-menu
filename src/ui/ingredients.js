@@ -259,7 +259,7 @@ export function _makeIngSearchSelect(wrap, selectEl) {
   selectEl.addEventListener('change', () => updateTrigger());
 
   let scrollListenerActive = false;
-  function onScroll() { if (scrollListenerActive) closePanel(); }
+  function onScroll(e) { if (scrollListenerActive && !panel.contains(e.target)) closePanel(); }
 
   document.addEventListener('click', e => {
     if (!wrap.contains(e.target) && !panel.contains(e.target)) closePanel();
