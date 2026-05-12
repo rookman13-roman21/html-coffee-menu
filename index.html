@@ -209,6 +209,23 @@
   </div>
 </div>
 
+<!-- Модал: просмотр ингредиента -->
+<div class="modal-bg" id="modal-mat-view">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title">
+      <span id="mmv-title"></span>
+      <button class="modal-close" onclick="closeModal('modal-mat-view')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="mmv-content" style="padding-right:8px;scrollbar-gutter:stable"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-mat-view')">Закрыть</button>
+      <button class="btn-primary" onclick="mmvOpenEdit()"><i data-lucide="pencil" class="icon"></i> Редактировать</button>
+    </div>
+  </div>
+</div>
+
 <!-- Модал: добавить сырьё -->
 <div class="modal-bg" id="modal-mat">
   <div class="modal">

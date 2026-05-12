@@ -346,6 +346,7 @@ const _srcExports = {
   mvdSemiDownloadPDF, mvdSemiDownloadXLSX,
   setRecipeSort, setRecipeGroup, filterRecipes,
   openVideoModal, closeVideoModal,
+  openViewMat, mmvOpenEdit,
   toggleRecipesIntro, toggleSupIntro, toggleSalesIntro, toggleFinIntro,
   // ui/misc
   openTemplatesModal, chooseTemplate, applyTemplateData,

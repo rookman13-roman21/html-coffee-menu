@@ -454,4 +454,78 @@ export function toggleFinIntro() {
   if (btn) btn.classList.toggle('active', el.classList.contains('open'));
 }
 
+let _mmvKey = null;
 
+export function openViewMat(key) {
+  const MAT  = window.MAT;
+  const S    = window.S;
+  const m = MAT[key];
+  if (!m) return;
+  _mmvKey = key;
+
+  const { MAT_NUTRITION, MAT_CATEGORIES } = window;
+  const baseNutr = (MAT_NUTRITION || {})[key];
+  const n = m.nutrition || baseNutr || {};
+  const price = S.prices[key] ?? m.price ?? 0;
+  const sup = (S.suppliers || {})[key];
+  const catLabel = ((MAT_CATEGORIES || {})[m.category || 'other'] || {}).label || m.category || '';
+
+  const nutHtml = (n.kcal || n.protein || n.fat || n.carbs)
+    ? `<div class="mvd-section">
+        <div class="mvd-section-title"><i data-lucide="activity" class="icon"></i> КБЖУ на 100 г/мл</div>
+        <div class="mvd-nutrition">
+          <div class="mvd-nut-item"><span class="mvd-nut-val">${n.kcal||0}</span><span class="mvd-nut-lbl">ккал</span></div>
+          <div class="mvd-nut-item"><span class="mvd-nut-val">${n.protein||0}</span><span class="mvd-nut-lbl">белки, г</span></div>
+          <div class="mvd-nut-item"><span class="mvd-nut-val">${n.fat||0}</span><span class="mvd-nut-lbl">жиры, г</span></div>
+          <div class="mvd-nut-item"><span class="mvd-nut-val">${n.carbs||0}</span><span class="mvd-nut-lbl">углев., г</span></div>
+        </div>
+      </div>` : '';
+
+  const supHtml = sup
+    ? `<div class="mvd-section">
+        <div class="mvd-section-title"><i data-lucide="truck" class="icon"></i> Поставщик</div>
+        <div class="mvd-info-card">
+          ${sup.name  ? `<div class="mvd-info-row"><span class="mvd-info-label">Название:</span><span class="mvd-info-value">${sup.name}</span></div>` : ''}
+          ${sup.phone ? `<div class="mvd-info-row"><span class="mvd-info-label">Телефон:</span><span class="mvd-info-value">${sup.phone}</span></div>` : ''}
+          ${sup.note  ? `<div class="mvd-info-row"><span class="mvd-info-label">Заметка:</span><span class="mvd-info-value">${sup.note}</span></div>` : ''}
+          ${sup.site  ? `<div class="mvd-info-row"><span class="mvd-info-label">Сайт:</span><span class="mvd-info-value"><a href="${sup.site}" target="_blank" rel="noopener" style="color:var(--green)">${sup.site.replace(/^https?:\/\//, '')}</a></span></div>` : ''}
+        </div>
+      </div>` : '';
+
+  const purchaseHtml = m.purchaseUrl
+    ? `<div class="mvd-info-row" style="margin-top:6px"><span class="mvd-info-label">🔗 Ссылка:</span><span class="mvd-info-value"><a href="${m.purchaseUrl}" target="_blank" rel="noopener" style="color:var(--green)">${m.purchaseUrl.replace(/^https?:\/\//, '')}</a></span></div>`
+    : '';
+
+  const usageMap = window._matUsageMap || {};
+  const usedIn = usageMap[key] || [];
+  const usageHtml = usedIn.length
+    ? `<div class="mvd-section"><div class="mvd-section-title"><i data-lucide="bar-chart-2" class="icon"></i> Используется в рецептурах</div><div style="display:flex;flex-wrap:wrap;gap:6px">${usedIn.map(name => `<span class="sup-mat-tag">${name}</span>`).join('')}</div></div>`
+    : '';
+
+  document.getElementById('mmv-title').textContent = m.name;
+  document.getElementById('mmv-content').innerHTML = `
+    <div class="mvd-section">
+      <div class="mvd-section-title"><i data-lucide="package" class="icon"></i> Основные данные</div>
+      <div class="mvd-info-card">
+        <div class="mvd-info-row"><span class="mvd-info-label">Категория:</span><span class="mvd-info-value">${catLabel}</span></div>
+        <div class="mvd-info-row"><span class="mvd-info-label">Единица закупки:</span><span class="mvd-info-value">${m.unit}</span></div>
+        <div class="mvd-info-row"><span class="mvd-info-label">Цена:</span><span class="mvd-info-value" style="font-weight:700">${price} ₽ / ${m.unit}</span></div>
+        <div class="mvd-info-row"><span class="mvd-info-label">Объём в единице:</span><span class="mvd-info-value">${m.size} г/мл/шт</span></div>
+        <div class="mvd-info-row"><span class="mvd-info-label">Цена за 1 г/мл:</span><span class="mvd-info-value">${(price / m.size).toFixed(3)} ₽</span></div>
+        ${purchaseHtml}
+      </div>
+    </div>
+    ${nutHtml}
+    ${supHtml}
+    ${usageHtml}
+  `;
+  openModal('modal-mat-view');
+  if (window.lucide) lucide.createIcons({ nodes: [document.getElementById('mmv-content')] });
+}
+
+export function mmvOpenEdit() {
+  if (_mmvKey === null) return;
+  const key = _mmvKey;
+  closeModal('modal-mat-view');
+  window.openEditMat(key);
+}
