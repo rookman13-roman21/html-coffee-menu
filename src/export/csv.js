@@ -14,7 +14,7 @@ export function exportCSV(filename, headers, rows) {
 export function exportDashboard() {
   const drinks = window.withABC(window.enrich());
   exportCSV('mbs-dashboard.csv',
-    ['Напиток', 'Цена ₽', 'Себест. ₽', 'Прибыль ₽', 'FC%', 'ABC'],
+    ['Напиток', 'Цена ₽', 'Себест. ₽', 'Прибыль ₽', 'FC%', 'Рейтинг'],
     window.sortDrinks(drinks).map(d => [
       d.name, Math.round(d.price), Math.round(d.cost),
       Math.round(d.profit), window.pct(d.fc), d.abc,

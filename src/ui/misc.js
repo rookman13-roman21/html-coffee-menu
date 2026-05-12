@@ -303,7 +303,7 @@ tfoot tr td { font-weight:700; background:#e7f2e3 !important; border-top:1.5px s
 <!-- РЕЙТИНГ НАПИТКОВ -->
 <div class="section-title"><span>☕</span> Рейтинг напитков</div>
 <table>
-  <thead><tr><th>Напиток</th><th class="r">Цена, ₽</th><th class="r">Себест., ₽</th><th class="r">Прибыль, ₽</th><th class="c">FC%</th><th class="c">ABC</th><th class="r">Порций/д</th></tr></thead>
+  <thead><tr><th>Напиток</th><th class="r">Цена, ₽</th><th class="r">Себест., ₽</th><th class="r">Прибыль, ₽</th><th class="c">FC%</th><th class="c">Рейтинг</th><th class="r">Порций/д</th></tr></thead>
   <tbody>${drinkRows}</tbody>
 </table>
 
@@ -474,7 +474,7 @@ export async function exportFullXLSX() {
 
   // Таблица напитков
   addSectionTitle(wsDash, '  Рейтинг напитков по прибыли', 4);
-  const drinkHeaderRow = wsDash.addRow(['Напиток','Цена, ₽','Себест., ₽','Прибыль, ₽','FC%','ABC','Порций/день','Выручка/мес, ₽']);
+  const drinkHeaderRow = wsDash.addRow(['Напиток','Цена, ₽','Себест., ₽','Прибыль, ₽','FC%','Рейтинг','Порций/день','Выручка/мес, ₽']);
   wsDash.columns = [
     { width:32 }, { width:12 }, { width:12 }, { width:14 },
     { width:9  }, { width:7  }, { width:13 }, { width:16 },
