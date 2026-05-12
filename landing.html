@@ -78,8 +78,10 @@
       transition: background .15s;
       text-decoration: none;
     }
-    .btn-primary:visited { color: #fff; }
-    .btn-primary:hover { background: var(--green); border-color: var(--green); }
+    .btn-primary:link,
+    .btn-primary:visited,
+    .btn-primary:active { color: #fff; }
+    .btn-primary:hover { background: var(--green); border-color: var(--green); color: #fff; }
 
     /* ── HERO ── */
     .hero {
