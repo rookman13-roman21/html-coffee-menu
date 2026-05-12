@@ -757,14 +757,15 @@
   </div>
 </div>
 
-<!-- Модал: добавить категорию сырья -->
+<!-- Модал: добавить/редактировать категорию сырья -->
 <div class="modal-bg" id="modal-add-cat">
   <div class="modal" style="max-width:380px">
     <div class="modal-title">
-      <span><i data-lucide="tag" class="icon"></i> Новая категория</span>
+      <span id="mac-modal-title"><i data-lucide="tag" class="icon"></i> Новая категория</span>
       <button class="modal-close" onclick="closeModal('modal-add-cat')">&times;</button>
     </div>
     <div class="modal-body">
+      <input type="hidden" id="mac-edit-key">
       <div class="modal-row">
         <div style="flex:0 0 80px">
           <div class="modal-label">Эмодзи</div>
@@ -778,20 +779,22 @@
       <p id="mac-error" style="color:var(--red,#e74c3c);font-size:12px;margin:4px 0 0"></p>
     </div>
     <div class="modal-footer">
+      <button id="mac-delete-btn" class="btn" style="display:none;color:var(--red);border-color:var(--red);margin-right:auto" onclick="deleteCategory(document.getElementById('mac-edit-key').value)">Удалить</button>
       <button class="btn btn-outline" onclick="closeModal('modal-add-cat')">Отмена</button>
       <button class="btn-primary" onclick="saveCategory()">Сохранить</button>
     </div>
   </div>
 </div>
 
-<!-- Модал: новая категория полуфабрикатов -->
+<!-- Модал: добавить/редактировать категорию полуфабрикатов -->
 <div class="modal-bg" id="modal-add-semi-cat">
   <div class="modal" style="max-width:380px">
     <div class="modal-title">
-      <span><i data-lucide="tag" class="icon"></i> Новая категория п/ф</span>
+      <span id="masc-modal-title"><i data-lucide="tag" class="icon"></i> Новая категория п/ф</span>
       <button class="modal-close" onclick="closeModal('modal-add-semi-cat')">&times;</button>
     </div>
     <div class="modal-body">
+      <input type="hidden" id="masc-edit-key">
       <div class="modal-row">
         <div style="flex:0 0 80px">
           <div class="modal-label">Эмодзи</div>
@@ -805,6 +808,7 @@
       <p id="masc-error" style="color:var(--red,#e74c3c);font-size:12px;margin:4px 0 0"></p>
     </div>
     <div class="modal-footer">
+      <button id="masc-delete-btn" class="btn" style="display:none;color:var(--red);border-color:var(--red);margin-right:auto" onclick="deleteSemiCategory(document.getElementById('masc-edit-key').value)">Удалить</button>
       <button class="btn btn-outline" onclick="closeModal('modal-add-semi-cat')">Отмена</button>
       <button class="btn-primary" onclick="saveSemiCategory()">Сохранить</button>
     </div>

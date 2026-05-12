@@ -120,12 +120,14 @@ import {
   _updateSemiCostPreview, _onSemiMatChange, _autoFillSemiYield,
   _updateSemiIngCost, _autoCalcSemiIngYield,
   openAddSemiCategory, saveSemiCategory, _refreshSemiCategorySelect,
+  openEditSemiCategory, deleteSemiCategory,
 } from './modals/semi.js';
 
 import {
   openEditMat, saveMat, cancelMat, deleteMat, matOnlyOptions,
   deleteEditingMat, onMatPurchaseUrlInput,
   openAddCategory, saveCategory, _refreshMatCategorySelect,
+  openEditCategory, deleteCategory,
 } from './modals/mat.js';
 
 import {
@@ -301,10 +303,12 @@ const _srcExports = {
   _updateSemiCostPreview, _onSemiMatChange, _autoFillSemiYield,
   _updateSemiIngCost, _autoCalcSemiIngYield,
   openAddSemiCategory, saveSemiCategory,
+  openEditSemiCategory, deleteSemiCategory,
   // modals/mat
   openEditMat, saveMat, cancelMat, deleteMat, matOnlyOptions,
   deleteEditingMat, onMatPurchaseUrlInput,
   openAddCategory, saveCategory,
+  openEditCategory, deleteCategory,
   // export/csv
   exportCSV, exportDashboard, exportSales,
   // ui/sort

@@ -152,19 +152,80 @@ export function deleteEditingMat() {
   if (_editMatKey) deleteMat(_editMatKey);
 }
 
+function _parseCatLabel(label) {
+  const parts = label.split(/\s+/);
+  if (parts.length > 1 && /[^\x00-\x7F]/.test(parts[0]) && parts[0].length <= 4) {
+    return { emoji: parts[0], name: parts.slice(1).join(' ') };
+  }
+  return { emoji: '', name: label };
+}
+
 export function openAddCategory() {
   document.getElementById('mac-emoji').value = '';
   document.getElementById('mac-name').value  = '';
   document.getElementById('mac-error').textContent = '';
+  document.getElementById('mac-edit-key').value = '';
+  const delBtn = document.getElementById('mac-delete-btn');
+  if (delBtn) delBtn.style.display = 'none';
+  const titleEl = document.getElementById('mac-modal-title');
+  if (titleEl) titleEl.innerHTML = '<i data-lucide="tag" class="icon"></i> Новая категория';
   openModal('modal-add-cat');
+  if (window.lucide) lucide.createIcons();
+}
+
+export function openEditCategory(key) {
+  const cat = (S.customCategories || {})[key];
+  if (!cat) return;
+  const { emoji, name } = _parseCatLabel(cat.label || '');
+  document.getElementById('mac-emoji').value = emoji;
+  document.getElementById('mac-name').value  = name;
+  document.getElementById('mac-error').textContent = '';
+  document.getElementById('mac-edit-key').value = key;
+  const delBtn = document.getElementById('mac-delete-btn');
+  if (delBtn) delBtn.style.display = '';
+  const titleEl = document.getElementById('mac-modal-title');
+  if (titleEl) titleEl.innerHTML = '<i data-lucide="tag" class="icon"></i> Редактировать категорию';
+  openModal('modal-add-cat');
+  if (window.lucide) lucide.createIcons();
+}
+
+export function deleteCategory(key) {
+  if (!key) return;
+  const usedCount = Object.values(MAT).filter(m => m.category === key).length;
+  if (usedCount > 0) {
+    window.showAlert(`Нельзя удалить: в категории ${usedCount} ингр. Сначала переместите их в другую категорию.`);
+    return;
+  }
+  window.showConfirm('Удалить категорию?', () => {
+    if (S.customCategories) delete S.customCategories[key];
+    closeModal('modal-add-cat');
+    saveState();
+    if (typeof window.renderActive === 'function') window.renderActive();
+  }, { icon: '🗑️', okText: 'Удалить' });
 }
 
 export function saveCategory() {
-  const emoji = document.getElementById('mac-emoji').value.trim();
-  const name  = document.getElementById('mac-name').value.trim();
-  const err   = document.getElementById('mac-error');
+  const emoji   = document.getElementById('mac-emoji').value.trim();
+  const name    = document.getElementById('mac-name').value.trim();
+  const editKey = document.getElementById('mac-edit-key').value;
+  const err     = document.getElementById('mac-error');
   if (!name) { err.textContent = 'Введите название категории'; return; }
-  // Генерируем ключ из транслита/латиницы
+  const label = emoji ? `${emoji} ${name}` : name;
+
+  // ── Режим редактирования ──
+  if (editKey) {
+    if (!S.customCategories || !S.customCategories[editKey]) {
+      err.textContent = 'Категория не найдена'; return;
+    }
+    S.customCategories[editKey].label = label;
+    _refreshMatCategorySelect();
+    closeModal('modal-add-cat');
+    saveState();
+    if (typeof window.renderActive === 'function') window.renderActive();
+    return;
+  }
+
+  // ── Режим добавления ──
   const key = 'cat_' + name
     .toLowerCase()
     .replace(/[а-яёa-z0-9]/g, c => {
@@ -180,15 +241,12 @@ export function saveCategory() {
   if (!key) { err.textContent = 'Не удалось создать ключ из названия'; return; }
   const allCats = { ...MAT_CATEGORIES, ...(S.customCategories || {}) };
   if (allCats[key]) { err.textContent = 'Категория с таким ключом уже существует'; return; }
-  const label = emoji ? `${emoji} ${name}` : name;
   const maxOrder = Object.values(allCats).reduce((m, c) => Math.max(m, c.order || 0), 0);
   if (!S.customCategories) S.customCategories = {};
   S.customCategories[key] = { label, order: maxOrder + 1 };
-  // Обновляем select категорий в модалке mat
   _refreshMatCategorySelect();
   closeModal('modal-add-cat');
   saveState();
-  // Перерисовываем вкладку себестоимости (табы и таблица категорий обновятся)
   if (typeof window.renderActive === 'function') window.renderActive();
 }
 

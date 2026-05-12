@@ -134,11 +134,13 @@ export function renderCost() {
         </td>
       </tr>`;
     }).join('');
+    const isCustomMatCat = !!(S.customCategories || {})[cat];
     return `<tr class="mat-cat-header" data-cat="${cat}" style="${catHidden}" onclick="toggleMatCat('${cat}')">
-        <td colspan="6">
+      <td colspan="6">
           <span id="mat-cat-icon-${cat}" class="mat-cat-chevron">${collapsed ? '▶' : '▼'}</span>
           ${catLabel}
           <span class="mat-cat-count">${matGroups[cat].length}</span>
+          ${isCustomMatCat ? `<button class="mat-del" onclick="event.stopPropagation();openEditCategory('${cat}')" title="Редактировать категорию" style="margin-left:6px;opacity:.7"><i data-lucide="pencil" class="icon"></i></button>` : ''}
         </td>
       </tr>
       <tbody id="mat-tbody-${cat}" style="${collapsed ? 'display:none' : ''}">${rows}</tbody>`;
@@ -208,11 +210,13 @@ export function renderCost() {
         </td>
       </tr>`;
     }).join('');
+    const isCustomSemiCat = !!(S.semiCustomCategories || {})[cat];
     return `<tr class="mat-cat-header" data-semicat="${cat}" onclick="toggleSemiCat('${cat}')">
-        <td colspan="6">
+      <td colspan="6">
           <span id="semi-cat-icon-${cat}" class="mat-cat-chevron">${collapsed ? '▶' : '▼'}</span>
           ${catLabel}
           <span class="mat-cat-count">${items.length}</span>
+          ${isCustomSemiCat ? `<button class="mat-del" onclick="event.stopPropagation();openEditSemiCategory('${cat}')" title="Редактировать категорию" style="margin-left:6px;opacity:.7"><i data-lucide="pencil" class="icon"></i></button>` : ''}
         </td>
       </tr>
       <tbody id="semi-tbody-${cat}" style="${collapsed ? 'display:none' : ''}">${rows}</tbody>`;

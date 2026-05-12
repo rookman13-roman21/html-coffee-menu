@@ -498,18 +498,80 @@ export { onSemiImgChange, clearSemiImg } from './drink.js';
 
 const SEMI_BASE_CATS = { semi_default: { label: '📦 Полуфабрикаты', order: 1 } };
 
+function _parseSemiCatLabel(label) {
+  const parts = label.split(/\s+/);
+  if (parts.length > 1 && /[^\x00-\x7F]/.test(parts[0]) && parts[0].length <= 4) {
+    return { emoji: parts[0], name: parts.slice(1).join(' ') };
+  }
+  return { emoji: '', name: label };
+}
+
 export function openAddSemiCategory() {
   document.getElementById('masc-emoji').value = '';
   document.getElementById('masc-name').value  = '';
   document.getElementById('masc-error').textContent = '';
+  document.getElementById('masc-edit-key').value = '';
+  const delBtn = document.getElementById('masc-delete-btn');
+  if (delBtn) delBtn.style.display = 'none';
+  const titleEl = document.getElementById('masc-modal-title');
+  if (titleEl) titleEl.innerHTML = '<i data-lucide="tag" class="icon"></i> Новая категория п/ф';
   openModal('modal-add-semi-cat');
+  if (window.lucide) lucide.createIcons();
+}
+
+export function openEditSemiCategory(key) {
+  const cat = (S.semiCustomCategories || {})[key];
+  if (!cat) return;
+  const { emoji, name } = _parseSemiCatLabel(cat.label || '');
+  document.getElementById('masc-emoji').value = emoji;
+  document.getElementById('masc-name').value  = name;
+  document.getElementById('masc-error').textContent = '';
+  document.getElementById('masc-edit-key').value = key;
+  const delBtn = document.getElementById('masc-delete-btn');
+  if (delBtn) delBtn.style.display = '';
+  const titleEl = document.getElementById('masc-modal-title');
+  if (titleEl) titleEl.innerHTML = '<i data-lucide="tag" class="icon"></i> Редактировать категорию п/ф';
+  openModal('modal-add-semi-cat');
+  if (window.lucide) lucide.createIcons();
+}
+
+export function deleteSemiCategory(key) {
+  if (!key) return;
+  const usedCount = SEMI.filter(s => (s.category || 'semi_default') === key).length;
+  if (usedCount > 0) {
+    window.showAlert(`Нельзя удалить: в категории ${usedCount} п/ф. Сначала переместите их в другую категорию.`);
+    return;
+  }
+  window.showConfirm('Удалить категорию?', () => {
+    if (S.semiCustomCategories) delete S.semiCustomCategories[key];
+    closeModal('modal-add-semi-cat');
+    saveState();
+    if (typeof window.renderActive === 'function') window.renderActive();
+  }, { icon: '🗑️', okText: 'Удалить' });
 }
 
 export function saveSemiCategory() {
-  const emoji = document.getElementById('masc-emoji').value.trim();
-  const name  = document.getElementById('masc-name').value.trim();
-  const err   = document.getElementById('masc-error');
+  const emoji   = document.getElementById('masc-emoji').value.trim();
+  const name    = document.getElementById('masc-name').value.trim();
+  const editKey = document.getElementById('masc-edit-key').value;
+  const err     = document.getElementById('masc-error');
   if (!name) { err.textContent = 'Введите название категории'; return; }
+  const label = emoji ? `${emoji} ${name}` : name;
+
+  // ── Режим редактирования ──
+  if (editKey) {
+    if (!S.semiCustomCategories || !S.semiCustomCategories[editKey]) {
+      err.textContent = 'Категория не найдена'; return;
+    }
+    S.semiCustomCategories[editKey].label = label;
+    _refreshSemiCategorySelect();
+    closeModal('modal-add-semi-cat');
+    saveState();
+    if (typeof window.renderActive === 'function') window.renderActive();
+    return;
+  }
+
+  // ── Режим добавления ──
   const key = 'scat_' + name
     .toLowerCase()
     .replace(/[а-яёa-z0-9]/g, c => {
@@ -525,10 +587,10 @@ export function saveSemiCategory() {
   if (!key || key === 'scat_') { err.textContent = 'Не удалось создать ключ из названия'; return; }
   const allCats = { ...SEMI_BASE_CATS, ...(S.semiCustomCategories || {}) };
   if (allCats[key]) { err.textContent = 'Категория с таким ключом уже существует'; return; }
-  const label = emoji ? `${emoji} ${name}` : name;
+  const label2 = emoji ? `${emoji} ${name}` : name;
   const maxOrder = Object.values(allCats).reduce((m, c) => Math.max(m, c.order || 0), 0);
   if (!S.semiCustomCategories) S.semiCustomCategories = {};
-  S.semiCustomCategories[key] = { label, order: maxOrder + 1 };
+  S.semiCustomCategories[key] = { label: label2, order: maxOrder + 1 };
   _refreshSemiCategorySelect();
   closeModal('modal-add-semi-cat');
   saveState();
