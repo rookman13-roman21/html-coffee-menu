@@ -108,7 +108,7 @@ export function renderCost() {
       const usageBadge  = usedIn.length
         ? `<button class="usage-badge" onclick="event.stopPropagation();openMatUsage('mat','${key}')" title="Нажмите, чтобы увидеть рецепты">${usedIn.length}</button>`
         : `<span class="usage-badge usage-badge-zero">0</span>`;
-      return `<tr style="${collapsed ? 'display:none' : ''}" class="mat-row${m.custom ? ' mat-row-custom' : ''}" data-cat="${cat}" onclick="openViewMat('${key}')" title="Нажмите для просмотра" style="cursor:pointer">
+      return `<tr class="mat-row${m.custom ? ' mat-row-custom' : ''}" data-cat="${cat}" onclick="openViewMat('${key}')" title="Нажмите для просмотра" style="cursor:pointer">
         <td class="mat-td-name">${m.name}${m.purchaseUrl ? ` <a href="${m.purchaseUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Ссылка на покупку" style="color:var(--green);font-size:12px;text-decoration:none;vertical-align:middle">↗</a>` : ''}</td>
         <td class="mat-td-unit mob-hide">${m.unit}</td>
         <td class="mat-td-price" onclick="event.stopPropagation();openEditMat('${key}')" title="Нажмите, чтобы изменить цену" style="cursor:pointer">
@@ -130,7 +130,7 @@ export function renderCost() {
           <span class="mat-cat-count">${matGroups[cat].length}</span>
         </td>
       </tr>
-      <tbody id="mat-tbody-${cat}">${rows}</tbody>`;
+      <tbody id="mat-tbody-${cat}" style="${collapsed ? 'display:none' : ''}">${rows}</tbody>`;
   }).join('');
 
   const matCardsHtml = `<div class="mat-table-wrap">
