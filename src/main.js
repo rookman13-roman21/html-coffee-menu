@@ -103,6 +103,7 @@ import {
 
 import {
   exportTechCards, exportSemiTechCards,
+  exportSingleSemiPDF, exportSingleSemiXLSX,
   mvdDownloadPDF, mvdDownloadSemiPDF, mvdDownloadExcel,
   _buildTechCardBlock, _openTechCardsWindow, _buildSemiTechCardBlock,
   _printViaIframe,
@@ -281,6 +282,7 @@ const _srcExports = {
   renderFinModel,
   // export/techcards
   exportTechCards, exportSemiTechCards,
+  exportSingleSemiPDF, exportSingleSemiXLSX,
   mvdDownloadPDF, mvdDownloadSemiPDF, mvdDownloadExcel,
   _buildTechCardBlock, _openTechCardsWindow, _buildSemiTechCardBlock,
   _printViaIframe,
