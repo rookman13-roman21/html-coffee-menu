@@ -1064,17 +1064,56 @@
     }
     .ing-del { background: none; border: none; cursor: pointer; font-size: 16px; color: var(--red); padding: 0; }
 
-    /* ── Поиск ингредиентов ── */
-    .ing-select-wrap { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-    .ing-search-inp {
-      width: 100%; box-sizing: border-box;
-      padding: 3px 8px; height: 28px; font-size: 12px;
-      border: 1.5px solid var(--border); border-radius: 6px;
-      background: var(--bg, #fff); color: var(--text);
-      outline: none; transition: border-color .15s;
+    /* ── Кастомный searchable select ── */
+    .ing-select-wrap { position: relative; display: block; min-width: 0; }
+    .ing-sel-trigger {
+      width: 100%; height: 38px; box-sizing: border-box;
+      display: flex; align-items: center; justify-content: space-between; gap: 6px;
+      padding: 0 10px;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      background: white; color: var(--text);
+      font-family: var(--font); font-size: 13px; font-weight: 500;
+      cursor: pointer; text-align: left;
+      transition: border-color .15s;
     }
-    .ing-search-inp:focus { border-color: var(--blue, #4a7cf6); }
-    .ing-search-inp::placeholder { color: var(--muted); font-size: 11px; }
+    .ing-sel-trigger:hover { border-color: var(--blue, #4a7cf6); }
+    .ing-sel-trigger.ing-sel-empty { color: var(--muted); border-style: dashed; }
+    .ing-sel-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ing-sel-arrow { flex-shrink: 0; font-size: 10px; color: var(--muted); }
+    .ing-sel-panel {
+      position: absolute; top: calc(100% + 2px); left: 0; right: 0;
+      background: white; border: 1.5px solid var(--border);
+      border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.14);
+      z-index: 500; overflow: hidden;
+    }
+    .ing-sel-search {
+      width: 100%; box-sizing: border-box;
+      padding: 7px 10px; border: none; border-bottom: 1.5px solid var(--border);
+      font-family: var(--font); font-size: 13px; outline: none;
+      background: var(--light, #f5f7fa); color: var(--text);
+    }
+    .ing-sel-options { max-height: 200px; overflow-y: auto; }
+    .ing-sel-group {
+      padding: 3px 10px; font-size: 10px; font-weight: 700;
+      color: var(--muted); text-transform: uppercase; letter-spacing: .04em;
+      background: var(--light, #f5f7fa); border-bottom: 1px solid var(--border);
+    }
+    .ing-sel-opt {
+      padding: 7px 12px; cursor: pointer; font-size: 13px; color: var(--text);
+      transition: background .1s;
+    }
+    .ing-sel-opt:hover { background: #eef2ff; color: var(--blue, #4a7cf6); }
+    .ing-sel-opt--active { background: #eef2ff; color: var(--blue, #4a7cf6); font-weight: 600; }
+    .ing-sel-opt--create { color: var(--green); font-weight: 700; border-bottom: 1px solid var(--border); }
+    .ing-sel-empty { padding: 10px 12px; color: var(--muted); font-size: 12px; }
+    /* dark mode */
+    body.dark .ing-sel-trigger { background: #3c3c3c; border-color: #454545; color: #d4d4d4; }
+    body.dark .ing-sel-trigger.ing-sel-empty { color: #777; }
+    body.dark .ing-sel-panel { background: #2d2d2d; border-color: #454545; box-shadow: 0 4px 16px rgba(0,0,0,.4); }
+    body.dark .ing-sel-search { background: #252525; color: #d4d4d4; border-bottom-color: #454545; }
+    body.dark .ing-sel-group { background: #252525; color: #777; border-bottom-color: #3c3c3c; }
+    body.dark .ing-sel-opt { color: #d4d4d4; }
+    body.dark .ing-sel-opt:hover, body.dark .ing-sel-opt--active { background: #3a3f5c; color: #7c9ef6; }
     /* .ing-row (полуфабрикат): обёртка принимает grid-позицию вместо select */
     .ing-row .ing-select-wrap { grid-column: 1; grid-row: 1; }
 
@@ -1396,8 +1435,7 @@
       /* select — вся ширина первой строки */
       .modal-ing-row .ing-select-wrap { grid-column: 1 / 4; grid-row: 1; }
       .modal-ing-row .modal-select {
-        grid-column: 1 / 4; grid-row: 1;
-        width: 100%; height: 44px;
+        display: none;
       }
       /* Корзина — рядом с селектом */
       .modal-ing-row .modal-ing-del {
@@ -1441,6 +1479,11 @@
         margin-bottom: 0;
         align-items: stretch;
       }
+      /* Кастомный dropdown на мобиле */
+      .ing-sel-trigger { height: 44px; font-size: 14px; }
+      .ing-sel-panel { position: fixed; left: 8px; right: 8px; top: auto; z-index: 600; }
+      .ing-sel-options { max-height: 40vh; }
+      .ing-sel-opt { padding: 11px 14px; font-size: 14px; }
       /* Первая строка: селект + кнопка удалить */
       .ing-row-header { display: flex; gap: 6px; align-items: center; }
       .ing-row-header .ing-select-wrap { flex: 1; min-width: 0; }

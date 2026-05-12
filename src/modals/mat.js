@@ -59,6 +59,7 @@ export function saveMat() {
     _pendingMatSelectEl.innerHTML = matOptions('mat:' + key);
     _pendingMatSelectEl.value = 'mat:' + key;
     _pendingMatSelectEl.dataset.prev = 'mat:' + key;
+    _pendingMatSelectEl.dispatchEvent(new Event('change'));
     const _pendingRow = _pendingMatSelectEl.closest('.modal-ing-row');
     if (_pendingRow) {
       const amtInp = _pendingRow.querySelector('input[type="number"]');
@@ -71,6 +72,7 @@ export function saveMat() {
     _pendingSemiMatSelectEl.innerHTML = matOnlyOptions(key);
     _pendingSemiMatSelectEl.value = key;
     _pendingSemiMatSelectEl.dataset.prev = key;
+    _pendingSemiMatSelectEl.dispatchEvent(new Event('change'));
     const _pendingSemiRow = _pendingSemiMatSelectEl.closest('.ing-row');
     if (_pendingSemiRow) {
       const amtInp = _pendingSemiRow.querySelector('.ing-amt');

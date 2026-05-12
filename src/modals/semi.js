@@ -2,6 +2,7 @@
 // Модальное окно полуфабриката: добавление, редактирование, удаление
 
 export function matOnlyOptions(selected) {
+  const placeholderOpt = `<option value="" disabled ${!selected ? 'selected' : ''} style="color:var(--muted)">— Выберите ингредиент —</option>`;
   const createOpt = `<option value="__create_mat__" style="font-weight:700;color:var(--green)">＋ Создать ингредиент...</option>`;
   const groups = {};
   Object.entries(MAT).forEach(([k, m]) => {
@@ -60,37 +61,124 @@ export function _updateSemiCostPreview() {
   }
 }
 
-function matOnlyOptionsFiltered(selected, query='') {
-  const q = query.toLowerCase().trim();
-  const createOpt = `<option value="__create_mat__" style="font-weight:700;color:var(--green)">＋ Создать ингредиент...</option>`;
-  const groups = {};
-  Object.entries(MAT).forEach(([k, m]) => {
-    const cat = m.category || 'other';
-    if (!groups[cat]) groups[cat] = [];
-    groups[cat].push([k, m]);
+function _makeSemiSearchSelect(wrap, selectEl) {
+  selectEl.style.display = 'none';
+
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.className = 'ing-sel-trigger';
+
+  const panel = document.createElement('div');
+  panel.className = 'ing-sel-panel';
+  panel.style.display = 'none';
+
+  const searchInp = document.createElement('input');
+  searchInp.type = 'text';
+  searchInp.className = 'ing-sel-search';
+  searchInp.placeholder = '\uD83D\uDD0D Поиск...';
+  searchInp.autocomplete = 'off';
+
+  const optsList = document.createElement('div');
+  optsList.className = 'ing-sel-options';
+
+  panel.appendChild(searchInp);
+  panel.appendChild(optsList);
+  wrap.insertBefore(trigger, selectEl);
+  wrap.insertBefore(panel, selectEl);
+
+  function getLabelForValue(val) {
+    if (!val) return '— Выберите ингредиент —';
+    const opt = [...selectEl.options].find(o => o.value === val);
+    return opt ? opt.textContent.trim() : '— Выберите ингредиент —';
+  }
+
+  function updateTrigger() {
+    const val = selectEl.value;
+    trigger.className = 'ing-sel-trigger' + (!val ? ' ing-sel-empty' : '');
+    trigger.innerHTML = `<span class="ing-sel-label">${getLabelForValue(val)}</span><span class="ing-sel-arrow">▾</span>`;
+  }
+
+  function renderOptions(q = '') {
+    const qLow = q.toLowerCase().trim();
+    const curVal = selectEl.value;
+    let html = '';
+    let prevGroup = null;
+    [...selectEl.options].forEach(opt => {
+      if (opt.disabled) return;
+      const text = opt.textContent.trim();
+      const val = opt.value;
+      if (qLow && val !== '__create_mat__' && !text.toLowerCase().includes(qLow)) return;
+      const group = opt.parentElement.tagName === 'OPTGROUP' ? opt.parentElement.label : '';
+      if (group !== prevGroup) {
+        if (group) html += `<div class="ing-sel-group">${group}</div>`;
+        prevGroup = group;
+      }
+      const isActive = val === curVal ? ' ing-sel-opt--active' : '';
+      const isCreate = val === '__create_mat__' ? ' ing-sel-opt--create' : '';
+      html += `<div class="ing-sel-opt${isActive}${isCreate}" data-value="${val}">${text}</div>`;
+    });
+    optsList.innerHTML = html || '<div class="ing-sel-empty">Ничего не найдено</div>';
+  }
+
+  let isOpen = false;
+
+  function openPanel() {
+    isOpen = true;
+    panel.style.display = 'block';
+    searchInp.value = '';
+    renderOptions();
+    searchInp.focus();
+    requestAnimationFrame(() => {
+      const active = optsList.querySelector('.ing-sel-opt--active');
+      if (active) active.scrollIntoView({ block: 'nearest' });
+    });
+  }
+
+  function closePanel() {
+    isOpen = false;
+    panel.style.display = 'none';
+  }
+
+  updateTrigger();
+
+  trigger.addEventListener('click', e => {
+    e.stopPropagation();
+    isOpen ? closePanel() : openPanel();
   });
-  const sortedCats = Object.keys(groups).sort((a, b) =>
-    ((MAT_CATEGORIES[a]||{order:99}).order) - ((MAT_CATEGORIES[b]||{order:99}).order)
-  );
-  return createOpt + sortedCats.map(cat => {
-    const label = (MAT_CATEGORIES[cat] || { label: cat }).label;
-    const opts = groups[cat]
-      .filter(([k, m]) => !q || m.name.toLowerCase().includes(q) || k === selected)
-      .map(([k, m]) => `<option value="${k}"${k===selected?' selected':''}>${m.name} (${m.unit})</option>`)
-      .join('');
-    return opts ? `<optgroup label="${label}">${opts}</optgroup>` : '';
-  }).join('');
+
+  searchInp.addEventListener('input', () => renderOptions(searchInp.value));
+
+  searchInp.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closePanel(); return; }
+    if (e.key === 'Enter') {
+      const first = optsList.querySelector('.ing-sel-opt:not(.ing-sel-opt--create)');
+      if (first) first.click();
+    }
+  });
+
+  optsList.addEventListener('click', e => {
+    const opt = e.target.closest('.ing-sel-opt');
+    if (!opt) return;
+    selectEl.value = opt.dataset.value;
+    selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+    closePanel();
+  });
+
+  selectEl.addEventListener('change', () => updateTrigger());
+
+  document.addEventListener('click', e => {
+    if (!wrap.contains(e.target)) closePanel();
+  }, true);
 }
 
 export function addSemiIngRow(matKey='', amt='', loss='', yieldAmt='') {
   const wrap = document.getElementById('ms-ings');
-  const firstKey = matKey || Object.keys(MAT)[0] || '';
+  const firstKey = matKey || '';
   const row = document.createElement('div');
   row.className = 'ing-row';
   row.innerHTML = `
     <div class="ing-row-header">
       <div class="ing-select-wrap">
-        <input type="text" class="ing-search-inp" placeholder="🔍 Поиск..." autocomplete="off">
         <select class="modal-select ing-mat">${matOnlyOptions(firstKey)}</select>
       </div>
       <button class="btn btn-outline ing-del-btn" type="button"><i data-lucide="trash-2" class="icon"></i></button>
@@ -117,21 +205,8 @@ export function addSemiIngRow(matKey='', amt='', loss='', yieldAmt='') {
   const amtInp  = row.querySelector('.ing-amt');
   const lossInp = row.querySelector('.ing-loss');
   const delBtn  = row.querySelector('.ing-del-btn');
-  const semiSearchInp = row.querySelector('.ing-search-inp');
 
-  semiSearchInp.addEventListener('input', () => {
-    const curVal = matSel.value;
-    matSel.innerHTML = matOnlyOptionsFiltered(curVal, semiSearchInp.value);
-    matSel.value = curVal;
-  });
-  semiSearchInp.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      semiSearchInp.value = '';
-      const curVal = matSel.value;
-      matSel.innerHTML = matOnlyOptionsFiltered(curVal, '');
-      matSel.value = curVal;
-    }
-  });
+  _makeSemiSearchSelect(row.querySelector('.ing-select-wrap'), matSel);
 
   matSel.addEventListener('change', () => {
     _onSemiMatChange(matSel);
