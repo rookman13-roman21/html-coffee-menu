@@ -517,7 +517,6 @@ export function openViewMat(key) {
           <span class="mvd-info-label">Цена за единицу:</span>
           <span class="mvd-info-value" style="font-size:17px;font-weight:700;color:var(--green)">${price} ₽</span>
         </div>
-        <div class="mvd-info-row"><span class="mvd-info-label">Цена за 1 ${_sizeUnit}:</span><span class="mvd-info-value">${pricePerUnit} ₽</span></div>
       </div>
       ${purchaseHtml}
     </div>
