@@ -190,6 +190,88 @@ export function _makeIngSearchSelect(wrap, selectEl) {
       const isActive = val === curVal ? ' ing-sel-opt--active' : '';
       const isCreate = val === '__create_mat__' ? ' ing-sel-opt--create' : val === '__create_semi__' ? ' ing-sel-opt--create-semi' : '';
       html += `<div class="ing-sel-opt${isActive}${isCreate}" data-value="${val}">${text}</div>`;
+    });
+    optsList.innerHTML = html || '<div class="ing-sel-empty">Ничего не найдено</div>';
+  }
+
+  let isOpen = false;
+
+  function positionPanel() {
+    const r = trigger.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - r.bottom - 8;
+    const spaceAbove = r.top - 8;
+    const panelH = Math.min(280, spaceBelow > 160 ? spaceBelow : spaceAbove);
+    panel.style.maxHeight = panelH + 'px';
+    optsList.style.maxHeight = (panelH - 48) + 'px';
+    panel.style.left = r.left + 'px';
+    panel.style.width = r.width + 'px';
+    if (spaceBelow > 160 || spaceBelow >= spaceAbove) {
+      panel.style.top = (r.bottom + 2) + 'px';
+      panel.style.bottom = 'auto';
+    } else {
+      panel.style.bottom = (window.innerHeight - r.top + 2) + 'px';
+      panel.style.top = 'auto';
+    }
+  }
+
+  function openPanel() {
+    isOpen = true;
+    positionPanel();
+    panel.style.display = 'block';
+    searchInp.value = '';
+    renderOptions();
+    searchInp.focus();
+    scrollListenerActive = false;
+    setTimeout(() => { scrollListenerActive = true; }, 200);
+    requestAnimationFrame(() => {
+      const active = optsList.querySelector('.ing-sel-opt--active');
+      if (active) active.scrollIntoView({ block: 'nearest' });
+    });
+  }
+
+  function closePanel() {
+    isOpen = false;
+    panel.style.display = 'none';
+  }
+
+  updateTrigger();
+
+  trigger.addEventListener('click', e => {
+    e.stopPropagation();
+    isOpen ? closePanel() : openPanel();
+  });
+
+  searchInp.addEventListener('input', () => renderOptions(searchInp.value));
+
+  searchInp.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closePanel(); return; }
+    if (e.key === 'Enter') {
+      const first = optsList.querySelector('.ing-sel-opt:not(.ing-sel-opt--create):not(.ing-sel-opt--create-semi)');
+      if (first) first.click();
+    }
+  });
+
+  optsList.addEventListener('click', e => {
+    const opt = e.target.closest('.ing-sel-opt');
+    if (!opt) return;
+    selectEl.value = opt.dataset.value;
+    selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+    closePanel();
+  });
+
+  selectEl.addEventListener('change', () => updateTrigger());
+
+  let scrollListenerActive = false;
+  function onScroll(e) { if (scrollListenerActive && !panel.contains(e.target)) closePanel(); }
+
+  document.addEventListener('click', e => {
+    if (!wrap.contains(e.target) && !panel.contains(e.target)) closePanel();
+  }, true);
+
+  window.addEventListener('scroll', onScroll, true);
+}
+
+export function addIngRow(selected='', amt='', loss='') {
   // selected = 'mat:coffee' | 'semi:5' | '' (legacy: plain key → convert)
   if (selected && !selected.startsWith('mat:') && !selected.startsWith('semi:')) selected = 'mat:' + selected;
   const ph = _ingPlaceholder(selected || ('mat:' + Object.keys(MAT)[0]));
