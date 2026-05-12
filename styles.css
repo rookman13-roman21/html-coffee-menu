@@ -830,6 +830,9 @@
     .mvd-info-row { display:flex; align-items:baseline; gap:6px; font-size:13px; }
     .mvd-info-label { color:var(--muted); font-weight:600; font-size:12px; flex-shrink:0; }
     .mvd-info-value { color:var(--text); line-height:1.5; }
+    .mvd-purchase-btn { display:inline-flex; align-items:center; gap:6px; margin-top:10px; padding:8px 14px; border-radius:8px; background:rgba(46,160,67,.08); color:var(--green); font-size:13px; font-weight:600; text-decoration:none; border:1px solid rgba(46,160,67,.2); transition:background .15s; }
+    .mvd-purchase-btn:hover { background:rgba(46,160,67,.16); }
+    .mvd-purchase-btn .icon { width:14px; height:14px; }
     /* ── COLLAPSIBLE PROCESS ON CARD ─────────────────────────── */
     .recipe-card-process-wrap { margin-top:10px; padding-top:10px; border-top:1px solid #f0f0f0; }
     .recipe-card-process-toggle { background:none; border:none; cursor:pointer; font-size:12px; color:var(--muted); font-weight:600; display:flex; align-items:center; gap:5px; padding:0; width:100%; text-align:left; }

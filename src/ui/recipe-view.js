@@ -487,14 +487,17 @@ export function openViewMat(key) {
         <div class="mvd-section-title"><i data-lucide="truck" class="icon"></i> Поставщик</div>
         <div class="mvd-info-card">
           ${sup.name  ? `<div class="mvd-info-row"><span class="mvd-info-label">Название:</span><span class="mvd-info-value">${sup.name}</span></div>` : ''}
-          ${sup.phone ? `<div class="mvd-info-row"><span class="mvd-info-label">Телефон:</span><span class="mvd-info-value">${sup.phone}</span></div>` : ''}
+          ${sup.phone ? `<div class="mvd-info-row"><span class="mvd-info-label">Телефон:</span><span class="mvd-info-value"><a href="tel:${sup.phone}" style="color:inherit;text-decoration:none">${sup.phone}</a></span></div>` : ''}
           ${sup.note  ? `<div class="mvd-info-row"><span class="mvd-info-label">Заметка:</span><span class="mvd-info-value">${sup.note}</span></div>` : ''}
           ${sup.site  ? `<div class="mvd-info-row"><span class="mvd-info-label">Сайт:</span><span class="mvd-info-value"><a href="${sup.site}" target="_blank" rel="noopener" style="color:var(--green)">${sup.site.replace(/^https?:\/\//, '')}</a></span></div>` : ''}
         </div>
       </div>` : '';
 
+  const _sizeUnit = _rawUnit.includes('кг') ? 'г' : (_rawUnit.includes(' л') || _rawUnit === 'л') ? 'мл' : m.unit.replace(/^1\s*/, '');
+  const pricePerUnit = price > 0 && m.size > 0 ? (price / m.size).toFixed(3) : '—';
+
   const purchaseHtml = m.purchaseUrl
-    ? `<div class="mvd-info-row" style="margin-top:6px"><span class="mvd-info-label">🔗 Ссылка:</span><span class="mvd-info-value"><a href="${m.purchaseUrl}" target="_blank" rel="noopener" style="color:var(--green)">${m.purchaseUrl.replace(/^https?:\/\//, '')}</a></span></div>`
+    ? `<a href="${m.purchaseUrl}" target="_blank" rel="noopener" class="mvd-purchase-btn"><i data-lucide="external-link" class="icon"></i> Открыть страницу покупки</a>`
     : '';
 
   const usageMap = window._matUsageMap || {};
@@ -509,12 +512,14 @@ export function openViewMat(key) {
       <div class="mvd-section-title"><i data-lucide="package" class="icon"></i> Основные данные</div>
       <div class="mvd-info-card">
         <div class="mvd-info-row"><span class="mvd-info-label">Категория:</span><span class="mvd-info-value">${catLabel}</span></div>
-        <div class="mvd-info-row"><span class="mvd-info-label">Единица закупки:</span><span class="mvd-info-value">${m.unit}</span></div>
-        <div class="mvd-info-row"><span class="mvd-info-label">Цена:</span><span class="mvd-info-value" style="font-weight:700">${price} ₽ / ${m.unit}</span></div>
-        <div class="mvd-info-row"><span class="mvd-info-label">Объём в единице:</span><span class="mvd-info-value">${m.size} ${_rawUnit.includes('кг') ? 'г' : (_rawUnit.includes(' л') || _rawUnit === 'л') ? 'мл' : m.unit.replace(/^1\s*/, '')}</span></div>
-        <div class="mvd-info-row"><span class="mvd-info-label">Цена за 1 ${_rawUnit.includes('кг') ? 'г' : (_rawUnit.includes(' л') || _rawUnit === 'л') ? 'мл' : m.unit.replace(/^1\s*/, '')}:</span><span class="mvd-info-value">${(price / m.size).toFixed(3)} ₽</span></div>
-        ${purchaseHtml}
+        <div class="mvd-info-row"><span class="mvd-info-label">Единица закупки:</span><span class="mvd-info-value">${m.unit} (${m.size} ${_sizeUnit})</span></div>
+        <div class="mvd-info-row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border,#e8e8e8)">
+          <span class="mvd-info-label">Цена за единицу:</span>
+          <span class="mvd-info-value" style="font-size:17px;font-weight:700;color:var(--green)">${price} ₽</span>
+        </div>
+        <div class="mvd-info-row"><span class="mvd-info-label">Цена за 1 ${_sizeUnit}:</span><span class="mvd-info-value">${pricePerUnit} ₽</span></div>
       </div>
+      ${purchaseHtml}
     </div>
     ${nutHtml}
     ${supHtml}
