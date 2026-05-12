@@ -1895,7 +1895,107 @@ function onAuthSuccess(user) {
 
 ---
 
-### Сессия 34 (в плане) — semi-категории: TODO
+### Сессия 34 (12 мая 2026) — tilda-blocks: HTML-блоки для Tilda + лендинг CaféDesk
+
+**Цель:** Создать набор самодостаточных HTML-блоков для вставки в Tilda и превью-страницу на Vercel.
+
+---
+
+#### 1. Структура tilda-blocks/
+
+Папка `tilda-blocks/` (и её копия `public/tilda-blocks/`) содержит 7 HTML-блоков + README + index.html. Каждый файл — standalone блок с inline `<style>` и `<script>` для вставки в Tilda через «Блок HTML/JS».
+
+| Файл | Содержимое |
+|---|---|
+| `01-hero.html` | Главный экран — 2-колоночный layout: текст + интерактивный макет приложения |
+| `02-benefits.html` | Преимущества — 6 карточек с иконками |
+| `03-features-detail.html` | Детальные фичи — 5 шагов с нумерацией |
+| `04-for-whom.html` | Для кого — 3 портрета ЦА + блок «Не подходит» |
+| `05-stats.html` | Цифры — 30+ рецептур, 4 режима, 5 мин, PDF, 14 600 ₽ |
+| `06-pricing.html` | Тарифы — CaféDesk 14 600 ₽ (featured) + Команда 990 ₽/мес (скоро) |
+| `07-cta-final.html` | Финальный CTA — тёмный фон, кнопка «Получить доступ — 14 600 ₽ →» |
+| `index.html` | Превью-страница: все 7 блоков + dev-toolbar с навигацией |
+
+**Цена:** 14 600 ₽ (единоразово, доступ навсегда) — в блоках 01, 05, 06, 07.
+
+**Деплой:** папка копируется в `public/tilda-blocks/` → Vite включает в `dist/` → доступна на `https://html-coffee-menu.vercel.app/tilda-blocks/`
+
+**Причина копирования в public/:** `vercel.json` настроен на `outputDirectory: dist`. Файлы из `public/` Vite копирует в `dist/` автоматически. Файлы в корне репозитория в `dist/` не попадают.
+
+**Правило синхронизации:** при изменении файлов в `tilda-blocks/` — обязательно копировать в `public/tilda-blocks/` перед коммитом:
+```bash
+cp tilda-blocks/01-hero.html public/tilda-blocks/01-hero.html
+```
+
+---
+
+#### 2. Дизайн-система tilda-blocks (цвета и шрифты)
+
+```css
+/* Цвета */
+--cd-green-dark:  #1e3a16  /* заголовки */
+--cd-green-mid:   #417033  /* акценты, кнопки */
+--cd-green-light: #4F883E  /* ховеры */
+--cd-green-bg:    #e7f2e3  /* светлые фоны */
+--cd-border:      #cde3c5  /* рамки */
+
+/* Шрифт */
+font-family: 'Mulish', 'Helvetica Neue', Arial, sans-serif;
+/* В Tilda подключается через Google Fonts; fallback — системный sans-serif */
+```
+
+---
+
+#### 3. Hero-блок (01-hero.html) — детали
+
+**Layout:** 2 колонки (`grid-template-columns: 1fr 1fr`, gap 72px). При ≤960px — 1 колонка, визуал сверху.
+
+**Левая колонка:** badge с пульсирующей точкой → h1 → подзаголовок → цена → кнопки → ноты.
+
+**Правая колонка:** `.cd-app-card` — имитация интерфейса приложения с header, nav-табами (Дашборд / Себестоимость / Финмодель) и телом с KPI-плитками и строками напитков. Плавающие бейджи `.cd-float-1` (🚀) и `.cd-float-2` (📋).
+
+**Авто-ротация вкладок** (добавлена в сессии 35):
+- Запуск через 0.9с после загрузки
+- Переключение каждые 3.2 сек: Дашборд → Себестоимость → Финмодель → …
+- Зелёный прогресс-бар между nav и body
+- При наведении на макет — пауза; при уходе — перезапуск
+- При ручном клике на вкладку — перезапуск от неё
+
+**Анимации появления** (добавлены в сессии 35):
+- `.cd-hero-text` — `fade + slide-up` 0.65с, задержка 0.1с
+- `.cd-hero-visual` — `fade + scale(0.93)` 0.7с, задержка 0.35с
+- Stagger дочерних элементов текста: badge(0.2с) → h1(0.3с) → sub(0.4с) → price(0.48с) → actions(0.56с) → note(0.64с)
+
+---
+
+#### Коммиты сессии 34
+
+| Коммит | Описание |
+|--------|----------|
+| `6814927` | feat: create tilda-blocks/ — 7 HTML blocks + README |
+| `05ac4ea` | feat: hero 2-col layout with app mockup, price 14600 rub across all blocks |
+| `6f96b17` | feat: add tilda-blocks/index.html — preview of all 7 blocks on Vercel |
+| `1674391` | fix: move tilda-blocks to public/ so Vite includes it in dist |
+
+---
+
+### Сессия 35 (12 мая 2026) — hero: авто-ротация + анимации появления
+
+**Добавлено в `01-hero.html`** (и синхронизировано в `public/tilda-blocks/`):
+1. CSS-анимации `@keyframes cd-fade-up` и `cd-fade-scale` — плавное появление блоков
+2. Stagger-анимации для дочерних элементов текста через `animation: ... both`
+3. Прогресс-бар `.cd-app-progress` / `.cd-app-progress-bar` — тонкая полоска под nav
+4. Логика авто-ротации: `cdStartAuto()` / `cdStopAuto()` / `cdAutoNext()` / `cdStartProgress()`
+5. `mouseenter`/`mouseleave` на `.cd-hero-visual` — пауза при наведении
+6. `cdSwitchTabInternal()` вынесена отдельно; `cdSwitchTab()` (публичная) сбрасывает и перезапускает таймер
+
+| Коммит | Описание |
+|--------|----------|
+| `b45a12c` | feat: hero entrance animations + auto-rotation tabs with progress bar |
+
+---
+
+### Сессия 36 (в плане) — semi-категории: TODO
 
 **Следующий блок работ — категории полуфабрикатов:**
 
