@@ -11,14 +11,18 @@ export function renderCost() {
     MAT, MAT_CATEGORIES, SEMI, S,
     calcSemiCostPerUnit, rubSemi,
     _buildMatUsageMap, _buildSemiUsageMap,
-    _matActiveCat, _matCollapsed, _semiCollapsed,
+    _matActiveCat, _matCollapsed, _semiCollapsed, _semiSectionCollapsed,
     _supCollapsed, _ingCollapsed,
     toggleMatCat, toggleSemiCat,
     setMatCat,
   } = window;
 
-  // ── Все категории (встроенные + кастомные) ───────────────────────
+  // ── Все категории ингредиентов (встроенные + кастомные) ──────────
   const ALL_CATS = { ...MAT_CATEGORIES, ...(S.customCategories || {}) };
+
+  // ── Базовая категория полуфабрикатов ─────────────────────────────
+  const SEMI_BASE_CATS = { semi_default: { label: '📦 Полуфабрикаты', order: 1 } };
+  const SEMI_ALL_CATS  = { ...SEMI_BASE_CATS, ...(S.semiCustomCategories || {}) };
 
   // ── Сырьё по категориям ──────────────────────────────────────────
   const matGroups = {};
@@ -160,7 +164,61 @@ export function renderCost() {
   const semiUsageMap = _buildSemiUsageMap();
   window._semiUsageMap = semiUsageMap;
 
-  const semiHtml = SEMI.length
+  // Группировка п/ф по категориям
+  const semiGroups = {};
+  Object.keys(S.semiCustomCategories || {}).forEach(cat => { if (!semiGroups[cat]) semiGroups[cat] = []; });
+  SEMI.forEach(s => {
+    const cat = s.category || 'semi_default';
+    if (!semiGroups[cat]) semiGroups[cat] = [];
+    semiGroups[cat].push(s);
+  });
+  // Убедимся что дефолтная категория присутствует
+  if (!semiGroups['semi_default']) semiGroups['semi_default'] = [];
+  const semiSortedCats = Object.keys(semiGroups).sort((a, b) =>
+    ((SEMI_ALL_CATS[a] || { order: 99 }).order) - ((SEMI_ALL_CATS[b] || { order: 99 }).order)
+  );
+  semiSortedCats.forEach(cat => {
+    if (_semiCollapsed[cat] === undefined) _semiCollapsed[cat] = true;
+  });
+
+  const semiRowsHtml = semiSortedCats.map(cat => {
+    const items = semiGroups[cat] || [];
+    const catLabel = (SEMI_ALL_CATS[cat] || {}).label || cat;
+    const collapsed = _semiCollapsed[cat];
+    const rows = items.map(s => {
+      const cost   = calcSemiCostPerUnit(s);
+      const recipe = s.recipe.map(r => {
+        const mat = MAT[r.mat];
+        return mat ? mat.name + ' ' + r.amt + (mat.unit.replace(/\d+ /, '')) : r.mat;
+      }).join(', ');
+      const usedIn = semiUsageMap[String(s.id)] || [];
+      const semiUsageBadge = usedIn.length
+        ? `<button class="usage-badge" onclick="event.stopPropagation();openMatUsage('semi','${s.id}')" title="Нажмите, чтобы увидеть рецепты">${usedIn.length}</button>`
+        : `<span class="usage-badge usage-badge-zero">0</span>`;
+      return `<tr class="mat-row" title="Состав: ${recipe}" style="cursor:pointer" onclick="openViewSemi(${s.id})">
+        <td class="mat-td-name">${s.name}</td>
+        <td class="mat-td-unit mob-hide">${s.yield}</td>
+        <td class="mat-td-unit mob-hide">${s.unit}</td>
+        <td class="mat-td-price" style="font-weight:700;color:var(--green)">${rubSemi(cost, s.unit)}</td>
+        <td class="mat-td-usage">${semiUsageBadge}</td>
+        <td class="mat-td-actions">
+          <button class="mat-del" onclick="event.stopPropagation();exportSingleSemiPDF(${s.id})" title="Скачать техкарту PDF"><i data-lucide="file-text" class="icon"></i></button>
+          <button class="mat-del" onclick="event.stopPropagation();exportSingleSemiXLSX(${s.id})" title="Скачать техкарту Excel"><i data-lucide="file-spreadsheet" class="icon"></i></button>
+          <button class="mat-del" onclick="event.stopPropagation();deleteSemi(${s.id})" title="Удалить" style="color:var(--red)"><i data-lucide="trash-2" class="icon"></i></button>
+        </td>
+      </tr>`;
+    }).join('');
+    return `<tr class="mat-cat-header" data-semicat="${cat}" onclick="toggleSemiCat('${cat}')">
+        <td colspan="6">
+          <span id="semi-cat-icon-${cat}" class="mat-cat-chevron">${collapsed ? '▶' : '▼'}</span>
+          ${catLabel}
+          <span class="mat-cat-count">${items.length}</span>
+        </td>
+      </tr>
+      <tbody id="semi-tbody-${cat}" style="${collapsed ? 'display:none' : ''}">${rows}</tbody>`;
+  }).join('');
+
+  const semiHtml = SEMI.length || Object.keys(S.semiCustomCategories || {}).length
     ? `<div class="mat-table-wrap">
         <table class="mat-table">
           <thead>
@@ -173,41 +231,10 @@ export function renderCost() {
               <th style="width:22%">Действия</th>
             </tr>
           </thead>
-          <tr class="mat-cat-header" onclick="toggleSemiCat()">
-            <td colspan="6">
-              <span id="semi-cat-icon" class="mat-cat-chevron">${_semiCollapsed ? '▶' : '▼'}</span>
-              Полуфабрикаты
-              <span class="mat-cat-count">${SEMI.length}</span>
-            </td>
-          </tr>
-          <tbody id="semi-tbody" style="${_semiCollapsed ? 'display:none' : ''}">
-            ${SEMI.map(s => {
-              const cost   = calcSemiCostPerUnit(s);
-              const recipe = s.recipe.map(r => {
-                const mat = MAT[r.mat];
-                return mat ? mat.name + ' ' + r.amt + (mat.unit.replace(/\d+ /, '')) : r.mat;
-              }).join(', ');
-              const usedIn = semiUsageMap[String(s.id)] || [];
-              const semiUsageBadge = usedIn.length
-                ? `<button class="usage-badge" onclick="event.stopPropagation();openMatUsage('semi','${s.id}')" title="Нажмите, чтобы увидеть рецепты">${usedIn.length}</button>`
-                : `<span class="usage-badge usage-badge-zero">0</span>`;
-              return `<tr class="mat-row" title="Состав: ${recipe}" style="cursor:pointer" onclick="openViewSemi(${s.id})">
-                <td class="mat-td-name">${s.name}</td>
-                <td class="mat-td-unit mob-hide">${s.yield}</td>
-                <td class="mat-td-unit mob-hide">${s.unit}</td>
-                <td class="mat-td-price" style="font-weight:700;color:var(--green)">${rubSemi(cost, s.unit)}</td>
-                <td class="mat-td-usage">${semiUsageBadge}</td>
-                <td class="mat-td-actions">
-                  <button class="mat-del" onclick="event.stopPropagation();exportSingleSemiPDF(${s.id})" title="Скачать техкарту PDF"><i data-lucide="file-text" class="icon"></i></button>
-                  <button class="mat-del" onclick="event.stopPropagation();exportSingleSemiXLSX(${s.id})" title="Скачать техкарту Excel"><i data-lucide="file-spreadsheet" class="icon"></i></button>
-                  <button class="mat-del" onclick="event.stopPropagation();deleteSemi(${s.id})" title="Удалить" style="color:var(--red)"><i data-lucide="trash-2" class="icon"></i></button>
-                </td>
-              </tr>`;
-            }).join('')}
-          </tbody>
+          ${semiRowsHtml}
         </table>
       </div>`
-    : `<div style="color:var(--muted);font-size:13px;padding:16px 0">Нет полуфабрикатов. Нажмите «+ Полуфабрикат», чтобы добавить (соусы, сиропы, основы).</div>`;
+    : `<div style="color:var(--muted);font-size:13px;padding:16px 0">Нет полуфабрикатов. Нажмите «+ Добавить», чтобы добавить (соусы, сиропы, основы).</div>`;
 
   // ── Сборка HTML ──────────────────────────────────────────────────
   const _costEl     = document.getElementById('tab-cost');
@@ -279,13 +306,19 @@ export function renderCost() {
 
     <div id="cost-section-semi"></div>
     <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px;cursor:pointer" onclick="toggleSemiSection()">
-      <span style="display:flex;align-items:center;gap:5px"><span class="mat-cat-chevron" id="cost-semi-icon">${_semiCollapsed ? '▶' : '▼'}</span><i data-lucide="layers" class="icon"></i> Полуфабрикаты <span style="background:var(--border);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:4px">${SEMI.length}</span></span>
+      <span style="display:flex;align-items:center;gap:5px"><span class="mat-cat-chevron" id="cost-semi-icon">${_semiSectionCollapsed ? '▶' : '▼'}</span><i data-lucide="layers" class="icon"></i> Полуфабрикаты <span style="background:var(--border);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:4px">${SEMI.length}</span></span>
       <div style="display:flex;gap:8px" onclick="event.stopPropagation()">
         <button class="btn btn-outline" onclick="exportSemiTechCards()" title="Экспорт техкарт полуфабрикатов в PDF"><i data-lucide="file-text" class="icon"></i><span class="sup-btn-txt"> PDF техкарт</span></button>
-        <button class="btn btn-green" onclick="openAddSemi()"><i data-lucide="plus" class="icon"></i><span class="sup-btn-txt"> Полуфабрикат</span></button>
+        <div style="position:relative">
+          <button class="btn btn-green" onclick="event.stopPropagation();toggleAddSemiMenu(this)"><i data-lucide="plus" class="icon"></i><span class="sup-btn-txt"> Добавить</span><i data-lucide="chevron-down" class="icon" style="margin-left:2px"></i></button>
+          <div id="add-semi-menu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:170px;z-index:100;overflow:hidden">
+            <button onclick="closeAddSemiMenu();openAddSemi()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;cursor:pointer;font-size:13px;color:var(--text)"><i data-lucide="layers" class="icon"></i> Полуфабрикат</button>
+            <button onclick="closeAddSemiMenu();openAddSemiCategory()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;background:none;border:none;cursor:pointer;font-size:13px;color:var(--text)"><i data-lucide="tag" class="icon"></i> Категорию</button>
+          </div>
+        </div>
       </div>
     </div>
-    <div id="cost-semi-body" style="${_semiCollapsed ? 'display:none' : ''}">
+    <div id="cost-semi-body" style="${_semiSectionCollapsed ? 'display:none' : ''}">
       ${semiHtml}
     </div>
   `;

@@ -335,6 +335,13 @@
         <div class="modal-label">Название</div>
         <input class="modal-inp" id="ms-name" type="text" placeholder="Например: Карамельный соус">
       </div>
+      <div style="flex:1.5">
+        <div class="modal-label">Категория</div>
+        <select class="modal-select" id="ms-category">
+          <option value="semi_default">📦 Полуфабрикаты</option>
+        </select>
+      </div>
+    </div>
       <div>
         <div class="modal-label">Единица выхода</div>
         <select class="modal-select" id="ms-unit" onchange="_updateSemiCostPreview()">
@@ -773,6 +780,33 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-add-cat')">Отмена</button>
       <button class="btn-primary" onclick="saveCategory()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модал: новая категория полуфабрикатов -->
+<div class="modal-bg" id="modal-add-semi-cat">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title">
+      <span><i data-lucide="tag" class="icon"></i> Новая категория п/ф</span>
+      <button class="modal-close" onclick="closeModal('modal-add-semi-cat')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-row">
+        <div style="flex:0 0 80px">
+          <div class="modal-label">Эмодзи</div>
+          <input class="modal-inp" id="masc-emoji" maxlength="4" placeholder="🍯" style="text-align:center;font-size:1.4em">
+        </div>
+        <div style="flex:1">
+          <div class="modal-label">Название категории</div>
+          <input class="modal-inp" id="masc-name" placeholder="Например: Сиропы">
+        </div>
+      </div>
+      <p id="masc-error" style="color:var(--red,#e74c3c);font-size:12px;margin:4px 0 0"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-semi-cat')">Отмена</button>
+      <button class="btn-primary" onclick="saveSemiCategory()">Сохранить</button>
     </div>
   </div>
 </div>

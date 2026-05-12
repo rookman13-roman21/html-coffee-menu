@@ -23,7 +23,8 @@ export let   salesSearch    = '';
 // ─── Состояние вкладки Cost (категории / свёрнутость) ───────────
 export let _matActiveCat  = 'all';
 export let _matCollapsed  = {};
-export let _semiCollapsed = false;
+export let _semiCollapsed = {};
+export let _semiSectionCollapsed = false;
 export let _supCollapsed  = false;
 export let _ingCollapsed  = false;
 

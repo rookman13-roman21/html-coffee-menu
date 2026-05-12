@@ -30,12 +30,12 @@ export function toggleMatCat(cat) {
   if (icon)  icon.textContent = _matCollapsed[cat] ? '▶' : '▼';
 }
 
-export function toggleSemiCat() {
-  _semiCollapsed = !_semiCollapsed;
-  const tbody = document.getElementById('semi-tbody');
-  const icon  = document.getElementById('semi-cat-icon');
-  if (tbody) tbody.style.display = _semiCollapsed ? 'none' : '';
-  if (icon)  icon.textContent = _semiCollapsed ? '▶' : '▼';
+export function toggleSemiCat(cat) {
+  _semiCollapsed[cat] = !_semiCollapsed[cat];
+  const tbody = document.getElementById('semi-tbody-' + cat);
+  const icon  = document.getElementById('semi-cat-icon-' + cat);
+  if (tbody) tbody.style.display = _semiCollapsed[cat] ? 'none' : '';
+  if (icon)  icon.textContent = _semiCollapsed[cat] ? '▶' : '▼';
 }
 
 export function toggleSupSection() {
@@ -55,11 +55,11 @@ export function toggleIngSection() {
 }
 
 export function toggleSemiSection() {
-  _semiCollapsed = !_semiCollapsed;
+  _semiSectionCollapsed = !_semiSectionCollapsed;
   const body = document.getElementById('cost-semi-body');
   const icon = document.getElementById('cost-semi-icon');
-  if (body) body.style.display = _semiCollapsed ? 'none' : '';
-  if (icon) icon.textContent = _semiCollapsed ? '▶' : '▼';
+  if (body) body.style.display = _semiSectionCollapsed ? 'none' : '';
+  if (icon) icon.textContent = _semiSectionCollapsed ? '▶' : '▼';
 }
 
 export function scrollCostTo(sectionId) {

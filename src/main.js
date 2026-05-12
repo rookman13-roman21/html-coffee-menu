@@ -72,7 +72,7 @@ import {
   _editMatKey, _pendingMatSelectEl, _pendingSemiMatSelectEl,
   searchQuery, _renderTimer,
   dirty, sortState, salesSortState, salesSearch,
-  _matActiveCat, _matCollapsed, _semiCollapsed, _supCollapsed, _ingCollapsed,
+  _matActiveCat, _matCollapsed, _semiCollapsed, _semiSectionCollapsed, _supCollapsed, _ingCollapsed,
   recipeSearch, recipeSort, recipeGroup,
   _mvdId, _matPriceBeforeEdit, _fceIdx,
   PS_DEFAULTS, MAT_CATEGORY, CAT_LABELS,
@@ -119,6 +119,7 @@ import {
   addSemiIngRow, onSemiImgChange, clearSemiImg,
   _updateSemiCostPreview, _onSemiMatChange, _autoFillSemiYield,
   _updateSemiIngCost, _autoCalcSemiIngYield,
+  openAddSemiCategory, saveSemiCategory, _refreshSemiCategorySelect,
 } from './modals/semi.js';
 
 import {
@@ -247,7 +248,7 @@ Object.assign(window, {
   _editMatKey, _pendingMatSelectEl, _pendingSemiMatSelectEl,
   searchQuery, _renderTimer,
   dirty, sortState, salesSortState, salesSearch,
-  _matActiveCat, _matCollapsed, _semiCollapsed, _supCollapsed, _ingCollapsed,
+  _matActiveCat, _matCollapsed, _semiCollapsed, _semiSectionCollapsed, _supCollapsed, _ingCollapsed,
   recipeSearch, recipeSort, recipeGroup,
   _mvdId, _matPriceBeforeEdit, _fceIdx,
   PS_DEFAULTS, MAT_CATEGORY, CAT_LABELS,
@@ -299,6 +300,7 @@ const _srcExports = {
   addSemiIngRow, onSemiImgChange, clearSemiImg,
   _updateSemiCostPreview, _onSemiMatChange, _autoFillSemiYield,
   _updateSemiIngCost, _autoCalcSemiIngYield,
+  openAddSemiCategory, saveSemiCategory,
   // modals/mat
   openEditMat, saveMat, cancelMat, deleteMat, matOnlyOptions,
   deleteEditingMat, onMatPurchaseUrlInput,
@@ -537,3 +539,25 @@ function openAddMatModal() {
   openModal('modal-mat');
 }
 Object.assign(window, { toggleAddMatMenu, closeAddMatMenu, openAddMatModal });
+
+// ── Дропдаун "+ Добавить" для полуфабрикатов ────────────────────────
+function toggleAddSemiMenu(btn) {
+  const menu = document.getElementById('add-semi-menu');
+  if (!menu) return;
+  const isOpen = menu.style.display !== 'none';
+  menu.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    const close = (e) => {
+      if (!menu.contains(e.target) && e.target !== btn) {
+        menu.style.display = 'none';
+        document.removeEventListener('click', close);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', close), 0);
+  }
+}
+function closeAddSemiMenu() {
+  const menu = document.getElementById('add-semi-menu');
+  if (menu) menu.style.display = 'none';
+}
+Object.assign(window, { toggleAddSemiMenu, closeAddSemiMenu });
