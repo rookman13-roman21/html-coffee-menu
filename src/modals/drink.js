@@ -101,6 +101,9 @@ export function saveDrink() {
   const group = document.getElementById('md-group').value;
   const editId = document.getElementById('md-edit-id').value;
   if (!name || !(price>0)) { alert('Заполните название и цену'); return; }
+  const _editIdNum = editId !== '' ? parseInt(editId) : null;
+  const _dupDrink = DRINKS.find(d => d.name.trim().toLowerCase() === name.toLowerCase() && d.id !== _editIdNum);
+  if (_dupDrink) { alert(`Напиток с названием «${name}» уже существует`); return; }
   const recipe = [];
   document.querySelectorAll('#md-ings .modal-ing-row').forEach(row => {
     const selEl  = row.querySelector('select');

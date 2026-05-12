@@ -34,6 +34,8 @@ export function saveMat() {
   const price = parseFloat(document.getElementById('mm-price').value) || 0;
   const size  = parseFloat(document.getElementById('mm-size').value);
   if (!name || !(size > 0)) { alert('Заполните название и объём'); return; }
+  const _dupMat = Object.entries(MAT).find(([k, m]) => m.name.trim().toLowerCase() === name.toLowerCase() && k !== _editMatKey);
+  if (_dupMat) { alert(`Ингредиент с названием «${name}» уже существует`); return; }
   const key = _editMatKey || ('custom_' + (window.nextMatKey++));
   if (!_editMatKey) nextMatKey; // счётчик уже увеличенся
   const category = document.getElementById('mm-category').value || 'other';

@@ -422,6 +422,9 @@ export function saveSemi() {
   const editId  = document.getElementById('ms-edit-id').value;
   if (!name) { alert('Введите название'); return; }
   if (!(yieldV > 0)) { alert('Введите выход (> 0)'); return; }
+  const _editSemiIdNum = editId ? parseInt(editId) : null;
+  const _dupSemi = SEMI.find(s => s.name.trim().toLowerCase() === name.toLowerCase() && s.id !== _editSemiIdNum);
+  if (_dupSemi) { alert(`Полуфабрикат с названием «${name}» уже существует`); return; }
   const imgEl = document.getElementById('ms-img-preview');
   const image = (imgEl && imgEl.style.display !== 'none' && imgEl.src) ? imgEl.src : '';
 
