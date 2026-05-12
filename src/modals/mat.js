@@ -114,7 +114,8 @@ export function cancelMat(force = false) {
 
 export function deleteMat(key) {
   const used = DRINKS.some(d => d.recipe.some(r => r.mat === key));
-  if (used) { window.showAlert('Сырьё используется в рецептурах — сначала удалите напитки с этим сырьём'); return; }
+  const usedInSemi = (window.SEMI || []).some(s => (s.recipe || []).some(r => r.mat === key));
+  if (used || usedInSemi) { window.showAlert('Сырьё используется в рецептурах — сначала удалите его из напитков/полуфабрикатов'); return; }
   window.showConfirm('Удалить позицию сырья?', () => {
     delete MAT[key];
     delete S.prices[key];

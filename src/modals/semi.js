@@ -41,11 +41,13 @@ export function _updateSemiCostPreview() {
   document.querySelectorAll('#ms-ings .ing-row').forEach(row => {
     const matKey = row.querySelector('.ing-mat').value;
     const amt    = parseFloat(row.querySelector('.ing-amt').value) || 0;
-    const loss   = parseFloat(row.querySelector('.ing-loss').value) || 0;
+    const lossRaw = (parseFloat(row.querySelector('.ing-loss').value) || 0) / 100;
     const m = MAT[matKey];
     if (!m || !(amt > 0)) return;
     const pricePerUnit = (S.prices[matKey] || m.price) / m.size;
-    totalRaw += pricePerUnit * amt * (1 + loss); // amt в г/мл, pricePerUnit в руб/г
+    let rowCost = pricePerUnit * amt; // amt в г/мл, pricePerUnit в руб/г
+    if (lossRaw > 0 && lossRaw < 1) rowCost = rowCost / (1 - lossRaw);
+    totalRaw += rowCost;
   });
   const unit = document.getElementById('ms-unit').value || 'ед.';
   const perUnit = (yieldV > 0 && totalRaw > 0) ? (totalRaw / yieldV) : null;

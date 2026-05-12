@@ -74,7 +74,8 @@ export function calcIngCost(ing) {
     return c;
   }
   if (!MAT[ing.mat]) return 0;
-  let c = (S.prices[ing.mat] / MAT[ing.mat].size) * ing.amt;
+  const _price = S.prices[ing.mat] != null ? S.prices[ing.mat] : MAT[ing.mat].price;
+  let c = (_price / MAT[ing.mat].size) * ing.amt;
   if (ing.loss) c = c / (1 - ing.loss);
   return c;
 }
@@ -115,7 +116,7 @@ export function calcNutrition(d) {
       return;
     }
     // ── Обычное сырьё ────────────────────────────────────────────
-    const n = MAT_NUTRITION[ing.mat];
+    const n = MAT_NUTRITION[ing.mat] || (window.MAT && window.MAT[ing.mat] && window.MAT[ing.mat].nutrition);
     if (!n) return;
     const factor = isSemi ? _semiUnitFactor(ing.mat) : 1;
     const amt = ing.amt * factor * (1 - (ing.loss || 0));
