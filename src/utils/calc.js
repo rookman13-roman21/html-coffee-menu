@@ -85,10 +85,36 @@ export function calcIngCost(ing) {
  */
 export function calcNutrition(d) {
   const MAT_NUTRITION = window.MAT_NUTRITION;
-  // У полуфабрикатов amt хранится в кг/л — нужно перевести в г/мл
+  const SEMI = window.SEMI;
+  // У полуфабрикатов (в их собственном рецепте) amt хранится в кг/л
   const isSemi = d.yield !== undefined;
   let kcal = 0, protein = 0, fat = 0, carbs = 0;
   (d.recipe || []).forEach(ing => {
+    // ── Полуфабрикат в составе напитка ──────────────────────────
+    if (ing.semi != null) {
+      const s = (SEMI || []).find(x => x.id === ing.semi);
+      if (!s || !s.yield) return;
+      // Суммарное КБЖУ всей партии полуфабриката
+      let sK = 0, sP = 0, sF = 0, sC = 0;
+      (s.recipe || []).forEach(sr => {
+        const sn = MAT_NUTRITION[sr.mat];
+        if (!sn) return;
+        const f = _semiUnitFactor(sr.mat);
+        const a = sr.amt * f * (1 - (sr.loss || 0));
+        sK += sn.kcal    * a / 100;
+        sP += sn.protein * a / 100;
+        sF += sn.fat     * a / 100;
+        sC += sn.carbs   * a / 100;
+      });
+      // Количество полуфабриката в напитке (г/мл)
+      const drinkAmt = ing.amt * _semiDrinkFactor(s) * (1 - (ing.loss || 0));
+      kcal    += (sK / s.yield) * drinkAmt;
+      protein += (sP / s.yield) * drinkAmt;
+      fat     += (sF / s.yield) * drinkAmt;
+      carbs   += (sC / s.yield) * drinkAmt;
+      return;
+    }
+    // ── Обычное сырьё ────────────────────────────────────────────
     const n = MAT_NUTRITION[ing.mat];
     if (!n) return;
     const factor = isSemi ? _semiUnitFactor(ing.mat) : 1;
