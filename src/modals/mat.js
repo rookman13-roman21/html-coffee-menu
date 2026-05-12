@@ -5,9 +5,12 @@ export function openEditMat(key) {
   const m = MAT[key];
   if (!m) return;
   _editMatKey = key;
+  // нормализуем единицу: "1 кг" → "кг", "1 л" → "л", всё остальное → "шт"
+  const _rawUnit = (m.unit || '').toLowerCase();
+  const _unit = _rawUnit.includes('кг') ? 'кг' : _rawUnit.includes(' л') || _rawUnit === 'л' ? 'л' : 'шт';
   document.getElementById('mm-modal-title').innerHTML = '<i data-lucide="pencil" class="icon"></i> Редактировать сырьё';
   document.getElementById('mm-name').value     = m.name || '';
-  document.getElementById('mm-unit').value     = m.unit || 'шт';
+  document.getElementById('mm-unit').value     = _unit;
   document.getElementById('mm-category').value = m.category || 'other';
   document.getElementById('mm-price').value    = S.prices[key] ?? m.price ?? '';
   document.getElementById('mm-size').value     = m.size || '';
