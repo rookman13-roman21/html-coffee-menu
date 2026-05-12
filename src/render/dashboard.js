@@ -90,27 +90,6 @@ export function renderDashboard() {
     ? grpFiltered.filter(d => d.name.toLowerCase().includes(searchQuery.toLowerCase()))
     : grpFiltered;
 
-  // Mini bar chart top-10
-  const top10  = [...drinks].sort((a, b) => b.profit - a.profit).slice(0, 10);
-  const maxPr  = top10[0]?.profit || 1;
-  const chartHtml = top10.map((d, i) => {
-    const w  = Math.round(d.profit / maxPr * 100);
-    const bc = d.abc === 'A' ? 'var(--soft)' : d.abc === 'B' ? '#ffd84a' : 'var(--red-bg)';
-    const vc = d.abc === 'A' ? 'var(--navy)' : d.abc === 'B' ? '#7a5800' : 'var(--red)';
-    return `<div class="dash-top10-row">
-      <div class="dash-top10-rank" style="background:${bc};color:${vc}">${i + 1}</div>
-      <div class="dash-top10-body">
-        <div class="dash-top10-hdr">
-          <span class="dash-top10-name">${d.name}</span>
-          <span class="dash-top10-val" style="color:${vc}">${Math.round(d.profit)}\u00a0₽</span>
-        </div>
-        <div class="dash-top10-track">
-          <div class="dash-top10-bar" style="width:${w}%;background:${bc}"></div>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-
   const rows = filtered.map(d => {
     const profCls      = d.profit >= avgProfit ? 'num-pos' : '';
     const recHighlight = d.fc > S.targetFC + 0.10
@@ -184,11 +163,6 @@ export function renderDashboard() {
         </div>
       </div>
     </div>
-    <div class="section-title dash-top10-title" onclick="toggleTop10()" style="cursor:pointer;user-select:none" title="Свернуть / развернуть">
-      <i data-lucide="trending-down" class="icon"></i> Топ-10 по прибыли с чашки
-      <i data-lucide="chevron-up" class="icon dash-top10-chevron" id="dash-top10-chevron" style="margin-left:auto;transition:transform .25s"></i>
-    </div>
-    <div class="panel dash-top10-panel" id="dash-top10-panel" style="margin-bottom:20px;overflow:hidden;transition:max-height .3s ease,opacity .25s ease,margin .25s ease">${chartHtml}</div>
     <div class="section-title"><i data-lucide="clipboard-list" class="icon"></i> Рейтинг напитков — кликните заголовок для сортировки</div>
     <div class="dash-search-row">
       <div class="recipe-filter-btns dash-group-tabs">
