@@ -1,0 +1,199 @@
+<!-- ═══════════════════════════════════════════════
+  БЛОК 06 — PRICING / Тарифы
+  CaféDesk — Tilda HTML-block
+═══════════════════════════════════════════════ -->
+<style>
+  .cd-pricing {
+    background: #f4faf1;
+    padding: 80px 40px;
+    font-family: 'Mulish', 'Helvetica Neue', Arial, sans-serif;
+  }
+  .cd-pricing-label {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: #4F883E;
+    margin-bottom: 12px;
+  }
+  .cd-pricing-title {
+    text-align: center;
+    font-size: clamp(26px, 3vw, 38px);
+    font-weight: 900;
+    color: #1e3a16;
+    margin: 0 0 14px;
+    letter-spacing: -.02em;
+  }
+  .cd-pricing-sub {
+    text-align: center;
+    font-size: 16px;
+    color: #6b7280;
+    max-width: 480px;
+    margin: 0 auto 52px;
+    line-height: 1.7;
+  }
+  .cd-pricing-cards {
+    max-width: 820px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+  .cd-pcard {
+    background: #fff;
+    border: 1.5px solid #cde3c5;
+    border-radius: 24px;
+    padding: 38px 34px;
+    position: relative;
+  }
+  .cd-pcard.featured {
+    background: #417033;
+    border-color: #417033;
+  }
+  .cd-pcard-badge {
+    display: inline-block;
+    background: #4F883E;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    padding: 4px 12px;
+    border-radius: 999px;
+    margin-bottom: 18px;
+  }
+  .cd-pcard-plan {
+    font-size: 13px;
+    font-weight: 800;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    margin-bottom: 10px;
+  }
+  .cd-pcard.featured .cd-pcard-plan { color: rgba(255,255,255,.55); }
+  .cd-pcard-price {
+    font-size: 54px;
+    font-weight: 900;
+    color: #1e3a16;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .cd-pcard.featured .cd-pcard-price { color: #fff; }
+  .cd-pcard-price sup { font-size: 22px; vertical-align: top; margin-top: 12px; display: inline-block; }
+  .cd-pcard-period {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 28px;
+  }
+  .cd-pcard.featured .cd-pcard-period { color: rgba(255,255,255,.5); }
+  .cd-pcard-list {
+    list-style: none;
+    padding: 0; margin: 0 0 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+  .cd-pcard-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #2d5022;
+    line-height: 1.5;
+  }
+  .cd-pcard.featured .cd-pcard-list li { color: rgba(255,255,255,.85); }
+  .cd-pcard-check {
+    color: #4F883E;
+    font-size: 15px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .cd-pcard.featured .cd-pcard-check { color: #a8e89c; }
+  .cd-pcard-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border: 1.5px solid #cde3c5;
+    border-radius: 12px;
+    background: none;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 800;
+    color: #417033 !important;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    box-sizing: border-box;
+  }
+  .cd-pcard-btn:hover {
+    border-color: #4F883E;
+    background: #e7f2e3;
+    color: #417033 !important;
+  }
+  .cd-pcard-btn.white {
+    background: #fff;
+    border-color: rgba(255,255,255,.25);
+    color: #417033 !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,.14);
+  }
+  .cd-pcard-btn.white:hover {
+    background: #f0faf0;
+    color: #417033 !important;
+  }
+  @media (max-width: 640px) {
+    .cd-pricing-cards { grid-template-columns: 1fr; }
+    .cd-pricing { padding: 60px 20px; }
+  }
+</style>
+
+<div class="cd-pricing">
+  <p class="cd-pricing-label">Тарифы</p>
+  <h2 class="cd-pricing-title">Просто и честно</h2>
+  <p class="cd-pricing-sub">Единоразовая оплата — никаких подписок и скрытых платежей. Доступ навсегда ко всем инструментам.</p>
+
+  <div class="cd-pricing-cards">
+
+    <div class="cd-pcard featured">
+      <span class="cd-pcard-badge">Полный доступ</span>
+      <p class="cd-pcard-plan">CaféDesk</p>
+      <div class="cd-pcard-price">14 600 <sup>₽</sup></div>
+      <p class="cd-pcard-period">единоразово · доступ навсегда</p>
+      <ul class="cd-pcard-list">
+        <li><span class="cd-pcard-check">✓</span> 30+ готовых рецептур</li>
+        <li><span class="cd-pcard-check">✓</span> Расчёт себестоимости</li>
+        <li><span class="cd-pcard-check">✓</span> Финансовая модель</li>
+        <li><span class="cd-pcard-check">✓</span> Техкарты PDF по ГОСТу</li>
+        <li><span class="cd-pcard-check">✓</span> Экспорт PDF и Excel</li>
+        <li><span class="cd-pcard-check">✓</span> Все 4 налоговых режима</li>
+        <li><span class="cd-pcard-check">✓</span> База поставщиков</li>
+        <li><span class="cd-pcard-check">✓</span> Расчёт ФОТ и зарплат</li>
+      </ul>
+      <a class="cd-pcard-btn white" href="https://html-coffee-menu.vercel.app" target="_blank">
+        Получить доступ →
+      </a>
+    </div>
+
+    <div class="cd-pcard">
+      <span class="cd-pcard-badge" style="background:#9ab890;color:#1e3a16">Скоро</span>
+      <p class="cd-pcard-plan">Команда</p>
+      <div class="cd-pcard-price">990 <sup>₽</sup></div>
+      <p class="cd-pcard-period">в месяц · до 3 пользователей</p>
+      <ul class="cd-pcard-list">
+        <li><span class="cd-pcard-check">✓</span> Безлимитное меню</li>
+        <li><span class="cd-pcard-check">✓</span> Облачное хранение данных</li>
+        <li><span class="cd-pcard-check">✓</span> Несколько локаций</li>
+        <li><span class="cd-pcard-check">✓</span> Совместный доступ</li>
+        <li><span class="cd-pcard-check">✓</span> Приоритетная поддержка</li>
+        <li><span class="cd-pcard-check">✓</span> Всё из бесплатного</li>
+      </ul>
+      <a class="cd-pcard-btn" href="https://html-coffee-menu.vercel.app" target="_blank">
+        Оставить заявку →
+      </a>
+    </div>
+
+  </div>
+</div>
