@@ -1106,6 +1106,7 @@
     .ing-sel-opt:hover { background: #eef2ff; color: var(--blue, #4a7cf6); }
     .ing-sel-opt--active { background: #eef2ff; color: var(--blue, #4a7cf6); font-weight: 600; }
     .ing-sel-opt--create { color: var(--green); font-weight: 700; border-bottom: 1px solid var(--border); }
+    .ing-sel-opt--create-semi { color: var(--blue, #4a7cf6); font-weight: 700; border-bottom: 1px solid var(--border); }
     .ing-sel-empty { padding: 10px 12px; color: var(--muted); font-size: 12px; }
     /* dark mode */
     body.dark .ing-sel-trigger { background: #3c3c3c; border-color: #454545; color: #d4d4d4; }

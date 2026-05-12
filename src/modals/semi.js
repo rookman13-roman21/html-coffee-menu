@@ -450,6 +450,16 @@ export function saveSemi() {
   }
   _clearModalDirty('modal-semi');
   closeModal('modal-semi');
+  // Если открыто из строки ингредиента напитка — вставить новый п/ф в тот select
+  if (!editId && window._pendingSemiSelectFromDrink) {
+    const newSemi = SEMI[SEMI.length - 1];
+    const selEl = window._pendingSemiSelectFromDrink;
+    selEl.innerHTML = window.matOptions(`semi:${newSemi.id}`);
+    selEl.value = `semi:${newSemi.id}`;
+    selEl.dataset.prev = `semi:${newSemi.id}`;
+    selEl.dispatchEvent(new Event('change', { bubbles: true }));
+    window._pendingSemiSelectFromDrink = null;
+  }
   markDirtyDebounce();
   saveState();
   renderCost();
