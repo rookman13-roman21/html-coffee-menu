@@ -464,6 +464,7 @@ export function openViewMat(key) {
   _mmvKey = key;
 
   const { MAT_NUTRITION, MAT_CATEGORIES } = window;
+  const _rawUnit = (m.unit || '').toLowerCase();
   const baseNutr = (MAT_NUTRITION || {})[key];
   const n = m.nutrition || baseNutr || {};
   const price = S.prices[key] ?? m.price ?? 0;
@@ -510,8 +511,8 @@ export function openViewMat(key) {
         <div class="mvd-info-row"><span class="mvd-info-label">Категория:</span><span class="mvd-info-value">${catLabel}</span></div>
         <div class="mvd-info-row"><span class="mvd-info-label">Единица закупки:</span><span class="mvd-info-value">${m.unit}</span></div>
         <div class="mvd-info-row"><span class="mvd-info-label">Цена:</span><span class="mvd-info-value" style="font-weight:700">${price} ₽ / ${m.unit}</span></div>
-        <div class="mvd-info-row"><span class="mvd-info-label">Объём в единице:</span><span class="mvd-info-value">${m.size} г/мл/шт</span></div>
-        <div class="mvd-info-row"><span class="mvd-info-label">Цена за 1 г/мл:</span><span class="mvd-info-value">${(price / m.size).toFixed(3)} ₽</span></div>
+        <div class="mvd-info-row"><span class="mvd-info-label">Объём в единице:</span><span class="mvd-info-value">${m.size} ${_rawUnit.includes('кг') ? 'г' : (_rawUnit.includes(' л') || _rawUnit === 'л') ? 'мл' : m.unit.replace(/^1\s*/, '')}</span></div>
+        <div class="mvd-info-row"><span class="mvd-info-label">Цена за 1 ${_rawUnit.includes('кг') ? 'г' : (_rawUnit.includes(' л') || _rawUnit === 'л') ? 'мл' : m.unit.replace(/^1\s*/, '')}:</span><span class="mvd-info-value">${(price / m.size).toFixed(3)} ₽</span></div>
         ${purchaseHtml}
       </div>
     </div>
