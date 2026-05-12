@@ -22,6 +22,10 @@ export function renderCost() {
 
   // ── Сырьё по категориям ──────────────────────────────────────────
   const matGroups = {};
+  // Пустые кастомные категории тоже должны отображаться
+  Object.keys(S.customCategories || {}).forEach(cat => {
+    if (!matGroups[cat]) matGroups[cat] = [];
+  });
   Object.entries(MAT).forEach(([key, m]) => {
     const cat = m.category || 'other';
     if (!matGroups[cat]) matGroups[cat] = [];

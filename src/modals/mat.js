@@ -187,8 +187,9 @@ export function saveCategory() {
   // Обновляем select категорий в модалке mat
   _refreshMatCategorySelect();
   closeModal('modal-add-cat');
-  markDirtyDebounce();
   saveState();
+  // Перерисовываем вкладку себестоимости (табы и таблица категорий обновятся)
+  if (typeof window.renderActive === 'function') window.renderActive();
 }
 
 export function _refreshMatCategorySelect() {
