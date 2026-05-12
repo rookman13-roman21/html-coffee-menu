@@ -1,7 +1,7 @@
 # CONTEXT — MBS* Coffee Menu
 
 > CFO-инструментарий для владельца кофейни. SPA на Vite + ES-модули.
-> Последнее обновление: 11 мая 2026 (сессия 28)
+> Последнее обновление: 12 мая 2026 (сессия 32)
 
 ---
 
@@ -34,7 +34,7 @@ HTML_coffee_menu/
     ├── data/
     │   ├── constants.js    # GROUP_LABEL, SALES_PRESETS, FIXED_COSTS_DEF, nextDrinkId/SemiId/MatKey
     │   ├── drinks.js       # DRINKS, DRINKS_ORIG, DRINK_IMAGES, DRINK_QUALITY
-    │   └── mat.js          # MAT, MAT_ORIG
+    │   └── mat.js          # MAT, MAT_ORIG, MAT_CATEGORIES, BASE_MAT_KEYS
     ├── state/
     │   ├── store.js        # S, Loc, DEFAULTS, activeLoc, saveState, loadState, resetGlobalsToBase
     │   └── ui-state.js     # dirty, sortState, salesSortState, _matActiveCat, PS_DEFAULTS
@@ -72,7 +72,7 @@ HTML_coffee_menu/
 
 **Сборка Vite:**
 - Dev: `npm run dev` → `localhost:5173`
-- Build: `npm run build` → `dist/` (33 модуля, ~227 kB, 381ms)
+- Build: `npm run build` → `dist/` (33 модуля, ~320 kB, ~430ms)
 - `index.html` содержит только `<script type="module" src="/src/main.js">` + CDN ExcelJS
 
 ---
@@ -183,6 +183,8 @@ S = {
   supplierBook,     // [ { id, name, phone, note, site } ] — общий справочник поставщиков
   priceLog,         // [ { matKey, oldPrice, newPrice, date } ] — лог изменений цен сырья
   activePreset,     // string | null — ключ активного пресета плана продаж
+  customCategories, // { key: { label, order } } — пользовательские и переопределённые категории ингредиентов
+  semiCustomCategories, // { key: { label, order } } — пользовательские и переопределённые категории п/ф
 }
 ```
 
@@ -1712,3 +1714,43 @@ delBtn.addEventListener('click', () => { row.remove(); _updateSemiCostPreview();
 |--------|----------|
 | `f5acd41` | fix: add _updateSemiIngCost and _autoCalcSemiIngYield to window exports |
 | `864eb24` | fix: use addEventListener in addSemiIngRow instead of inline oninput globals |
+
+
+---
+
+### Сессия 31 (12 мая 2026) — категории ингредиентов и п/ф: добавление, редактирование, удаление
+
+**`S.customCategories`** — словарь пользовательских и переопределённых категорий ингредиентов:
+- Ключи `cat_*` — новые категории пользователя
+- Базовые ключи (`coffee`, `dairy`, `tea`, …) — переопределение через `saveCategory()` в `src/modals/mat.js`
+
+**`S.semiCustomCategories`** — аналогично для п/ф:
+- Ключи `scat_*` — новые категории
+- Базовый ключ `semi_default` — переопределение через `saveSemiCategory()`
+
+Логика слияния:
+```js
+const ALL_CATS = { ...MAT_CATEGORIES, ...(S.customCategories || {}) };
+```
+
+CRUD (`src/modals/mat.js`): `openAddCategory`, `saveCategory`, `openEditCategory(key)`, `deleteCategory(key)`
+Аналоги п/ф (`src/modals/semi.js`): `openAddSemiCategory`, `saveSemiCategory`, `openEditSemiCategory(key)`, `deleteSemiCategory(key)`
+
+Кнопка «Удалить» в модалке: красная заливка `background:var(--red,#e74c3c);color:#fff`. Скрыта для базовых категорий.
+
+| Коммит | Описание |
+|--------|----------|
+| `b38b296` | feat: edit/delete categories for materials and semis |
+| `5f7ecaf` | fix: make delete category buttons filled red (visible) |
+
+---
+
+### Сессия 32 (12 мая 2026) — редактирование базовых категорий + карандаш вправо
+
+**Карандаш вправо:** flex-контейнер в `<td>`, spacer `<span style="flex:1">`, кнопка в конце. Показывается для ВСЕХ категорий (убрана проверка `isCustomMatCat`/`isCustomSemiCat`).
+
+**Базовые категории редактируемые:** `openEditCategory`/`openEditSemiCategory` читают из merged `ALL_CATS`. `isBuiltin=true` → кнопка «Удалить» скрыта. `saveCategory`/`saveSemiCategory` при `isBase` сохраняют override в `S.customCategories`/`S.semiCustomCategories`.
+
+| Коммит | Описание |
+|--------|----------|
+| `d2aef0f` | feat: pencil right-aligned, base categories editable |
