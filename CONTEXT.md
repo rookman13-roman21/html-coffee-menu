@@ -1,7 +1,7 @@
 # CONTEXT — MBS* Coffee Menu
 
 > CFO-инструментарий для владельца кофейни. SPA на Vite + ES-модули.
-> Последнее обновление: 12 мая 2026 (сессия 32)
+> Последнее обновление: 12 мая 2026 (сессия 33)
 
 ---
 
@@ -22,6 +22,7 @@
 ```
 HTML_coffee_menu/
 ├── index.html          # Разметка + <script type="module" src="/src/main.js">
+├── landing.html        # Лендинг + Firebase Auth (отдельный standalone HTML, без Vite)
 ├── styles.css          # Все стили (CSS Variables, Grid, Flexbox, Dark theme, Print)
 ├── vite.config.js      # Vite 5.4 конфиг (root: '.', outDir: 'dist')
 ├── package.json        # devDependency: vite
@@ -1754,3 +1755,157 @@ CRUD (`src/modals/mat.js`): `openAddCategory`, `saveCategory`, `openEditCategory
 | Коммит | Описание |
 |--------|----------|
 | `d2aef0f` | feat: pencil right-aligned, base categories editable |
+
+---
+
+## 11. Деплой и внешние сервисы
+
+### Архитектура деплоя
+
+```
+https://baristaschool.ru/landing  (landing.html)
+        ↓ Google / email auth
+        ↓ onAuthSuccess → 1.5 сек
+https://html-coffee-menu.vercel.app  (Vite-приложение)
+```
+
+### Vite-приложение (CaféDesk)
+
+| Параметр | Значение |
+|---|---|
+| URL | `https://html-coffee-menu.vercel.app` |
+| Платформа | Vercel |
+| Репозиторий | `rookman13-roman21/html-coffee-menu`, ветка `main` |
+| Авто-деплой | При каждом `git push` в `main` |
+
+### Firebase
+
+| Параметр | Значение |
+|---|---|
+| Проект | `moscow-barista-school` |
+| authDomain | `moscow-barista-school.firebaseapp.com` |
+| SDK | Firebase compat v10.12.0 (CDN, только в `landing.html`) |
+| Authorized domains | `baristaschool.ru`, `localhost` |
+
+### landing.html (лендинг + авторизация)
+
+- **Расположение в репо:** `HTML_coffee_menu/landing.html`
+- **Хостинг:** `https://baristaschool.ru/landing` (партнёрский домен MBS)
+- **Технология:** Standalone HTML (~1120 строк), inline CSS + JS, **без Vite**
+- **Firebase SDK:** подключён CDN-тегом `<script src="https://www.gstatic.com/firebasejs/10.12.0/...">` внутри `landing.html`
+- **Авторизация:** Google Sign-In (popup) + Email/Password
+- **После входа:** `onAuthSuccess()` → пишет `localStorage.setItem('mbs_active_tab', 'dashboard')` → редирект на Vercel-приложение через `window.location.href = 'https://html-coffee-menu.vercel.app'`
+
+### ⚠️ Известное ограничение: cross-domain localStorage
+
+`localStorage` не шарится между доменами. `mbs_active_tab` записывается на `baristaschool.ru`, но Vite-приложение читает свой `localStorage` на `vercel.app`. Таб dashboard при редиректе **не откроется автоматически**.
+
+**Возможное решение (не реализовано):** передавать таб через URL-параметр:
+```js
+// landing.html onAuthSuccess:
+window.location.href = 'https://html-coffee-menu.vercel.app?tab=dashboard';
+
+// src/main.js INIT:
+const _urlTab = new URLSearchParams(location.search).get('tab');
+const _savedTab = _urlTab || localStorage.getItem('mbs_active_tab') || 'dashboard';
+```
+
+---
+
+### Сессия 33 (12 мая 2026) — лендинг + Firebase Auth + редирект на Vercel
+
+**Цель:** создать лендинг-страницу `landing.html` с авторизацией Firebase и редиректом на Vite-приложение после успешного входа.
+
+---
+
+#### 1. Создание landing.html
+
+Standalone HTML-файл (~1120 строк) с inline CSS и JS. Структура:
+- `HEADER` — логотип CaféDesk, кнопки «Возможности» и «Войти»
+- `HERO` — заголовок, описание, интерактивная демо-карточка (3 вкладки: Дашборд / Себестоимость / Финмодель)
+- `FEATURES` — 6 карточек возможностей с fade-in при скролле
+- `STATS` — 4 статистики (50+ рецептур, 4 режима, 5 мин, 0 ₽)
+- `PRICING` — 2 тарифа (Бесплатно / Команда «Скоро»)
+- `AUTH` — 2 вкладки (Регистрация / Войти), Google + Email/Password
+- `CTA` — секция призыва к действию
+- `FOOTER` — с упоминанием партнёра `baristaschool.ru`
+
+**Дизайн-токены landing.html** (отдельные от styles.css):
+```css
+--navy:   #417033   /* совпадает с основным приложением */
+--green:  #4F883E
+--light:  #E7F2E3
+--red:    #CC2841
+```
+
+---
+
+#### 2. Firebase Auth — исправленные баги
+
+**Баг 1 — попап закрывался мгновенно:**
+- `showAuthError(msg)` вызывался без `panel` → элемент ошибки добавлялся не в DOM
+- **Исправление:** захватить `activePanel = document.querySelector('.auth-panel.active')` ДО `signInWithPopup()`, передать в `showAuthError(msg, activePanel)`
+
+**Баг 2 — `auth/unauthorized-domain`:**
+- Домен `baristaschool.ru` не был в Firebase Authorized domains
+- **Исправление:** добавить вручную через Firebase Console → Authentication → Settings → Authorized domains
+
+**Баг 3 — редирект на `index.html` не работал:**
+- `window.location.href = 'index.html'` на `baristaschool.ru` открывал несуществующую страницу
+- **Исправление:** заменить на полный URL Vercel-приложения
+
+**Баг 4 — неправильный ключ localStorage:**
+- Использовался `cafedeskActiveTab` вместо реального `mbs_active_tab` из `src/main.js`
+- **Исправление:** `localStorage.setItem('mbs_active_tab', 'dashboard')` (хотя из-за cross-domain не имеет эффекта)
+
+---
+
+#### 3. Итоговый поток авторизации
+
+```js
+function signInWithGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  const activePanel = document.querySelector('.auth-panel.active');
+  auth.signInWithPopup(provider)
+    .then(result => onAuthSuccess(result.user))
+    .catch(err => {
+      console.error('[Firebase Google Auth]', err.code, err.message);
+      showAuthError(firebaseErrorRu(err.code), activePanel);
+    });
+}
+
+function onAuthSuccess(user) {
+  // XSS-защита через esc()
+  // Показ success-экрана
+  setTimeout(() => {
+    localStorage.setItem('mbs_active_tab', 'dashboard');
+    window.location.href = 'https://html-coffee-menu.vercel.app';
+  }, 1500);
+}
+```
+
+---
+
+#### Коммиты сессии 33
+
+| Коммит | Описание |
+|--------|----------|
+| *(серия)* | feat: create landing.html with Firebase Auth |
+| `d4d28d5` | fix: redirect to Vercel app after auth |
+
+---
+
+### Сессия 34 (в плане) — semi-категории: TODO
+
+**Следующий блок работ — категории полуфабрикатов:**
+
+| Статус | Задача |
+|--------|--------|
+| ✅ | `store.js`: `semiCustomCategories` |
+| 🔄 | `ui-state.js`: `_semiCollapsed: false → {}` |
+| ⬜ | `semi.js` modal: категории |
+| ⬜ | `cost-table.js`: `toggleSemiCat(cat)` |
+| ⬜ | `render/cost.js`: категории п/ф |
+| ⬜ | `index.html`: поля для semi категорий |
+| ⬜ | `main.js`: импорты и window |
+| ⬜ | Git commit |
