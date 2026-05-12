@@ -101,18 +101,13 @@ export function renderCost() {
         : `<button class="mat-del" style="font-size:11px;color:var(--muted)" onclick="openSupQuickDrop('${key}',this)" title="Добавить поставщика">+ добавить</button>`;
       const usedIn      = matUsageMap[key] || [];
       const usageBadge  = usedIn.length
-        ? `<button class="usage-badge" onclick="openMatUsage('mat','${key}')" title="Нажмите, чтобы увидеть рецепты">${usedIn.length}</button>`
+        ? `<button class="usage-badge" onclick="event.stopPropagation();openMatUsage('mat','${key}')" title="Нажмите, чтобы увидеть рецепты">${usedIn.length}</button>`
         : `<span class="usage-badge usage-badge-zero">0</span>`;
       return `<tr style="${collapsed ? 'display:none' : ''}" class="mat-row${m.custom ? ' mat-row-custom' : ''}" data-cat="${cat}" onclick="openViewMat('${key}')" title="Нажмите для просмотра" style="cursor:pointer">
         <td class="mat-td-name">${m.name}${m.purchaseUrl ? ` <a href="${m.purchaseUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Ссылка на покупку" style="color:var(--green);font-size:12px;text-decoration:none;vertical-align:middle">↗</a>` : ''}</td>
         <td class="mat-td-unit mob-hide">${m.unit}</td>
-        <td class="mat-td-price">
-          <input class="inp sm" type="number" min="1" style="width:72px" inputmode="numeric"
-            id="mat-inp-${key}" value="${S.prices[key]}"
-            onfocus="onMatPriceFocus('${key}')"
-            oninput="onMatPriceInput('${key}',this.value)"
-            onblur="onMatPriceCommit('${key}',this.value)"
-            onclick="event.stopPropagation()"> <span style="font-size:12px;color:var(--muted)">₽</span>
+        <td class="mat-td-price" onclick="event.stopPropagation();openEditMat('${key}')" title="Нажмите, чтобы изменить цену" style="cursor:pointer">
+          <span style="font-weight:600">${S.prices[key]}</span> <span style="font-size:12px;color:var(--muted)">₽</span>
         </td>
         <td class="mat-td-sup mob-hide">${supCell}</td>
         <td class="mat-td-usage">${usageBadge}</td>
