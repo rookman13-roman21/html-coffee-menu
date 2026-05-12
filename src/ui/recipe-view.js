@@ -3,6 +3,8 @@
 
 // ── Перенесено из public/app.js ──
 
+let _mvsId = null; // id полуфабриката в текущем просмотре
+
 // ── Видео-плеер ──
 function _toYouTubeEmbed(url) {
   if (!url) return null;
@@ -122,12 +124,22 @@ export function openViewDrink(id) {
   openModal('modal-drink-view');
   if (window.lucide) lucide.createIcons({ nodes: [document.getElementById('modal-drink-view')] });
   const hasSemi = d.recipe.some(r => r.semi != null);
-  const semiBtn = document.getElementById('mvd-semi-pdf-btn');
-  if (semiBtn) semiBtn.style.display = hasSemi ? '' : 'none';
+  const _show = (id, v) => { const el = document.getElementById(id); if (el) el.style.display = v ? '' : 'none'; };
+  _show('mvd-drink-pdf-btn',     true);
+  _show('mvd-drink-xls-btn',     true);
+  _show('mvd-semi-pdf-btn',      hasSemi);
+  _show('mvd-semi-only-pdf-btn', false);
+  _show('mvd-semi-only-xls-btn', false);
+  _mvsId = null;
 }
 export function mvdOpenEdit() {
-  closeModal('modal-drink-view');
-  if (_mvdId !== null) openEditDrink(_mvdId);
+  if (_mvsId !== null) {
+    closeModal('modal-drink-view');
+    window.openEditSemi(_mvsId);
+  } else if (_mvdId !== null) {
+    closeModal('modal-drink-view');
+    openEditDrink(_mvdId);
+  }
 }
 
 export function mvdToggleDownload(e) {
@@ -136,6 +148,112 @@ export function mvdToggleDownload(e) {
   menu.classList.toggle('open');
   const close = () => { menu.classList.remove('open'); document.removeEventListener('click', close); };
   if (menu.classList.contains('open')) setTimeout(() => document.addEventListener('click', close), 0);
+}
+
+export function openViewSemi(id) {
+  const s = window.SEMI.find(x => x.id === id);
+  if (!s) return;
+  _mvsId = id;
+  _mvdId = null;
+  const MAT   = window.MAT;
+  const S     = window.S;
+  const { calcSemiCostPerUnit, calcNutrition, rub, rubSemi, _semiUnitFactor } = window;
+
+  const ings = (s.recipe || []).filter(r => MAT[r.mat]).map(r => {
+    const m  = MAT[r.mat];
+    const sf = _semiUnitFactor(r.mat);
+    const dispAmt = +(r.amt * sf).toFixed(1);
+    const mu  = (m.unit || '').toLowerCase();
+    const unit = mu.includes('кг') ? 'г' : (mu === 'л' || mu.includes(' л')) ? 'мл' : m.unit.replace(/^1\s*/, '');
+    let cost = ((S.prices[r.mat] || m.price) / m.size) * r.amt * sf;
+    if (r.loss) cost = cost / (1 - r.loss);
+    return { name: m.name, dispAmt, unit, cost };
+  });
+
+  const totalCost   = ings.reduce((sum, i) => sum + i.cost, 0);
+  const costPerUnit = calcSemiCostPerUnit(s);
+  const nut = calcNutrition(s);
+
+  const _img = s.image || null;
+  const imgHtml = _img
+    ? `<div class="mvd-photo-wrap"><img src="${_img}" alt="${s.name}" class="mvd-photo" onerror="this.closest('.mvd-photo-wrap').style.display='none'"></div>`
+    : '';
+
+  const ingRows = ings.map(ing => {
+    const share = totalCost > 0 ? (ing.cost / totalCost * 100).toFixed(0) : 0;
+    return `<div class="recipe-ing">
+      <span class="recipe-ing-name">${ing.name}</span>
+      <span style="font-size:10px;color:var(--muted);flex-shrink:0">${ing.dispAmt} ${ing.unit}</span>
+      <span class="recipe-ing-share">${share}%</span>
+      <span class="recipe-ing-cost">${rub(ing.cost)}</span>
+    </div>`;
+  }).join('');
+
+  const processHtml = s.process
+    ? `<div class="mvd-section"><div class="mvd-section-title"><i data-lucide="chef-hat" class="icon"></i> Технология приготовления</div><div class="mvd-process">${s.process.replace(/\n/g,'<br>')}</div></div>`
+    : '';
+
+  const storageHtml = (s.storage_temp || s.storage_life)
+    ? `<div class="mvd-section"><div class="mvd-section-title"><i data-lucide="thermometer" class="icon"></i> Условия хранения</div>
+        ${s.storage_temp ? `<div style="font-size:13px;color:var(--text);margin-bottom:4px">🌡️ ${s.storage_temp}</div>` : ''}
+        ${s.storage_life ? `<div style="font-size:13px;color:var(--text)">⏱️ ${s.storage_life}</div>` : ''}
+      </div>`
+    : '';
+
+  const organoHtml = (s.appearance || s.taste || s.consistency)
+    ? `<div class="mvd-section"><div class="mvd-section-title"><i data-lucide="eye" class="icon"></i> Органолептика</div>
+        ${s.appearance   ? `<div style="font-size:13px;margin-bottom:4px"><span style="color:var(--muted)">Внешний вид: </span>${s.appearance}</div>` : ''}
+        ${s.taste        ? `<div style="font-size:13px;margin-bottom:4px"><span style="color:var(--muted)">Вкус и запах: </span>${s.taste}</div>` : ''}
+        ${s.consistency  ? `<div style="font-size:13px"><span style="color:var(--muted)">Консистенция: </span>${s.consistency}</div>` : ''}
+      </div>`
+    : '';
+
+  document.getElementById('mvd-title').textContent = s.name;
+  document.getElementById('mvd-content').innerHTML = `
+    ${imgHtml}
+    <div class="mvd-meta">
+      <span class="mvd-meta-group"><i data-lucide="layers" class="icon"></i> Полуфабрикат</span>
+      <span class="mvd-meta-vol">Выход: ${s.yield} ${s.unit}</span>
+      <span style="font-weight:700;color:var(--green)">${rubSemi(costPerUnit, s.unit)}</span>
+    </div>
+    <div class="mvd-section">
+      <div class="mvd-section-title"><i data-lucide="package" class="icon"></i> Состав</div>
+      ${ingRows || '<div style="color:var(--muted);font-size:13px">Нет ингредиентов</div>'}
+      <div class="recipe-total"><span>Себестоимость партии</span><span>${rub(totalCost)}</span></div>
+      <div class="recipe-total" style="color:var(--navy)"><span>Себестоимость единицы</span><span>${rubSemi(costPerUnit, s.unit)}</span></div>
+    </div>
+    <div class="mvd-section">
+      <div class="mvd-section-title"><i data-lucide="activity" class="icon"></i> КБЖУ (на выход)</div>
+      <div class="mvd-nutrition">
+        <div class="mvd-nut-item"><span class="mvd-nut-val">${nut.kcal}</span><span class="mvd-nut-lbl">ккал</span></div>
+        <div class="mvd-nut-item"><span class="mvd-nut-val">${nut.protein}</span><span class="mvd-nut-lbl">белки, г</span></div>
+        <div class="mvd-nut-item"><span class="mvd-nut-val">${nut.fat}</span><span class="mvd-nut-lbl">жиры, г</span></div>
+        <div class="mvd-nut-item"><span class="mvd-nut-val">${nut.carbs}</span><span class="mvd-nut-lbl">углеводы, г</span></div>
+      </div>
+    </div>
+    ${processHtml}${storageHtml}${organoHtml}
+  `;
+
+  // Управление кнопками скачивания
+  const _show = (id, v) => { const el = document.getElementById(id); if (el) el.style.display = v ? '' : 'none'; };
+  _show('mvd-drink-pdf-btn',      false);
+  _show('mvd-drink-xls-btn',      false);
+  _show('mvd-semi-pdf-btn',       false);
+  _show('mvd-semi-only-pdf-btn',  true);
+  _show('mvd-semi-only-xls-btn',  true);
+
+  openModal('modal-drink-view');
+  if (window.lucide) lucide.createIcons({ nodes: [document.getElementById('modal-drink-view')] });
+}
+
+export function mvdSemiDownloadPDF() {
+  document.getElementById('mvd-download-menu').classList.remove('open');
+  if (_mvsId !== null) window.exportSingleSemiPDF(_mvsId);
+}
+
+export function mvdSemiDownloadXLSX() {
+  document.getElementById('mvd-download-menu').classList.remove('open');
+  if (_mvsId !== null) window.exportSingleSemiXLSX(_mvsId);
 }
 
 export function _mvdGetData() {

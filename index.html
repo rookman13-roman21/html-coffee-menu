@@ -104,9 +104,11 @@
       <div class="mvd-download-wrap">
         <button class="btn btn-outline" onclick="mvdToggleDownload(event)"><i data-lucide="download" class="icon"></i> Скачать <i data-lucide="chevron-down" class="icon" style="margin-left:2px"></i></button>
         <div class="mvd-download-menu" id="mvd-download-menu">
-          <button onclick="mvdDownloadPDF()"><i data-lucide="file-text" class="icon"></i> PDF (техкарта)</button>
-          <button onclick="mvdDownloadExcel()"><i data-lucide="table" class="icon"></i> Excel (.xls)</button>
+          <button id="mvd-drink-pdf-btn" onclick="mvdDownloadPDF()"><i data-lucide="file-text" class="icon"></i> PDF (техкарта)</button>
+          <button id="mvd-drink-xls-btn" onclick="mvdDownloadExcel()"><i data-lucide="table" class="icon"></i> Excel (.xls)</button>
           <button id="mvd-semi-pdf-btn" onclick="mvdDownloadSemiPDF()" style="display:none"><i data-lucide="layers" class="icon"></i> PDF техкарт п/ф</button>
+          <button id="mvd-semi-only-pdf-btn" onclick="mvdSemiDownloadPDF()" style="display:none"><i data-lucide="file-text" class="icon"></i> PDF (техкарта)</button>
+          <button id="mvd-semi-only-xls-btn" onclick="mvdSemiDownloadXLSX()" style="display:none"><i data-lucide="table" class="icon"></i> Excel (.xls)</button>
         </div>
       </div>
       <button class="btn-primary" onclick="mvdOpenEdit()"><i data-lucide="pencil" class="icon"></i> Редактировать</button>

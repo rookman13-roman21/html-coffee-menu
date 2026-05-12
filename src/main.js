@@ -186,7 +186,8 @@ import {
 } from './ui/suppliers.js';
 
 import {
-  openViewDrink, mvdOpenEdit, mvdToggleDownload, _mvdGetData,
+  openViewDrink, openViewSemi, mvdOpenEdit, mvdToggleDownload, _mvdGetData,
+  mvdSemiDownloadPDF, mvdSemiDownloadXLSX,
   setRecipeSort, setRecipeGroup, filterRecipes,
   openVideoModal, closeVideoModal,
   toggleRecipesIntro, toggleSupIntro, toggleSalesIntro, toggleFinIntro,
@@ -339,7 +340,8 @@ const _srcExports = {
   cancelSupplierModal, saveSupplier, openSuppliersList, renderSuppliersList,
   openSupplierBookModal, cancelSupplierBookModal, deleteSupplierBook, exportSuppliersPDF, exportSuppliersXLSX,
   // ui/recipe-view
-  openViewDrink, mvdOpenEdit, mvdToggleDownload, _mvdGetData,
+  openViewDrink, openViewSemi, mvdOpenEdit, mvdToggleDownload, _mvdGetData,
+  mvdSemiDownloadPDF, mvdSemiDownloadXLSX,
   setRecipeSort, setRecipeGroup, filterRecipes,
   openVideoModal, closeVideoModal,
   toggleRecipesIntro, toggleSupIntro, toggleSalesIntro, toggleFinIntro,

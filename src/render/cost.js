@@ -184,7 +184,7 @@ export function renderCost() {
               const semiUsageBadge = usedIn.length
                 ? `<button class="usage-badge" onclick="event.stopPropagation();openMatUsage('semi','${s.id}')" title="Нажмите, чтобы увидеть рецепты">${usedIn.length}</button>`
                 : `<span class="usage-badge usage-badge-zero">0</span>`;
-              return `<tr class="mat-row" title="Состав: ${recipe}" style="cursor:pointer" onclick="openEditSemi(${s.id})">
+              return `<tr class="mat-row" title="Состав: ${recipe}" style="cursor:pointer" onclick="openViewSemi(${s.id})">
                 <td class="mat-td-name">${s.name}</td>
                 <td class="mat-td-unit mob-hide">${s.yield}</td>
                 <td class="mat-td-unit mob-hide">${s.unit}</td>
