@@ -68,17 +68,17 @@ export function addSemiIngRow(matKey='', amt='', loss='', yieldAmt='') {
   row.className = 'ing-row';
   row.innerHTML = `
     <div class="ing-row-header">
-      <select class="modal-select ing-mat" onchange="_onSemiMatChange(this);_updateSemiIngCost(this)">${matOnlyOptions(firstKey)}</select>
-      <button class="btn btn-outline ing-del-btn" onclick="this.closest('.ing-row').remove();_updateSemiCostPreview()"><i data-lucide="trash-2" class="icon"></i></button>
+      <select class="modal-select ing-mat">${matOnlyOptions(firstKey)}</select>
+      <button class="btn btn-outline ing-del-btn" type="button"><i data-lucide="trash-2" class="icon"></i></button>
     </div>
     <div class="ing-row-fields">
       <div class="ing-field-wrap">
         <span class="ing-field-label">Кол-во</span>
-        <input class="modal-inp ing-amt" type="text" inputmode="decimal" value="${amt}" placeholder="${_semiIngPlaceholder(firstKey)}" oninput="this.value=this.value.replace(',','.');_updateSemiCostPreview();_updateSemiIngCost(this);_autoCalcSemiIngYield(this)">
+        <input class="modal-inp ing-amt" type="text" inputmode="decimal" value="${amt}" placeholder="${_semiIngPlaceholder(firstKey)}">
       </div>
       <div class="ing-field-wrap">
         <span class="ing-field-label">Потери, %</span>
-        <input class="modal-inp ing-loss" type="number" min="0" max="99" step="1" inputmode="numeric" value="${loss}" placeholder="0" oninput="_updateSemiCostPreview();_updateSemiIngCost(this);_autoCalcSemiIngYield(this)">
+        <input class="modal-inp ing-loss" type="number" min="0" max="99" step="1" inputmode="numeric" value="${loss}" placeholder="0">
       </div>
       <div class="ing-field-wrap">
         <span class="ing-field-label">Выход</span>
@@ -88,6 +88,32 @@ export function addSemiIngRow(matKey='', amt='', loss='', yieldAmt='') {
     <span class="ing-cost-hint"></span>
   `;
   wrap.appendChild(row);
+
+  const matSel  = row.querySelector('.ing-mat');
+  const amtInp  = row.querySelector('.ing-amt');
+  const lossInp = row.querySelector('.ing-loss');
+  const delBtn  = row.querySelector('.ing-del-btn');
+
+  matSel.addEventListener('change', () => {
+    _onSemiMatChange(matSel);
+    _updateSemiIngCost(matSel);
+  });
+  amtInp.addEventListener('input', () => {
+    amtInp.value = amtInp.value.replace(',', '.');
+    _updateSemiCostPreview();
+    _updateSemiIngCost(amtInp);
+    _autoCalcSemiIngYield(amtInp);
+  });
+  lossInp.addEventListener('input', () => {
+    _updateSemiCostPreview();
+    _updateSemiIngCost(lossInp);
+    _autoCalcSemiIngYield(lossInp);
+  });
+  delBtn.addEventListener('click', () => {
+    row.remove();
+    _updateSemiCostPreview();
+  });
+
   if (window.lucide) lucide.createIcons({ nodes: [row] });
   _updateSemiCostPreview();
   if (amt) {
