@@ -191,6 +191,7 @@ import {
   mvdSemiDownloadPDF, mvdSemiDownloadXLSX,
   setRecipeSort, setRecipeGroup, filterRecipes,
   openVideoModal, closeVideoModal,
+  openViewMat, mmvOpenEdit,
   toggleRecipesIntro, toggleSupIntro, toggleSalesIntro, toggleFinIntro,
 } from './ui/recipe-view.js';
 
