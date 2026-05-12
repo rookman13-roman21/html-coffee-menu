@@ -192,8 +192,27 @@ export function _makeIngSearchSelect(wrap, selectEl) {
 
   let isOpen = false;
 
+  function positionPanel() {
+    const r = trigger.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - r.bottom - 8;
+    const spaceAbove = r.top - 8;
+    const panelH = Math.min(280, spaceBelow > 160 ? spaceBelow : spaceAbove);
+    panel.style.maxHeight = panelH + 'px';
+    optsList.style.maxHeight = (panelH - 48) + 'px';
+    panel.style.left = r.left + 'px';
+    panel.style.width = r.width + 'px';
+    if (spaceBelow > 160 || spaceBelow >= spaceAbove) {
+      panel.style.top = (r.bottom + 2) + 'px';
+      panel.style.bottom = 'auto';
+    } else {
+      panel.style.bottom = (window.innerHeight - r.top + 2) + 'px';
+      panel.style.top = 'auto';
+    }
+  }
+
   function openPanel() {
     isOpen = true;
+    positionPanel();
     panel.style.display = 'block';
     searchInp.value = '';
     renderOptions();

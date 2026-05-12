@@ -1081,10 +1081,11 @@
     .ing-sel-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ing-sel-arrow { flex-shrink: 0; font-size: 10px; color: var(--muted); }
     .ing-sel-panel {
-      position: absolute; top: calc(100% + 2px); left: 0; right: 0;
+      position: fixed;
       background: white; border: 1.5px solid var(--border);
       border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.14);
-      z-index: 500; overflow: hidden;
+      z-index: 1000; overflow: hidden;
+      min-width: 200px;
     }
     .ing-sel-search {
       width: 100%; box-sizing: border-box;
@@ -1481,7 +1482,6 @@
       }
       /* Кастомный dropdown на мобиле */
       .ing-sel-trigger { height: 44px; font-size: 14px; }
-      .ing-sel-panel { position: fixed; left: 8px; right: 8px; top: auto; z-index: 600; }
       .ing-sel-options { max-height: 40vh; }
       .ing-sel-opt { padding: 11px 14px; font-size: 14px; }
       /* Первая строка: селект + кнопка удалить */
