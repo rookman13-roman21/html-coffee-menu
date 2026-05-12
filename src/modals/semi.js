@@ -84,7 +84,7 @@ function _makeSemiSearchSelect(wrap, selectEl) {
   panel.appendChild(searchInp);
   panel.appendChild(optsList);
   wrap.insertBefore(trigger, selectEl);
-  wrap.insertBefore(panel, selectEl);
+  document.body.appendChild(panel);
 
   function getLabelForValue(val) {
     if (!val) return '— Выберите ингредиент —';
@@ -186,7 +186,7 @@ function _makeSemiSearchSelect(wrap, selectEl) {
   selectEl.addEventListener('change', () => updateTrigger());
 
   document.addEventListener('click', e => {
-    if (!wrap.contains(e.target)) closePanel();
+    if (!wrap.contains(e.target) && !panel.contains(e.target)) closePanel();
   }, true);
 }
 
