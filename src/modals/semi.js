@@ -60,6 +60,28 @@ export function _updateSemiCostPreview() {
   }
 }
 
+function matOnlyOptionsFiltered(selected, query='') {
+  const q = query.toLowerCase().trim();
+  const createOpt = `<option value="__create_mat__" style="font-weight:700;color:var(--green)">＋ Создать ингредиент...</option>`;
+  const groups = {};
+  Object.entries(MAT).forEach(([k, m]) => {
+    const cat = m.category || 'other';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push([k, m]);
+  });
+  const sortedCats = Object.keys(groups).sort((a, b) =>
+    ((MAT_CATEGORIES[a]||{order:99}).order) - ((MAT_CATEGORIES[b]||{order:99}).order)
+  );
+  return createOpt + sortedCats.map(cat => {
+    const label = (MAT_CATEGORIES[cat] || { label: cat }).label;
+    const opts = groups[cat]
+      .filter(([k, m]) => !q || m.name.toLowerCase().includes(q) || k === selected)
+      .map(([k, m]) => `<option value="${k}"${k===selected?' selected':''}>${m.name} (${m.unit})</option>`)
+      .join('');
+    return opts ? `<optgroup label="${label}">${opts}</optgroup>` : '';
+  }).join('');
+}
+
 export function addSemiIngRow(matKey='', amt='', loss='', yieldAmt='') {
   const wrap = document.getElementById('ms-ings');
   const firstKey = matKey || Object.keys(MAT)[0] || '';
@@ -67,7 +89,10 @@ export function addSemiIngRow(matKey='', amt='', loss='', yieldAmt='') {
   row.className = 'ing-row';
   row.innerHTML = `
     <div class="ing-row-header">
-      <select class="modal-select ing-mat">${matOnlyOptions(firstKey)}</select>
+      <div class="ing-select-wrap">
+        <input type="text" class="ing-search-inp" placeholder="🔍 Поиск..." autocomplete="off">
+        <select class="modal-select ing-mat">${matOnlyOptions(firstKey)}</select>
+      </div>
       <button class="btn btn-outline ing-del-btn" type="button"><i data-lucide="trash-2" class="icon"></i></button>
     </div>
     <div class="ing-row-fields">
@@ -92,6 +117,21 @@ export function addSemiIngRow(matKey='', amt='', loss='', yieldAmt='') {
   const amtInp  = row.querySelector('.ing-amt');
   const lossInp = row.querySelector('.ing-loss');
   const delBtn  = row.querySelector('.ing-del-btn');
+  const semiSearchInp = row.querySelector('.ing-search-inp');
+
+  semiSearchInp.addEventListener('input', () => {
+    const curVal = matSel.value;
+    matSel.innerHTML = matOnlyOptionsFiltered(curVal, semiSearchInp.value);
+    matSel.value = curVal;
+  });
+  semiSearchInp.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      semiSearchInp.value = '';
+      const curVal = matSel.value;
+      matSel.innerHTML = matOnlyOptionsFiltered(curVal, '');
+      matSel.value = curVal;
+    }
+  });
 
   matSel.addEventListener('change', () => {
     _onSemiMatChange(matSel);

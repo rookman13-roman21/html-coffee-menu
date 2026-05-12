@@ -131,6 +131,34 @@ export function _autoCalcDrinkIngYield(anyEl) {
   }
 }
 
+function matOptionsFiltered(selected='', query='') {
+  const q = query.toLowerCase().trim();
+  const placeholderOpt = `<option value="" disabled ${!selected ? 'selected' : ''} style="color:var(--muted)">— Выберите ингредиент —</option>`;
+  const createOpt = `<option value="__create_mat__" style="font-weight:700;color:var(--green)">＋ Создать ингредиент...</option>`;
+  const groups = {};
+  Object.entries(MAT).forEach(([k, m]) => {
+    const cat = m.category || 'other';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push([k, m]);
+  });
+  const sortedCats = Object.keys(groups).sort((a, b) =>
+    ((MAT_CATEGORIES[a]||{order:99}).order) - ((MAT_CATEGORIES[b]||{order:99}).order)
+  );
+  const matOpts = sortedCats.map(cat => {
+    const label = (MAT_CATEGORIES[cat] || { label: cat }).label;
+    const opts = groups[cat]
+      .filter(([k, m]) => !q || m.name.toLowerCase().includes(q) || selected === `mat:${k}`)
+      .map(([k, m]) => `<option value="mat:${k}" ${selected===`mat:${k}`?'selected':''}>${m.name}</option>`)
+      .join('');
+    return opts ? `<optgroup label="${label}">${opts}</optgroup>` : '';
+  }).join('');
+  const semis = SEMI.filter(s => !q || s.name.toLowerCase().includes(q) || selected === `semi:${s.id}`);
+  const semiOpts = semis.length ? `<optgroup label="── Полуфабрикаты ──">${
+    semis.map(s => `<option value="semi:${s.id}" ${selected===`semi:${s.id}`?'selected':''}>${s.name} (п/ф, ${s.yield}${s.unit})</option>`).join('')
+  }</optgroup>` : '';
+  return placeholderOpt + createOpt + matOpts + semiOpts;
+}
+
 export function addIngRow(selected='', amt='', loss='') {
   // selected = 'mat:coffee' | 'semi:5' | '' (legacy: plain key → convert)
   if (selected && !selected.startsWith('mat:') && !selected.startsWith('semi:')) selected = 'mat:' + selected;
@@ -139,7 +167,10 @@ export function addIngRow(selected='', amt='', loss='') {
   const row = document.createElement('div');
   row.className = 'modal-ing-row';
   row.innerHTML = `
-    <select class="modal-select${!selected ? ' ing-select-empty' : ''}" onchange="_onIngMatChange(this);_updateIngRowCost(this)">${matOptions(selected)}</select>
+    <div class="ing-select-wrap">
+      <input type="text" class="ing-search-inp" placeholder="🔍 Поиск ингредиента..." autocomplete="off">
+      <select class="modal-select${!selected ? ' ing-select-empty' : ''}" onchange="_onIngMatChange(this);_updateIngRowCost(this)">${matOptions(selected)}</select>
+    </div>
     <button class="modal-ing-del" title="Удалить" onclick="this.closest('.modal-ing-row').remove()"><i data-lucide="trash-2" class="icon"></i></button>
     <div class="ing-inp-wrap" data-label="Кол-во"><input class="modal-inp" type="text" inputmode="decimal" placeholder="${ph}" value="${amt}" oninput="this.value=this.value.replace(',','.');_updateIngRowCost(this);_autoCalcDrinkIngYield(this)"></div>
     <div class="ing-inp-wrap" data-label="Потери"><input class="modal-inp" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="%" value="${loss}" oninput="_updateIngRowCost(this);_autoCalcDrinkIngYield(this)"></div>
@@ -147,8 +178,23 @@ export function addIngRow(selected='', amt='', loss='') {
     <span class="ing-cost-hint"></span>
   `;
   document.getElementById('md-ings').appendChild(row);
-  // Сохранить начальное значение для восстановления при отмене создания ингредиента
+  // Поиск ингредиента
+  const searchInp = row.querySelector('.ing-search-inp');
   const selEl = row.querySelector('select');
+  searchInp.addEventListener('input', () => {
+    const curVal = selEl.value;
+    selEl.innerHTML = matOptionsFiltered(curVal, searchInp.value);
+    selEl.value = curVal;
+  });
+  searchInp.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      searchInp.value = '';
+      const curVal = selEl.value;
+      selEl.innerHTML = matOptionsFiltered(curVal, '');
+      selEl.value = curVal;
+    }
+  });
+  // Сохранить начальное значение для восстановления при отмене создания ингредиента
   if (selEl) selEl.dataset.prev = selEl.value;
   if (window.lucide) lucide.createIcons({ nodes: [row] });
   // Показать цену сразу если редактируем существующий напиток
