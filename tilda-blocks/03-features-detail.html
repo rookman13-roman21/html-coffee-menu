@@ -1,0 +1,182 @@
+<!-- ═══════════════════════════════════════════════
+  БЛОК 03 — FEATURES DETAIL / Детальный разбор фич
+  CaféDesk — Tilda HTML-block
+═══════════════════════════════════════════════ -->
+<style>
+  .cd-fd {
+    background: #f4faf1;
+    padding: 80px 40px;
+    font-family: 'Mulish', 'Helvetica Neue', Arial, sans-serif;
+  }
+  .cd-fd-label {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: #4F883E;
+    margin-bottom: 12px;
+  }
+  .cd-fd-title {
+    text-align: center;
+    font-size: clamp(24px, 2.8vw, 36px);
+    font-weight: 900;
+    color: #1e3a16;
+    margin: 0 0 56px;
+    letter-spacing: -.02em;
+  }
+  .cd-fd-list {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .cd-fd-item {
+    display: grid;
+    grid-template-columns: 68px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  .cd-fd-num {
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    background: #417033;
+    color: #fff;
+    font-size: 22px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .cd-fd-item-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #1e3a16;
+    margin-bottom: 8px;
+  }
+  .cd-fd-item-desc {
+    font-size: 15px;
+    color: #4b6b42;
+    line-height: 1.7;
+  }
+  .cd-fd-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .cd-fd-tag {
+    background: #e7f2e3;
+    border: 1px solid #cde3c5;
+    border-radius: 8px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #2d5022;
+  }
+  @media (max-width: 600px) {
+    .cd-fd { padding: 60px 20px; }
+    .cd-fd-item { grid-template-columns: 48px 1fr; gap: 16px; }
+    .cd-fd-num { width: 44px; height: 44px; font-size: 18px; border-radius: 12px; }
+  }
+</style>
+
+<div class="cd-fd">
+  <p class="cd-fd-label">Как это работает</p>
+  <h2 class="cd-fd-title">Что вы получаете внутри</h2>
+
+  <div class="cd-fd-list">
+
+    <div class="cd-fd-item">
+      <div class="cd-fd-num">1</div>
+      <div>
+        <div class="cd-fd-item-title">Рецептуры напитков с расчётом себестоимости</div>
+        <div class="cd-fd-item-desc">
+          В базе 30+ готовых рецептур — эспрессо, капучино, латте, флэт уайт, матча, раф, лимонады,
+          чаи и авторские напитки. Каждую рецептуру можно редактировать: изменить граммовки,
+          добавить свои ингредиенты, задать цену поставщика. CaféDesk сразу пересчитает
+          себестоимость и покажет маржу при вашей цене продажи.
+        </div>
+        <div class="cd-fd-tags">
+          <span class="cd-fd-tag">☕ Кофейные напитки</span>
+          <span class="cd-fd-tag">🧋 Некофейные</span>
+          <span class="cd-fd-tag">🍋 Лимонады и чаи</span>
+          <span class="cd-fd-tag">✏️ Свои рецептуры</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cd-fd-item">
+      <div class="cd-fd-num">2</div>
+      <div>
+        <div class="cd-fd-item-title">Финансовая модель с налогами и точкой безубыточности</div>
+        <div class="cd-fd-item-desc">
+          Введите планируемые расходы: аренда, ФОТ, коммуналка, эквайринг, прочее.
+          Система рассчитает точку безубыточности, покажет прогноз прибыли и автоматически
+          посчитает налоговую нагрузку по выбранному режиму: УСН 6%, УСН 15%, патент или ОСН.
+          Готовую финмодель можно скачать в PDF и показать инвестору или партнёру.
+        </div>
+        <div class="cd-fd-tags">
+          <span class="cd-fd-tag">💹 УСН 6%</span>
+          <span class="cd-fd-tag">💹 УСН 15%</span>
+          <span class="cd-fd-tag">💹 Патент</span>
+          <span class="cd-fd-tag">📤 Экспорт PDF / Excel</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cd-fd-item">
+      <div class="cd-fd-num">3</div>
+      <div>
+        <div class="cd-fd-item-title">Техкарты по ГОСТу — скачать и отдать персоналу</div>
+        <div class="cd-fd-item-desc">
+          Для каждой рецептуры автоматически формируется техкарта в стандарте ГОСТ:
+          наименование, состав, выход блюда, пищевая ценность, условия хранения.
+          Скачайте PDF — и документ готов для передачи баристам или для проверяющих органов.
+        </div>
+        <div class="cd-fd-tags">
+          <span class="cd-fd-tag">📄 Формат ГОСТ</span>
+          <span class="cd-fd-tag">📥 PDF одной кнопкой</span>
+          <span class="cd-fd-tag">🖨 Готово к печати</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cd-fd-item">
+      <div class="cd-fd-num">4</div>
+      <div>
+        <div class="cd-fd-item-title">База поставщиков и управление ингредиентами</div>
+        <div class="cd-fd-item-desc">
+          Заведите поставщиков с контактами и ценами. Назначайте ингредиентам конкретного поставщика —
+          и себестоимость пересчитается автоматически. Удобно сравнивать предложения и видеть,
+          как смена поставщика влияет на маржу.
+        </div>
+        <div class="cd-fd-tags">
+          <span class="cd-fd-tag">🏬 Список поставщиков</span>
+          <span class="cd-fd-tag">📦 Цены по каждому</span>
+          <span class="cd-fd-tag">🔄 Авто-пересчёт</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cd-fd-item">
+      <div class="cd-fd-num">5</div>
+      <div>
+        <div class="cd-fd-item-title">Зарплатный фонд: МРОТ, НДФЛ, страховые взносы</div>
+        <div class="cd-fd-item-desc">
+          Добавьте сотрудников, укажите оклады — система рассчитает итоговые затраты на ФОТ
+          с учётом НДФЛ 13% и страховых взносов. Помогает правильно заложить кадровые расходы
+          в финмодель ещё до найма.
+        </div>
+        <div class="cd-fd-tags">
+          <span class="cd-fd-tag">👥 Штатное расписание</span>
+          <span class="cd-fd-tag">🧾 НДФЛ + взносы</span>
+          <span class="cd-fd-tag">📊 Итог в финмодели</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

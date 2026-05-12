@@ -1,0 +1,197 @@
+<!-- ═══════════════════════════════════════════════
+  БЛОК 01 — HERO / Главный экран
+  CaféDesk — Tilda HTML-block
+  Вставить через: Блоки → Другое → HTML
+═══════════════════════════════════════════════ -->
+<style>
+  .cd-hero {
+    background: linear-gradient(150deg, #f4faf1 0%, #e7f2e3 60%, #d4eaca 100%);
+    padding: 80px 40px 90px;
+    font-family: 'Mulish', 'Helvetica Neue', Arial, sans-serif;
+    position: relative;
+    overflow: hidden;
+  }
+  .cd-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -80px;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(79,136,62,.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cd-hero-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    text-align: center;
+    position: relative;
+  }
+  .cd-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid #cde3c5;
+    border-radius: 999px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #417033;
+    margin-bottom: 24px;
+  }
+  .cd-hero-badge-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #4F883E;
+    animation: cd-pulse 2s ease-in-out infinite;
+  }
+  @keyframes cd-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .4; transform: scale(.75); }
+  }
+  .cd-hero h1 {
+    font-size: clamp(34px, 5vw, 58px);
+    font-weight: 900;
+    line-height: 1.1;
+    color: #1e3a16;
+    margin: 0 0 20px;
+    letter-spacing: -.02em;
+  }
+  .cd-hero h1 span { color: #4F883E; }
+  .cd-hero-sub {
+    font-size: 18px;
+    color: #4b6b42;
+    line-height: 1.7;
+    margin-bottom: 40px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .cd-hero-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .cd-btn-main {
+    display: inline-block;
+    background: #417033;
+    color: #fff !important;
+    text-decoration: none;
+    border-radius: 14px;
+    padding: 16px 40px;
+    font-size: 16px;
+    font-weight: 800;
+    font-family: inherit;
+    box-shadow: 0 6px 24px rgba(65,112,51,.35);
+    transition: background .15s, transform .12s, box-shadow .15s;
+    border: none;
+    cursor: pointer;
+  }
+  .cd-btn-main:hover {
+    background: #4F883E;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 32px rgba(65,112,51,.42);
+    color: #fff !important;
+  }
+  .cd-btn-ghost {
+    display: inline-block;
+    background: #fff;
+    color: #417033 !important;
+    text-decoration: none;
+    border-radius: 14px;
+    padding: 15px 32px;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: inherit;
+    border: 1.5px solid #cde3c5;
+    transition: border-color .15s, background .15s;
+    cursor: pointer;
+  }
+  .cd-btn-ghost:hover {
+    border-color: #4F883E;
+    background: #f4faf1;
+    color: #417033 !important;
+  }
+  .cd-hero-note {
+    font-size: 13px;
+    color: #6b8c62;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .cd-hero-note span::before { content: '✓ '; color: #4F883E; font-weight: 800; }
+  /* Плашки-превью */
+  .cd-preview-pills {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 36px 0 0;
+  }
+  .cd-pill {
+    background: #fff;
+    border: 1px solid #cde3c5;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #2d5022;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  }
+  @media (max-width: 600px) {
+    .cd-hero { padding: 60px 20px 70px; }
+    .cd-btn-main, .cd-btn-ghost { width: 100%; text-align: center; }
+    .cd-hero-actions { flex-direction: column; }
+  }
+</style>
+
+<div class="cd-hero">
+  <div class="cd-hero-inner">
+    <div class="cd-hero-badge">
+      <span class="cd-hero-badge-dot"></span>
+      Бесплатный инструмент для будущих владельцев кофеен
+    </div>
+
+    <h1>
+      Откройте кофейню<br>
+      с <span>чёткими цифрами</span>
+    </h1>
+
+    <p class="cd-hero-sub">
+      Рецептуры, финмодель, себестоимость и техкарты —
+      всё в одном бесплатном сервисе.<br>
+      Просчитайте всё до первой аренды.
+    </p>
+
+    <div class="cd-hero-actions">
+      <a class="cd-btn-main" href="https://html-coffee-menu.vercel.app" target="_blank">
+        Открыть CaféDesk бесплатно →
+      </a>
+      <a class="cd-btn-ghost" href="#cd-features">
+        Что внутри?
+      </a>
+    </div>
+
+    <div class="cd-hero-note">
+      <span>Бесплатно</span>
+      <span>Без регистрации</span>
+      <span>Готово за 5 минут</span>
+    </div>
+
+    <div class="cd-preview-pills">
+      <div class="cd-pill">📋 30+ рецептур</div>
+      <div class="cd-pill">💹 Финмодель</div>
+      <div class="cd-pill">📤 Экспорт PDF и Excel</div>
+      <div class="cd-pill">🏬 База поставщиков</div>
+      <div class="cd-pill">👥 Расчёт ФОТ</div>
+    </div>
+  </div>
+</div>

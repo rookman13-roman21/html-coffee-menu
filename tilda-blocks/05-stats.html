@@ -1,0 +1,97 @@
+<!-- ═══════════════════════════════════════════════
+  БЛОК 05 — STATS / Цифры и факты
+  CaféDesk — Tilda HTML-block
+═══════════════════════════════════════════════ -->
+<style>
+  .cd-stats {
+    background: #417033;
+    padding: 70px 40px;
+    font-family: 'Mulish', 'Helvetica Neue', Arial, sans-serif;
+    position: relative;
+    overflow: hidden;
+  }
+  .cd-stats::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(255,255,255,.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cd-stats-inner {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+    text-align: center;
+    position: relative;
+  }
+  .cd-stat {
+    padding: 20px 10px;
+  }
+  .cd-stat-val {
+    font-size: clamp(30px, 3.5vw, 48px);
+    font-weight: 900;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .cd-stat-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,.65);
+    line-height: 1.4;
+  }
+  .cd-stat-divider {
+    width: 1px;
+    background: rgba(255,255,255,.15);
+    align-self: center;
+    height: 50px;
+  }
+  @media (max-width: 800px) {
+    .cd-stats-inner { grid-template-columns: repeat(2, 1fr); }
+    .cd-stat-divider { display: none; }
+    .cd-stats { padding: 50px 24px; }
+  }
+  @media (max-width: 400px) {
+    .cd-stats-inner { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+
+<div class="cd-stats">
+  <div class="cd-stats-inner">
+
+    <div class="cd-stat">
+      <div class="cd-stat-val">30+</div>
+      <div class="cd-stat-label">готовых рецептур<br>в базе</div>
+    </div>
+
+    <div class="cd-stat-divider"></div>
+
+    <div class="cd-stat">
+      <div class="cd-stat-val">4</div>
+      <div class="cd-stat-label">налоговых режима<br>для расчёта</div>
+    </div>
+
+    <div class="cd-stat-divider"></div>
+
+    <div class="cd-stat">
+      <div class="cd-stat-val">5 мин</div>
+      <div class="cd-stat-label">до первого<br>расчёта</div>
+    </div>
+
+    <div class="cd-stat-divider"></div>
+
+    <div class="cd-stat">
+      <div class="cd-stat-val">PDF</div>
+      <div class="cd-stat-label">техкарты по ГОСТу<br>в один клик</div>
+    </div>
+
+    <div class="cd-stat-divider"></div>
+
+    <div class="cd-stat">
+      <div class="cd-stat-val">0 ₽</div>
+      <div class="cd-stat-label">чтобы<br>начать</div>
+    </div>
+
+  </div>
+</div>

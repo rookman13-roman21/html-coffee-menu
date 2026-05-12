@@ -1,0 +1,148 @@
+<!-- ═══════════════════════════════════════════════
+  БЛОК 02 — BENEFITS / Преимущества (6 карточек)
+  CaféDesk — Tilda HTML-block
+═══════════════════════════════════════════════ -->
+<style>
+  .cd-benefits {
+    background: #fff;
+    padding: 80px 40px;
+    font-family: 'Mulish', 'Helvetica Neue', Arial, sans-serif;
+  }
+  .cd-benefits-label {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: #4F883E;
+    margin-bottom: 12px;
+  }
+  .cd-benefits-title {
+    text-align: center;
+    font-size: clamp(26px, 3vw, 38px);
+    font-weight: 900;
+    color: #1e3a16;
+    margin: 0 0 14px;
+    letter-spacing: -.02em;
+  }
+  .cd-benefits-sub {
+    text-align: center;
+    font-size: 16px;
+    color: #6b7280;
+    max-width: 520px;
+    margin: 0 auto 56px;
+    line-height: 1.7;
+  }
+  .cd-benefits-grid {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+  }
+  .cd-bcard {
+    background: #fafcf9;
+    border: 1.5px solid #cde3c5;
+    border-radius: 20px;
+    padding: 28px 26px 26px;
+    transition: box-shadow .2s, transform .18s;
+  }
+  .cd-bcard:hover {
+    box-shadow: 0 14px 40px rgba(65,112,51,.13);
+    transform: translateY(-4px);
+  }
+  .cd-bcard-icon {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    background: #e7f2e3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    margin-bottom: 18px;
+  }
+  .cd-bcard-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1e3a16;
+    margin-bottom: 8px;
+  }
+  .cd-bcard-desc {
+    font-size: 14px;
+    color: #5a7252;
+    line-height: 1.65;
+  }
+  @media (max-width: 900px) {
+    .cd-benefits-grid { grid-template-columns: repeat(2,1fr); }
+    .cd-benefits { padding: 60px 24px; }
+  }
+  @media (max-width: 560px) {
+    .cd-benefits-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="cd-benefits" id="cd-features">
+  <p class="cd-benefits-label">Возможности</p>
+  <h2 class="cd-benefits-title">Всё что нужно до открытия кофейни</h2>
+  <p class="cd-benefits-sub">
+    Один инструмент вместо десятка таблиц Excel — спланируйте меню, финансы и команду ещё до подписания аренды.
+  </p>
+
+  <div class="cd-benefits-grid">
+
+    <div class="cd-bcard">
+      <div class="cd-bcard-icon">📋</div>
+      <div class="cd-bcard-title">30+ готовых рецептур</div>
+      <div class="cd-bcard-desc">
+        База кофейных и некофейных напитков: эспрессо, латте, матча, раф, лимонады, чаи.
+        Редактируйте под свой бар — граммовки, ингредиенты, цены.
+      </div>
+    </div>
+
+    <div class="cd-bcard">
+      <div class="cd-bcard-icon">📊</div>
+      <div class="cd-bcard-title">Реальная себестоимость</div>
+      <div class="cd-bcard-desc">
+        Точный расчёт стоимости каждого напитка с учётом цен ваших поставщиков и потерь при приготовлении.
+        Никаких «примерно» — только факт.
+      </div>
+    </div>
+
+    <div class="cd-bcard">
+      <div class="cd-bcard-icon">💹</div>
+      <div class="cd-bcard-title">Финансовая модель</div>
+      <div class="cd-bcard-desc">
+        Прогноз выручки, точка безубыточности, налоговая нагрузка: УСН 6%, УСН 15%, патент, ОСН.
+        Покажет — сработает ли ваша идея.
+      </div>
+    </div>
+
+    <div class="cd-bcard">
+      <div class="cd-bcard-icon">📄</div>
+      <div class="cd-bcard-title">Техкарты по ГОСТу</div>
+      <div class="cd-bcard-desc">
+        Каждая рецептура превращается в техкарту, оформленную по стандарту ГОСТ.
+        Скачайте PDF — и сразу передавайте персоналу.
+      </div>
+    </div>
+
+    <div class="cd-bcard">
+      <div class="cd-bcard-icon">🏬</div>
+      <div class="cd-bcard-title">База поставщиков</div>
+      <div class="cd-bcard-desc">
+        Контакты, цены, условия работы. Сравнивайте предложения и выбирайте партнёров
+        ещё на этапе планирования — до первой закупки.
+      </div>
+    </div>
+
+    <div class="cd-bcard">
+      <div class="cd-bcard-icon">👥</div>
+      <div class="cd-bcard-title">Расчёт зарплатного фонда</div>
+      <div class="cd-bcard-desc">
+        ФОТ с учётом МРОТ, НДФЛ и страховых взносов. Сразу видно, сколько реально
+        стоит команда из 2–5 человек.
+      </div>
+    </div>
+
+  </div>
+</div>
