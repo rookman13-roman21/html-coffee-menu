@@ -28,6 +28,11 @@ export function renderCost() {
     ((MAT_CATEGORIES[a] || { order: 99 }).order) - ((MAT_CATEGORIES[b] || { order: 99 }).order)
   );
 
+  // По умолчанию все категории свёрнуты (если не задано иное пользователем)
+  matSortedCats.forEach(cat => {
+    if (_matCollapsed[cat] === undefined) _matCollapsed[cat] = true;
+  });
+
   // ── Секция Поставщики ────────────────────────────────────────────
   const sups = S.suppliers || {};
   const book = S.supplierBook || [];
