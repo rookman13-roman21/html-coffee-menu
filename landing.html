@@ -894,9 +894,17 @@
   // ── Google Sign-In ──
   function signInWithGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
+    // Определяем активную панель для показа ошибки
+    const activePanel = document.querySelector('.auth-panel.active');
     auth.signInWithPopup(provider)
       .then(result => onAuthSuccess(result.user))
-      .catch(err => showAuthError(err.message));
+      .catch(err => {
+        console.error('[Firebase Google Auth]', err.code, err.message);
+        const msg = firebaseErrorRu(err.code) + (err.code === 'auth/unauthorized-domain'
+          ? ' (домен не добавлен в Firebase → Authentication → Settings → Authorized domains)'
+          : '');
+        showAuthError(msg, activePanel);
+      });
   }
 
   // ── Email/Password ──
@@ -930,19 +938,30 @@
   }
 
   function onAuthSuccess(user) {
+    // Экранируем пользовательские данные для защиты от XSS
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = str || '';
+      return d.innerHTML;
+    }
+    const name = user.displayName ? ', ' + esc(user.displayName.split(' ')[0]) : '';
+    const email = esc(user.email || '');
     // Закрываем обе панели и показываем success
     ['register','login'].forEach(id => {
       const p = document.getElementById('panel-' + id);
       if (p) p.innerHTML = `
         <div class="form-success">
           <div class="form-success-icon">🎉</div>
-          <h3>Добро пожаловать${user.displayName ? ', ' + user.displayName.split(' ')[0] : ''}!</h3>
-          <p>Вы вошли как <b>${user.email}</b>.<br>Сейчас откроется приложение.</p>
+          <h3>Добро пожаловать${name}!</h3>
+          <p>Вы вошли как <b>${email}</b>.<br>Сейчас откроется приложение.</p>
         </div>
       `;
     });
-    // Через 1.5с переходим в приложение
-    setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+    // Через 1.5с переходим в приложение на вкладку дашборда
+    setTimeout(() => {
+      localStorage.setItem('mbs_active_tab', 'dashboard');
+      window.location.href = 'index.html';
+    }, 1500);
   }
 
   function showAuthError(msg, panel) {
@@ -966,6 +985,9 @@
       'auth/too-many-requests':      'Слишком много попыток. Попробуйте позже',
       'auth/popup-closed-by-user':   'Окно входа закрыто',
       'auth/network-request-failed': 'Ошибка сети. Проверьте интернет',
+      'auth/unauthorized-domain':    'Этот домен не авторизован в Firebase',
+      'auth/cancelled-popup-request':'Запрос попапа отменён',
+      'auth/popup-blocked':          'Браузер заблокировал всплывающее окно',
     };
     return map[code] || 'Ошибка входа. Попробуйте ещё раз';
   }
