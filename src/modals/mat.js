@@ -174,15 +174,17 @@ export function openAddCategory() {
 }
 
 export function openEditCategory(key) {
-  const cat = (S.customCategories || {})[key];
+  const allCats = { ...MAT_CATEGORIES, ...(S.customCategories || {}) };
+  const cat = allCats[key];
   if (!cat) return;
+  const isBuiltin = !!MAT_CATEGORIES[key];
   const { emoji, name } = _parseCatLabel(cat.label || '');
   document.getElementById('mac-emoji').value = emoji;
   document.getElementById('mac-name').value  = name;
   document.getElementById('mac-error').textContent = '';
   document.getElementById('mac-edit-key').value = key;
   const delBtn = document.getElementById('mac-delete-btn');
-  if (delBtn) delBtn.style.display = '';
+  if (delBtn) delBtn.style.display = isBuiltin ? 'none' : '';
   const titleEl = document.getElementById('mac-modal-title');
   if (titleEl) titleEl.innerHTML = '<i data-lucide="tag" class="icon"></i> Редактировать категорию';
   openModal('modal-add-cat');
@@ -214,10 +216,16 @@ export function saveCategory() {
 
   // ── Режим редактирования ──
   if (editKey) {
-    if (!S.customCategories || !S.customCategories[editKey]) {
+    const isBase = !!MAT_CATEGORIES[editKey];
+    if (!isBase && (!S.customCategories || !S.customCategories[editKey])) {
       err.textContent = 'Категория не найдена'; return;
     }
-    S.customCategories[editKey].label = label;
+    if (isBase) {
+      if (!S.customCategories) S.customCategories = {};
+      S.customCategories[editKey] = { label, order: MAT_CATEGORIES[editKey].order };
+    } else {
+      S.customCategories[editKey].label = label;
+    }
     _refreshMatCategorySelect();
     closeModal('modal-add-cat');
     saveState();

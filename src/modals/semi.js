@@ -520,15 +520,17 @@ export function openAddSemiCategory() {
 }
 
 export function openEditSemiCategory(key) {
-  const cat = (S.semiCustomCategories || {})[key];
+  const allCats = { ...SEMI_BASE_CATS, ...(S.semiCustomCategories || {}) };
+  const cat = allCats[key];
   if (!cat) return;
+  const isBuiltin = !!SEMI_BASE_CATS[key];
   const { emoji, name } = _parseSemiCatLabel(cat.label || '');
   document.getElementById('masc-emoji').value = emoji;
   document.getElementById('masc-name').value  = name;
   document.getElementById('masc-error').textContent = '';
   document.getElementById('masc-edit-key').value = key;
   const delBtn = document.getElementById('masc-delete-btn');
-  if (delBtn) delBtn.style.display = '';
+  if (delBtn) delBtn.style.display = isBuiltin ? 'none' : '';
   const titleEl = document.getElementById('masc-modal-title');
   if (titleEl) titleEl.innerHTML = '<i data-lucide="tag" class="icon"></i> Редактировать категорию п/ф';
   openModal('modal-add-semi-cat');
@@ -560,10 +562,16 @@ export function saveSemiCategory() {
 
   // ── Режим редактирования ──
   if (editKey) {
-    if (!S.semiCustomCategories || !S.semiCustomCategories[editKey]) {
+    const isBase = !!SEMI_BASE_CATS[editKey];
+    if (!isBase && (!S.semiCustomCategories || !S.semiCustomCategories[editKey])) {
       err.textContent = 'Категория не найдена'; return;
     }
-    S.semiCustomCategories[editKey].label = label;
+    if (isBase) {
+      if (!S.semiCustomCategories) S.semiCustomCategories = {};
+      S.semiCustomCategories[editKey] = { label, order: SEMI_BASE_CATS[editKey].order };
+    } else {
+      S.semiCustomCategories[editKey].label = label;
+    }
     _refreshSemiCategorySelect();
     closeModal('modal-add-semi-cat');
     saveState();
