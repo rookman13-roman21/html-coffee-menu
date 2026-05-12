@@ -12,6 +12,12 @@ export function filterDashboard(query) {
   if (window.lucide) window.lucide.createIcons();
 }
 
+export function setDashGroup(v) {
+  window.dashGroup = v;
+  renderDashboard();
+  if (window.lucide) window.lucide.createIcons();
+}
+
 export function toggleDashIntro() {
   const el = document.getElementById('dash-intro');
   if (!el) return;
@@ -65,9 +71,11 @@ export function initTop10Collapse() {
 }
 
 export function renderDashboard() {
+  if (window.dashGroup === undefined) window.dashGroup = 'all';
   const { withABC, enrich, avgMetrics, sortDrinks,
           rub, pct, fcCombinedHtml, abcBadge, thSort,
           S, searchQuery } = window;
+  const dg = window.dashGroup || 'all';
 
   const drinks   = withABC(enrich());
   const { avgCost, avgPrice, avgProfit, avgFC } = avgMetrics(drinks);
@@ -75,9 +83,12 @@ export function renderDashboard() {
   const okCnt    = drinks.filter(d => d.fc > 0.25 && d.fc <= 0.30).length;
   const aCnt     = drinks.filter(d => d.abc === 'A').length;
   const sorted   = sortDrinks(drinks);
-  const filtered = searchQuery
-    ? sorted.filter(d => d.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  const grpFiltered = dg !== 'all'
+    ? sorted.filter(d => d.group === dg)
     : sorted;
+  const filtered = searchQuery
+    ? grpFiltered.filter(d => d.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : grpFiltered;
 
   // Mini bar chart top-10
   const top10  = [...drinks].sort((a, b) => b.profit - a.profit).slice(0, 10);
@@ -179,6 +190,14 @@ export function renderDashboard() {
     </div>
     <div class="panel dash-top10-panel" id="dash-top10-panel" style="margin-bottom:20px;overflow:hidden;transition:max-height .3s ease,opacity .25s ease,margin .25s ease">${chartHtml}</div>
     <div class="section-title"><i data-lucide="clipboard-list" class="icon"></i> Рейтинг напитков — кликните заголовок для сортировки</div>
+    <div class="recipe-filter-btns">
+      <button class="recipe-filter-btn${dg==='all'?' active':''}" onclick="setDashGroup('all')">Все</button>
+      <button class="recipe-filter-btn${dg==='hot'?' active':''}" onclick="setDashGroup('hot')">Горячие</button>
+      <button class="recipe-filter-btn${dg==='tea'?' active':''}" onclick="setDashGroup('tea')">Чай</button>
+      <button class="recipe-filter-btn${dg==='cold'?' active':''}" onclick="setDashGroup('cold')">Холодные</button>
+      <button class="recipe-filter-btn${dg==='filter'?' active':''}" onclick="setDashGroup('filter')">Пуровер</button>
+      <button class="recipe-filter-btn${dg==='author'?' active':''}" onclick="setDashGroup('author')">Авторские</button>
+    </div>
     <div class="dash-search-row">
       <div class="search-wrap" style="margin-bottom:0;flex:1">
         <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
