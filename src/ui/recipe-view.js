@@ -274,7 +274,7 @@ export function filterRecipes(val) {
   if (!list.length) {
     html = `<p style="padding:32px;text-align:center;color:var(--muted)">Ничего не найдено — измените поиск или фильтр</p>`;
   } else if (useGroups) {
-    ['hot', 'tea', 'cold', 'filter'].forEach(grp => {
+    ['hot', 'tea', 'cold', 'filter', 'author'].forEach(grp => {
       const grpList = list.filter(d => d.group === grp);
       if (!grpList.length) return;
       html += `<div class="recipe-group-title">${window.GROUP_LABEL[grp]}</div>`;

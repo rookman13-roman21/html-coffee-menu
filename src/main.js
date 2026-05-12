@@ -364,7 +364,7 @@ Object.entries(_srcExports).forEach(([k, v]) => {
 const SEMI = [];
 window.SEMI        = SEMI;
 window.nextSemiId  = 1;
-window.nextDrinkId = 27;
+window.nextDrinkId = DRINKS.reduce((max, d) => Math.max(max, d.id + 1), 27);
 window.nextMatKey  = 1;
 
 // ════════════════════════════════════════════════════════════════════
