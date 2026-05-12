@@ -117,6 +117,7 @@ import {
   openAddSemi, openEditSemi, saveSemi, deleteSemi,
   addSemiIngRow, onSemiImgChange, clearSemiImg,
   _updateSemiCostPreview, _onSemiMatChange, _autoFillSemiYield,
+  _updateSemiIngCost, _autoCalcSemiIngYield,
 } from './modals/semi.js';
 
 import {
@@ -290,6 +291,7 @@ const _srcExports = {
   openAddSemi, openEditSemi, saveSemi, deleteSemi,
   addSemiIngRow, onSemiImgChange, clearSemiImg,
   _updateSemiCostPreview, _onSemiMatChange, _autoFillSemiYield,
+  _updateSemiIngCost, _autoCalcSemiIngYield,
   // modals/mat
   openEditMat, saveMat, cancelMat, deleteMat, matOnlyOptions,
   // export/csv
