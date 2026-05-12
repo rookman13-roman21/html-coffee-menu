@@ -188,6 +188,8 @@ function _makeSemiSearchSelect(wrap, selectEl) {
   document.addEventListener('click', e => {
     if (!wrap.contains(e.target) && !panel.contains(e.target)) closePanel();
   }, true);
+
+  window.addEventListener('scroll', closePanel, true);
 }
 
 export function addSemiIngRow(matKey='', amt='', loss='', yieldAmt='') {

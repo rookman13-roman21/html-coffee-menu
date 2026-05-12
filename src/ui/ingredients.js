@@ -259,6 +259,8 @@ export function _makeIngSearchSelect(wrap, selectEl) {
   document.addEventListener('click', e => {
     if (!wrap.contains(e.target) && !panel.contains(e.target)) closePanel();
   }, true);
+
+  window.addEventListener('scroll', closePanel, true);
 }
 
 export function addIngRow(selected='', amt='', loss='') {
