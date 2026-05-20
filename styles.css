@@ -893,6 +893,14 @@
     .search-clear { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; padding:2px 4px; display:none; color:var(--muted); font-size:16px; line-height:1; border-radius:50%; transition:color .15s; }
     .search-clear:hover { color:var(--text); }
     .search-clear.visible { display:flex; align-items:center; justify-content:center; }
+    /* Autocomplete dropdown */
+    .cost-suggest { position:fixed; z-index:500; background:var(--card,#fff); border:1.5px solid var(--border,#e0ddd8); border-radius:10px; box-shadow:0 6px 24px rgba(0,0,0,.12); overflow:hidden; display:none; }
+    .cost-suggest-item { padding:9px 14px; font-size:13px; cursor:pointer; transition:background .1s; color:var(--text); }
+    .cost-suggest-item:hover { background:var(--bg,#f9f8f6); }
+    .cost-suggest-item mark { background:transparent; color:var(--green,#417033); font-weight:700; }
+    body.dark .cost-suggest { background:#2d2d2d; border-color:#454545; }
+    body.dark .cost-suggest-item:hover { background:#3c3c3c; }
+    body.dark .cost-suggest-item mark { color:#4fc96e; }
 
     .recipe-filter-btn, .recipe-sort-btn {
       display: inline-flex; align-items: center; gap: 4px;

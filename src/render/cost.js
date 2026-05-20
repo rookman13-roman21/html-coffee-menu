@@ -64,6 +64,91 @@ export function filterSemiCost(val) {
   if (clearBtn) clearBtn.classList.toggle('visible', !!val);
 }
 
+// ── Autocomplete-дропдаун для полей поиска ───────────────────────
+function _ensureSuggestEl() {
+  let el = document.getElementById('_cost-suggest');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = '_cost-suggest';
+    el.className = 'cost-suggest';
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function _hideSuggest() {
+  const el = document.getElementById('_cost-suggest');
+  if (el) el.style.display = 'none';
+}
+
+function _showSuggest(inputEl, items, onSelect) {
+  const q = inputEl.value.toLowerCase().trim();
+  const el = _ensureSuggestEl();
+  if (!q) { _hideSuggest(); return; }
+
+  const matches = items
+    .filter(name => name && name.toLowerCase().includes(q))
+    .slice(0, 8);
+
+  if (!matches.length) { _hideSuggest(); return; }
+
+  const rect = inputEl.getBoundingClientRect();
+  el.style.left  = rect.left + 'px';
+  el.style.top   = (rect.bottom + 4) + 'px';
+  el.style.width = rect.width + 'px';
+  el.style.display = 'block';
+
+  const esc = s => s.replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const hi = (name) => {
+    const lo = name.toLowerCase();
+    const idx = lo.indexOf(q);
+    if (idx < 0) return esc(name);
+    return esc(name.slice(0, idx))
+      + '<mark>' + esc(name.slice(idx, idx + q.length)) + '</mark>'
+      + esc(name.slice(idx + q.length));
+  };
+
+  el.innerHTML = matches.map(name =>
+    `<div class="cost-suggest-item">${hi(name)}</div>`
+  ).join('');
+
+  el.querySelectorAll('.cost-suggest-item').forEach((item, i) => {
+    item.addEventListener('mousedown', (e) => {
+      e.preventDefault(); // не снимаем фокус с input
+      onSelect(matches[i]);
+      _hideSuggest();
+    });
+  });
+}
+
+function _attachCostSuggestions() {
+  const configs = [
+    {
+      id: 'cost-sup-search',
+      getItems: () => (window.S?.suppliers || []).map(s => s.name).filter(Boolean),
+      onSelect: (name, el) => { el.value = name; filterSupCost(name); window._searchClear?.(el); },
+    },
+    {
+      id: 'cost-ing-search',
+      getItems: () => Object.values(window.MAT || {}).map(m => m.name).filter(Boolean),
+      onSelect: (name, el) => { el.value = name; filterIngCost(name); window._searchClear?.(el); },
+    },
+    {
+      id: 'cost-semi-search',
+      getItems: () => (window.SEMI || []).map(s => s.name).filter(Boolean),
+      onSelect: (name, el) => { el.value = name; filterSemiCost(name); window._searchClear?.(el); },
+    },
+  ];
+  configs.forEach(({ id, getItems, onSelect }) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input',   () => _showSuggest(el, getItems(), (name) => onSelect(name, el)));
+    el.addEventListener('blur',    () => setTimeout(_hideSuggest, 150));
+    el.addEventListener('keydown', (e) => { if (e.key === 'Escape') { _hideSuggest(); e.stopPropagation(); } });
+  });
+}
+
 export function renderCost() {
   const {
     MAT, MAT_CATEGORIES, SEMI, S,
@@ -451,4 +536,6 @@ export function renderCost() {
     const el = document.getElementById(_focusedSearchId);
     if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
   }
+  // Навесить autocomplete-listeners на поля поиска
+  _attachCostSuggestions();
 }
