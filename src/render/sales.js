@@ -101,7 +101,13 @@ export function renderSales() {
     </div>
 
     <div class="table-wrap" id="sales-table-wrap">
-      <table>
+      <table class="sales-table">
+        <colgroup>
+          <col style="width:46%"><!-- Напиток -->
+          <col style="width:18%"><!-- Порций/день -->
+          <col style="width:18%"><!-- Выручка/мес -->
+          <col style="width:18%"><!-- Прибыль/мес -->
+        </colgroup>
         <thead><tr>
           ${thSalesSort('name',    'Напиток',        '',     'Название напитка')}
           ${thSalesSort('portions','Порций/день',    'ta-c', 'Среднее количество порций в день')}

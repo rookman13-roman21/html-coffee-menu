@@ -149,7 +149,15 @@ export function renderCost() {
   }).join('');
 
   const matCardsHtml = `<div class="mat-table-wrap">
-    <table class="mat-table">
+    <table class="mat-table fixed-cols">
+      <colgroup>
+        <col style="width:30%">
+        <col class="mob-hide" style="width:9%">
+        <col style="width:13%">
+        <col class="mob-hide" style="width:20%">
+        <col style="width:8%">
+        <col style="width:20%">
+      </colgroup>
       <thead>
         <tr>
           <th style="width:30%">Название</th>
@@ -228,7 +236,15 @@ export function renderCost() {
 
   const semiHtml = SEMI.length || Object.keys(S.semiCustomCategories || {}).length
     ? `<div class="mat-table-wrap">
-        <table class="mat-table">
+        <table class="mat-table fixed-cols">
+          <colgroup>
+            <col style="width:33%">
+            <col class="mob-hide" style="width:12%">
+            <col class="mob-hide" style="width:8%">
+            <col style="width:17%">
+            <col style="width:8%">
+            <col style="width:22%">
+          </colgroup>
           <thead>
             <tr>
               <th style="width:33%">Название</th>

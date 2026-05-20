@@ -123,6 +123,10 @@
     #tab-dashboard table.dash-table { table-layout: fixed; width: 100%; }
     #tab-dashboard table.dash-table td,
     #tab-dashboard table.dash-table th { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    table.sales-table { table-layout: fixed; width: 100%; }
+    table.sales-table td, table.sales-table th { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    table.mat-table.fixed-cols { table-layout: fixed; width: 100%; }
+    table.mat-table.fixed-cols td, table.mat-table.fixed-cols th { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     #tab-dashboard tbody td:nth-child(3) { text-align: center; padding-right: 0; }
 
     /* Выравнивание колонки FC% (3-я) в таблице себестоимости */
