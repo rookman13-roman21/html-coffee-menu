@@ -10,6 +10,8 @@ export function filterDashboard(query) {
   window.searchQuery = query;
   renderDashboard();
   if (window.lucide) window.lucide.createIcons();
+  const inp = document.getElementById('dash-search');
+  if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
 }
 
 export function setDashGroup(v) {
