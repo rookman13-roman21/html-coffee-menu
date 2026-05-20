@@ -232,7 +232,7 @@ export function exportFullPDF() {
     return `<tr style="background:${bg};${bTop}">
       <td style="padding:5px 8px;font-size:9pt;font-weight:${fw};padding-left:${isBold?'8px':'20px'}">${r.label}</td>
       <td style="padding:5px 8px;text-align:right;font-size:9pt;font-weight:${fw};color:${vClr}">${n(Math.abs(r.val))} ₽</td>
-      <td style="padding:5px 8px;text-align:right;font-size:9pt;color:#999">${totRevMon > 0 ? (r.val/totRevMon*100).toFixed(1) + '%' : ''}</td>
+      <td style="padding:5px 8px;text-align:right;font-size:9pt;color:#555">${totRevMon > 0 ? (r.val/totRevMon*100).toFixed(1) + '%' : ''}</td>
     </tr>`;
   }).join('');
 
@@ -256,9 +256,9 @@ body { font-family:'Mulish',Arial,sans-serif; font-size:10pt; color:#222; backgr
 /* KPI-сетка */
 .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin-bottom:16px; }
 .kpi-card { border-radius:6px; padding:9px 11px; border:1px solid #dcebd7; }
-.kpi-label { font-size:7.5pt; color:#6b7280; font-weight:600; text-transform:uppercase; letter-spacing:.03em; margin-bottom:4px; }
+.kpi-label { font-size:7.5pt; color:#444; font-weight:600; text-transform:uppercase; letter-spacing:.03em; margin-bottom:4px; }
 .kpi-value { font-size:13pt; font-weight:800; color:#222; line-height:1.1; }
-.kpi-sub   { font-size:7pt; color:#9ca3af; margin-top:2px; }
+.kpi-sub   { font-size:7.5pt; color:#555; margin-top:2px; }
 
 /* Таблицы */
 table { width:100%; border-collapse:collapse; margin-bottom:14px; font-size:8.5pt; }
@@ -279,7 +279,7 @@ tfoot tr td { font-weight:700; background:#e7f2e3 !important; border-top:1.5px s
 .hint { font-size:8pt; color:#555; margin:-10px 0 12px; font-style:italic; }
 
 /* Футер */
-.mbs-footer { margin-top:24px; padding-top:5px; border-top:1px solid #ddd; text-align:right; font-size:7.5pt; color:#aaa; }
+.mbs-footer { margin-top:24px; padding-top:5px; border-top:1px solid #ddd; text-align:right; font-size:8pt; color:#666; }
 
 @media print {
   .cover, th, tfoot tr td, .group-sep td { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
@@ -681,7 +681,7 @@ td{padding:5px 8px;border-bottom:1px solid #e4ede0;vertical-align:top}
 tr:nth-child(even) td{background:#fafcf9}
 td.num{color:#999;width:28px;text-align:center}
 td.bold{font-weight:700}
-.footer{margin-top:16px;text-align:right;font-size:8pt;color:#aaa;border-top:1px solid #ddd;padding-top:4px}
+.footer{margin-top:16px;text-align:right;font-size:8pt;color:#666;border-top:1px solid #ddd;padding-top:4px}
 @media print{.cover,th{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style></head><body>
 <div class="cover">
@@ -830,7 +830,7 @@ tr:nth-child(even) td{background:#fafcf9}
 td.num{color:#999;width:26px;text-align:center}
 td.bold{font-weight:700}
 .cat-row td{background:#eef5eb!important;font-weight:700;font-size:8pt;color:#417033;text-transform:uppercase;letter-spacing:.04em;padding:4px 7px}
-.footer{margin-top:14px;text-align:right;font-size:8pt;color:#aaa;border-top:1px solid #ddd;padding-top:4px}
+.footer{margin-top:14px;text-align:right;font-size:8pt;color:#666;border-top:1px solid #ddd;padding-top:4px}
 @media print{.cover,th,.cat-row td{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style></head><body>
 <div class="cover">
