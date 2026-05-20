@@ -131,6 +131,8 @@
     table.sales-merged-table th:first-child, table.sales-merged-table td:first-child { white-space: normal; max-width: none; }
     table.sales-merged-table .dash-price-inp { width: 58px; }
     table.sales-merged-table .inp.sm { width: 52px; }
+    #sales-table-wrap { overflow-x: auto; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    #sales-table-wrap table.sales-merged-table { min-width: 680px; }
     table.mat-table.fixed-cols { table-layout: fixed; width: 100%; }
     table.mat-table.fixed-cols td, table.mat-table.fixed-cols th { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     #tab-dashboard tbody td:nth-child(3) { text-align: center; padding-right: 0; }
@@ -1042,6 +1044,7 @@
       .main { padding:8px; }
       .tab:not(.active) { display:none !important; }
       .table-wrap { box-shadow:none; overflow:visible; }
+      #sales-table-wrap { overflow:visible; }
       .inp { border:none !important; background:transparent !important; width:auto; }
     }
 
