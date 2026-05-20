@@ -1,10 +1,18 @@
-// ════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
 //  RENDER — COST / ПОСТАВЩИКИ / ИНГРЕДИЕНТЫ / ПОЛУФАБРИКАТЫ
 //  (src/render/cost.js)
 //
 //  Все данные читаются из window.* — они доступны после того как
 //  app.js сделал Object.assign(window, {...}) в конце своего файла.
-// ════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+
+let _supSearch  = '';
+let _ingSearch  = '';
+let _semiSearch = '';
+
+export function filterSupCost(val)  { _supSearch  = val; renderCost(); }
+export function filterIngCost(val)  { _ingSearch  = val; renderCost(); }
+export function filterSemiCost(val) { _semiSearch = val; renderCost(); }
 
 export function renderCost() {
   const {
@@ -69,8 +77,18 @@ export function renderCost() {
     }
   });
   const supGroups = Object.values(byName);
-  const suppliersHtml = supGroups.length
-    ? '<div class="mat-grid">' + supGroups.map(g => {
+  const filteredSupGroups = _supSearch
+    ? supGroups.filter(g => {
+        const q = _supSearch.toLowerCase();
+        return g.name.toLowerCase().includes(q)
+          || (g.phone||'').toLowerCase().includes(q)
+          || (g.note||'').toLowerCase().includes(q)
+          || (g.site||'').toLowerCase().includes(q)
+          || g.mats.some(nm => nm.toLowerCase().includes(q));
+      })
+    : supGroups;
+  const suppliersHtml = filteredSupGroups.length
+    ? '<div class="mat-grid">' + filteredSupGroups.map(g => {
         const matTags = g.mats.map(name => '<span class="sup-mat-tag">' + name + '</span>').join('');
         const editFn = (g.matKeys && g.matKeys.length)
           ? "openSupplierModal('" + g.matKeys[0] + "')"
@@ -88,7 +106,7 @@ export function renderCost() {
           + (matTags ? '<div class="sup-card-mats">' + matTags + '</div>' : '')
           + '</div>';
       }).join('') + '</div>'
-    : '<div style="color:var(--muted);font-size:13px;padding:16px 0">Поставщики ещё не добавлены. Нажмите <b>+ Поставщик</b> или значок 🚚 у любого сырья.</div>';
+    : `<div style="color:var(--muted);font-size:13px;padding:16px 0">${_supSearch ? 'Ничего не найдено' : 'Поставщики ещё не добавлены. Нажмите <b>+ Поставщик</b> или значок 🚚 у любого сырья.'}</div>`;
 
   // ── Табы категорий сырья ─────────────────────────────────────────
   const matCatTabsHtml = `
@@ -119,6 +137,8 @@ export function renderCost() {
       const usageBadge  = usedIn.length
         ? `<button class="usage-badge" onclick="event.stopPropagation();openMatUsage('mat','${key}')" title="Нажмите, чтобы увидеть рецепты">${usedIn.length}</button>`
         : `<span class="usage-badge usage-badge-zero">0</span>`;
+      const ingQ = _ingSearch.toLowerCase();
+      if (ingQ && !m.name.toLowerCase().includes(ingQ)) return '';
       return `<tr class="mat-row${m.custom ? ' mat-row-custom' : ''}" data-cat="${cat}" onclick="openViewMat('${key}')" title="Нажмите для просмотра" style="cursor:pointer">
         <td class="mat-td-name">${m.name}${m.purchaseUrl ? ` <a href="${m.purchaseUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Ссылка на покупку" style="color:var(--green);font-size:12px;text-decoration:none;vertical-align:middle">↗</a>` : ''}</td>
         <td class="mat-td-unit mob-hide">${m.unit}</td>
@@ -194,7 +214,10 @@ export function renderCost() {
   });
 
   const semiRowsHtml = semiSortedCats.map(cat => {
-    const items = semiGroups[cat] || [];
+    const allItems = semiGroups[cat] || [];
+    const items = _semiSearch
+      ? allItems.filter(s => s.name.toLowerCase().includes(_semiSearch.toLowerCase()))
+      : allItems;
     const catLabel = (SEMI_ALL_CATS[cat] || {}).label || cat;
     const collapsed = _semiCollapsed[cat];
     const rows = items.map(s => {
@@ -305,6 +328,12 @@ export function renderCost() {
       </div>
     </div>
     <div id="cost-sup-body" style="${_supCollapsed ? 'display:none' : ''}">
+      <div class="search-wrap" style="margin-bottom:12px">
+        <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
+        <input class="search-inp" id="cost-sup-search" type="text" placeholder="Поиск поставщика..."
+          value="${_supSearch || ''}" oninput="filterSupCost(this.value);_searchClear(this)">
+        <button class="search-clear${_supSearch ? ' visible' : ''}" title="Очистить" onclick="filterSupCost('');var el=document.getElementById('cost-sup-search');el.value='';_searchClear(el)">✕</button>
+      </div>
       ${suppliersHtml}
     </div>
 
@@ -324,6 +353,12 @@ export function renderCost() {
       </div>
     </div>
     <div id="cost-ing-body" style="${_ingCollapsed ? 'display:none' : ''}">
+      <div class="search-wrap" style="margin-bottom:8px">
+        <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
+        <input class="search-inp" id="cost-ing-search" type="text" placeholder="Поиск ингредиента..."
+          value="${_ingSearch || ''}" oninput="filterIngCost(this.value);_searchClear(this)">
+        <button class="search-clear${_ingSearch ? ' visible' : ''}" title="Очистить" onclick="filterIngCost('');var el=document.getElementById('cost-ing-search');el.value='';_searchClear(el)">✕</button>
+      </div>
       ${matCatTabsHtml}
       ${matCardsHtml}
     </div>
@@ -343,6 +378,12 @@ export function renderCost() {
       </div>
     </div>
     <div id="cost-semi-body" style="${_semiSectionCollapsed ? 'display:none' : ''}">
+      <div class="search-wrap" style="margin-bottom:8px">
+        <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
+        <input class="search-inp" id="cost-semi-search" type="text" placeholder="Поиск полуфабриката..."
+          value="${_semiSearch || ''}" oninput="filterSemiCost(this.value);_searchClear(this)">
+        <button class="search-clear${_semiSearch ? ' visible' : ''}" title="Очистить" onclick="filterSemiCost('');var el=document.getElementById('cost-semi-search');el.value='';_searchClear(el)">✕</button>
+      </div>
       ${semiHtml}
     </div>
   `;

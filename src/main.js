@@ -86,7 +86,7 @@ import {
 } from './render/dashboard.js';
 
 import {
-  renderCost,
+  renderCost, filterSupCost, filterIngCost, filterSemiCost,
 } from './render/cost.js';
 
 import {
@@ -281,7 +281,7 @@ const _srcExports = {
   // render/dashboard
   renderDashboard, filterDashboard, setDashGroup, toggleDashIntro, toggleTop10, initTop10Collapse,
   // render/cost
-  renderCost,
+  renderCost, filterSupCost, filterIngCost, filterSemiCost,
   // render/sales
   renderSales,
   // render/recipes
