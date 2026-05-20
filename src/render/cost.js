@@ -10,9 +10,59 @@ let _supSearch  = '';
 let _ingSearch  = '';
 let _semiSearch = '';
 
-export function filterSupCost(val)  { _supSearch  = val; renderCost(); }
-export function filterIngCost(val)  { _ingSearch  = val; renderCost(); }
-export function filterSemiCost(val) { _semiSearch = val; renderCost(); }
+export function filterSupCost(val) {
+  _supSearch = val;
+  // Фильтруем карточки поставщиков напрямую без ре-рендера
+  const cards = document.querySelectorAll('#cost-sup-body .sup-card');
+  const q = val.toLowerCase();
+  cards.forEach(card => {
+    if (!q) { card.style.display = ''; return; }
+    const text = card.textContent.toLowerCase();
+    card.style.display = text.includes(q) ? '' : 'none';
+  });
+  const clearBtn = document.querySelector('#cost-sup-body .search-clear');
+  if (clearBtn) clearBtn.classList.toggle('visible', !!val);
+  // Показываем «Ничего не найдено» если все скрыты
+  let noRes = document.getElementById('cost-sup-nores');
+  const visible = [...cards].some(c => c.style.display !== 'none');
+  if (cards.length && !visible) {
+    if (!noRes) {
+      noRes = document.createElement('div');
+      noRes.id = 'cost-sup-nores';
+      noRes.style.cssText = 'color:var(--muted);font-size:13px;padding:16px 0';
+      noRes.textContent = 'Ничего не найдено';
+      document.getElementById('cost-sup-body').appendChild(noRes);
+    }
+    noRes.style.display = '';
+  } else if (noRes) {
+    noRes.style.display = 'none';
+  }
+}
+
+export function filterIngCost(val) {
+  _ingSearch = val;
+  const q = val.toLowerCase();
+  // Фильтруем строки таблицы ингредиентов
+  document.querySelectorAll('#cost-ing-body .mat-row').forEach(row => {
+    if (!q) { row.style.display = ''; return; }
+    const name = (row.querySelector('.mat-td-name')?.textContent || '').toLowerCase();
+    row.style.display = name.includes(q) ? '' : 'none';
+  });
+  const clearBtn = document.querySelector('#cost-ing-body .search-clear');
+  if (clearBtn) clearBtn.classList.toggle('visible', !!val);
+}
+
+export function filterSemiCost(val) {
+  _semiSearch = val;
+  const q = val.toLowerCase();
+  document.querySelectorAll('#cost-semi-body .mat-row').forEach(row => {
+    if (!q) { row.style.display = ''; return; }
+    const name = (row.querySelector('.mat-td-name')?.textContent || '').toLowerCase();
+    row.style.display = name.includes(q) ? '' : 'none';
+  });
+  const clearBtn = document.querySelector('#cost-semi-body .search-clear');
+  if (clearBtn) clearBtn.classList.toggle('visible', !!val);
+}
 
 export function renderCost() {
   const {
@@ -390,4 +440,8 @@ export function renderCost() {
 
   if (window.lucide) lucide.createIcons();
   if (_costScroll) _costEl.scrollTop = _costScroll;
+  // Восстановить фильтры после ре-рендера
+  if (_supSearch)  filterSupCost(_supSearch);
+  if (_ingSearch)  filterIngCost(_ingSearch);
+  if (_semiSearch) filterSemiCost(_semiSearch);
 }
