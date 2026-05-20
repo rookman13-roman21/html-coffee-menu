@@ -120,6 +120,9 @@
 
     /* Колонка FC% (3-я) в дашборде — по центру */
     #tab-dashboard thead th:nth-child(3) { text-align: center; }
+    #tab-dashboard table.dash-table { table-layout: fixed; width: 100%; }
+    #tab-dashboard table.dash-table td,
+    #tab-dashboard table.dash-table th { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     #tab-dashboard tbody td:nth-child(3) { text-align: center; padding-right: 0; }
 
     /* Выравнивание колонки FC% (3-я) в таблице себестоимости */

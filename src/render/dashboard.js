@@ -183,7 +183,17 @@ export function renderDashboard() {
       </div>
     </div>
     <div class="table-wrap">
-      <table>
+      <table class="dash-table">
+        <colgroup>
+          <col style="width:30%"><!-- Напиток -->
+          <col class="mob-hide" style="width:11%"><!-- Себест. -->
+          <col style="width:9%"><!-- FC% -->
+          <col style="width:11%"><!-- Цена -->
+          <col class="mob-hide" style="width:12%"><!-- Рек. цена -->
+          <col style="width:12%"><!-- Прибыль -->
+          <col style="width:10%"><!-- Рейтинг -->
+          <col style="width:5%"><!-- кнопка -->
+        </colgroup>
         <thead><tr>
           ${thSort('name','Напиток','','Название позиции меню. Клик по строке — открыть карточку редактирования')}
           ${thSort('cost','Себест. ₽','ta-r mob-hide','Расчётная себестоимость одной порции по текущим ценам сырья. Пересчитывается автоматически при изменении цен поставщиков')}
