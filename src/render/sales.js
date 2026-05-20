@@ -76,6 +76,18 @@ export function renderSales() {
         <div class="sales-kpi-label">Средний чек</div>
         <div class="sales-kpi-val">${rub(avgChk)}</div>
       </div>
+      <div class="sales-kpi-card sales-kpi-compact kpi-card--editable" title="Целевой food-cost %">
+        <div class="sales-kpi-label">Целевой FC%</div>
+        <div class="sales-kpi-val kpi-value--input">
+          <input type="number" id="kpi-target-fc" class="kpi-inp" min="5" max="60" step="1" inputmode="numeric"
+            value="${Math.round(S.targetFC * 100)}"
+            oninput="onTargetFCSilent(this.value)"
+            onblur="onTargetFC(this.value)"
+            onclick="event.stopPropagation()"
+            title="Целевой food-cost %">
+          <span class="kpi-inp-unit">%</span>
+        </div>
+      </div>
       <div class="sales-days-scale">
         <span class="sales-days-label">Дней в месяце:</span>
         <input class="inp sm" type="number" min="1" max="31" inputmode="numeric" value="${S.days}" onchange="onDays(this.value)">

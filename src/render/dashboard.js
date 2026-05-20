@@ -152,18 +152,6 @@ export function renderDashboard() {
       <div class="kpi-card"><div class="kpi-label">Средний чек</div><div class="kpi-value">${rub(avgPrice)}</div></div>
       <div class="kpi-card"><div class="kpi-label">Прибыль / чашка</div><div class="kpi-value">${rub(avgProfit)}</div></div>
       <div class="kpi-card"><div class="kpi-label">Средний FC%</div><div class="kpi-value">${pct(avgFC)}</div></div>
-      <div class="kpi-card kpi-card--editable kpi-card--span2" title="Нажмите для изменения">
-        <div class="kpi-label">Целевой FC%</div>
-        <div class="kpi-value kpi-value--input">
-          <input type="number" id="kpi-target-fc" class="kpi-inp" min="5" max="60" step="1" inputmode="numeric"
-            value="${Math.round(S.targetFC * 100)}"
-            oninput="onTargetFCSilent(this.value)"
-            onblur="onTargetFC(this.value)"
-            onclick="event.stopPropagation()"
-            title="Целевой food-cost %">
-          <span class="kpi-inp-unit">%</span>
-        </div>
-      </div>
     </div>
     <div class="panel" style="font-size:13px;color:var(--muted);display:flex;align-items:center;gap:10px">
       <i data-lucide="arrow-right" class="icon" style="flex-shrink:0"></i>
