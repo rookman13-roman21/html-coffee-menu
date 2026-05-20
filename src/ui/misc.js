@@ -202,9 +202,13 @@ export function exportFullPDF() {
   }).join('');
 
   // ── План продаж ───────────────────────────────────────────────────
+  const targetFC = window.S.targetFC || 0;
   const planRows = window.sortDrinks(drinks).filter(d => (window.S.portions[d.id]||0) > 0).map(d => {
     const p = window.S.portions[d.id] || 0;
-    return `<tr><td class="drink-name">${d.name}</td><td class="r muted">${Math.round(d.price)}</td><td class="c">${p}</td><td class="r">${n(d.price*p)}</td><td class="r">${n(d.profit*p)}</td><td class="r fw">${n(d.price*p*window.S.days)}</td><td class="r fw">${n(d.profit*p*window.S.days)}</td></tr>`;
+    const overFC = targetFC > 0 && d.fc > targetFC;
+    const fcClr = overFC ? '#c0392b' : fcClrPdf(d.fc);
+    const fcBg  = overFC ? '#fdecea' : fcBgPdf(d.fc);
+    return `<tr><td class="drink-name">${d.name}</td><td class="r muted">${Math.round(d.price)}</td><td class="c" style="color:${fcClr};background:${fcBg};font-weight:700">${(d.fc*100).toFixed(1)}%</td><td class="c">${p}</td><td class="r">${n(d.price*p)}</td><td class="r">${n(d.profit*p)}</td><td class="r fw">${n(d.price*p*window.S.days)}</td><td class="r fw">${n(d.profit*p*window.S.days)}</td></tr>`;
   }).join('');
 
   // ── P&L ───────────────────────────────────────────────────────────
@@ -309,11 +313,11 @@ tfoot tr td { font-weight:700; background:#e7f2e3 !important; border-top:1.5px s
 
 <!-- ПЛАН ПРОДАЖ -->
 <div class="section-title pb"><span>📈</span> План продаж <span style="font-size:9pt;font-weight:400;color:#6b7280">(только активные позиции)</span></div>
-<p class="hint">${window.S.days} дней в месяце &nbsp;·&nbsp; показаны только напитки с порциями &gt; 0</p>
+<p class="hint">${window.S.days} дней в месяце &nbsp;·&nbsp; показаны только напитки с порциями &gt; 0${targetFC > 0 ? ' &nbsp;·&nbsp; Целевой FC%: ' + Math.round(targetFC*100) + '% (красный = превышение)' : ''}</p>
 <table>
-  <thead><tr><th>Напиток</th><th class="r">Цена</th><th class="c">Порц./д</th><th class="r">Выр./день</th><th class="r">Приб./день</th><th class="r">Выр./мес</th><th class="r">Приб./мес</th></tr></thead>
+  <thead><tr><th>Напиток</th><th class="r">Цена</th><th class="c">FC%</th><th class="c">Порц./д</th><th class="r">Выр./день</th><th class="r">Приб./день</th><th class="r">Выр./мес</th><th class="r">Приб./мес</th></tr></thead>
   <tbody>${planRows}</tbody>
-  <tfoot><tr><td colspan="3">ИТОГО</td><td class="r">${n(sales.totRevDay)} ₽</td><td class="r">${n(sales.totPrfDay)} ₽</td><td class="r">${n(totRevMon)} ₽</td><td class="r">${n(sales.totPrfMon)} ₽</td></tr></tfoot>
+  <tfoot><tr><td colspan="4">ИТОГО</td><td class="r">${n(sales.totRevDay)} ₽</td><td class="r">${n(sales.totPrfDay)} ₽</td><td class="r">${n(totRevMon)} ₽</td><td class="r">${n(sales.totPrfMon)} ₽</td></tr></tfoot>
 </table>
 
 <!-- P&L -->
