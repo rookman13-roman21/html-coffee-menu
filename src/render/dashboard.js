@@ -165,55 +165,9 @@ export function renderDashboard() {
         </div>
       </div>
     </div>
-    <div class="section-title"><i data-lucide="clipboard-list" class="icon"></i> Рейтинг напитков — кликните заголовок для сортировки</div>
-    <div class="dash-search-row">
-      <div class="recipe-filter-btns dash-group-tabs">
-        <button class="recipe-filter-btn${dg==='all'?' active':''}" onclick="setDashGroup('all')">Все</button>
-        <button class="recipe-filter-btn${dg==='hot'?' active':''}" onclick="setDashGroup('hot')">Горячие</button>
-        <button class="recipe-filter-btn${dg==='tea'?' active':''}" onclick="setDashGroup('tea')">Чай</button>
-        <button class="recipe-filter-btn${dg==='cold'?' active':''}" onclick="setDashGroup('cold')">Холодные</button>
-        <button class="recipe-filter-btn${dg==='filter'?' active':''}" onclick="setDashGroup('filter')">Пуровер</button>
-        <button class="recipe-filter-btn${dg==='author'?' active':''}" onclick="setDashGroup('author')">Авторские</button>
-      </div>
-      <div class="search-wrap" style="margin-bottom:0;flex:1">
-        <span class="search-icon"><i data-lucide="search" class="icon"></i></span>
-        <input class="search-inp" id="dash-search" type="text" placeholder="Поиск по названию..."
-          value="${searchQuery}" oninput="filterDashboard(this.value);_searchClear(this)">
-        <button class="search-clear${searchQuery ? ' visible' : ''}" title="Очистить" onclick="filterDashboard('');var el=document.getElementById('dash-search');el.value='';_searchClear(el)">✕</button>
-      </div>
-    </div>
-    <div class="table-wrap">
-      <table class="dash-table">
-        <colgroup>
-          <col style="width:30%"><!-- Напиток -->
-          <col class="mob-hide" style="width:11%"><!-- Себест. -->
-          <col style="width:9%"><!-- FC% -->
-          <col style="width:11%"><!-- Цена -->
-          <col class="mob-hide" style="width:12%"><!-- Рек. цена -->
-          <col style="width:12%"><!-- Прибыль -->
-          <col style="width:10%"><!-- Рейтинг -->
-          <col style="width:5%"><!-- кнопка -->
-        </colgroup>
-        <thead><tr>
-          ${thSort('name','Напиток','','Название позиции меню. Клик по строке — открыть карточку редактирования')}
-          ${thSort('cost','Себест. ₽','ta-r mob-hide','Расчётная себестоимость одной порции по текущим ценам сырья. Пересчитывается автоматически при изменении цен поставщиков')}
-          ${thSort('fc','FC%','ta-c','Food Cost % — доля себестоимости в цене продажи. 🟢 ≤25% отлично · 🟡 26–30% норма · 🔴 >30% пересмотрите цену или рецептуру')}
-          ${thSort('price','Цена ₽','ta-r','Цена продажи для гостя. Редактируется прямо в таблице — изменения сохраняются немедленно')}
-          ${thSort('rec','Рек. цена ₽','ta-r mob-hide','Минимальная цена для достижения целевого FC%. ⚠️ — ваша цена существенно ниже рекомендованной, позиция убыточна по FC')}
-          ${thSort('profit','Прибыль ₽','ta-r','Прибыль с одной чашки = Цена − Себестоимость. Зелёный цвет — выше среднего по меню')}
-          ${thSort('abc','Рейтинг','ta-c','Рейтинг по прибыли с чашки: A — топ 20% (продвигать), B — следующие 30% (рабочий ассортимент), C — нижние 50% (пересмотреть)')}
-          <th></th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-    <div class="panel" style="font-size:13px;color:var(--muted)">
-      <strong style="color:var(--navy);display:block;margin-bottom:6px">Рейтинг по прибыли:</strong>
-      <div style="display:flex;flex-direction:column;gap:4px">
-        <div>${abcBadge('A')} Топ-20% по прибыли — приоритет продаж</div>
-        <div>${abcBadge('B')} Следующие 30% — рабочий ассортимент</div>
-        <div>${abcBadge('C')} Остальные 50% — пересмотреть цену или себестоимость</div>
-      </div>
+    <div class="panel" style="font-size:13px;color:var(--muted);display:flex;align-items:center;gap:10px">
+      <i data-lucide="arrow-right" class="icon" style="flex-shrink:0"></i>
+      <span>Таблица напитков объединена с планом продаж — перейдите во вкладку <strong style="color:var(--navy)">«Планирование продаж»</strong> чтобы увидеть FC%, цены, ABC-рейтинг и план порций в одном месте.</span>
     </div>
   `;
 }

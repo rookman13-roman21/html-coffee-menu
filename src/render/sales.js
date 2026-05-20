@@ -7,8 +7,9 @@
 
 export function renderSales() {
   const {
-    enrich, salesMetrics,
+    enrich, withABC, salesMetrics,
     rub, pct, int,
+    fcCombinedHtml, abcBadge,
     S, SALES_PRESETS,
     salesSearch,
     thSalesSort, filterSales,
@@ -101,18 +102,32 @@ export function renderSales() {
     </div>
 
     <div class="table-wrap" id="sales-table-wrap">
-      <table class="sales-table">
+      <table class="sales-merged-table">
         <colgroup>
-          <col style="width:46%"><!-- Напиток -->
-          <col style="width:18%"><!-- Порций/день -->
-          <col style="width:18%"><!-- Выручка/мес -->
-          <col style="width:18%"><!-- Прибыль/мес -->
+          <col style="width:20%"><!-- Напиток -->
+          <col class="mob-hide" style="width:7%"><!-- Себест. -->
+          <col style="width:6%"><!-- FC% -->
+          <col style="width:8%"><!-- Цена ₽ -->
+          <col class="mob-hide" style="width:8%"><!-- Рек. цена -->
+          <col class="mob-hide" style="width:8%"><!-- Прибыль/чашку -->
+          <col class="mob-hide" style="width:5%"><!-- ABC -->
+          <col style="width:9%"><!-- Порций/день -->
+          <col class="mob-hide" style="width:10%"><!-- Выручка/мес -->
+          <col style="width:10%"><!-- Прибыль/мес -->
+          <col class="mob-hide" style="width:5%"><!-- Кнопка -->
         </colgroup>
         <thead><tr>
-          ${thSalesSort('name',    'Напиток',        '',     'Название напитка')}
-          ${thSalesSort('portions','Порций/день',    'ta-c', 'Среднее количество порций в день')}
-          ${thSalesSort('revMon',  'Выручка/мес ₽',  'ta-r', 'Выручка за месяц = Цена × Порций × Дней')}
-          ${thSalesSort('prfMon',  'Прибыль/мес ₽', 'ta-r', 'Прибыль/шт × Порций × Дней. Попадает в финмодель')}
+          ${thSalesSort('name',    'Напиток',           '',             'Название. Клик по строке — открыть карточку редактирования')}
+          ${thSalesSort('cost',    'Себест. ₽',          'ta-r mob-hide','Расчётная себестоимость одной порции по текущим ценам сырья')}
+          ${thSalesSort('fc',      'FC%',               'ta-c',         'Food Cost % — доля себестоимости в цене. 🟢 ≤25% · 🟡 26–30% · 🔴 >30%')}
+          ${thSalesSort('price',   'Цена ₽',            'ta-r',         'Цена продажи. Редактируется прямо в таблице')}
+          ${thSalesSort('rec',     'Рек. цена ₽',       'ta-r mob-hide','Минимальная цена для достижения целевого FC%')}
+          ${thSalesSort('profit',  'Прибыль/чашку ₽',   'ta-r mob-hide','Прибыль с одной чашки = Цена − Себестоимость')}
+          ${thSalesSort('abc',     'ABC',               'ta-c mob-hide','A — топ 20% прибыли · B — следующие 30% · C — нижние 50%')}
+          ${thSalesSort('portions','Порций/день',       'ta-c',         'Среднее количество порций в день. Редактируется')}
+          ${thSalesSort('revMon',  'Выручка/мес ₽',     'ta-r mob-hide','Выручка за месяц = Цена × Порций × Дней')}
+          ${thSalesSort('prfMon',  'Прибыль/мес ₽',    'ta-r',         'Прибыль/чашку × Порций × Дней. Попадает в финмодель')}
+          <th class="mob-hide"></th>
         </tr></thead>
         <tbody></tbody>
         <tfoot style="position:sticky;bottom:0;z-index:2"></tfoot>

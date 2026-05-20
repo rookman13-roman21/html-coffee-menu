@@ -125,6 +125,12 @@
     #tab-dashboard table.dash-table th { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     table.sales-table { table-layout: fixed; width: 100%; }
     table.sales-table td, table.sales-table th { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* Объединённая таблица меню + продажи */
+    table.sales-merged-table { table-layout: auto; width: 100%; border-collapse: collapse; }
+    table.sales-merged-table th, table.sales-merged-table td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 0; }
+    table.sales-merged-table th:first-child, table.sales-merged-table td:first-child { white-space: normal; max-width: none; }
+    table.sales-merged-table .dash-price-inp { width: 58px; }
+    table.sales-merged-table .inp.sm { width: 52px; }
     table.mat-table.fixed-cols { table-layout: fixed; width: 100%; }
     table.mat-table.fixed-cols td, table.mat-table.fixed-cols th { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     #tab-dashboard tbody td:nth-child(3) { text-align: center; padding-right: 0; }
