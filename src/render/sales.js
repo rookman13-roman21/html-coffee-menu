@@ -41,16 +41,17 @@ export function renderSales() {
       <div>
         <div class="tab-intro-title">План продаж</div>
         <div class="tab-intro-text">
-          Задай количество порций в день для каждого напитка — страница считает <strong>выручку, прибыль, food-cost и средний чек</strong> в реальном времени.<br>
-          Используй <strong>пресет</strong> для быстрого старта — готовые шаблоны под разные типы дней.<br>
+          Задай количество порций в день для каждого напитка — таблица считает <strong>выручку, прибыль, food-cost и средний чек</strong> в реальном времени.<br>
+          Используй <strong>пресет</strong> для быстрого старта или заполни порции вручную.<br>
           Кнопки <strong>±10%</strong> масштабируют весь план сразу. Поле <strong>«Дней в месяце»</strong> — для учёта неполного месяца.<br>
-          Все данные автоматически передаются в <strong>Финмодель</strong>.
+          Задай <strong>Целевой FC%</strong> — строки с превышением подсветятся красным. Все данные автоматически передаются в <strong>Финмодель</strong>.
         </div>
         <div class="tab-intro-steps">
           <span class="tab-intro-step">1. Выбери пресет или заполни порции вручную</span>
           <span class="tab-intro-step">2. Скорректируй ±10% или измени дни в месяце</span>
-          <span class="tab-intro-step">3. Следи за KPI: food-cost, средний чек, прибыль/мес</span>
-          <span class="tab-intro-step">4. Финмодель пересчитается автоматически</span>
+          <span class="tab-intro-step">3. Задай Целевой FC% — проверь, какие позиции не вписываются</span>
+          <span class="tab-intro-step">4. Следи за KPI: food-cost, средний чек, прибыль/мес</span>
+          <span class="tab-intro-step">5. Финмодель пересчитается автоматически</span>
         </div>
       </div>
     </div>
