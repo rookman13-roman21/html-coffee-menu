@@ -127,23 +127,33 @@ function _attachCostSuggestions() {
     {
       id: 'cost-sup-search',
       getItems: () => (window.S?.suppliers || []).map(s => s.name).filter(Boolean),
-      onSelect: (name, el) => { el.value = name; filterSupCost(name); window._searchClear?.(el); },
+      onSelect: (name, el) => { filterSupCost(name); window._searchClear?.(el); },
     },
     {
       id: 'cost-ing-search',
       getItems: () => Object.values(window.MAT || {}).map(m => m.name).filter(Boolean),
-      onSelect: (name, el) => { el.value = name; filterIngCost(name); window._searchClear?.(el); },
+      onSelect: (name, el) => { filterIngCost(name); window._searchClear?.(el); },
     },
     {
       id: 'cost-semi-search',
       getItems: () => (window.SEMI || []).map(s => s.name).filter(Boolean),
-      onSelect: (name, el) => { el.value = name; filterSemiCost(name); window._searchClear?.(el); },
+      onSelect: (name, el) => { filterSemiCost(name); window._searchClear?.(el); },
     },
   ];
   configs.forEach(({ id, getItems, onSelect }) => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.addEventListener('input',   () => _showSuggest(el, getItems(), (name) => onSelect(name, el)));
+    // Используем rAF: oninput на HTML-элементе вызывает renderCost() и перестраивает DOM раньше,
+    // чем срабатывает этот addEventListener. После rAF берём свежий элемент по id.
+    el.addEventListener('input', () => {
+      requestAnimationFrame(() => {
+        const fresh = document.getElementById(id);
+        if (fresh) _showSuggest(fresh, getItems(), (name) => {
+          fresh.value = name;
+          onSelect(name, fresh);
+        });
+      });
+    });
     el.addEventListener('blur',    () => setTimeout(_hideSuggest, 150));
     el.addEventListener('keydown', (e) => { if (e.key === 'Escape') { _hideSuggest(); e.stopPropagation(); } });
   });
