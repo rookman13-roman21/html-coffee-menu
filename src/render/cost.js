@@ -336,6 +336,8 @@ export function renderCost() {
   // ── Сборка HTML ──────────────────────────────────────────────────
   const _costEl     = document.getElementById('tab-cost');
   const _costScroll = _costEl ? _costEl.scrollTop : 0;
+  const _SEARCH_IDS = ['cost-sup-search', 'cost-ing-search', 'cost-semi-search'];
+  const _focusedSearchId = _SEARCH_IDS.includes(document.activeElement?.id) ? document.activeElement.id : null;
 
   _costEl.innerHTML = `
     <div class="page-title">
@@ -444,4 +446,9 @@ export function renderCost() {
   if (_supSearch)  filterSupCost(_supSearch);
   if (_ingSearch)  filterIngCost(_ingSearch);
   if (_semiSearch) filterSemiCost(_semiSearch);
+  // Восстановить фокус на поле поиска (курсор в конец)
+  if (_focusedSearchId) {
+    const el = document.getElementById(_focusedSearchId);
+    if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+  }
 }
