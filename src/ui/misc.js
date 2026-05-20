@@ -268,7 +268,7 @@ th.c, td.c { text-align:center; }
 td { padding:4px 7px; border-bottom:1px solid #e8f0e5; vertical-align:middle; }
 tr:nth-child(even) td { background:#fafcf9; }
 td.fw  { font-weight:700; }
-td.muted { color:#888; }
+td.muted { color:#444; }
 td.drink-name { max-width:170px; }
 .group-sep td { background:#f0f5ee !important; padding:5px 7px; border-bottom:1.5px solid #c8dfc0; }
 .group-sep span { font-size:8pt; font-weight:700; color:#417033; text-transform:uppercase; letter-spacing:.05em; }
@@ -276,7 +276,7 @@ tfoot tr td { font-weight:700; background:#e7f2e3 !important; border-top:1.5px s
 
 /* Разрыв */
 .pb { page-break-before:always; margin-top:0; }
-.hint { font-size:7.5pt; color:#9ca3af; margin:-10px 0 12px; font-style:italic; }
+.hint { font-size:8pt; color:#555; margin:-10px 0 12px; font-style:italic; }
 
 /* Футер */
 .mbs-footer { margin-top:24px; padding-top:5px; border-top:1px solid #ddd; text-align:right; font-size:7.5pt; color:#aaa; }
