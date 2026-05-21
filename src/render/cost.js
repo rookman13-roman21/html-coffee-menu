@@ -48,6 +48,20 @@ export function filterIngCost(val) {
     const name = (row.querySelector('.mat-td-name')?.textContent || '').toLowerCase();
     row.style.display = name.includes(q) ? '' : 'none';
   });
+  // При поиске — раскрываем все категории; при сбросе — возвращаем свёрнутые
+  document.querySelectorAll('#cost-ing-body tbody[id^="mat-tbody-"]').forEach(tbody => {
+    const cat = tbody.id.replace('mat-tbody-', '');
+    if (q) {
+      tbody.style.display = '';
+      const icon = document.getElementById('mat-cat-icon-' + cat);
+      if (icon) icon.textContent = '▼';
+    } else {
+      const isCollapsed = (window._matCollapsed || {})[cat];
+      tbody.style.display = isCollapsed ? 'none' : '';
+      const icon = document.getElementById('mat-cat-icon-' + cat);
+      if (icon) icon.textContent = isCollapsed ? '▶' : '▼';
+    }
+  });
   const clearBtn = document.querySelector('#cost-ing-body .search-clear');
   if (clearBtn) clearBtn.classList.toggle('visible', !!val);
 }
@@ -59,6 +73,20 @@ export function filterSemiCost(val) {
     if (!q) { row.style.display = ''; return; }
     const name = (row.querySelector('.mat-td-name')?.textContent || '').toLowerCase();
     row.style.display = name.includes(q) ? '' : 'none';
+  });
+  // При поиске — раскрываем все категории; при сбросе — возвращаем свёрнутые
+  document.querySelectorAll('#cost-semi-body tbody[id^="semi-tbody-"]').forEach(tbody => {
+    const cat = tbody.id.replace('semi-tbody-', '');
+    if (q) {
+      tbody.style.display = '';
+      const icon = document.getElementById('semi-cat-icon-' + cat);
+      if (icon) icon.textContent = '▼';
+    } else {
+      const isCollapsed = (window._semiCollapsed || {})[cat];
+      tbody.style.display = isCollapsed ? 'none' : '';
+      const icon = document.getElementById('semi-cat-icon-' + cat);
+      if (icon) icon.textContent = isCollapsed ? '▶' : '▼';
+    }
   });
   const clearBtn = document.querySelector('#cost-semi-body .search-clear');
   if (clearBtn) clearBtn.classList.toggle('visible', !!val);
