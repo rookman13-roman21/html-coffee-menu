@@ -66,7 +66,12 @@ import {
   activeLoc, getOrgInfo,
   S, Loc, DEFAULTS, resetGlobalsToBase, locDataKey, _wif,
   LOC_INDEX_KEY, LOC_ACTIVE_KEY, LOC_DATA_PREFIX, OLD_STATE_KEY,
+  restoreFromServer,
 } from './state/store.js';
+
+import {
+  isLoggedIn, showAuthScreen, logout, fetchState, getUser,
+} from './ui/auth.js';
 
 import {
   _editMatKey, _pendingMatSelectEl, _pendingSemiMatSelectEl,
@@ -388,47 +393,84 @@ window.nextMatKey  = 1;
 // ════════════════════════════════════════════════════════════════════
 //  INIT (перенесено из app.js)
 // ════════════════════════════════════════════════════════════════════
-loadLocIndex();
-if (!Loc.list.length) {
-  try {
-    if (localStorage.getItem(OLD_STATE_KEY)) migrateOldState();
-  } catch(e) {}
-}
-if (!Loc.list.length) {
-  Loc.list = [{ id: 'loc_default', name: 'Моя кофейня', icon: '☕' }];
-  Loc.activeId = 'loc_default';
-  saveLocIndex();
-}
-if (!Loc.activeId) { Loc.activeId = Loc.list[0].id; saveLocIndex(); }
-loadState();
 
-try { renderLocSwitcherUI(); } catch(e) { console.error('[renderLocSwitcherUI]', e); }
-try {
-  if (localStorage.getItem('mbs_theme') === 'dark') {
-    document.body.classList.add('dark');
-    const icon = document.getElementById('theme-icon');
-    if (icon) icon.setAttribute('data-lucide', 'sun');
-  }
-  if (!localStorage.getItem('mbs_onboard')) {
-    document.getElementById('onboarding').style.display = 'block';
-  }
-} catch(e) {}
-
-// Восстанавливаем activeTab из localStorage
-const _savedTab = (() => {
-  try {
-    const saved = localStorage.getItem('mbs_active_tab');
-    const valid = ['dashboard','cost','sales','finmodel','recipes'];
-    return (saved && valid.includes(saved)) ? saved : 'dashboard';
-  } catch(e) { return 'dashboard'; }
+// Добавляем кнопку "Выйти" в шапку если авторизованы
+(function _initUserBar() {
+  const user = getUser();
+  if (!user) return;
+  const bar = document.getElementById('user-bar');
+  if (!bar) return;
+  bar.innerHTML = `
+    <span style="font-size:13px;color:#888;margin-right:8px;">${user.email || ''}</span>
+    <button onclick="window._authLogout()" style="font-size:12px;background:none;border:1px solid #ddd;
+      border-radius:8px;padding:4px 10px;cursor:pointer;color:#666;font-family:inherit;">Выйти</button>
+  `;
+  bar.style.display = 'flex';
+  bar.style.alignItems = 'center';
 })();
+window._authLogout = logout;
 
-// Рендерим вкладки
-window.activeTab = _savedTab;
-const _dirty = window.dirty || { dashboard:true, cost:true, sales:true, finmodel:true, recipes:true };
-Object.keys(_dirty).forEach(k => _dirty[k] = true);
-switchTab(_savedTab);
-if (window.lucide) window.lucide.createIcons();
+async function _initApp(serverState) {
+  // Если пришёл стейт с сервера — восстанавливаем в localStorage
+  if (serverState) {
+    restoreFromServer(serverState);
+  }
+
+  loadLocIndex();
+  if (!Loc.list.length) {
+    try {
+      if (localStorage.getItem(OLD_STATE_KEY)) migrateOldState();
+    } catch(e) {}
+  }
+  if (!Loc.list.length) {
+    Loc.list = [{ id: 'loc_default', name: 'Моя кофейня', icon: '☕' }];
+    Loc.activeId = 'loc_default';
+    saveLocIndex();
+  }
+  if (!Loc.activeId) { Loc.activeId = Loc.list[0].id; saveLocIndex(); }
+  loadState();
+
+  try { renderLocSwitcherUI(); } catch(e) { console.error('[renderLocSwitcherUI]', e); }
+  try {
+    if (localStorage.getItem('mbs_theme') === 'dark') {
+      document.body.classList.add('dark');
+      const icon = document.getElementById('theme-icon');
+      if (icon) icon.setAttribute('data-lucide', 'sun');
+    }
+    if (!localStorage.getItem('mbs_onboard')) {
+      document.getElementById('onboarding').style.display = 'block';
+    }
+  } catch(e) {}
+
+  // Восстанавливаем activeTab из localStorage
+  const _savedTab = (() => {
+    try {
+      const saved = localStorage.getItem('mbs_active_tab');
+      const valid = ['dashboard','cost','sales','finmodel','recipes'];
+      return (saved && valid.includes(saved)) ? saved : 'dashboard';
+    } catch(e) { return 'dashboard'; }
+  })();
+
+  // Рендерим вкладки
+  window.activeTab = _savedTab;
+  const _dirty = window.dirty || { dashboard:true, cost:true, sales:true, finmodel:true, recipes:true };
+  Object.keys(_dirty).forEach(k => _dirty[k] = true);
+  switchTab(_savedTab);
+  if (window.lucide) window.lucide.createIcons();
+}
+
+// ─── Auth gate ────────────────────────────────────────────────────────────────
+// Если JWT есть — загружаем стейт с сервера и стартуем
+// Если нет — показываем форму входа, ждём токен, потом стартуем
+// В режиме разработки (localhost без VITE_API_URL) auth можно пропустить
+const _skipAuth = !import.meta.env.VITE_API_URL && location.hostname === 'localhost';
+
+if (_skipAuth || isLoggedIn()) {
+  // Уже авторизован — пробуем подтянуть свежий стейт с сервера
+  fetchState().then(serverState => _initApp(serverState));
+} else {
+  showAuthScreen().then(serverState => _initApp(serverState));
+}
 
 // ════════════════════════════════════════════════════════════════════
 //  TOOLTIP (перенесено из app.js)

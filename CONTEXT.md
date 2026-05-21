@@ -1,7 +1,63 @@
 # CONTEXT — MBS* Coffee Menu
 
-> CFO-инструментарий для владельца кофейни. SPA на Vite + ES-модули.
-> Последнее обновление: 12 мая 2026 (сессия 33)
+> CFO-инструментарий для владельца кофейни. SPA на Vite + ES-модули.  
+> Последнее обновление: 21 мая 2026 (сессия 34 — SaaS запущен)
+
+---
+
+## 0. SaaS-инфраструктура (добавлено сессия 34)
+
+**Проект работает как облачный SaaS: `https://barista-school.online`**
+
+### Инфраструктура
+- **Сервер:** Beget VPS `root@159.194.233.13`, Ubuntu 24.04, nginx 1.24, Python 3.12  
+- **SSH:** `ssh -i ~/.ssh/id_ed25519 root@159.194.233.13`  
+- **Бэкенд:** FastAPI 0.111 + SQLite, systemd сервис `coffee-menu-api`, порт 8000  
+- **Код бэкенда:** `Coffee_menu/server/main.py`  
+- **БД:** SQLite `/var/www/coffee-menu/server/data/app.db`  
+- **SSL:** Let’s Encrypt, истекает 2026-08-19  
+
+### Аутентификация: `src/ui/auth.js`
+- **JWT токен** 30 дней, хранится в `localStorage['coffee_auth_token']`
+- **Логин возвращает:** `{ ok, token, user }` — читать `d.token` (не `d.access_token`!)
+- **Экспорты:** `isLoggedIn`, `showAuthScreen`, `logout`, `fetchState`, `pushState`, `getToken`, `getUser`, `clearAuth`
+- **`fetchState()`:** `GET /api/state` → возвращает `serverState` для `_initApp()`
+- **`pushState()`:** `PUT /api/state` — вызывается из `scheduleServerSync()`
+
+### Синхронизация данных: `src/state/store.js`
+- **`scheduleServerSync()`** — дебаунс 2с после `saveState()`, вызывает `pushState()` из `auth.js`
+- **`restoreFromServer(serverData)`** — принимает `{ locIndex, activeId, locations }`, записывает в localStorage, вызывается из `_initApp(serverState)`
+
+### Поток запуска `main.js`
+```js
+// 1. Аутентификация
+if (_skipAuth || isLoggedIn()) {
+  fetchState().then(serverState => _initApp(serverState));
+} else {
+  showAuthScreen().then(serverState => _initApp(serverState));
+}
+// 2. _initApp вызывает restoreFromServer(serverState) если serverState != null
+// 3. Затем loadState() + renderAll()
+```
+
+### Ключевые исправления (bcrypt)
+```python
+# server/main.py — bcrypt напрямую, без passlib:
+import bcrypt as _bcrypt
+def hash_password(p): return _bcrypt.hashpw(p.encode(), _bcrypt.gensalt()).decode()
+def verify_password(plain, hashed): return _bcrypt.checkpw(plain.encode(), hashed.encode())
+# passlib[bcrypt]==1.7.4 удалён — несовместим с bcrypt 5.0.0
+```
+
+### Деплой
+```bash
+# Фронтенд:
+cd HTML_coffee_menu && npm run build
+rsync -az --delete dist/ -e 'ssh -i ~/.ssh/id_ed25519' root@159.194.233.13:/var/www/coffee-menu/dist/
+# Бэкенд:
+scp -i ~/.ssh/id_ed25519 server/main.py root@159.194.233.13:/var/www/coffee-menu/server/
+ssh -i ~/.ssh/id_ed25519 root@159.194.233.13 'systemctl restart coffee-menu-api'
+```
 
 ---
 
@@ -57,6 +113,7 @@ HTML_coffee_menu/
     │   ├── csv.js          # exportCSV, exportDashboard, exportSales
     │   └── techcards.js    # _techCardCSS, _buildTechCardBlock, _buildSemiTechCardBlock, exportTechCards, mvdDownload*
     └── ui/
+        ├── auth.js         # SaaS JWT-аутентификация: форма входа/регистрации, fetchState, pushState
         ├── updaters.js     # switchTab, flashCells, renderTab, markDirty
         ├── events.js       # burgerNav, modalDirty, safeClose, Escape, keyboard nav
         ├── modals.js       # openModal, closeModal, safeCloseModal, _unsaved warning

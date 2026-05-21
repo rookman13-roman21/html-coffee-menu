@@ -3,6 +3,7 @@
 // ════════════════════════════════════════════════════════════════════
 
 import { MAT, MAT_ORIG, BASE_MAT_KEYS }            from '../data/mat.js';
+import { pushState as _pushToServer, isLoggedIn }  from '../ui/auth.js';
 import { DRINKS, DRINKS_ORIG, BASE_DRINK_IDS }      from '../data/drinks.js';
 import { FIXED_COSTS_DEF }                          from '../data/constants.js';
 
@@ -166,6 +167,26 @@ export function resetGlobalsToBase() {
   if (window.SEMI) window.SEMI.splice(0);
 }
 
+// ─── Дебаунс-синхронизация с сервером ─────────────────────────────
+let _syncTimer = null;
+export function scheduleServerSync() {
+  if (!isLoggedIn()) return;
+  clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(() => {
+    // Собираем весь state всех локаций + индекс для облачного бэкапа
+    const allLocs = {};
+    for (const loc of Loc.list) {
+      const raw = localStorage.getItem(locDataKey(loc.id));
+      if (raw) allLocs[loc.id] = JSON.parse(raw);
+    }
+    _pushToServer({
+      locIndex:  Loc.list,
+      activeId:  Loc.activeId,
+      locations: allLocs,
+    });
+  }, 2000);
+}
+
 // ─── State persistence ───────────────────────────────────────────────
 export function saveState() {
   if (!Loc.activeId) return;
@@ -199,6 +220,7 @@ export function saveState() {
       semiCustomCategories: S.semiCustomCategories,
       semiItems: SEMI,
     }));
+    scheduleServerSync();
   } catch(e) {}
 }
 
@@ -320,4 +342,25 @@ export function loadState() {
       window.nextSemiId = Math.max(...window.SEMI.map(s => s.id), 0) + 1;
     }
   } catch(e) {}
+}
+
+// ─── Восстановить стейт из объекта, загруженного с сервера ───────────
+//     serverData = { locIndex, activeId, locations }
+export function restoreFromServer(serverData) {
+  if (!serverData || !serverData.locations) return false;
+  try {
+    // Записываем все локации в localStorage
+    for (const [id, data] of Object.entries(serverData.locations)) {
+      localStorage.setItem(locDataKey(id), JSON.stringify(data));
+    }
+    if (serverData.locIndex && Array.isArray(serverData.locIndex)) {
+      Loc.list = serverData.locIndex;
+      localStorage.setItem(LOC_INDEX_KEY, JSON.stringify(Loc.list));
+    }
+    if (serverData.activeId) {
+      Loc.activeId = serverData.activeId;
+      localStorage.setItem(LOC_ACTIVE_KEY, Loc.activeId);
+    }
+    return true;
+  } catch(e) { return false; }
 }
