@@ -319,7 +319,7 @@ export function renderCost() {
       return `<tr class="mat-row${m.custom ? ' mat-row-custom' : ''}" data-cat="${cat}" onclick="openViewMat('${key}')" title="Нажмите для просмотра" style="cursor:pointer">
         <td class="mat-td-name">${m.name}${m.purchaseUrl ? ` <a href="${m.purchaseUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Ссылка на покупку" style="color:var(--green);font-size:12px;text-decoration:none;vertical-align:middle">↗</a>` : ''}</td>
         <td class="mat-td-unit mob-hide">${m.unit}</td>
-        <td class="mat-td-price" onclick="event.stopPropagation();openEditMat('${key}')" title="Нажмите, чтобы изменить цену" style="cursor:pointer">
+        <td class="mat-td-price" style="cursor:default">
           <span style="font-weight:600">${S.prices[key]}</span> <span style="font-size:12px;color:var(--muted)">₽</span>
         </td>
         <td class="mat-td-sup mob-hide">${supCell}</td>
