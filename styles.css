@@ -274,6 +274,10 @@
     .mat-table .mat-row { border-bottom: 1px solid var(--border); transition: background .12s; }
     .mat-table .mat-row:last-child { border-bottom: none; }
     .mat-table .mat-row:hover { background: var(--light); }
+    .mat-table .mat-row--match { background: #eef6ea; border-left: 3px solid #4F883E; }
+    .mat-table .mat-row--match:hover { background: #e3f0de; }
+    body.dark .mat-table .mat-row--match { background: #1c2e1a; border-left-color: #5aaa44; }
+    body.dark .mat-table .mat-row--match:hover { background: #22371f; }
     .mat-td-name { padding: 8px 12px; font-weight: 600; font-size: 13px; }
     .mat-td-unit { padding: 8px 10px; font-size: 12px; color: var(--muted); white-space: nowrap; }
     .mat-td-price { padding: 6px 10px; white-space: nowrap; }

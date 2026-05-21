@@ -44,9 +44,11 @@ export function filterIngCost(val) {
   const q = val.toLowerCase();
   // Фильтруем строки таблицы ингредиентов
   document.querySelectorAll('#cost-ing-body .mat-row').forEach(row => {
-    if (!q) { row.style.display = ''; return; }
+    if (!q) { row.style.display = ''; row.classList.remove('mat-row--match'); return; }
     const name = (row.querySelector('.mat-td-name')?.textContent || '').toLowerCase();
-    row.style.display = name.includes(q) ? '' : 'none';
+    const match = name.includes(q);
+    row.style.display = match ? '' : 'none';
+    row.classList.toggle('mat-row--match', match);
   });
   // При поиске — раскрываем все категории; при сбросе — возвращаем свёрнутые
   document.querySelectorAll('#cost-ing-body tbody[id^="mat-tbody-"]').forEach(tbody => {
@@ -70,9 +72,11 @@ export function filterSemiCost(val) {
   _semiSearch = val;
   const q = val.toLowerCase();
   document.querySelectorAll('#cost-semi-body .mat-row').forEach(row => {
-    if (!q) { row.style.display = ''; return; }
+    if (!q) { row.style.display = ''; row.classList.remove('mat-row--match'); return; }
     const name = (row.querySelector('.mat-td-name')?.textContent || '').toLowerCase();
-    row.style.display = name.includes(q) ? '' : 'none';
+    const match = name.includes(q);
+    row.style.display = match ? '' : 'none';
+    row.classList.toggle('mat-row--match', match);
   });
   // При поиске — раскрываем все категории; при сбросе — возвращаем свёрнутые
   document.querySelectorAll('#cost-semi-body tbody[id^="semi-tbody-"]').forEach(tbody => {
