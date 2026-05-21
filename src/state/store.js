@@ -6,6 +6,9 @@ import { MAT, MAT_ORIG, BASE_MAT_KEYS }            from '../data/mat.js';
 import { DRINKS, DRINKS_ORIG, BASE_DRINK_IDS }      from '../data/drinks.js';
 import { FIXED_COSTS_DEF }                          from '../data/constants.js';
 
+// ─── Версия схемы данных (менять при изменении базовых рецептов/процессов) ───
+export const DATA_SCHEMA_VERSION = 2;
+
 // ─── Ключи localStorage ─────────────────────────────────────────────
 export const LOC_INDEX_KEY  = 'mbs_locations';
 export const LOC_ACTIVE_KEY = 'mbs_active_loc';
@@ -169,6 +172,7 @@ export function saveState() {
   const SEMI = window.SEMI || [];
   try {
     localStorage.setItem(locDataKey(Loc.activeId), JSON.stringify({
+      schemaVersion: DATA_SCHEMA_VERSION,
       prices: S.prices, salePrices: S.salePrices, portions: S.portions,
       days: S.days, targetFC: S.targetFC, fixedCosts: S.fixedCosts,
       taxMode: S.taxMode, investment: S.investment,
@@ -297,9 +301,18 @@ export function loadState() {
       });
     }
     if (sv.drinkPatches) {
+      const schemaMismatch = (sv.schemaVersion || 1) < DATA_SCHEMA_VERSION;
       Object.entries(sv.drinkPatches).forEach(([idStr, patch]) => {
-        const idx = DRINKS.findIndex(x => x.id === Number(idStr));
-        if (idx >= 0) DRINKS[idx] = { ...DRINKS[idx], ...patch };
+        const id = Number(idStr);
+        const idx = DRINKS.findIndex(x => x.id === id);
+        if (idx < 0) return;
+        // При смене версии схемы не применяем process/videoUrl базовых напитков из старого кэша
+        if (schemaMismatch && BASE_DRINK_IDS.has(id)) {
+          const { process: _p, videoUrl: _v, ...safePatch } = patch;
+          DRINKS[idx] = { ...DRINKS[idx], ...safePatch };
+        } else {
+          DRINKS[idx] = { ...DRINKS[idx], ...patch };
+        }
       });
     }
     if (sv.semiItems && sv.semiItems.length > 0) {
