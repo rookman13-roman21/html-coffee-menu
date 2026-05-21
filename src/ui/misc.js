@@ -1566,3 +1566,263 @@ export function onFixedCostVariable(i, checked) {
   if (window.lucide) lucide.createIcons();
 }
 
+// ════════════════════════════════════════════════════════════════════
+//  EXPORT — Стартовые вложения (PDF + XLSX)
+// ════════════════════════════════════════════════════════════════════
+
+import { OC_CATS, OC_FORMATS, _ocCalcTotal, _ocFmtAmt } from '../render/dashboard.js';
+
+export function exportOpeningCostsPDF() {
+  const S       = window.S;
+  const costs   = S.openingCosts || [];
+  const meta    = S.openingMeta  || {};
+  const format  = meta.format   || 'full';
+  const currency = meta.currency || 'RUB';
+  const today   = new Date().toLocaleDateString('ru');
+  const loc     = window.activeLoc();
+  const locName = loc?.name || 'Кофейня';
+  const total   = _ocCalcTotal(costs);
+  const fmtName = OC_FORMATS[format]?.label || format;
+
+  // Группируем по категориям
+  const byCat = {};
+  Object.keys(OC_CATS).forEach(c => { byCat[c] = []; });
+  costs.forEach(item => {
+    if (byCat[item.category]) byCat[item.category].push(item);
+    else byCat['reserve'].push(item);
+  });
+
+  const fmtRub = v => v.toLocaleString('ru') + ' ₽';
+  const fmtCur = v => currency !== 'RUB' ? ` (${_ocFmtAmt(v)})` : '';
+
+  let rows = '';
+  let globalN = 0;
+  let catRows = '';
+  Object.entries(byCat).forEach(([cat, items]) => {
+    if (!items.length) return;
+    const catTotal = items.reduce((s, r) => s + r.price * r.qty, 0);
+    const info = OC_CATS[cat];
+    catRows += `<tr class="cat-row"><td colspan="5">${info.icon} ${info.label}</td><td class="num-r">${fmtRub(catTotal)}${fmtCur(catTotal)}</td></tr>`;
+    items.forEach(item => {
+      globalN++;
+      const rowTotal = item.price * item.qty;
+      catRows += `<tr>
+        <td class="num">${globalN}</td>
+        <td class="name">${item.name || '—'}</td>
+        <td class="num-r">${item.qty}</td>
+        <td class="num-r">${fmtRub(item.price)}${fmtCur(item.price)}</td>
+        <td class="url">${item.url ? `<span style="color:#417033;font-size:8pt">${item.url.replace(/^https?:\/\//,'').replace(/\/$/, '')}</span>` : '—'}</td>
+        <td class="num-r bold">${fmtRub(rowTotal)}${fmtCur(rowTotal)}</td>
+      </tr>`;
+    });
+  });
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Стартовые вложения — ${locName}</title>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Mulish',Arial,sans-serif;font-size:10pt;color:#222;background:#fff}
+@page{size:A4 landscape;margin:10mm}
+.cover{background:#417033;color:#fff;padding:16px 20px;margin-bottom:16px;border-radius:6px;display:flex;justify-content:space-between;align-items:flex-end}
+.cover h1{font-size:15pt;font-weight:800}
+.cover p{font-size:9pt;opacity:.85;margin-top:3px}
+.cover-right{text-align:right;font-size:9pt;opacity:.85}
+.cover-right .total{font-size:17pt;font-weight:800}
+table{width:100%;border-collapse:collapse;font-size:9pt}
+th{background:#417033;color:#fff;padding:6px 8px;text-align:left;font-weight:700}
+th.num-r{text-align:right}
+td{padding:5px 8px;border-bottom:1px solid #e4ede0;vertical-align:middle}
+td.num{color:#999;width:28px;text-align:center}
+td.num-r{text-align:right;white-space:nowrap}
+td.bold{font-weight:700}
+td.url{font-size:8pt;color:#417033;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.name{font-weight:600}
+tr:nth-child(even) td{background:#fafcf9}
+tr.cat-row td{background:#417033;color:#fff;font-weight:700;font-size:10pt;padding:5px 8px;letter-spacing:0.01em}
+.footer{margin-top:16px;text-align:right;font-size:8pt;color:#666;border-top:1px solid #ddd;padding-top:4px}
+.total-row td{background:#e8f2e3;font-weight:800;font-size:10pt}
+@media print{.cover,th,tr.cat-row td,.total-row td{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body>
+<div class="cover">
+  <div>
+    <h1>Стартовые вложения</h1>
+    <p>${locName} &nbsp;·&nbsp; Формат: ${fmtName} &nbsp;·&nbsp; ${today}</p>
+  </div>
+  <div class="cover-right">
+    <div>Итого</div>
+    <div class="total">${fmtRub(total)}</div>
+    ${currency !== 'RUB' ? `<div style="opacity:.8;font-size:11pt">${_ocFmtAmt(total)}</div>` : ''}
+  </div>
+</div>
+<table>
+  <thead><tr>
+    <th style="width:28px">#</th>
+    <th>Наименование</th>
+    <th class="num-r" style="width:60px">Кол-во</th>
+    <th class="num-r" style="width:120px">Цена за ед.</th>
+    <th style="width:180px">Ссылка</th>
+    <th class="num-r" style="width:130px">Итого</th>
+  </tr></thead>
+  <tbody>
+    ${catRows}
+    <tr class="total-row">
+      <td colspan="5" style="text-align:right">ИТОГО ВЛОЖЕНИЙ</td>
+      <td class="num-r">${fmtRub(total)}${fmtCur(total)}</td>
+    </tr>
+  </tbody>
+</table>
+<div class="footer">Московская школа бариста &nbsp;·&nbsp; baristaschool.ru &nbsp;·&nbsp; ${costs.length} позиций</div>
+</body></html>`;
+
+  window._printViaIframe(html, 'mbs-opening-costs');
+}
+
+export async function exportOpeningCostsXLSX() {
+  if (!window.ExcelJS) { window.showAlert('Библиотека ExcelJS не загрузилась.'); return; }
+  const S        = window.S;
+  const costs    = S.openingCosts || [];
+  const meta     = S.openingMeta  || {};
+  const format   = meta.format   || 'full';
+  const currency = meta.currency || 'RUB';
+  const loc      = window.activeLoc();
+  const locName  = loc?.name || 'Кофейня';
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const fmtName  = OC_FORMATS[format]?.label || format;
+
+  // Группируем
+  const byCat = {};
+  Object.keys(OC_CATS).forEach(c => { byCat[c] = []; });
+  costs.forEach(item => {
+    if (byCat[item.category]) byCat[item.category].push(item);
+    else byCat['reserve'].push(item);
+  });
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'MBS Coffee Menu';
+  const ws = wb.addWorksheet('Стартовые вложения');
+
+  const C = {
+    green:     '417033',
+    greenBg:   'e8f2e3',
+    catBg:     'd4e8cc',
+    rowEven:   'f4f8f2',
+    white:     'FFFFFF',
+    muted:     '999999',
+    text:      '222222',
+  };
+  const fill  = (c) => ({ type: 'pattern', pattern: 'solid', fgColor: { argb: c } });
+  const font  = (bold, size = 10, color = C.text) => ({ name: 'Arial', bold, size, color: { argb: color } });
+  const align = (h = 'left') => ({ vertical: 'middle', horizontal: h });
+
+  ws.columns = [
+    { header: '№',             key: 'n',      width: 5   },
+    { header: 'Категория',     key: 'cat',    width: 22  },
+    { header: 'Наименование',  key: 'name',   width: 38  },
+    { header: 'Кол-во',        key: 'qty',    width: 8   },
+    { header: 'Цена, ₽',       key: 'price',  width: 14  },
+    { header: 'Итого, ₽',      key: 'total',  width: 16  },
+    { header: 'Ссылка',        key: 'url',    width: 36  },
+  ];
+
+  // Заголовок таблицы
+  const hRow = ws.getRow(1);
+  hRow.eachCell(cell => {
+    cell.fill = fill(C.green);
+    cell.font = font(true, 10, C.white);
+    cell.alignment = align('center');
+    cell.border = { bottom: { style: 'thin', color: { argb: C.green } } };
+  });
+  hRow.height = 22;
+
+  let globalN   = 0;
+  let rowIndex  = 1; // tracker for even/odd
+
+  Object.entries(byCat).forEach(([cat, items]) => {
+    if (!items.length) return;
+    const catTotal = items.reduce((s, r) => s + r.price * r.qty, 0);
+    const info = OC_CATS[cat];
+
+    // Строка категории
+    const cr = ws.addRow({ cat: `${info.icon} ${info.label}`, total: catTotal });
+    cr.height = 20;
+    cr.eachCell(cell => {
+      cell.fill = fill(C.catBg);
+      cell.font = font(true, 10, C.text);
+      cell.alignment = align();
+    });
+    // Сумма по категории вправо
+    cr.getCell('total').alignment = align('right');
+    cr.getCell('total').numFmt = '#,##0" ₽"';
+    cr.getCell('total').value = catTotal;
+
+    items.forEach((item, i) => {
+      globalN++;
+      rowIndex++;
+      const rowTotal = item.price * item.qty;
+      const r = ws.addRow({
+        n:     globalN,
+        cat:   OC_CATS[cat]?.label || cat,
+        name:  item.name,
+        qty:   item.qty,
+        price: item.price,
+        total: rowTotal,
+        url:   item.url || '',
+      });
+      r.height = 18;
+      r.eachCell(cell => {
+        cell.alignment = { vertical: 'middle', wrapText: false };
+        cell.border = { bottom: { style: 'thin', color: { argb: 'e4ede0' } } };
+      });
+      if (rowIndex % 2 === 0) r.eachCell(c => { c.fill = fill(C.rowEven); });
+      r.getCell('n').font     = font(false, 9, C.muted);
+      r.getCell('price').numFmt = '#,##0" ₽"';
+      r.getCell('total').numFmt = '#,##0" ₽"';
+      r.getCell('total').font   = font(true, 10, C.text);
+      r.getCell('price').alignment = align('right');
+      r.getCell('total').alignment = align('right');
+      r.getCell('qty').alignment   = align('center');
+
+      // Гиперссылка
+      if (item.url) {
+        r.getCell('url').value = { text: item.url.replace(/^https?:\/\//, ''), hyperlink: item.url };
+        r.getCell('url').font  = { name: 'Arial', size: 9, color: { argb: C.green }, underline: true };
+      }
+    });
+  });
+
+  // Итоговая строка
+  const total    = _ocCalcTotal(costs);
+  const totalRow = ws.addRow({ cat: 'ИТОГО ВЛОЖЕНИЙ', total });
+  totalRow.height = 24;
+  totalRow.eachCell(cell => {
+    cell.fill = fill(C.greenBg);
+    cell.font = font(true, 11, C.text);
+    cell.alignment = align();
+  });
+  totalRow.getCell('total').numFmt    = '#,##0" ₽"';
+  totalRow.getCell('total').alignment = align('right');
+  totalRow.getCell('cat').alignment   = align('right');
+
+  // Мета-лист
+  const wsMeta = wb.addWorksheet('Инфо');
+  wsMeta.addRow(['Параметр', 'Значение']);
+  wsMeta.addRow(['Точка',    locName]);
+  wsMeta.addRow(['Формат',   fmtName]);
+  wsMeta.addRow(['Дата',     todayISO]);
+  wsMeta.addRow(['Позиций',  costs.length]);
+  wsMeta.addRow(['Итого, ₽', total]);
+  if (currency !== 'RUB') {
+    wsMeta.addRow([`Итого (${currency})`, _ocFmtAmt(total)]);
+  }
+  wsMeta.columns = [{ width: 18 }, { width: 24 }];
+
+  const buf  = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `mbs-opening-costs-${locName.replace(/\s+/g, '_')}-${todayISO}.xlsx`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+}

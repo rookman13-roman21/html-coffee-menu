@@ -123,6 +123,8 @@ export const S = {
   priceLog:    [],
   customCategories: {},
   semiCustomCategories: {},
+  openingCosts: [],
+  openingMeta: { format: 'full', currency: 'RUB', usdRate: 90, eurRate: 98 },
 };
 
 // ─── Сброс глобального стейта к базовым значениям ───────────────────
@@ -160,6 +162,8 @@ export function resetGlobalsToBase() {
   S.priceLog          = [];
   S.customCategories  = {};
   S.semiCustomCategories = {};
+  S.openingCosts = [];
+  S.openingMeta  = { format: 'full', currency: 'RUB', usdRate: 90, eurRate: 98 };
 
   // Сбрасываем счётчики (через window — они ещё в app.js)
   window.nextDrinkId = 27;
@@ -218,6 +222,8 @@ export function saveState() {
       customMats: Object.entries(MAT).filter(([,v]) => v.custom).map(([k,v]) => ({ key: k, ...v })),
       customCategories: S.customCategories,
       semiCustomCategories: S.semiCustomCategories,
+      openingCosts: S.openingCosts,
+      openingMeta: S.openingMeta,
       semiItems: SEMI,
     }));
     scheduleServerSync();
@@ -298,6 +304,8 @@ export function loadState() {
 
     if (sv.customCategories) Object.assign(S.customCategories, sv.customCategories);
     if (sv.semiCustomCategories) Object.assign(S.semiCustomCategories, sv.semiCustomCategories);
+    if (sv.openingCosts) S.openingCosts = sv.openingCosts;
+    if (sv.openingMeta)  Object.assign(S.openingMeta, sv.openingMeta);
 
     if (sv.customMats) {
       sv.customMats.forEach(m => {

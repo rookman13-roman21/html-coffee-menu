@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MBS* Coffee Menu</title>
+  <link rel="icon" type="image/svg+xml" href="https://static.tildacdn.com/tild3638-6136-4039-b639-633937393438/Group_23.svg">
   <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -19,12 +20,10 @@
       <source media="(max-width: 768px)" srcset="/images/MBS logo.svg">
       <img src="/images/moscow barista school logo.svg" alt="Moscow Barista School" class="header-logo-img">
     </picture>
-    <div class="header-sub" style="margin-top:2px">CFO-инструментарий · финансы кофейни в реальном времени</div>
   </div>
 
   <!-- Селектор локаций -->
   <div class="loc-switcher" id="loc-switcher" onclick="toggleLocMenu(event)">
-    <span class="loc-icon" id="loc-icon">☕</span>
     <span class="loc-name" id="loc-name">Моя кофейня</span>
     <i data-lucide="chevron-down" class="icon" style="width:14px;height:14px;opacity:.7"></i>
   </div>
@@ -46,12 +45,12 @@
     </div>
 
     <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Тёмная / светлая тема"><i data-lucide="moon" class="icon" id="theme-icon"></i></button>
-    <div id="user-bar" style="display:none;margin-left:8px;"></div>
   </div>
 </header>
 
 <!-- Выпадающие меню (вне хедера — фикс iOS position:fixed внутри sticky) -->
 <div class="loc-menu" id="loc-menu" onclick="event.stopPropagation()">
+  <div id="loc-user-card"></div>
   <div class="loc-menu-header">Заведения</div>
   <div class="loc-list" id="loc-list"></div>
   <div class="loc-menu-divider"></div>
@@ -91,6 +90,57 @@
   </button>
 </nav>
 <!-- Модал: просмотр напитка (техкарта) -->
+<!-- Карточка позиции стартовых вложений -->
+<div class="modal-bg" id="modal-oc-item">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-title">
+      <span id="oci-cat-label" style="font-size:13px;font-weight:600;color:var(--muted);margin-right:8px"></span>
+      <span id="oci-title">Позиция</span>
+      <button class="modal-close" onclick="closeModal('modal-oc-item')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-row">
+        <div class="modal-label">Название</div>
+        <input class="modal-inp" id="oci-name" type="text" placeholder="Название статьи расходов">
+      </div>
+      <div class="modal-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <div class="modal-label">Количество</div>
+          <input class="modal-inp" id="oci-qty" type="number" min="1" step="1" inputmode="numeric" placeholder="1">
+        </div>
+        <div>
+          <div class="modal-label" id="oci-price-label">Цена, ₽</div>
+          <input class="modal-inp" id="oci-price" type="number" min="0" step="500" inputmode="numeric" placeholder="0">
+        </div>
+      </div>
+      <div class="modal-row" style="background:var(--gray);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;color:var(--muted)">Итого</span>
+        <span id="oci-total" style="font-size:20px;font-weight:800;color:var(--green)"></span>
+      </div>
+      <div class="modal-row">
+        <div class="modal-label">Ссылка на источник</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="modal-inp" id="oci-url" type="url" placeholder="https://..." style="flex:1">
+          <a id="oci-url-open" href="#" target="_blank" class="btn btn-outline" style="display:none;padding:7px 10px"><i data-lucide="external-link" class="icon"></i></a>
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-label">Категория</div>
+        <select class="modal-select" id="oci-cat"></select>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between">
+      <button class="btn btn-danger-outline" onclick="ocItemDelete()" title="Удалить позицию">
+        <i data-lucide="trash-2" class="icon"></i> Удалить
+      </button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline" onclick="closeModal('modal-oc-item')">Отмена</button>
+        <button class="btn-primary" onclick="ocItemSave()"><i data-lucide="check" class="icon"></i> Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="modal-drink-view">
   <div class="modal" style="max-width:560px">
     <div class="modal-title">

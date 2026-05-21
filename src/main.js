@@ -88,6 +88,11 @@ import {
 
 import {
   renderDashboard, filterDashboard, setDashGroup, toggleDashIntro, toggleTop10, initTop10Collapse,
+  OC_CATS, OC_FORMATS, OC_TEMPLATES,
+  ocAddRow, ocDeleteRow, ocUpdateField, ocLoadTemplate, ocSetFormat, ocSetCurrency, ocUpdateRate,
+  ocToggleCat, ocMoveRow, ocClearAll,
+  ocOpenItem, ocItemSave, ocItemDelete,
+  _ocCalcTotal, _ocFmtAmt,
 } from './render/dashboard.js';
 
 import {
@@ -214,6 +219,7 @@ import {
   onSeasonalMonth, openSeasonDrawer, closeSeasonDrawer, onSeasonDrawerChange,
   applySeasonPreset, _updateDrawerRangeColor, onFixedCostVariable,
   exportSuppliersPDF, exportSuppliersXLSX,
+  exportOpeningCostsPDF, exportOpeningCostsXLSX,
 } from './ui/misc.js';
 
 // ─── Реэкспорт в window для обратной совместимости с public/app.js ──
@@ -285,6 +291,11 @@ Object.assign(window, {
 const _srcExports = {
   // render/dashboard
   renderDashboard, filterDashboard, setDashGroup, toggleDashIntro, toggleTop10, initTop10Collapse,
+  OC_CATS, OC_FORMATS, OC_TEMPLATES,
+  ocAddRow, ocDeleteRow, ocUpdateField, ocLoadTemplate, ocSetFormat, ocSetCurrency, ocUpdateRate,
+  ocToggleCat, ocMoveRow, ocClearAll,
+  ocOpenItem, ocItemSave, ocItemDelete,
+  _ocCalcTotal, _ocFmtAmt,
   // render/cost
   renderCost, filterSupCost, filterIngCost, filterSemiCost,
   // render/sales
@@ -372,6 +383,7 @@ const _srcExports = {
   onSeasonalMonth, openSeasonDrawer, closeSeasonDrawer, onSeasonDrawerChange,
   applySeasonPreset, _updateDrawerRangeColor, onFixedCostVariable,
   exportSuppliersPDF, exportSuppliersXLSX,
+  exportOpeningCostsPDF, exportOpeningCostsXLSX,
   // state/store
   // saveState/loadState перенесены в _storeExports выше
 };
@@ -394,23 +406,32 @@ window.nextMatKey  = 1;
 //  INIT (перенесено из app.js)
 // ════════════════════════════════════════════════════════════════════
 
-// Добавляем кнопку "Выйти" в шапку если авторизованы
-(function _initUserBar() {
+// Карточка пользователя в дропдауне "Моя кофейня"
+function _renderUserCard() {
   const user = getUser();
-  if (!user) return;
-  const bar = document.getElementById('user-bar');
-  if (!bar) return;
-  bar.innerHTML = `
-    <span style="font-size:13px;color:#888;margin-right:8px;">${user.email || ''}</span>
-    <button onclick="window._authLogout()" style="font-size:12px;background:none;border:1px solid #ddd;
-      border-radius:8px;padding:4px 10px;cursor:pointer;color:#666;font-family:inherit;">Выйти</button>
+  const card = document.getElementById('loc-user-card');
+  if (!card) return;
+  if (!user) { card.innerHTML = ''; return; }
+  const initial = (user.name || user.email || '?')[0].toUpperCase();
+  card.innerHTML = `
+    <div class="loc-user-card">
+      <div class="loc-user-avatar">${initial}</div>
+      <div class="loc-user-info">
+        <div class="loc-user-name">${user.name || ''}</div>
+        <div class="loc-user-email">${user.email || ''}</div>
+      </div>
+      <button class="loc-user-logout" onclick="window._authLogout()">Выйти</button>
+    </div>
+    <div class="loc-menu-divider"></div>
   `;
-  bar.style.display = 'flex';
-  bar.style.alignItems = 'center';
-})();
+}
+_renderUserCard();
 window._authLogout = logout;
 
 async function _initApp(serverState) {
+  // Обновляем карточку пользователя (актуально после логина)
+  _renderUserCard();
+
   // Если пришёл стейт с сервера — восстанавливаем в localStorage
   if (serverState) {
     restoreFromServer(serverState);

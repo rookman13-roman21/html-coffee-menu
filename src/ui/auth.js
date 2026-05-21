@@ -51,11 +51,15 @@ export async function pushState(state) {
 }
 
 /** Выполнить login/register. mode = 'login' | 'register' */
-async function authRequest(mode, email, password) {
+async function authRequest(mode, email, password, name, consent = false, phone = '') {
+  const body = { email, password };
+  if (mode === 'register' && name) body.name = name;
+  if (mode === 'register') body.consent = consent;
+  if (mode === 'register' && phone) body.phone = phone;
   const r = await fetch(`${API}/api/auth/${mode}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify(body)
   });
   const d = await r.json();
   if (!r.ok) {
@@ -78,8 +82,10 @@ function injectStyles() {
     #auth-overlay {
       position: fixed; inset: 0; z-index: 9999;
       background: #f5f4f0;
-      display: flex; align-items: center; justify-content: center;
-      padding: 16px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 24px 16px;
       font-family: inherit;
     }
     .auth-card {
@@ -88,10 +94,47 @@ function injectStyles() {
       box-shadow: 0 8px 40px rgba(0,0,0,.10);
       padding: 36px 32px 32px;
       width: 100%; max-width: 400px;
+      margin: auto;
     }
+    #auth-name-field, #auth-phone-field, #auth-consent-field {
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height .2s ease, opacity .15s ease, margin .2s ease;
+      margin-bottom: 0;
+    }
+    #auth-name-field.visible, #auth-phone-field.visible {
+      max-height: 80px;
+      opacity: 1;
+      margin-bottom: 16px;
+    }
+    #auth-consent-field {
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height .25s ease, opacity .2s ease, margin .25s ease;
+      margin-bottom: 0;
+    }
+    #auth-consent-field.visible {
+      max-height: 120px;
+      opacity: 1;
+      margin-bottom: 16px;
+    }
+    .auth-consent-label {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 13px; color: #555; line-height: 1.5; cursor: pointer;
+    }
+    .auth-consent-label input[type=checkbox] {
+      margin-top: 2px; flex-shrink: 0;
+      width: 16px; height: 16px; accent-color: #417033; cursor: pointer;
+    }
+    .auth-consent-label a { color: #417033; text-decoration: underline; text-underline-offset: 2px; }
+    .auth-consent-label a:hover { opacity: .75; }
     .auth-logo {
-      font-size: 22px; font-weight: 800; color: #1a1a1a;
-      margin: 0 0 4px; letter-spacing: -.02em;
+      margin: 0 0 8px; line-height: 0;
+    }
+    .auth-logo img {
+      height: 38px; width: auto;
     }
     .auth-sub {
       font-size: 13px; color: #888; margin: 0 0 28px;
@@ -155,6 +198,48 @@ function injectStyles() {
       display: none; line-height: 1.5;
     }
     .auth-pending-notice.visible { display: block; }
+    .auth-link-btn {
+      background: none; border: none; padding: 0;
+      font-size: 13px; color: #417033; cursor: pointer;
+      font-family: inherit; font-weight: 600;
+      text-decoration: underline; text-underline-offset: 2px;
+    }
+    .auth-link-btn:hover { opacity: .75; }
+    .auth-forgot-row {
+      text-align: right; margin-top: 6px;
+    }
+    .auth-divider {
+      display: flex; align-items: center; gap: 10px;
+      margin: 16px 0; color: #bbb; font-size: 12px;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: ''; flex: 1; height: 1px; background: #e8e6e1;
+    }
+    .auth-ya-btn {
+      width: 100%; padding: 11px; border: 1.5px solid #e0ddd8;
+      border-radius: 12px; background: #fff; color: #1a1a1a;
+      font-size: 14px; font-weight: 600; font-family: inherit;
+      cursor: pointer; display: flex; align-items: center;
+      justify-content: center; gap: 9px;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .auth-ya-btn:hover { border-color: #fc3f1d; box-shadow: 0 0 0 3px rgba(252,63,29,.1); }
+    .auth-ya-btn svg { flex-shrink: 0; }
+    .auth-footer {
+      margin-top: 24px; padding-top: 16px;
+      border-top: 1px solid #f0ede8;
+      font-size: 11px; color: #aaa; line-height: 1.7;
+      text-align: center;
+    }
+    .auth-footer-docs {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px;
+      margin-top: 6px;
+    }
+    .auth-footer-docs a {
+      color: #999; text-decoration: underline; text-underline-offset: 2px;
+      font-size: 11px; white-space: nowrap;
+    }
+    .auth-footer-docs a:hover { color: #417033; }
   `;
   document.head.appendChild(s);
 }
@@ -168,7 +253,7 @@ export function showAuthScreen() {
     overlay.id = 'auth-overlay';
     overlay.innerHTML = `
       <div class="auth-card">
-        <p class="auth-logo">☕ Coffee Menu</p>
+        <p class="auth-logo"><img src="https://static.tildacdn.com/tild6131-3765-4030-a666-656363633265/_1_1.svg" alt="Moscow Barista School"></p>
         <p class="auth-sub">Управление кофейней — вход в аккаунт</p>
         <div class="auth-tabs">
           <button class="auth-tab active" data-tab="login">Войти</button>
@@ -179,9 +264,26 @@ export function showAuthScreen() {
             <label>Email</label>
             <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email">
           </div>
+          <div class="auth-field" id="auth-name-field">
+            <label>Как вас зовут?</label>
+            <input type="text" id="auth-name" placeholder="Ваше имя" autocomplete="name">
+          </div>
+          <div class="auth-field" id="auth-phone-field">
+            <label>Номер телефона</label>
+            <input type="tel" id="auth-phone" placeholder="+7 (___) ___-__-__" autocomplete="tel" inputmode="tel">
+          </div>
           <div class="auth-field">
             <label>Пароль</label>
             <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
+          </div>
+          <div class="auth-forgot-row" id="auth-forgot-row">
+            <button class="auth-link-btn" id="auth-forgot-btn" type="button">Забыли пароль?</button>
+          </div>
+          <div id="auth-consent-field">
+            <label class="auth-consent-label">
+              <input type="checkbox" id="auth-consent">
+              <span>Я даю своё <a href="https://docs.google.com/document/d/13Q2Qwov_B2vzTI5qh2c3MNOZ-B3gVtDW9T3vyFkAKY0/preview" target="_blank" rel="noopener">Согласие</a> на обработку персональных данных и ознакомлен с <a href="https://docs.google.com/document/d/1VvQ_XvR-FIq3Xaleas07I-9pfAomrfUNFqPqWFE4H1U/preview" target="_blank" rel="noopener">Политикой обработки персональных данных</a> и <a href="https://docs.google.com/document/d/1JgElyS6jSWw8L-h7ZnTpJRtDN56WyVzhm7m7buY-yJA/preview" target="_blank" rel="noopener">Офертой</a></span>
+            </label>
           </div>
           <button class="auth-btn" id="auth-submit">Войти</button>
           <div class="auth-error" id="auth-error"></div>
@@ -189,6 +291,56 @@ export function showAuthScreen() {
           <div class="auth-pending-notice" id="auth-pending">
             ⏳ Аккаунт создан и ожидает активации администратором.<br>
             Обычно это занимает до нескольких часов.
+          </div>
+          <div class="auth-divider">или</div>
+          <button class="auth-ya-btn" id="auth-ya-btn" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#FC3F1D"/><path d="M13.32 6.4H12.1c-1.68 0-2.56.84-2.56 2.1 0 1.4.62 2.06 1.86 2.9l1.04.7-2.96 4.5H7.8l2.74-4.14c-1.58-1.1-2.46-2.16-2.46-3.9 0-2.18 1.52-3.66 3.98-3.66h2.38v11.7H13.32V6.4Z" fill="#fff"/></svg>
+            Войти через Яндекс ID
+          </button>
+        </div>
+
+        <!-- Forgot password panel -->
+        <div id="auth-forgot-panel" style="display:none">
+          <p style="font-size:14px;color:#555;margin:0 0 20px;line-height:1.5">
+            Введите ваш email — пришлём ссылку для сброса пароля.
+          </p>
+          <div class="auth-field">
+            <label>Email</label>
+            <input type="email" id="auth-forgot-email" placeholder="you@example.com" autocomplete="email" autocapitalize="none" autocorrect="off">
+          </div>
+          <button class="auth-btn" id="auth-forgot-submit">Отправить ссылку</button>
+          <div class="auth-error" id="auth-forgot-error"></div>
+          <div class="auth-success" id="auth-forgot-success"></div>
+          <div style="text-align:center;margin-top:14px">
+            <button class="auth-link-btn" id="auth-forgot-back">← Назад к входу</button>
+          </div>
+        </div>
+
+        <!-- Reset password panel -->
+        <div id="auth-reset-panel" style="display:none">
+          <p style="font-size:14px;color:#555;margin:0 0 20px;line-height:1.5">
+            Придумайте новый пароль (минимум 6 символов).
+          </p>
+          <div class="auth-field">
+            <label>Новый пароль</label>
+            <input type="password" id="auth-reset-pass" placeholder="••••••••" autocomplete="new-password">
+          </div>
+          <div class="auth-field">
+            <label>Повторите пароль</label>
+            <input type="password" id="auth-reset-pass2" placeholder="••••••••" autocomplete="new-password">
+          </div>
+          <button class="auth-btn" id="auth-reset-submit">Сохранить пароль</button>
+          <div class="auth-error" id="auth-reset-error"></div>
+          <div class="auth-success" id="auth-reset-success"></div>
+        </div>
+
+        <!-- Footer -->
+        <div class="auth-footer">
+          <div>ИП Суслин Роман Викторович · ИНН 744517097939 · ОГРН 318745600110807</div>
+          <div class="auth-footer-docs">
+            <a href="https://docs.google.com/document/d/1VvQ_XvR-FIq3Xaleas07I-9pfAomrfUNFqPqWFE4H1U/preview" target="_blank" rel="noopener">Политика персональных данных</a>
+            <a href="https://docs.google.com/document/d/1JgElyS6jSWw8L-h7ZnTpJRtDN56WyVzhm7m7buY-yJA/preview" target="_blank" rel="noopener">Оферта</a>
+            <a href="https://docs.google.com/document/d/13Q2Qwov_B2vzTI5qh2c3MNOZ-B3gVtDW9T3vyFkAKY0/preview" target="_blank" rel="noopener">Согласие на обработку данных</a>
           </div>
         </div>
       </div>
@@ -199,7 +351,45 @@ export function showAuthScreen() {
     let currentMode = 'login';
 
     const emailEl    = overlay.querySelector('#auth-email');
+    const nameEl     = overlay.querySelector('#auth-name');
+    const nameField  = overlay.querySelector('#auth-name-field');
+    const phoneEl    = overlay.querySelector('#auth-phone');
+    const phoneField = overlay.querySelector('#auth-phone-field');
     const passEl     = overlay.querySelector('#auth-password');
+
+    // Нормализация телефона: всегда +7, игнорировать 8/7 в начале
+    function normalizePhone(raw) {
+      let digits = raw.replace(/\D/g, '');
+      if (digits.startsWith('8') || digits.startsWith('7')) digits = digits.slice(1);
+      digits = digits.slice(0, 10);
+      if (!digits) return '+7';
+      let out = '+7';
+      if (digits.length > 0) out += ' (' + digits.slice(0, 3);
+      if (digits.length >= 3) out += ') ' + digits.slice(3, 6);
+      else if (digits.length > 3) out += ') ';
+      if (digits.length >= 6) out += '-' + digits.slice(6, 8);
+      if (digits.length >= 8) out += '-' + digits.slice(8, 10);
+      return out;
+    }
+    phoneEl.addEventListener('focus', () => {
+      if (!phoneEl.value) phoneEl.value = '+7 ';
+    });
+    phoneEl.addEventListener('blur', () => {
+      if (phoneEl.value === '+7 ' || phoneEl.value === '+7') phoneEl.value = '';
+    });
+    phoneEl.addEventListener('input', () => {
+      const prev = phoneEl.value;
+      const sel  = phoneEl.selectionStart;
+      const norm = normalizePhone(prev);
+      phoneEl.value = norm;
+      const delta = norm.length - prev.length;
+      try { phoneEl.setSelectionRange(sel + delta, sel + delta); } catch(e) {}
+    });
+    phoneEl.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pasted = (e.clipboardData || window.clipboardData).getData('text');
+      phoneEl.value = normalizePhone(pasted);
+    });
     const submitBtn  = overlay.querySelector('#auth-submit');
     const errorEl    = overlay.querySelector('#auth-error');
     const successEl  = overlay.querySelector('#auth-success');
@@ -210,6 +400,9 @@ export function showAuthScreen() {
       overlay.querySelectorAll('.auth-tab').forEach(t => {
         t.classList.toggle('active', t.dataset.tab === mode);
       });
+      nameField.classList.toggle('visible', mode === 'register');
+      phoneField.classList.toggle('visible', mode === 'register');
+      overlay.querySelector('#auth-consent-field').classList.toggle('visible', mode === 'register');
       submitBtn.textContent = mode === 'login' ? 'Войти' : 'Зарегистрироваться';
       errorEl.classList.remove('visible');
       successEl.classList.remove('visible');
@@ -243,8 +436,18 @@ export function showAuthScreen() {
       submitBtn.textContent = '...';
 
       try {
-        if (currentMode === 'register') {
-          await authRequest('register', email, password);
+      if (currentMode === 'register') {
+          const name = nameEl.value.trim();
+          const phone = normalizePhone(phoneEl.value.trim());
+          const consent = overlay.querySelector('#auth-consent');
+          if (!consent.checked) {
+            errorEl.textContent = 'Необходимо согласие на обработку персональных данных';
+            errorEl.classList.add('visible');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Зарегистрироваться';
+            return;
+          }
+          await authRequest('register', email, password, name, true, phone);
           pendingEl.classList.add('visible');
           submitBtn.disabled = false;
           submitBtn.textContent = 'Зарегистрироваться';
@@ -269,6 +472,163 @@ export function showAuthScreen() {
     });
 
     emailEl.focus();
+
+    // Yandex OAuth
+    overlay.querySelector('#auth-ya-btn').addEventListener('click', () => {
+      window.location.href = `${API}/api/auth/yandex`;
+    });
+
+    // Обработка редиректа после OAuth (oauth_token в URL)
+    const _oauthToken = new URLSearchParams(window.location.search).get('oauth_token');
+    const _oauthUser  = new URLSearchParams(window.location.search).get('oauth_user');
+    if (_oauthToken && _oauthUser) {
+      try {
+        const _user = JSON.parse(decodeURIComponent(_oauthUser));
+        saveAuth(_oauthToken, _user);
+        // Убираем параметры из URL
+        window.history.replaceState({}, '', window.location.pathname);
+        fetchState().then(state => { overlay.remove(); resolve(state); });
+        return;
+      } catch { /* ignore, show form */ }
+    }
+    const _authError = new URLSearchParams(window.location.search).get('auth_error');
+    if (_authError) {
+      const _errMsg = _authError === 'account_inactive' ? 'Аккаунт ожидает активации администратором' : 'Ошибка входа через Яндекс';
+      errorEl.textContent = _errMsg;
+      errorEl.classList.add('visible');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+    const forgotBtn    = overlay.querySelector('#auth-forgot-btn');
+    const forgotPanel  = overlay.querySelector('#auth-forgot-panel');
+    const mainForm     = overlay.querySelector('#auth-form');
+    const tabsEl       = overlay.querySelector('.auth-tabs');
+    const forgotEmailEl = overlay.querySelector('#auth-forgot-email');
+    const forgotSubmit = overlay.querySelector('#auth-forgot-submit');
+    const forgotError  = overlay.querySelector('#auth-forgot-error');
+    const forgotSuccess= overlay.querySelector('#auth-forgot-success');
+    const forgotBack   = overlay.querySelector('#auth-forgot-back');
+
+    function showForgotPanel() {
+      mainForm.style.display = 'none';
+      tabsEl.style.display = 'none';
+      forgotPanel.style.display = '';
+      forgotEmailEl.value = emailEl.value || '';
+      forgotEmailEl.focus();
+    }
+
+    function showMainPanel() {
+      forgotPanel.style.display = 'none';
+      tabsEl.style.display = '';
+      mainForm.style.display = '';
+      emailEl.focus();
+    }
+
+    forgotBtn.addEventListener('click', showForgotPanel);
+    forgotBack.addEventListener('click', showMainPanel);
+
+    forgotSubmit.addEventListener('click', async () => {
+      const email = forgotEmailEl.value.trim().toLowerCase();
+      forgotError.classList.remove('visible');
+      forgotSuccess.classList.remove('visible');
+      if (!email) {
+        forgotError.textContent = 'Введите email';
+        forgotError.classList.add('visible');
+        return;
+      }
+      forgotSubmit.disabled = true;
+      forgotSubmit.textContent = '...';
+      try {
+        const r = await fetch(`${API}/api/auth/forgot-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const d = await r.json();
+        if (d.email_sent === false) {
+          forgotSuccess.textContent = 'Ссылка создана. Обратитесь к администратору для её получения.';
+        } else {
+          forgotSuccess.textContent = 'Ссылка отправлена на ' + email + '. Проверьте почту.';
+        }
+        forgotSuccess.classList.add('visible');
+      } catch (e) {
+        forgotError.textContent = 'Ошибка сети';
+        forgotError.classList.add('visible');
+      } finally {
+        forgotSubmit.disabled = false;
+        forgotSubmit.textContent = 'Отправить ссылку';
+      }
+    });
+
+    forgotEmailEl.addEventListener('keydown', e => { if (e.key === 'Enter') forgotSubmit.click(); });
+
+    // ─── RESET PASSWORD (по токену из URL) ──────────────────────────────────
+    const resetPanel  = overlay.querySelector('#auth-reset-panel');
+    const resetPass   = overlay.querySelector('#auth-reset-pass');
+    const resetPass2  = overlay.querySelector('#auth-reset-pass2');
+    const resetSubmit = overlay.querySelector('#auth-reset-submit');
+    const resetError  = overlay.querySelector('#auth-reset-error');
+    const resetSuccess= overlay.querySelector('#auth-reset-success');
+
+    const urlParams   = new URLSearchParams(window.location.search);
+    const resetToken  = urlParams.get('reset_token');
+
+    if (resetToken) {
+      // Показываем форму сброса сразу
+      mainForm.style.display = 'none';
+      tabsEl.style.display = 'none';
+      resetPanel.style.display = '';
+      overlay.querySelector('.auth-sub').textContent = 'Создайте новый пароль';
+      resetPass.focus();
+    }
+
+    resetSubmit.addEventListener('click', async () => {
+      const p1 = resetPass.value;
+      const p2 = resetPass2.value;
+      resetError.classList.remove('visible');
+      resetSuccess.classList.remove('visible');
+      if (!p1 || p1.length < 6) {
+        resetError.textContent = 'Пароль минимум 6 символов';
+        resetError.classList.add('visible');
+        return;
+      }
+      if (p1 !== p2) {
+        resetError.textContent = 'Пароли не совпадают';
+        resetError.classList.add('visible');
+        return;
+      }
+      resetSubmit.disabled = true;
+      resetSubmit.textContent = '...';
+      try {
+        const r = await fetch(`${API}/api/auth/reset-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: resetToken, password: p1 })
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || 'Ошибка');
+        resetSuccess.textContent = '✓ Пароль изменён! Переходим к входу...';
+        resetSuccess.classList.add('visible');
+        // Убираем токен из URL
+        window.history.replaceState({}, '', window.location.pathname);
+        setTimeout(() => {
+          resetPanel.style.display = 'none';
+          tabsEl.style.display = '';
+          mainForm.style.display = '';
+          overlay.querySelector('.auth-sub').textContent = 'Управление кофейней — вход в аккаунт';
+          setMode('login');
+          emailEl.focus();
+        }, 2000);
+      } catch (e) {
+        resetError.textContent = e.message;
+        resetError.classList.add('visible');
+        resetSubmit.disabled = false;
+        resetSubmit.textContent = 'Сохранить пароль';
+      }
+    });
+
+    [resetPass, resetPass2].forEach(el => {
+      el.addEventListener('keydown', e => { if (e.key === 'Enter') resetSubmit.click(); });
+    });
   });
 }
 

@@ -33,6 +33,7 @@ export function renderSales() {
       <span class="page-title-left"><i data-lucide="shopping-cart" class="icon"></i> Планирование продаж</span>
       <div class="sales-hdr-actions">
         <button class="btn btn-outline sales-intro-toggle" id="sales-intro-btn" onclick="toggleSalesIntro()" title="Подсказка"><i data-lucide="info" class="icon"></i> <span class="sales-btn-txt">Подсказка</span></button>
+        <button class="btn btn-outline" onclick="openDropCandidates()" title="Кандидаты на удаление"><i data-lucide="scissors" class="icon"></i> <span class="sales-btn-txt">Кандидаты</span></button>
         <button class="btn btn-outline" onclick="exportSales()"><i data-lucide="download" class="icon"></i><span class="sales-btn-txt"> Скачать CSV</span></button>
       </div>
     </div>

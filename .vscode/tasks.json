@@ -10,6 +10,11 @@
 			"label": "git commit recipes button",
 			"type": "shell",
 			"command": "cd /Users/romansuslin_1/Downloads/All_Code/Coffee_menu/HTML_coffee_menu && git add app.js && git commit -m 'fix: move + Напиток button from renderCost to renderRecipes' && git push"
+		},
+		{
+			"label": "build deploy phone format",
+			"type": "shell",
+			"command": "cd /Users/romansuslin_1/Downloads/All_Code/Coffee_menu/HTML_coffee_menu && npm run build 2>&1 | tail -4 && ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no root@159.194.233.13 'rm -f /var/www/coffee-menu/dist/assets/index-*.js /var/www/coffee-menu/dist/assets/index-*.css' && scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no dist/index.html dist/assets/index-*.js dist/assets/index-*.css root@159.194.233.13:/var/www/coffee-menu/dist/assets/ && scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no dist/index.html root@159.194.233.13:/var/www/coffee-menu/dist/ && echo DONE"
 		}
 	]
 }

@@ -1,7 +1,7 @@
 # CONTEXT — MBS* Coffee Menu
 
 > CFO-инструментарий для владельца кофейни. SPA на Vite + ES-модули.  
-> Последнее обновление: 21 мая 2026 (сессия 34 — SaaS запущен)
+> Последнее обновление: 22 мая 2026 (сессия 38 — fix Escape для modal-oc-item)
 
 ---
 
@@ -53,11 +53,115 @@ def verify_password(plain, hashed): return _bcrypt.checkpw(plain.encode(), hashe
 ```bash
 # Фронтенд:
 cd HTML_coffee_menu && npm run build
-rsync -az --delete dist/ -e 'ssh -i ~/.ssh/id_ed25519' root@159.194.233.13:/var/www/coffee-menu/dist/
+# Деплоить только изменённые файлы (хэш в имени меняется после каждой сборки):
+scp -i ~/.ssh/id_ed25519 dist/assets/index-XXXX.js root@159.194.233.13:/var/www/coffee-menu/dist/assets/
+scp -i ~/.ssh/id_ed25519 dist/index.html root@159.194.233.13:/var/www/coffee-menu/dist/index.html
+# Удалить старые js-бандлы чтобы не было конфликтов!
+ssh -i ~/.ssh/id_ed25519 root@159.194.233.13 'ls /var/www/coffee-menu/dist/assets/'
 # Бэкенд:
 scp -i ~/.ssh/id_ed25519 server/main.py root@159.194.233.13:/var/www/coffee-menu/server/
 ssh -i ~/.ssh/id_ed25519 root@159.194.233.13 'systemctl restart coffee-menu-api'
 ```
+
+---
+
+### Email / SMTP (сессия 36)
+
+**Провайдер:** Яндекс SMTP, SSL, порт 465  
+**Отправитель:** `Moscow Barista School <hello@baristaschool.ru>`  
+**Сервис:** `coffee-menu-api` читает настройки из `/var/www/coffee-menu/server/.env`
+
+```
+SMTP_HOST=smtp.yandex.ru
+SMTP_PORT=465
+SMTP_USER=hello@baristaschool.ru
+SMTP_PASS=tikcyzpywpomxqvt
+```
+
+**Ключевые детали:**
+- Используется `smtplib.SMTP_SSL` (не `SMTP` + `starttls`) — Яндекс принимает только SSL на 465
+- `load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))` — явный путь, иначе `.env` не найден
+- Тема письма: `Временный пароль — Moscow Barista School`
+- Письмо содержит Telegram-кнопку (`https://t.me/baristaschool`), **без** кнопки «Войти»
+
+**Forgot Password flow:**
+- `POST /api/auth/forgot-password` принимает `{ email, source }` (`source: 'admin' | 'user'`)
+- Генерирует 8-символьный temp_pass, хэширует, сохраняет в БД, отправляет email
+- Всегда возвращает `{ ok, temp_password, email_sent }` — temp_password показывать в UI даже если письмо не дошло
+- `login_url` в письме зависит от `source`: admin → `https://baristaschool.online`, user → `https://barista-school.online`
+
+**Admin-panel (tilda-admin.html + admin-panel.js):**
+- Inline forgot-form прямо в карточке логина (не отдельный модал)
+- `body: JSON.stringify({ email: fEmail, source: 'admin' })` — всегда source='admin'
+- UI всегда показывает temp_password в форме: `✓ Временный пароль: <b>XXXX</b>`
+
+---
+
+### Yandex OAuth (сессия 36, обновлено сессия 37)
+
+**Приложение:** «Moscow Barista School» на oauth.yandex.ru  
+**ClientID:** `6377f7d0f4c046958fcda1f5a599dc19`  
+**Secret:** `20127c8213fb421ebd14a69fe013485c`  
+**Scopes:** `login:email login:info login:phone`  
+**Redirect URI:** `https://barista-school.online/api/auth/yandex/callback`
+
+> ⚠️ Новые пользователи через Яндекс OAuth → `is_active=False` → ожидают ручной активации через admin-панель
+
+**`.env` на сервере (полный состав):**
+```
+SMTP_HOST=smtp.yandex.ru
+SMTP_PORT=465
+SMTP_USER=hello@baristaschool.ru
+SMTP_PASS=tikcyzpywpomxqvt
+YANDEX_CLIENT_ID=6377f7d0f4c046958fcda1f5a599dc19
+YANDEX_SECRET=20127c8213fb421ebd14a69fe013485c
+YANDEX_REDIRECT=https://barista-school.online/api/auth/yandex/callback
+TELEGRAM_BOT_TOKEN=7976269448:AAGL_JKrnXRi8AaMM3KnJl2TVbFyO1G_Ckw
+TELEGRAM_ADMIN_CHAT_ID=33668380
+```
+
+**Backend endpoints (server/main.py):**
+- `GET /api/auth/yandex` — редирект на `oauth.yandex.ru/authorize`
+- `GET /api/auth/yandex/callback` — обменивает `code` → токен, получает профиль через `login.yandex.ru/info`, извлекает телефон из `profile.get("default_phone")`, создаёт пользователя с `is_active=False`, отправляет TG-уведомление
+- Редирект на `APP_URL/?oauth_token=...&oauth_user=...` (если `is_active=True`) или на `/` с ошибкой
+
+**Frontend (src/ui/auth.js):**
+- Кнопка «Войти через Яндекс ID» под разделителем «или»
+- Иконка — inline SVG (красный круг с Я), **не** `<img src>` с внешнего домена
+- Клик → `window.location.href = API + '/api/auth/yandex'`
+- После редиректа читает `?oauth_token=` + `?oauth_user=` из URL → `saveAuth()` → `fetchState()` → вход
+- Читает `?auth_error=` → показывает сообщение об ошибке
+
+**Паттерны OAuth (что нельзя делать):**
+| ❌ Нельзя | ✅ Правильно |
+|---|---|
+| `<img src="https://yastatic.net/...">` для иконки | Inline SVG — не блокируется, всегда отображается |
+| `import httpx` для OAuth | `urllib.request.urlopen` — httpx не в venv |
+| Секрет в коде | Читать из `.env` через `os.getenv('YANDEX_SECRET')` |
+| Новые пользователи Яндекс ID сразу активны | Новые → `is_active=False` → ручная активация через admin |
+
+---
+
+### Telegram-уведомления (сессия 37)
+
+**Бот:** `@baristaschool_admin_bot`  
+**Token:** `7976269448:AAGL_JKrnXRi8AaMM3KnJl2TVbFyO1G_Ckw`  
+**Admin chat ID:** `33668380` (`@DonRomon`)  
+**Env vars:** `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ADMIN_CHAT_ID` в `/var/www/coffee-menu/server/.env`
+
+**При регистрации** (email и Яндекс OAuth) отправляется уведомление:
+- Имя, email, телефон, источник (`email` или `yandex`)
+- Ссылка на admin-панель для активации
+- Inline-кнопки ✅ Активировать / ❌ Отклонить (через Telegram Bot API callback)
+
+**Backend (`notify_admin_new_user`):**
+```python
+TG_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TG_ADMIN_CHAT = os.getenv("TELEGRAM_ADMIN_CHAT_ID")
+```
+Если env vars не заданы — функция молча игнорируется (нет crash).
+
+**Важно:** не хранить токен и chat_id в коде или репозитории — только в `.env` на сервере.
 
 ---
 
@@ -2052,17 +2156,46 @@ font-family: 'Mulish', 'Helvetica Neue', Arial, sans-serif;
 
 ---
 
-### Сессия 36 (в плане) — semi-категории: TODO
+### Сессия 36 (21 мая 2026) — Email + Yandex OAuth
+- FastAPI backend: регистрация, логин, смена пароля, сброс пароля через email
+- Yandex OAuth: вход через Яндекс ID
+- SMTP через Яндекс SSL (port 465)
+- Admin-панель: управление пользователями
 
-**Следующий блок работ — категории полуфабрикатов:**
+### Сессия 37 (21 мая 2026) — Telegram-уведомления + телефон в регистрации
+- Telegram-бот для уведомлений при регистрации нового пользователя
+- Поле телефона в форме регистрации с нормализацией (`normalizePhone()`)
+- Яндекс OAuth: scope `login:phone`, новые пользователи → `is_active=False`
+- Обновлены Yandex OAuth credentials (новое приложение с правами на телефон)
+- CSS-баг: `#auth-phone-field.visible` отсутствовал → исправлено
 
-| Статус | Задача |
-|--------|--------|
-| ✅ | `store.js`: `semiCustomCategories` |
-| 🔄 | `ui-state.js`: `_semiCollapsed: false → {}` |
-| ⬜ | `semi.js` modal: категории |
-| ⬜ | `cost-table.js`: `toggleSemiCat(cat)` |
-| ⬜ | `render/cost.js`: категории п/ф |
-| ⬜ | `index.html`: поля для semi категорий |
-| ⬜ | `main.js`: импорты и window |
-| ⬜ | Git commit |
+---
+
+### Сессия 38 (22 мая 2026) — fix: Escape для modal-oc-item
+
+**Проблема:** попап карточки позиции стартовых вложений (`#modal-oc-item`) не закрывался по нажатию Escape.
+
+**Причина:** `modal-oc-item` отсутствовал в массиве `MODAL_IDS` в `src/ui/events.js`. Глобальный Escape-обработчик перебирает `MODAL_IDS` и вызывает `safeCloseModal(id)` для первого открытого модала — т.к. `modal-oc-item` не был в списке, обработчик его игнорировал.
+
+**Исправление** (`src/ui/events.js`):
+```js
+// БЫЛО:
+const MODAL_IDS = [
+  'modal-drink','modal-mat','modal-semi','modal-templates','modal-loc',
+  'modal-supplier','modal-supplier-book','modal-price-hist','modal-drop',
+  'modal-suppliers-list','modal-drink-view',
+];
+
+// СТАЛО:
+const MODAL_IDS = [
+  'modal-drink','modal-mat','modal-semi','modal-templates','modal-loc',
+  'modal-supplier','modal-supplier-book','modal-price-hist','modal-drop',
+  'modal-suppliers-list','modal-drink-view','modal-oc-item',
+];
+```
+
+**Правило:** при добавлении нового `<div class="modal-bg" id="modal-XYZ">` в `index.html` — обязательно добавлять `'modal-XYZ'` в `MODAL_IDS` в `src/ui/events.js`. Иначе Escape и клик по подложке не будут закрывать этот модал.
+
+| Коммит | Описание |
+|--------|----------|
+| *(deploy)* | fix: add modal-oc-item to MODAL_IDS — Escape now closes the popup |
