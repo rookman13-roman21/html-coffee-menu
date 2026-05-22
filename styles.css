@@ -2921,7 +2921,9 @@ body.dark .oci-ai-btn { box-shadow: 0 4px 12px rgba(124,58,237,.25); }
   font-family: inherit; text-align: center;
 }
 .oclib-cat-tile:hover { border-color: var(--accent, #7c3aed); box-shadow: 0 4px 14px rgba(124,58,237,.12); transform: translateY(-1px); }
-.oclib-cat-icon { font-size: 28px; line-height: 1; }
+.oclib-cat-icon { display: flex; align-items: center; justify-content: center; }
+.oclib-cat-icon .oclib-icon { width: 28px; height: 28px; stroke: var(--accent, #4F883E); }
+.oclib-item-no-photo .oclib-icon { width: 36px; height: 36px; stroke: #bbb; }
 .oclib-cat-name { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.2; }
 .oclib-cat-count { font-size: 11px; color: var(--muted); }
 

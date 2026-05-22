@@ -654,22 +654,26 @@ ${pageContext ? `\nДанные со страницы товара:\n${pageConte
 // ════════════════════════════════════════════════════════════════════
 
 const OCLIB_ICONS = {
-  'Кофемашина':           '☕',
-  'Кофемолка':            '⚙️',
-  'Аксессуары бариста':   '🔧',
-  'Блендер':              '🥤',
-  'Холодильник':          '🧊',
-  'Витрина':              '🪟',
-  'Ледогенератор':        '🫙',
-  'Соковыжималка':        '🍊',
-  'Посудомоечная машина': '🍽️',
-  'Водонагреватель/бойлер': '🔥',
-  'Водоподготовка':       '💧',
-  'Термосы и диспенсеры': '🫗',
-  'Кассовое оборудование':'💳',
-  'Вытяжка/вентиляция':   '💨',
-  'Другое':               '📦',
+  'Кофемашина':             'coffee',
+  'Кофемолка':              'disc-3',
+  'Аксессуары бариста':     'utensils',
+  'Блендер':                'zap',
+  'Холодильник':            'thermometer-snowflake',
+  'Витрина':                'layout-panel-left',
+  'Ледогенератор':          'snowflake',
+  'Соковыжималка':          'citrus',
+  'Посудомоечная машина':   'waves',
+  'Водонагреватель/бойлер': 'flame',
+  'Водоподготовка':         'droplets',
+  'Термосы и диспенсеры':   'flask-conical',
+  'Кассовое оборудование':  'scan-barcode',
+  'Вытяжка/вентиляция':     'wind',
+  'Другое':                 'package',
 };
+function _oclibIcon(cat) {
+  const name = OCLIB_ICONS[cat] || 'package';
+  return `<i data-lucide="${name}" class="oclib-icon"></i>`;
+}
 
 let _oclibData = null;    // { subcategory: [{name,price,photo,url}, ...] }
 let _oclibCurCat = null;  // текущая выбранная подкатегория
@@ -750,9 +754,8 @@ function _oclibRenderCats(filter = '') {
     // Без поиска — плитки подкатегорий
     content.innerHTML = `<div class="oclib-cats">${
       cats.map(([cat, items]) => {
-        const icon = OCLIB_ICONS[cat] || '📦';
         return `<button class="oclib-cat-tile" onclick="oclibOpenCat('${cat.replace(/'/g, "\\'")}')">
-          <span class="oclib-cat-icon">${icon}</span>
+          <span class="oclib-cat-icon">${_oclibIcon(cat)}</span>
           <span class="oclib-cat-name">${cat}</span>
           <span class="oclib-cat-count">${items.length} шт.</span>
         </button>`;
@@ -766,9 +769,11 @@ export function oclibOpenCat(cat) {
   _oclibCurCat = cat;
   const backBtn = document.getElementById('oclib-back-btn');
   const title   = document.getElementById('oclib-title');
-  const icon    = OCLIB_ICONS[cat] || '📦';
   if (backBtn) backBtn.style.display = '';
-  if (title)   title.textContent = icon + ' ' + cat;
+  if (title) {
+    title.innerHTML = _oclibIcon(cat) + ' ' + cat;
+    if (window.lucide) lucide.createIcons({ nodes: title.querySelectorAll('[data-lucide]') });
+  }
 
   const items = _oclibData?.[cat] || [];
   const content = document.getElementById('oclib-content');
@@ -800,7 +805,7 @@ function _oclibItemHtml(item, cat) {
   const price = item.price ? `<span class="oclib-price">${item.price.toLocaleString('ru-RU')} ₽</span>` : '';
   const photo = item.photo
     ? `<img src="${item.photo}" alt="" class="oclib-item-photo" onerror="this.style.display='none'">`
-    : `<span class="oclib-item-no-photo">${OCLIB_ICONS[cat] || '📦'}</span>`;
+    : `<span class="oclib-item-no-photo">${_oclibIcon(cat)}</span>`;
   const safeItem = btoa(unescape(encodeURIComponent(JSON.stringify(item))));
   const safeCat  = encodeURIComponent(cat);
   return `<div class="oclib-item">
