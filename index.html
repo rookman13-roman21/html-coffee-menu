@@ -123,6 +123,9 @@
         <button id="oci-photo-url-btn" class="oci-photo-url-btn" onclick="document.getElementById('oci-photo-file').click()" title="Загрузить фото с устройства">
           <i data-lucide="image-plus" class="icon"></i> Загрузить фото
         </button>
+        <button id="oci-lib-btn" class="oci-lib-btn" onclick="ocOpenLibrary()" title="Выбрать из библиотеки оборудования">
+          <i data-lucide="library" class="icon"></i> Из библиотеки
+        </button>
         <button id="oci-ai-btn" class="oci-ai-btn" onclick="ocAiFill()" title="Заполнить название, цену и фото через AI" style="display:none">
           <i data-lucide="sparkles" class="icon"></i> Заполнить через AI
         </button>
@@ -145,15 +148,18 @@
           <datalist id="oci-subcat-list">
             <option value="Кофемашина">
             <option value="Кофемолка">
-            <option value="Ледогенератор">
-            <option value="Холодильник">
-            <option value="Посудомоечная машина">
+            <option value="Аксессуары бариста">
             <option value="Блендер">
-            <option value="Водонагреватель / бойлер">
+            <option value="Холодильник">
+            <option value="Витрина">
+            <option value="Ледогенератор">
+            <option value="Соковыжималка">
+            <option value="Посудомоечная машина">
+            <option value="Водонагреватель/бойлер">
+            <option value="Водоподготовка">
+            <option value="Термосы и диспенсеры">
             <option value="Кассовое оборудование">
-            <option value="Вытяжка / вентиляция">
-            <option value="Профессиональный чайник">
-            <option value="Диспенсер для воды">
+            <option value="Вытяжка/вентиляция">
             <option value="Другое">
           </datalist>
         </div>
@@ -193,6 +199,27 @@
     </div>
   </div>
 </div>
+</div>
+
+<!-- ═══════════════ БИБЛИОТЕКА ОБОРУДОВАНИЯ ═══════════════════ -->
+<div class="modal-bg" id="modal-oc-library">
+  <div class="modal oclib-modal">
+    <div class="modal-title">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button id="oclib-back-btn" class="btn btn-sm btn-outline oclib-back" onclick="oclibShowCats()" style="display:none">
+          <i data-lucide="arrow-left" class="icon"></i> Назад
+        </button>
+        <span id="oclib-title">📚 Библиотека оборудования</span>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-oc-library')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="oclib-search-row">
+        <input class="modal-inp oclib-search" id="oclib-search" type="search" placeholder="Поиск по названию…" oninput="oclibSearch(this.value)" autocomplete="off">
+      </div>
+      <div id="oclib-content" class="oclib-content"></div>
+    </div>
+  </div>
 </div>
 
 <div class="modal-bg" id="modal-drink-view">

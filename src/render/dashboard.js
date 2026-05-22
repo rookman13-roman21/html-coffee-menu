@@ -580,7 +580,7 @@ ${pageContext ? `\nДанные со страницы товара:\n${pageConte
 Верни ТОЛЬКО JSON-объект (без markdown, без пояснений) с полями:
 {
   "name": "краткое читаемое название товара (до 60 символов)",
-  "subcategory": "тип оборудования: одно из — Кофемашина, Кофемолка, Ледогенератор, Холодильник, Посудомоечная машина, Блендер, Водонагреватель/бойлер, Кассовое оборудование, Вытяжка/вентиляция, Другое",
+  "subcategory": "тип оборудования: одно из — Кофемашина, Кофемолка, Аксессуары бариста (темперы/нок-боксы/весы/дозаторы/ринзеры), Блендер, Холодильник, Витрина (кондитерские и барные витрины), Ледогенератор, Соковыжималка, Посудомоечная машина, Водонагреватель/бойлер, Водоподготовка (фильтры обратного осмоса), Термосы и диспенсеры, Кассовое оборудование, Вытяжка/вентиляция, Другое",
   "price": числовая цена товара в рублях (целое число, без пробелов). Если цена в данных — сумма скидки, рассрочки или ежемесячного платежа, а не полная стоимость — верни 0. Если цена вообще не известна — верни 0,
   "photo": "${ogImage ? ogImage : 'пустая строка'}"
 }`;
@@ -647,6 +647,205 @@ ${pageContext ? `\nДанные со страницы товара:\n${pageConte
   } finally {
     if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="sparkles" class="icon"></i> Заполнить через AI'; if (window.lucide) lucide.createIcons(); }
   }
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  БИБЛИОТЕКА ОБОРУДОВАНИЯ
+// ════════════════════════════════════════════════════════════════════
+
+const OCLIB_ICONS = {
+  'Кофемашина':           '☕',
+  'Кофемолка':            '⚙️',
+  'Аксессуары бариста':   '🔧',
+  'Блендер':              '🥤',
+  'Холодильник':          '🧊',
+  'Витрина':              '🪟',
+  'Ледогенератор':        '🫙',
+  'Соковыжималка':        '🍊',
+  'Посудомоечная машина': '🍽️',
+  'Водонагреватель/бойлер': '🔥',
+  'Водоподготовка':       '💧',
+  'Термосы и диспенсеры': '🫗',
+  'Кассовое оборудование':'💳',
+  'Вытяжка/вентиляция':   '💨',
+  'Другое':               '📦',
+};
+
+let _oclibData = null;    // { subcategory: [{name,price,photo,url}, ...] }
+let _oclibCurCat = null;  // текущая выбранная подкатегория
+
+export async function ocOpenLibrary() {
+  if (window.openModal) openModal('modal-oc-library');
+  const content = document.getElementById('oclib-content');
+  if (!content) return;
+
+  content.innerHTML = '<div class="oclib-loading">Загружаю библиотеку…</div>';
+  document.getElementById('oclib-search').value = '';
+  oclibShowCats(); // сбрасываем в режим подкатегорий
+
+  if (!_oclibData) {
+    try {
+      const r = await fetch('https://barista-school.online/api/oc-library');
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      _oclibData = await r.json();
+    } catch (e) {
+      content.innerHTML = `<div class="oclib-error">Не удалось загрузить библиотеку: ${e.message}</div>`;
+      return;
+    }
+  }
+  _oclibRenderCats();
+}
+
+export function oclibShowCats() {
+  _oclibCurCat = null;
+  const backBtn = document.getElementById('oclib-back-btn');
+  const title   = document.getElementById('oclib-title');
+  if (backBtn) backBtn.style.display = 'none';
+  if (title)   title.textContent = '📚 Библиотека оборудования';
+  if (_oclibData) _oclibRenderCats();
+}
+
+function _oclibRenderCats(filter = '') {
+  const content = document.getElementById('oclib-content');
+  if (!content || !_oclibData) return;
+
+  const cats = Object.entries(_oclibData)
+    .filter(([, items]) => {
+      if (!filter) return true;
+      return items.some(i => i.name.toLowerCase().includes(filter));
+    })
+    .sort(([a], [b]) => {
+      const order = ['Кофемашина','Кофемолка','Аксессуары бариста','Блендер',
+        'Холодильник','Витрина','Ледогенератор','Соковыжималка',
+        'Посудомоечная машина','Водонагреватель/бойлер','Водоподготовка',
+        'Термосы и диспенсеры','Кассовое оборудование','Вытяжка/вентиляция','Другое'];
+      return (order.indexOf(a) + 99) % 99 - (order.indexOf(b) + 99) % 99;
+    });
+
+  if (!cats.length) {
+    content.innerHTML = '<div class="oclib-empty">Ничего не найдено</div>';
+    return;
+  }
+
+  if (filter) {
+    // При поиске — плоский список по всем категориям
+    const allItems = cats.flatMap(([cat, items]) =>
+      items.filter(i => i.name.toLowerCase().includes(filter))
+           .map(i => ({ ...i, _cat: cat }))
+    );
+    content.innerHTML = allItems.map(i => _oclibItemHtml(i, i._cat)).join('');
+  } else {
+    // Без поиска — плитки подкатегорий
+    content.innerHTML = `<div class="oclib-cats">${
+      cats.map(([cat, items]) => {
+        const icon = OCLIB_ICONS[cat] || '📦';
+        return `<button class="oclib-cat-tile" onclick="oclibOpenCat(${JSON.stringify(cat)})">
+          <span class="oclib-cat-icon">${icon}</span>
+          <span class="oclib-cat-name">${cat}</span>
+          <span class="oclib-cat-count">${items.length} шт.</span>
+        </button>`;
+      }).join('')
+    }</div>`;
+  }
+  if (window.lucide) lucide.createIcons({ nodes: content.querySelectorAll('[data-lucide]') });
+}
+
+export function oclibOpenCat(cat) {
+  _oclibCurCat = cat;
+  const backBtn = document.getElementById('oclib-back-btn');
+  const title   = document.getElementById('oclib-title');
+  const icon    = OCLIB_ICONS[cat] || '📦';
+  if (backBtn) backBtn.style.display = '';
+  if (title)   title.textContent = icon + ' ' + cat;
+
+  const items = _oclibData?.[cat] || [];
+  const content = document.getElementById('oclib-content');
+  if (!content) return;
+
+  content.innerHTML = items.length
+    ? items.map(i => _oclibItemHtml(i, cat)).join('')
+    : '<div class="oclib-empty">В этой категории пусто</div>';
+
+  if (window.lucide) lucide.createIcons({ nodes: content.querySelectorAll('[data-lucide]') });
+}
+
+export function oclibSearch(val) {
+  const q = val.trim().toLowerCase();
+  const backBtn = document.getElementById('oclib-back-btn');
+  const title   = document.getElementById('oclib-title');
+  if (!_oclibData) return;
+  if (q) {
+    _oclibCurCat = null;
+    if (backBtn) backBtn.style.display = 'none';
+    if (title)   title.textContent = '📚 Библиотека оборудования';
+    _oclibRenderCats(q);
+  } else {
+    oclibShowCats();
+  }
+}
+
+function _oclibItemHtml(item, cat) {
+  const price = item.price ? `<span class="oclib-price">${item.price.toLocaleString('ru-RU')} ₽</span>` : '';
+  const photo = item.photo
+    ? `<img src="${item.photo}" alt="" class="oclib-item-photo" onerror="this.style.display='none'">`
+    : `<span class="oclib-item-no-photo">${OCLIB_ICONS[cat] || '📦'}</span>`;
+  return `<div class="oclib-item">
+    <div class="oclib-item-thumb">${photo}</div>
+    <div class="oclib-item-info">
+      <div class="oclib-item-name">${item.name}</div>
+      ${price}
+    </div>
+    <button class="btn btn-sm btn-primary oclib-select-btn"
+      onclick='oclibSelect(${JSON.stringify(JSON.stringify(item))}, ${JSON.stringify(cat)})'>
+      Выбрать
+    </button>
+  </div>`;
+}
+
+export function oclibSelect(itemJson, cat) {
+  const item = JSON.parse(itemJson);
+  // Заполняем поля modal-oc-item
+  const nameEl  = document.getElementById('oci-name');
+  const priceEl = document.getElementById('oci-price');
+  const subcatEl = document.getElementById('oci-subcategory');
+  const totalEl = document.getElementById('oci-total');
+  const photoImg  = document.getElementById('oci-photo-img');
+  const photoBox  = document.getElementById('oci-photo-preview');
+  const photoPlaceholder = document.getElementById('oci-photo-placeholder');
+  const urlInp    = document.getElementById('oci-url');
+  const urlBtn    = document.getElementById('oci-url-open');
+  const titleEl   = document.getElementById('oci-title');
+
+  if (nameEl)   { nameEl.value = item.name; }
+  if (titleEl)  { titleEl.textContent = item.name; }
+  if (subcatEl) { subcatEl.value = cat; }
+  if (priceEl)  {
+    priceEl.value = item.price || '';
+    priceEl.classList.remove('oci-price-missing');
+  }
+  const qty = parseFloat(document.getElementById('oci-qty')?.value) || 1;
+  if (totalEl && item.price) totalEl.textContent = (qty * item.price).toLocaleString('ru-RU') + ' ₽';
+
+  if (item.url && urlInp) {
+    urlInp.value = item.url;
+    if (urlBtn) { urlBtn.href = item.url; urlBtn.style.display = ''; }
+  }
+  if (item.photo && photoImg && photoBox) {
+    photoImg.src = item.photo;
+    photoImg.onerror = () => { photoBox.style.display = 'none'; if (photoPlaceholder) photoPlaceholder.style.display = ''; };
+    photoBox.style.display = '';
+    if (photoPlaceholder) photoPlaceholder.style.display = 'none';
+  }
+
+  // Переключаем категорию на equipment
+  const catSel = document.getElementById('oci-cat');
+  if (catSel) {
+    catSel.value = 'equipment';
+    const subcatRow = document.getElementById('oci-subcategory-row');
+    if (subcatRow) subcatRow.style.display = '';
+  }
+
+  if (window.closeModal) closeModal('modal-oc-library');
 }
 
 function _ocInitDrag() {
