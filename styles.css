@@ -2890,7 +2890,6 @@ body.dark .oci-ai-btn { box-shadow: 0 4px 12px rgba(124,58,237,.25); }
 .oci-right {
   display: flex; flex-direction: column;
   padding: 16px 20px 16px 16px;
-  overflow-y: auto;
 }
 .oci-right .modal-row { margin-bottom: 12px; }
 .oci-right .modal-row:last-child { margin-bottom: 0; }
