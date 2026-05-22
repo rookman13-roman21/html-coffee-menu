@@ -144,24 +144,28 @@
 
         <div class="modal-row" id="oci-subcategory-row">
           <div class="modal-label">Тип оборудования</div>
-          <input class="modal-inp" id="oci-subcategory" type="text" list="oci-subcat-list" placeholder="напр. кофемашина, кофемолка…" autocomplete="off">
-          <datalist id="oci-subcat-list">
-            <option value="Кофемашина">
-            <option value="Кофемолка">
-            <option value="Аксессуары бариста">
-            <option value="Блендер">
-            <option value="Холодильник">
-            <option value="Витрина">
-            <option value="Ледогенератор">
-            <option value="Соковыжималка">
-            <option value="Посудомоечная машина">
-            <option value="Водонагреватель/бойлер">
-            <option value="Водоподготовка">
-            <option value="Термосы и диспенсеры">
-            <option value="Кассовое оборудование">
-            <option value="Вытяжка/вентиляция">
-            <option value="Другое">
-          </datalist>
+          <select class="modal-inp" id="oci-subcategory" onchange="ociSubcatChange(this)">
+            <option value="">— выберите тип —</option>
+            <option value="Кофемашина">Кофемашина</option>
+            <option value="Кофемолка">Кофемолка</option>
+            <option value="Аксессуары бариста">Аксессуары бариста</option>
+            <option value="Блендер">Блендер</option>
+            <option value="Холодильник">Холодильник</option>
+            <option value="Витрина">Витрина</option>
+            <option value="Ледогенератор">Ледогенератор</option>
+            <option value="Соковыжималка">Соковыжималка</option>
+            <option value="Посудомоечная машина">Посудомоечная машина</option>
+            <option value="Водонагреватель/бойлер">Водонагреватель/бойлер</option>
+            <option value="Водоподготовка">Водоподготовка</option>
+            <option value="Термосы и диспенсеры">Термосы и диспенсеры</option>
+            <option value="Кассовое оборудование">Кассовое оборудование</option>
+            <option value="Вытяжка/вентиляция">Вытяжка/вентиляция</option>
+            <option value="Другое">Другое</option>
+            <option value="__custom__">✏️ Своя категория…</option>
+          </select>
+          <input class="modal-inp" id="oci-subcategory-custom" type="text"
+            placeholder="Введите название категории…" autocomplete="off"
+            style="display:none;margin-top:8px">
         </div>
 
         <div class="modal-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">

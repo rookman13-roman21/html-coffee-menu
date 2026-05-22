@@ -375,8 +375,7 @@ export function ocOpenItem(id) {
   // Подкатегория (тип оборудования) — показываем только для equipment
   const subcatRow = document.getElementById('oci-subcategory-row');
   if (subcatRow) subcatRow.style.display = item.category === 'equipment' ? '' : 'none';
-  const subcatInp = document.getElementById('oci-subcategory');
-  if (subcatInp) subcatInp.value = item.subcategory || '';
+  _ociSetSubcat(item.subcategory || '');
 
   // Фото-превью / плейсхолдер
   const photoBox   = document.getElementById('oci-photo-preview');
@@ -464,7 +463,7 @@ export function ocItemSave() {
   item.qty         = parseFloat(document.getElementById('oci-qty').value) || 1;
   item.category    = document.getElementById('oci-cat').value;
   item.url         = document.getElementById('oci-url').value.trim();
-  item.subcategory = (document.getElementById('oci-subcategory')?.value || '').trim();
+  item.subcategory = _ociGetSubcat();
   const photoImg   = document.getElementById('oci-photo-img');
   const pSrc = photoImg?.getAttribute('data-user-url') || (photoImg?.src && !photoImg.src.endsWith(location.href.replace(/#.*/, '') + '#') ? photoImg.src : '');
   item.photo = pSrc || '';
@@ -608,8 +607,7 @@ ${pageContext ? `\nДанные со страницы товара:\n${pageConte
 
     if (parsed.name)  { document.getElementById('oci-name').value = parsed.name; document.getElementById('oci-title').textContent = parsed.name; }
     if (parsed.subcategory) {
-      const subcatInp = document.getElementById('oci-subcategory');
-      if (subcatInp) subcatInp.value = parsed.subcategory;
+      _ociSetSubcat(parsed.subcategory);
       const subcatRow = document.getElementById('oci-subcategory-row');
       if (subcatRow) subcatRow.style.display = '';
     }
@@ -836,7 +834,7 @@ export function oclibSelect(item, cat) {
 
   if (nameEl)   { nameEl.value = item.name; }
   if (titleEl)  { titleEl.textContent = item.name; }
-  if (subcatEl) { subcatEl.value = cat; }
+  if (subcatEl) { _ociSetSubcat(cat); }
   if (priceEl)  {
     priceEl.value = item.price || '';
     priceEl.classList.remove('oci-price-missing');
@@ -864,6 +862,59 @@ export function oclibSelect(item, cat) {
   }
 
   if (window.closeModal) closeModal('modal-oc-library');
+}
+
+// ─── Хелперы для select «Тип оборудования» ──────────────────────────
+// Стандартные значения select-а
+const _OCI_SUBCAT_OPTIONS = [
+  'Кофемашина','Кофемолка','Аксессуары бариста','Блендер','Холодильник',
+  'Витрина','Ледогенератор','Соковыжималка','Посудомоечная машина',
+  'Водонагреватель/бойлер','Водоподготовка','Термосы и диспенсеры',
+  'Кассовое оборудование','Вытяжка/вентиляция','Другое',
+];
+
+/** Установить значение подкатегории (select + custom-инпут) */
+function _ociSetSubcat(val) {
+  const sel    = document.getElementById('oci-subcategory');
+  const custom = document.getElementById('oci-subcategory-custom');
+  if (!sel) return;
+  if (!val) {
+    sel.value = '';
+    if (custom) { custom.style.display = 'none'; custom.value = ''; }
+    return;
+  }
+  // Если значение есть в стандартных — выбираем его
+  if (_OCI_SUBCAT_OPTIONS.includes(val)) {
+    sel.value = val;
+    if (custom) { custom.style.display = 'none'; custom.value = ''; }
+  } else {
+    // Кастомная категория — выбираем "Своя…" и заполняем инпут
+    sel.value = '__custom__';
+    if (custom) { custom.style.display = ''; custom.value = val; }
+  }
+}
+
+/** Прочитать значение подкатегории */
+function _ociGetSubcat() {
+  const sel    = document.getElementById('oci-subcategory');
+  const custom = document.getElementById('oci-subcategory-custom');
+  if (!sel) return '';
+  if (sel.value === '__custom__') return (custom?.value || '').trim();
+  return sel.value;
+}
+
+/** onchange на select — показать/скрыть поле кастомной категории */
+export function ociSubcatChange(sel) {
+  const custom = document.getElementById('oci-subcategory-custom');
+  if (!custom) return;
+  if (sel.value === '__custom__') {
+    custom.style.display = '';
+    custom.value = '';
+    setTimeout(() => custom.focus(), 50);
+  } else {
+    custom.style.display = 'none';
+    custom.value = '';
+  }
 }
 
 function _ocInitDrag() {

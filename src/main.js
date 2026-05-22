@@ -94,6 +94,7 @@ import {
   ocOpenItem, ocItemSave, ocItemDelete,
   ocAiFill, ocSetApiKey,
   ocOpenLibrary, oclibShowCats, oclibOpenCat, oclibSearch, oclibSelect,
+  ociSubcatChange,
   ocPhotoFileChange,
   _ocCalcTotal, _ocFmtAmt,
 } from './render/dashboard.js';
@@ -299,6 +300,7 @@ const _srcExports = {
   ocToggleCat, ocMoveRow, ocClearAll,
   ocOpenItem, ocItemSave, ocItemDelete, ocAiFill, ocSetApiKey,
   ocOpenLibrary, oclibShowCats, oclibOpenCat, oclibSearch, oclibSelect,
+  ociSubcatChange,
   ocPhotoFileChange,
   _ocCalcTotal, _ocFmtAmt,
   // render/cost
