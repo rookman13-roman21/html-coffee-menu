@@ -2688,10 +2688,10 @@ em.oc-row-noname { color: var(--muted); font-style: normal; }
   font-weight: 700; color: var(--navy); white-space: nowrap;
   font-size: 13px; min-width: 96px; text-align: right; flex-shrink: 0;
 }
-/* URL placeholder */
-.oc-url-placeholder { width: 28px; flex-shrink: 0; }
+/* URL placeholder — одинаковая ширина со ссылкой, чтобы числа не ехали */
+.oc-url-placeholder { width: 28px; height: 28px; flex-shrink: 0; }
 .oc-row-url:focus { outline: none; border-color: var(--navy); background: #fff; color: var(--navy); }
-.oc-url-open { color: var(--navy); text-decoration: none; font-size: 14px; line-height: 1; flex-shrink: 0; opacity: .7; transition: opacity .15s; }
+.oc-url-open { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--navy); text-decoration: none; font-size: 14px; line-height: 1; opacity: .7; transition: opacity .15s; }
 .oc-url-open:hover { opacity: 1; }
 .oc-row-del {
   width: 28px; height: 28px; border-radius: 7px; border: none;
