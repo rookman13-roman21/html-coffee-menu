@@ -407,7 +407,10 @@ export function ocOpenItem(id) {
     document.getElementById('oci-total').textContent = _ocFmtAmt(qty * rawPrice);
   };
   document.getElementById('oci-qty').oninput   = updateTotal;
-  document.getElementById('oci-price').oninput = updateTotal;
+  document.getElementById('oci-price').oninput = () => {
+    document.getElementById('oci-price').classList.remove('oci-price-missing');
+    updateTotal();
+  };
   document.getElementById('oci-url').oninput = () => {
     const v = document.getElementById('oci-url').value.trim();
     const btn = document.getElementById('oci-url-open');
@@ -574,10 +577,18 @@ ${pageContext ? `\nДанные со страницы товара:\n${pageConte
       const subcatRow = document.getElementById('oci-subcategory-row');
       if (subcatRow) subcatRow.style.display = '';
     }
+    const priceInp = document.getElementById('oci-price');
     if (parsed.price && parsed.price > 0) {
-      document.getElementById('oci-price').value = parsed.price;
+      priceInp.value = parsed.price;
+      priceInp.classList.remove('oci-price-missing');
       const qty = parseFloat(document.getElementById('oci-qty').value) || 1;
       document.getElementById('oci-total').textContent = _ocFmtAmt(qty * parsed.price);
+    } else {
+      // Цена не найдена (JS-рендер) — подсвечиваем поле
+      priceInp.value = '';
+      priceInp.placeholder = 'Введите цену вручную';
+      priceInp.classList.add('oci-price-missing');
+      setTimeout(() => priceInp.focus(), 100);
     }
     // Фото: og:image берём напрямую из HTML (не через GPT), затем из ответа GPT
     const photoSrc = ogImage || (parsed.photo && parsed.photo !== 'пустая строка' ? parsed.photo : '');
