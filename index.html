@@ -115,6 +115,15 @@
           <i data-lucide="image" class="icon" style="width:32px;height:32px;color:var(--muted)"></i>
           <span>Фото появится<br>после заполнения</span>
         </div>
+        <!-- Ручная загрузка фото -->
+        <div id="oci-photo-url-row" class="oci-photo-url-row" style="display:none">
+          <input id="oci-photo-url-inp" class="modal-inp" type="url" placeholder="https://…/photo.jpg" autocomplete="off">
+          <button class="btn btn-sm btn-primary" onclick="ocPhotoUrlApply()">Ок</button>
+          <button class="btn btn-sm btn-outline" onclick="ocPhotoUrlCancel()">✕</button>
+        </div>
+        <button id="oci-photo-url-btn" class="oci-photo-url-btn" onclick="ocPhotoUrlToggle()" title="Вставить ссылку на фото вручную">
+          <i data-lucide="image-plus" class="icon"></i> Загрузить фото
+        </button>
         <button id="oci-ai-btn" class="oci-ai-btn" onclick="ocAiFill()" title="Заполнить название, цену и фото через AI">
           <i data-lucide="sparkles" class="icon"></i> Заполнить через AI
         </button>

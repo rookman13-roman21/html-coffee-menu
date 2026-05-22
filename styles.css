@@ -2869,6 +2869,19 @@ body.dark .oc-clear-btn { border-color: #8b3a3a !important; color: #f48771 !impo
 .oci-ai-btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
 body.dark .oci-ai-btn { box-shadow: 0 4px 12px rgba(124,58,237,.25); }
 
+/* Кнопка ручной загрузки фото */
+.oci-photo-url-btn {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 12px; border: 1.5px dashed var(--border, #e0ddd8); border-radius: 10px;
+  background: transparent; color: var(--muted, #888); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: border-color .15s, color .15s, background .15s;
+  font-family: inherit; flex-shrink: 0;
+}
+.oci-photo-url-btn:hover { border-color: var(--accent, #7c3aed); color: var(--accent, #7c3aed); background: rgba(124,58,237,.04); }
+/* Строка ввода URL фото */
+.oci-photo-url-row { display: flex; gap: 6px; align-items: center; width: 100%; }
+.oci-photo-url-row .modal-inp { flex: 1; min-width: 0; font-size: 12px; }
+
 /* URL-строка */
 .oci-url-row { display: flex; gap: 6px; align-items: center; }
 .oci-url-inp { flex: 1; font-size: 11px !important; color: var(--muted); }

@@ -462,8 +462,8 @@ export function ocItemSave() {
   item.url         = document.getElementById('oci-url').value.trim();
   item.subcategory = (document.getElementById('oci-subcategory')?.value || '').trim();
   const photoImg   = document.getElementById('oci-photo-img');
-  if (photoImg && photoImg.src && !photoImg.src.endsWith('#')) item.photo = photoImg.src;
-  else if (!photoImg?.src) item.photo = '';
+  const pSrc = photoImg?.getAttribute('data-user-url') || (photoImg?.src && !photoImg.src.endsWith(location.href.replace(/#.*/, '') + '#') ? photoImg.src : '');
+  item.photo = pSrc || '';
 
   const rawPrice = parseFloat(document.getElementById('oci-price').value) || 0;
   item.price = cur === 'RUB' ? rawPrice
@@ -472,6 +472,50 @@ export function ocItemSave() {
   _ocSyncInvestment();
   if (window.closeModal) closeModal('modal-oc-item');
   renderDashboard();
+}
+
+// ─── Ручная загрузка фото ───────────────────────────────────────────
+export function ocPhotoUrlToggle() {
+  const row = document.getElementById('oci-photo-url-row');
+  const btn = document.getElementById('oci-photo-url-btn');
+  if (!row) return;
+  const open = row.style.display === 'none' || row.style.display === '';
+  row.style.display = open ? 'flex' : 'none';
+  if (open) {
+    const inp = document.getElementById('oci-photo-url-inp');
+    if (inp) { inp.value = ''; setTimeout(() => inp.focus(), 50); }
+  }
+}
+
+export function ocPhotoUrlApply() {
+  const inp = document.getElementById('oci-photo-url-inp');
+  const val = inp?.value.trim();
+  if (!val) return;
+
+  const photoImg = document.getElementById('oci-photo-img');
+  const photoBox = document.getElementById('oci-photo-preview');
+  const photoPlaceholder = document.getElementById('oci-photo-placeholder');
+  const row = document.getElementById('oci-photo-url-row');
+
+  if (!photoImg) return;
+  photoImg.onerror = () => {
+    photoImg.src = '';
+    if (photoBox) photoBox.style.display = 'none';
+    if (photoPlaceholder) photoPlaceholder.style.display = '';
+    alert('Не удалось загрузить изображение по этой ссылке');
+  };
+  photoImg.onload = () => {
+    if (photoBox) photoBox.style.display = '';
+    if (photoPlaceholder) photoPlaceholder.style.display = 'none';
+    if (row) row.style.display = 'none';
+    photoImg.setAttribute('data-user-url', val);
+  };
+  photoImg.src = val;
+}
+
+export function ocPhotoUrlCancel() {
+  const row = document.getElementById('oci-photo-url-row');
+  if (row) row.style.display = 'none';
 }
 
 // ─── AI-заполнение карточки ─────────────────────────────────────────
