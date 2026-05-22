@@ -474,48 +474,25 @@ export function ocItemSave() {
   renderDashboard();
 }
 
-// ─── Ручная загрузка фото ───────────────────────────────────────────
-export function ocPhotoUrlToggle() {
-  const row = document.getElementById('oci-photo-url-row');
-  const btn = document.getElementById('oci-photo-url-btn');
-  if (!row) return;
-  const open = row.style.display === 'none' || row.style.display === '';
-  row.style.display = open ? 'flex' : 'none';
-  if (open) {
-    const inp = document.getElementById('oci-photo-url-inp');
-    if (inp) { inp.value = ''; setTimeout(() => inp.focus(), 50); }
-  }
-}
-
-export function ocPhotoUrlApply() {
-  const inp = document.getElementById('oci-photo-url-inp');
-  const val = inp?.value.trim();
-  if (!val) return;
-
-  const photoImg = document.getElementById('oci-photo-img');
-  const photoBox = document.getElementById('oci-photo-preview');
-  const photoPlaceholder = document.getElementById('oci-photo-placeholder');
-  const row = document.getElementById('oci-photo-url-row');
-
-  if (!photoImg) return;
-  photoImg.onerror = () => {
-    photoImg.src = '';
-    if (photoBox) photoBox.style.display = 'none';
-    if (photoPlaceholder) photoPlaceholder.style.display = '';
-    alert('Не удалось загрузить изображение по этой ссылке');
-  };
-  photoImg.onload = () => {
+// ─── Загрузка фото с устройства ────────────────────────────────────
+export function ocPhotoFileChange(input) {
+  const file = input?.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    const photoImg = document.getElementById('oci-photo-img');
+    const photoBox = document.getElementById('oci-photo-preview');
+    const photoPlaceholder = document.getElementById('oci-photo-placeholder');
+    if (!photoImg) return;
+    photoImg.src = dataUrl;
+    photoImg.setAttribute('data-user-url', dataUrl);
     if (photoBox) photoBox.style.display = '';
     if (photoPlaceholder) photoPlaceholder.style.display = 'none';
-    if (row) row.style.display = 'none';
-    photoImg.setAttribute('data-user-url', val);
+    // сбросить input чтобы можно было загрузить тот же файл повторно
+    input.value = '';
   };
-  photoImg.src = val;
-}
-
-export function ocPhotoUrlCancel() {
-  const row = document.getElementById('oci-photo-url-row');
-  if (row) row.style.display = 'none';
+  reader.readAsDataURL(file);
 }
 
 // ─── AI-заполнение карточки ─────────────────────────────────────────
