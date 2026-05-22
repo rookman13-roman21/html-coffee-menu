@@ -94,27 +94,28 @@
 <div class="modal-bg" id="modal-oc-item">
   <div class="modal" style="max-width:460px">
     <div class="modal-title">
-      <span id="oci-cat-label" style="font-size:13px;font-weight:600;color:var(--muted);margin-right:8px"></span>
-      <span id="oci-title">Позиция</span>
+      <div class="oci-title-wrap">
+        <span id="oci-cat-label" class="oci-cat-badge"></span>
+        <span id="oci-title">Позиция</span>
+      </div>
       <button class="modal-close" onclick="closeModal('modal-oc-item')">&times;</button>
     </div>
+    <!-- Hero-фото (full-bleed, показывается после AI-заполнения) -->
+    <div id="oci-photo-preview" style="display:none" class="oci-hero-wrap">
+      <img id="oci-photo-img" src="" alt="" class="oci-hero-img">
+    </div>
+
     <div class="modal-body">
 
-      <!-- Фото-превью (показывается после AI-заполнения) -->
-      <div id="oci-photo-preview" style="display:none" class="modal-row oci-photo-wrap">
-        <img id="oci-photo-img" src="" alt="" class="oci-photo-img">
-      </div>
-
-      <!-- Ссылка на источник + кнопка AI -->
-      <div class="modal-row">
-        <div class="modal-label">Ссылка на товар</div>
-        <div style="display:flex;gap:6px;align-items:center">
-          <input class="modal-inp" id="oci-url" type="url" placeholder="https://..." style="flex:1" autocomplete="off">
-          <a id="oci-url-open" href="#" target="_blank" class="btn btn-outline oci-icon-btn" style="display:none"><i data-lucide="external-link" class="icon"></i></a>
-        </div>
+      <!-- AI + URL блок -->
+      <div class="oci-ai-block">
         <button id="oci-ai-btn" class="oci-ai-btn" onclick="ocAiFill()" title="Заполнить название, цену и фото через AI">
           <i data-lucide="sparkles" class="icon"></i> Заполнить через AI
         </button>
+        <div class="oci-url-row">
+          <input class="modal-inp oci-url-inp" id="oci-url" type="url" placeholder="Вставьте ссылку на товар…" autocomplete="off">
+          <a id="oci-url-open" href="#" target="_blank" class="btn btn-outline oci-icon-btn" style="display:none"><i data-lucide="external-link" class="icon"></i></a>
+        </div>
       </div>
 
       <div class="modal-row">
@@ -152,9 +153,9 @@
           <input class="modal-inp" id="oci-price" type="number" min="0" step="500" inputmode="numeric" placeholder="0">
         </div>
       </div>
-      <div class="modal-row" style="background:var(--gray);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:13px;color:var(--muted)">Итого</span>
-        <span id="oci-total" style="font-size:20px;font-weight:800;color:var(--green)"></span>
+      <div class="modal-row oci-total-row">
+        <span class="oci-total-label">Итого</span>
+        <span id="oci-total" class="oci-total-value"></span>
       </div>
       <div class="modal-row">
         <div class="modal-label">Категория бюджета</div>
