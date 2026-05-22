@@ -14,19 +14,21 @@ export function toggleTop10() {}
 export function initTop10Collapse() {}
 
 // ─── Категории расходов ──────────────────────────────────────────────
+const _ico = d => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+
 export const OC_CATS = {
-  renovation:  { icon: '🏗',  label: 'Ремонт и отделка' },
-  equipment:   { icon: '☕',  label: 'Оборудование' },
-  furniture:   { icon: '🪑',  label: 'Мебель и интерьер' },
-  automation:  { icon: '💻',  label: 'Автоматизация' },
-  stock:       { icon: '📦',  label: 'Стартовый склад' },
-  branding:    { icon: '🎨',  label: 'Брендинг' },
-  legal:       { icon: '📋',  label: 'Юридическое оформление' },
-  marketing:   { icon: '📣',  label: 'Маркетинг запуска' },
-  rent:        { icon: '🏠',  label: 'Депозит / аванс аренды' },
-  uniform:     { icon: '👕',  label: 'Форма и инвентарь' },
-  training:    { icon: '🎓',  label: 'Обучение персонала' },
-  reserve:     { icon: '💰',  label: 'Оборотный резерв' },
+  renovation:  { icon: _ico('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'),  label: 'Ремонт и отделка' },
+  equipment:   { icon: _ico('<path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/>'),   label: 'Оборудование' },
+  furniture:   { icon: _ico('<rect x="2" y="12" width="20" height="8" rx="2"/><rect x="4" y="6" width="4" height="8" rx="1"/><rect x="16" y="6" width="4" height="8" rx="1"/>'),   label: 'Мебель и интерьер' },
+  automation:  { icon: _ico('<rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>'),  label: 'Автоматизация' },
+  stock:       { icon: _ico('<path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/>'),       label: 'Стартовый склад' },
+  branding:    { icon: _ico('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>'),    label: 'Брендинг' },
+  legal:       { icon: _ico('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/>'),       label: 'Юридическое оформление' },
+  marketing:   { icon: _ico('<path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>'),   label: 'Маркетинг запуска' },
+  rent:        { icon: _ico('<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'),        label: 'Депозит / аванс аренды' },
+  uniform:     { icon: _ico('<path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/>'),     label: 'Форма и инвентарь' },
+  training:    { icon: _ico('<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>'),    label: 'Обучение персонала' },
+  reserve:     { icon: _ico('<circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/>'),     label: 'Оборотный резерв' },
 };
 
 export const OC_FORMATS = {
@@ -356,8 +358,8 @@ export function ocOpenItem(id) {
   const sym  = cur === 'USD' ? '$' : cur === 'EUR' ? '€' : '₽';
   const info = OC_CATS[item.category];
 
-  document.getElementById('oci-title').textContent     = item.name || 'Без названия';
-  document.getElementById('oci-cat-label').textContent = info ? info.icon + '\u2009' + info.label : '';
+  document.getElementById('oci-title').textContent = item.name || 'Без названия';
+  document.getElementById('oci-cat-label').innerHTML  = info ? info.icon + '\u2009' + info.label : '';
   document.getElementById('oci-name').value            = item.name || '';
   document.getElementById('oci-qty').value             = item.qty;
 
