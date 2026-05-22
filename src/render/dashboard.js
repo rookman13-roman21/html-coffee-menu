@@ -679,6 +679,18 @@ export async function ocOpenLibrary() {
   const content = document.getElementById('oclib-content');
   if (!content) return;
 
+  // Делегированный обработчик для кнопок «Выбрать» (один раз)
+  if (!content._oclibDelegated) {
+    content._oclibDelegated = true;
+    content.addEventListener('click', e => {
+      const btn = e.target.closest('.oclib-select-btn');
+      if (!btn) return;
+      const item = JSON.parse(decodeURIComponent(escape(atob(btn.dataset.item))));
+      const cat  = decodeURIComponent(btn.dataset.cat);
+      oclibSelect(item, cat);
+    });
+  }
+
   content.innerHTML = '<div class="oclib-loading">Загружаю библиотеку…</div>';
   document.getElementById('oclib-search').value = '';
   oclibShowCats(); // сбрасываем в режим подкатегорий
@@ -739,7 +751,7 @@ function _oclibRenderCats(filter = '') {
     content.innerHTML = `<div class="oclib-cats">${
       cats.map(([cat, items]) => {
         const icon = OCLIB_ICONS[cat] || '📦';
-        return `<button class="oclib-cat-tile" onclick="oclibOpenCat(${JSON.stringify(cat)})">
+        return `<button class="oclib-cat-tile" onclick="oclibOpenCat('${cat.replace(/'/g, "\\'")}')">
           <span class="oclib-cat-icon">${icon}</span>
           <span class="oclib-cat-name">${cat}</span>
           <span class="oclib-cat-count">${items.length} шт.</span>
@@ -789,6 +801,8 @@ function _oclibItemHtml(item, cat) {
   const photo = item.photo
     ? `<img src="${item.photo}" alt="" class="oclib-item-photo" onerror="this.style.display='none'">`
     : `<span class="oclib-item-no-photo">${OCLIB_ICONS[cat] || '📦'}</span>`;
+  const safeItem = btoa(unescape(encodeURIComponent(JSON.stringify(item))));
+  const safeCat  = encodeURIComponent(cat);
   return `<div class="oclib-item">
     <div class="oclib-item-thumb">${photo}</div>
     <div class="oclib-item-info">
@@ -796,14 +810,13 @@ function _oclibItemHtml(item, cat) {
       ${price}
     </div>
     <button class="btn btn-sm btn-primary oclib-select-btn"
-      onclick='oclibSelect(${JSON.stringify(JSON.stringify(item))}, ${JSON.stringify(cat)})'>
+      data-item="${safeItem}" data-cat="${safeCat}">
       Выбрать
     </button>
   </div>`;
 }
 
-export function oclibSelect(itemJson, cat) {
-  const item = JSON.parse(itemJson);
+export function oclibSelect(item, cat) {
   // Заполняем поля modal-oc-item
   const nameEl  = document.getElementById('oci-name');
   const priceEl = document.getElementById('oci-price');
