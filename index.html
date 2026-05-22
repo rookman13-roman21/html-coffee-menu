@@ -58,6 +58,8 @@
   <button class="loc-menu-item" onclick="openTemplatesModal()"><i data-lucide="sparkles" class="icon"></i> Создать из шаблона</button>
   <button class="loc-menu-item" onclick="renameActiveLocation()"><i data-lucide="pencil" class="icon"></i> Переименовать текущую</button>
   <button class="loc-menu-item danger" onclick="deleteActiveLocation()"><i data-lucide="trash-2" class="icon"></i> Удалить текущую</button>
+  <div class="loc-menu-divider"></div>
+  <button class="loc-menu-item" id="loc-menu-api-key-btn" onclick="ocSetApiKey()" title="OpenAI API ключ нужен для функции AI-заполнения карточек оборудования"><i data-lucide="key-round" class="icon"></i> <span id="loc-menu-api-key-label">Добавить OpenAI API ключ</span></button>
 </div>
 <div class="export-menu" id="export-menu" onclick="event.stopPropagation()">
   <button class="loc-menu-item" onclick="exportFullPDF()"><i data-lucide="file-text" class="icon"></i> PDF — полный отчёт</button>
@@ -121,7 +123,7 @@
         <button id="oci-photo-url-btn" class="oci-photo-url-btn" onclick="document.getElementById('oci-photo-file').click()" title="Загрузить фото с устройства">
           <i data-lucide="image-plus" class="icon"></i> Загрузить фото
         </button>
-        <button id="oci-ai-btn" class="oci-ai-btn" onclick="ocAiFill()" title="Заполнить название, цену и фото через AI">
+        <button id="oci-ai-btn" class="oci-ai-btn" onclick="ocAiFill()" title="Заполнить название, цену и фото через AI" style="display:none">
           <i data-lucide="sparkles" class="icon"></i> Заполнить через AI
         </button>
         <div class="oci-url-row">
@@ -185,9 +187,6 @@
         <i data-lucide="trash-2" class="icon"></i> Удалить
       </button>
       <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn btn-ghost oci-key-btn" onclick="ocSetApiKey()" title="Настроить OpenAI API ключ для AI-заполнения">
-          <i data-lucide="key-round" class="icon"></i>
-        </button>
         <button class="btn btn-outline" onclick="closeModal('modal-oc-item')">Отмена</button>
         <button class="btn-primary" onclick="ocItemSave()"><i data-lucide="check" class="icon"></i> Сохранить</button>
       </div>

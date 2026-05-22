@@ -455,6 +455,13 @@ async function _initApp(serverState) {
   loadState();
 
   try { renderLocSwitcherUI(); } catch(e) { console.error('[renderLocSwitcherUI]', e); }
+  // Обновить метку API ключа в loc-menu
+  try {
+    const _labelEl = document.getElementById('loc-menu-api-key-label');
+    if (_labelEl) _labelEl.textContent = localStorage.getItem('oc_openai_key')
+      ? '✅ OpenAI API ключ настроен'
+      : 'Добавить OpenAI API ключ';
+  } catch(e) {}
   try {
     if (localStorage.getItem('mbs_theme') === 'dark') {
       document.body.classList.add('dark');

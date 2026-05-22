@@ -431,6 +431,10 @@ export function ocOpenItem(id) {
   modalEl._ociKeyHandler = onKey;
   modalEl.addEventListener('keydown', onKey);
 
+  // Показывать кнопку AI только если задан API-ключ
+  const aiBtnEl = document.getElementById('oci-ai-btn');
+  if (aiBtnEl) aiBtnEl.style.display = localStorage.getItem('oc_openai_key') ? '' : 'none';
+
   document.getElementById('modal-oc-item').dataset.editId = id;
   if (window.openModal) openModal('modal-oc-item');
   // Автофокус на поле Название
@@ -496,15 +500,26 @@ export function ocPhotoFileChange(input) {
 }
 
 // ─── AI-заполнение карточки ─────────────────────────────────────────
+function _updateApiKeyUi(hasKey) {
+  // Кнопка в открытом модале
+  const aiBtnEl = document.getElementById('oci-ai-btn');
+  if (aiBtnEl) aiBtnEl.style.display = hasKey ? '' : 'none';
+  // Метка в loc-menu
+  const labelEl = document.getElementById('loc-menu-api-key-label');
+  if (labelEl) labelEl.textContent = hasKey ? '✅ OpenAI API ключ настроен' : 'Добавить OpenAI API ключ';
+}
+
 export function ocSetApiKey() {
   const current = localStorage.getItem('oc_openai_key') || '';
   const key = prompt('Введите ваш OpenAI API ключ (sk-...):\n\nКлюч сохраняется только в вашем браузере (localStorage).', current);
   if (key === null) return; // отмена
   if (key.trim()) {
     localStorage.setItem('oc_openai_key', key.trim());
+    _updateApiKeyUi(true);
     alert('✅ API ключ сохранён');
   } else {
     localStorage.removeItem('oc_openai_key');
+    _updateApiKeyUi(false);
     alert('Ключ удалён');
   }
 }
