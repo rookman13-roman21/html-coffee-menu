@@ -3,6 +3,7 @@
 
 export function openModal(id)  {
   const el = document.getElementById(id);
+  if (!el) { console.error('[openModal] element not found:', id); return; }
   el.classList.add('open');
   // Сброс скролла модалки в начало
   const modalEl = el.querySelector('.modal');

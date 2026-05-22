@@ -1,6 +1,8 @@
 // src/ui/recipe-view.js
 // Просмотр карточки напитка (попап рецептуры) + фильтры вкладки Рецептуры
 
+import { openModal, closeModal } from './modals.js';
+
 // ── Перенесено из public/app.js ──
 
 let _mvsId = null; // id полуфабриката в текущем просмотре
