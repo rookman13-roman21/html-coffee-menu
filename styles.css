@@ -2678,9 +2678,15 @@ em.oc-row-noname { color: var(--muted); font-style: normal; }
 .oc-row-qty-text, .oc-row-price-text {
   font-size: 13px; color: var(--muted); white-space: nowrap;
 }
+.oc-row-qty-text {
+  min-width: 28px; text-align: right; display: inline-block;
+}
+.oc-row-price-text {
+  min-width: 96px; text-align: right; display: inline-block;
+}
 .oc-row-total {
   font-weight: 700; color: var(--navy); white-space: nowrap;
-  font-size: 13px; min-width: 76px; text-align: right; flex-shrink: 0;
+  font-size: 13px; min-width: 96px; text-align: right; flex-shrink: 0;
 }
 /* URL placeholder */
 .oc-url-placeholder { width: 28px; flex-shrink: 0; }
