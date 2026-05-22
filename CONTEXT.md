@@ -1,7 +1,7 @@
 # CONTEXT — MBS* Coffee Menu
 
 > CFO-инструментарий для владельца кофейни. SPA на Vite + ES-модули.  
-> Последнее обновление: 22 мая 2026 (сессия 38 — fix Escape для modal-oc-item)
+> Последнее обновление: 22 мая 2026 (сессия 39 — OC item modal: загрузка фото с устройства + скролл на мобиле)
 
 ---
 
@@ -2199,3 +2199,42 @@ const MODAL_IDS = [
 | Коммит | Описание |
 |--------|----------|
 | *(deploy)* | fix: add modal-oc-item to MODAL_IDS — Escape now closes the popup |
+
+---
+
+### Сессия 39 (22 мая 2025) — загрузка фото с устройства + скролл в OC item modal
+
+#### 1. Загрузка фото с устройства (FileReader → base64)
+
+**Исходное состояние:** кнопка «Загрузить фото» открывала строку с `<input type="url">`. Пользователю нужна загрузка файла с устройства.
+
+**Решение:**
+- `index.html`: заменена `oci-photo-url-row` на `<input id="oci-photo-file" type="file" accept="image/*" style="display:none" onchange="ocPhotoFileChange(this)">`. Кнопка вызывает `.click()` на этом инпуте
+- `src/render/dashboard.js`: убраны `ocPhotoUrlToggle/Apply/Cancel`; добавлена `ocPhotoFileChange(input)` — FileReader читает файл → base64 DataURL → `photoImg.src` + `photoImg.setAttribute('data-user-url', dataUrl)`; `input.value = ''` для повторной загрузки
+- `src/main.js`: импорт/экспорт обновлён (3 функции → 1)
+- Фото сохраняется в `item.photo` как base64 при `ocItemSave()`
+
+#### 2. Скролл OC item modal на мобиле
+
+**Проблема:** нижняя часть формы недоступна на мобиле.
+
+**Причина:** `.oci-layout` лежал напрямую в `.modal` (минуя `modal-body`). На мобиле `.modal` имеет `overflow: hidden` + `display: flex`.
+
+**Исправление** (`index.html`):
+```html
+<div class="modal-body oci-modal-body">
+  <div class="oci-layout">…</div>
+</div>
+```
+Десктоп: `modal-body { display: contents }` — прозрачно. Мобиле: `modal-body { flex: 1; overflow-y: auto }` — скроллится.
+Убран `overflow-y: auto` с `.oci-right` в `styles.css`.
+
+**Правило:** при добавлении нового OC-подобного модала с `.oci-layout` — обязательно оборачивать контент в `<div class="modal-body">`.
+
+#### Коммиты сессии 39
+
+| Коммит | Описание |
+|--------|----------|
+| `fdf11e6` | feat: ручная загрузка фото через URL *(отменено в этой же сессии)* |
+| `2bf15c0` | feat: загрузка фото с устройства (FileReader) вместо URL |
+| `72c04b4` | fix: OC item modal — скролл на мобиле через modal-body |
