@@ -11,6 +11,7 @@ const MODAL_IDS = [
   'modal-drink','modal-mat','modal-semi','modal-templates','modal-loc',
   'modal-supplier','modal-supplier-book','modal-price-hist','modal-drop',
   'modal-suppliers-list','modal-drink-view','modal-oc-item',
+  'modal-mat-view','modal-supplier-info','modal-add-cat','modal-add-semi-cat',
 ];
 
 // Закрывать бургер при клике на нав-кнопку
