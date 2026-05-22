@@ -2793,6 +2793,25 @@ body.dark .oc-row-cat-sel { background: #2a2a2a; border-color: #454545; color: #
 }
 body.dark .oc-cat-count { background: #383838; color: #888; }
 
+/* Mobile: 2-row category header */
+@media (max-width: 520px) {
+  .oc-cat-header {
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    padding: 8px 12px;
+  }
+  /* invisible flex line-break between chevron and count */
+  .oc-cat-header::after {
+    content: ''; flex-basis: 100%; order: 4; height: 0;
+  }
+  .oc-cat-icon  { order: 1; }
+  .oc-cat-label { order: 2; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .oc-cat-chevron { order: 3; margin-left: auto; }
+  .oc-cat-count   { order: 5; margin-right: 0; }
+  .oc-cat-total   { order: 6; flex: 1; text-align: left; min-width: 0; }
+  .oc-add-in-cat  { order: 7; margin-left: auto; }
+}
+
 /* Green total when has value */
 .oc-cat-total.has-value { color: #2e7d32; font-weight: 800; }
 body.dark .oc-cat-total.has-value { color: #89d185; }
