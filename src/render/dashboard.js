@@ -499,30 +499,60 @@ export async function ocAiFill() {
   let pageContext = '';
   let ogImage = '';
   if (urlVal) {
-    try {
-      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(urlVal)}`;
-      const pr = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
-      if (pr.ok) {
-        const pj = await pr.json();
-        const html = pj.contents || '';
-        // Извлекаем только нужные фрагменты — title, meta, цену, чтобы не перегружать контекст
-        const getTag = (h, tag) => { const m = h.match(new RegExp(`<${tag}[^>]*>([^<]{1,300})`, 'i')); return m ? m[1].trim() : ''; };
-        const getMeta = (h, prop) => { const m = h.match(new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]+content=["']([^"']{1,300})`, 'i'))
-                                                    || h.match(new RegExp(`<meta[^>]+content=["']([^"']{1,300})["'][^>]+(?:property|name)=["']${prop}["']`, 'i')); return m ? m[1].trim() : ''; };
-        const title   = getMeta(html, 'og:title') || getTag(html, 'title') || '';
-        ogImage = getMeta(html, 'og:image') || '';
-        const desc    = getMeta(html, 'og:description') || '';
-        // Ищем цены — числа рядом со словами цена/price/руб/₽
-        const priceMatches = [...html.matchAll(/(?:цена|price|стоит|₽|руб)[^\d]{0,20}([\d\s]{3,10})/gi)]
-          .map(m => m[1].replace(/\s/g, '')).filter(p => +p > 100 && +p < 10000000).slice(0, 5);
+    // Пробуем два прокси по очереди
+    const proxies = [
+      (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+      (u) => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+    ];
+    for (const makeProxy of proxies) {
+      try {
+        const pr = await fetch(makeProxy(urlVal), { signal: AbortSignal.timeout(6000) });
+        if (!pr.ok) continue;
+        let html = '';
+        const ct = pr.headers.get('content-type') || '';
+        if (ct.includes('json')) {
+          // allorigins возвращает { contents: "..." }
+          const pj = await pr.json();
+          html = pj.contents || '';
+        } else {
+          html = await pr.text();
+        }
+        if (!html || html.length < 500) continue;
+
+        // og:image — два варианта порядка атрибутов
+        const imgM = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)/i)
+                  || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+        if (imgM) ogImage = imgM[1].trim();
+
+        // og:title / <title>
+        const titleM = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']{1,300})/i)
+                    || html.match(/<meta[^>]+content=["']([^"']{1,300})["'][^>]+property=["']og:title["']/i)
+                    || html.match(/<title[^>]*>([^<]{1,200})/i);
+        const title = titleM ? titleM[1].trim() : '';
+
+        // og:description
+        const descM = html.match(/<meta[^>]+(?:property=["']og:description["']|name=["']description["'])[^>]+content=["']([^"']{1,300})/i)
+                   || html.match(/<meta[^>]+content=["']([^"']{1,300})["'][^>]+(?:property=["']og:description["']|name=["']description["'])/i);
+        const desc = descM ? descM[1].trim() : '';
+
+        // Цена: ищем широко — числа 4-7 цифр рядом с ₽/руб/price/data-price
+        const priceRaw = [
+          ...html.matchAll(/["'\s>](\d{4,7})\s*(?:₽|руб\.?|rub)/gi),
+          ...html.matchAll(/(?:data-price|"price"|'price')\s*[=:]\s*["']?(\d{4,7})/gi),
+          ...html.matchAll(/(\d{3})\s{0,1}(\d{3})\s*(?:₽|руб)/gi),
+        ].map(m => m[1] ? parseInt(m[1].replace(/\s/g,'')) : parseInt(m[1]+m[2])).filter(n => n >= 1000 && n <= 9999999);
+        const prices = [...new Set(priceRaw)].slice(0, 5);
+
         pageContext = [
-          title && `Заголовок: ${title}`,
-          desc  && `Описание: ${desc.slice(0, 200)}`,
+          title  && `Заголовок: ${title}`,
+          desc   && `Описание: ${desc.slice(0, 250)}`,
           ogImage && `og:image: ${ogImage}`,
-          priceMatches.length && `Найденные цены на странице (руб): ${priceMatches.join(', ')}`,
+          prices.length && `Найденные цены на странице (руб): ${prices.join(', ')}`,
         ].filter(Boolean).join('\n');
-      }
-    } catch (_) { /* прокси недоступен — работаем без него */ }
+
+        break; // успешно
+      } catch (_) { continue; }
+    }
   }
 
   if (btn) btn.innerHTML = '<span class="oci-ai-spinner"></span> Анализирую…';
@@ -539,7 +569,7 @@ ${pageContext ? `\nДанные со страницы товара:\n${pageConte
   "name": "краткое читаемое название товара (до 60 символов)",
   "subcategory": "тип оборудования: одно из — Кофемашина, Кофемолка, Ледогенератор, Холодильник, Посудомоечная машина, Блендер, Водонагреватель/бойлер, Кассовое оборудование, Вытяжка/вентиляция, Другое",
   "price": числовая цена в рублях без пробелов (0 если не известна),
-  "photo": "${ogImage || 'URL фото если есть в данных выше, иначе пустая строка'}"
+  "photo": "${ogImage ? ogImage : 'пустая строка'}"
 }`;
 
   try {
@@ -575,8 +605,8 @@ ${pageContext ? `\nДанные со страницы товара:\n${pageConte
       const qty = parseFloat(document.getElementById('oci-qty').value) || 1;
       document.getElementById('oci-total').textContent = _ocFmtAmt(qty * parsed.price);
     }
-    // Фото: сначала из og:image (уже есть), потом из ответа GPT
-    const photoSrc = ogImage || parsed.photo || '';
+    // Фото: og:image берём напрямую из HTML (не через GPT), затем из ответа GPT
+    const photoSrc = ogImage || (parsed.photo && parsed.photo !== 'пустая строка' ? parsed.photo : '');
     if (photoSrc) {
       const photoImg  = document.getElementById('oci-photo-img');
       const photoWrap = document.getElementById('oci-photo-preview');
