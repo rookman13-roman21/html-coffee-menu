@@ -697,15 +697,14 @@ export async function ocOpenLibrary() {
   document.getElementById('oclib-search').value = '';
   oclibShowCats(); // сбрасываем в режим подкатегорий
 
-  if (!_oclibData) {
-    try {
-      const r = await fetch('https://barista-school.online/api/oc-library');
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      _oclibData = await r.json();
-    } catch (e) {
-      content.innerHTML = `<div class="oclib-error">Не удалось загрузить библиотеку: ${e.message}</div>`;
-      return;
-    }
+  // Всегда перезапрашиваем, чтобы photo/url были актуальны
+  try {
+    const r = await fetch('https://barista-school.online/api/oc-library?t=' + Date.now());
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    _oclibData = await r.json();
+  } catch (e) {
+    content.innerHTML = `<div class="oclib-error">Не удалось загрузить библиотеку: ${e.message}</div>`;
+    return;
   }
   _oclibRenderCats();
 }
