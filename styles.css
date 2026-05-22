@@ -2805,7 +2805,10 @@ body.dark .oc-clear-btn { border-color: #8b3a3a !important; color: #f48771 !impo
 /* AI fill button */
 /* ─── OC Item Modal ─── */
 
-/* Заголовок модала */
+/* Модал шире на десктопе */
+.oci-modal { max-width: 760px !important; }
+
+/* Заголовок */
 .oci-title-wrap { display: flex; flex-direction: column; gap: 1px; }
 .oci-cat-badge {
   font-size: 11px; font-weight: 700; color: var(--muted);
@@ -2813,46 +2816,75 @@ body.dark .oc-clear-btn { border-color: #8b3a3a !important; color: #f48771 !impo
 }
 .oci-cat-badge:empty { display: none; }
 
-/* Hero-фото full-bleed между заголовком и телом */
-.oci-hero-wrap {
-  width: 100%; overflow: hidden;
-  background: var(--gray);
-}
-.oci-hero-img {
-  width: 100%; height: 220px;
-  object-fit: cover; display: block;
+/* Горизонтальный лейаут */
+.oci-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 0;
 }
 
-/* AI + URL блок */
-.oci-ai-block {
-  display: flex; flex-direction: column; gap: 8px;
-  margin-bottom: 4px;
+/* Левая колонка */
+.oci-left {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 16px 16px 16px 20px;
+  border-right: 1px solid var(--border);
 }
+
+/* Фото-блок: квадрат с contain, не обрезает */
+.oci-photo-box {
+  width: 100%; aspect-ratio: 1 / 1;
+  background: var(--gray); border-radius: 12px;
+  overflow: hidden; display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--border);
+}
+.oci-photo-img {
+  width: 100%; height: 100%;
+  object-fit: contain; display: block;
+}
+
+/* Плейсхолдер пока нет фото */
+.oci-photo-placeholder {
+  width: 100%; aspect-ratio: 1 / 1;
+  background: var(--gray); border-radius: 12px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; border: 1.5px dashed var(--border);
+  color: var(--muted); font-size: 12px; text-align: center; line-height: 1.4;
+}
+
+/* Кнопка AI */
 .oci-ai-btn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 11px 18px; border-radius: 12px; font-size: 14px; font-weight: 700;
+  padding: 10px 14px; border-radius: 12px; font-size: 13px; font-weight: 700;
   border: none;
   background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-  color: #fff;
-  cursor: pointer; font-family: var(--font);
+  color: #fff; cursor: pointer; font-family: var(--font);
   transition: opacity .15s, transform .1s, box-shadow .15s;
   width: 100%;
-  box-shadow: 0 4px 14px rgba(124,58,237,.35);
+  box-shadow: 0 4px 12px rgba(124,58,237,.35);
   letter-spacing: .01em;
+  flex-shrink: 0;
 }
-.oci-ai-btn:hover { opacity: .9; box-shadow: 0 6px 18px rgba(124,58,237,.45); }
+.oci-ai-btn:hover { opacity: .9; box-shadow: 0 6px 16px rgba(124,58,237,.45); }
 .oci-ai-btn:active { transform: scale(.98); }
 .oci-ai-btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
-body.dark .oci-ai-btn { box-shadow: 0 4px 14px rgba(124,58,237,.25); }
+body.dark .oci-ai-btn { box-shadow: 0 4px 12px rgba(124,58,237,.25); }
 
-.oci-url-row {
-  display: flex; gap: 6px; align-items: center;
+/* URL-строка */
+.oci-url-row { display: flex; gap: 6px; align-items: center; }
+.oci-url-inp { flex: 1; font-size: 11px !important; color: var(--muted); }
+
+/* Правая колонка */
+.oci-right {
+  display: flex; flex-direction: column;
+  padding: 16px 20px 16px 16px;
+  overflow-y: auto;
 }
-.oci-url-inp { flex: 1; font-size: 12px !important; color: var(--muted); }
+.oci-right .modal-row { margin-bottom: 12px; }
+.oci-right .modal-row:last-child { margin-bottom: 0; }
 
 /* AI spinner */
 .oci-ai-spinner {
-  width: 15px; height: 15px; border-radius: 50%; flex-shrink: 0;
+  width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
   border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
   animation: oci-spin .7s linear infinite;
 }
@@ -2865,11 +2897,23 @@ body.dark .oci-ai-btn { box-shadow: 0 4px 14px rgba(124,58,237,.25); }
 /* Итого */
 .oci-total-row {
   background: var(--gray); border-radius: 12px;
-  padding: 13px 16px; display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;
   border: 1.5px solid var(--border);
 }
 .oci-total-label { font-size: 13px; font-weight: 600; color: var(--muted); }
-.oci-total-value { font-size: 22px; font-weight: 800; color: var(--green); }
+.oci-total-value { font-size: 20px; font-weight: 800; color: var(--green); }
+
+/* Мобайл — вертикальная компоновка */
+@media (max-width: 600px) {
+  .oci-modal { max-width: 100% !important; }
+  .oci-layout { grid-template-columns: 1fr; }
+  .oci-left {
+    border-right: none; border-bottom: 1px solid var(--border);
+    padding: 16px 16px 14px;
+  }
+  .oci-photo-box, .oci-photo-placeholder { aspect-ratio: 4 / 3; }
+  .oci-right { padding: 14px 16px 16px; }
+}
 
 /* Saved badge */
 .oc-saved-badge {

@@ -92,7 +92,9 @@
 <!-- Модал: просмотр напитка (техкарта) -->
 <!-- Карточка позиции стартовых вложений -->
 <div class="modal-bg" id="modal-oc-item">
-  <div class="modal" style="max-width:460px">
+  <div class="modal oci-modal">
+
+    <!-- Шапка -->
     <div class="modal-title">
       <div class="oci-title-wrap">
         <span id="oci-cat-label" class="oci-cat-badge"></span>
@@ -100,68 +102,78 @@
       </div>
       <button class="modal-close" onclick="closeModal('modal-oc-item')">&times;</button>
     </div>
-    <!-- Hero-фото (full-bleed, показывается после AI-заполнения) -->
-    <div id="oci-photo-preview" style="display:none" class="oci-hero-wrap">
-      <img id="oci-photo-img" src="" alt="" class="oci-hero-img">
-    </div>
 
-    <div class="modal-body">
+    <!-- Горизонтальное тело: фото слева, форма справа -->
+    <div class="oci-layout">
 
-      <!-- AI + URL блок -->
-      <div class="oci-ai-block">
+      <!-- Левая колонка: фото + AI-кнопка + URL -->
+      <div class="oci-left">
+        <div id="oci-photo-preview" class="oci-photo-box">
+          <img id="oci-photo-img" src="" alt="" class="oci-photo-img">
+        </div>
+        <div id="oci-photo-placeholder" class="oci-photo-placeholder">
+          <i data-lucide="image" class="icon" style="width:32px;height:32px;color:var(--muted)"></i>
+          <span>Фото появится<br>после заполнения</span>
+        </div>
         <button id="oci-ai-btn" class="oci-ai-btn" onclick="ocAiFill()" title="Заполнить название, цену и фото через AI">
           <i data-lucide="sparkles" class="icon"></i> Заполнить через AI
         </button>
         <div class="oci-url-row">
-          <input class="modal-inp oci-url-inp" id="oci-url" type="url" placeholder="Вставьте ссылку на товар…" autocomplete="off">
+          <input class="modal-inp oci-url-inp" id="oci-url" type="url" placeholder="Ссылка на товар…" autocomplete="off">
           <a id="oci-url-open" href="#" target="_blank" class="btn btn-outline oci-icon-btn" style="display:none"><i data-lucide="external-link" class="icon"></i></a>
         </div>
       </div>
 
-      <div class="modal-row">
-        <div class="modal-label">Название</div>
-        <input class="modal-inp" id="oci-name" type="text" placeholder="Название статьи расходов">
-      </div>
-
-      <!-- Подкатегория (только для оборудования — показывается/скрывается) -->
-      <div class="modal-row" id="oci-subcategory-row">
-        <div class="modal-label">Тип оборудования</div>
-        <input class="modal-inp" id="oci-subcategory" type="text" list="oci-subcat-list" placeholder="напр. кофемашина, кофемолка…" autocomplete="off">
-        <datalist id="oci-subcat-list">
-          <option value="Кофемашина">
-          <option value="Кофемолка">
-          <option value="Ледогенератор">
-          <option value="Холодильник">
-          <option value="Посудомоечная машина">
-          <option value="Блендер">
-          <option value="Водонагреватель / бойлер">
-          <option value="Кассовое оборудование">
-          <option value="Вытяжка / вентиляция">
-          <option value="Профессиональный чайник">
-          <option value="Диспенсер для воды">
-          <option value="Другое">
-        </datalist>
-      </div>
-
-      <div class="modal-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div>
-          <div class="modal-label">Количество</div>
-          <input class="modal-inp" id="oci-qty" type="number" min="1" step="1" inputmode="numeric" placeholder="1">
+      <!-- Правая колонка: форма -->
+      <div class="oci-right">
+        <div class="modal-row">
+          <div class="modal-label">Название</div>
+          <input class="modal-inp" id="oci-name" type="text" placeholder="Название статьи расходов">
         </div>
-        <div>
-          <div class="modal-label" id="oci-price-label">Цена, ₽</div>
-          <input class="modal-inp" id="oci-price" type="number" min="0" step="500" inputmode="numeric" placeholder="0">
+
+        <div class="modal-row" id="oci-subcategory-row">
+          <div class="modal-label">Тип оборудования</div>
+          <input class="modal-inp" id="oci-subcategory" type="text" list="oci-subcat-list" placeholder="напр. кофемашина, кофемолка…" autocomplete="off">
+          <datalist id="oci-subcat-list">
+            <option value="Кофемашина">
+            <option value="Кофемолка">
+            <option value="Ледогенератор">
+            <option value="Холодильник">
+            <option value="Посудомоечная машина">
+            <option value="Блендер">
+            <option value="Водонагреватель / бойлер">
+            <option value="Кассовое оборудование">
+            <option value="Вытяжка / вентиляция">
+            <option value="Профессиональный чайник">
+            <option value="Диспенсер для воды">
+            <option value="Другое">
+          </datalist>
         </div>
-      </div>
-      <div class="modal-row oci-total-row">
-        <span class="oci-total-label">Итого</span>
-        <span id="oci-total" class="oci-total-value"></span>
-      </div>
-      <div class="modal-row">
-        <div class="modal-label">Категория бюджета</div>
-        <select class="modal-select" id="oci-cat"></select>
+
+        <div class="modal-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <div class="modal-label">Количество</div>
+            <input class="modal-inp" id="oci-qty" type="number" min="1" step="1" inputmode="numeric" placeholder="1">
+          </div>
+          <div>
+            <div class="modal-label" id="oci-price-label">Цена, ₽</div>
+            <input class="modal-inp" id="oci-price" type="number" min="0" step="500" inputmode="numeric" placeholder="0">
+          </div>
+        </div>
+
+        <div class="modal-row oci-total-row">
+          <span class="oci-total-label">Итого</span>
+          <span id="oci-total" class="oci-total-value"></span>
+        </div>
+
+        <div class="modal-row">
+          <div class="modal-label">Категория бюджета</div>
+          <select class="modal-select" id="oci-cat"></select>
+        </div>
       </div>
     </div>
+
+    <!-- Футер -->
     <div class="modal-footer" style="justify-content:space-between">
       <button class="btn btn-danger-outline" onclick="ocItemDelete()" title="Удалить позицию">
         <i data-lucide="trash-2" class="icon"></i> Удалить

@@ -378,12 +378,20 @@ export function ocOpenItem(id) {
   const subcatInp = document.getElementById('oci-subcategory');
   if (subcatInp) subcatInp.value = item.subcategory || '';
 
-  // Фото-превью
-  const photoWrap = document.getElementById('oci-photo-preview');
-  const photoImg  = document.getElementById('oci-photo-img');
-  if (photoWrap && photoImg) {
-    if (item.photo) { photoImg.src = item.photo; photoWrap.style.display = ''; }
-    else { photoWrap.style.display = 'none'; photoImg.src = ''; }
+  // Фото-превью / плейсхолдер
+  const photoBox   = document.getElementById('oci-photo-preview');
+  const photoPlaceholder = document.getElementById('oci-photo-placeholder');
+  const photoImg   = document.getElementById('oci-photo-img');
+  if (photoImg) {
+    if (item.photo) {
+      photoImg.src = item.photo;
+      if (photoBox) photoBox.style.display = '';
+      if (photoPlaceholder) photoPlaceholder.style.display = 'none';
+    } else {
+      photoImg.src = '';
+      if (photoBox) photoBox.style.display = 'none';
+      if (photoPlaceholder) photoPlaceholder.style.display = '';
+    }
   }
 
   // Категории select
@@ -495,64 +503,28 @@ export async function ocAiFill() {
   const btn = document.getElementById('oci-ai-btn');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="oci-ai-spinner"></span> Загружаю страницу…'; }
 
-  // ─── Шаг 1: пытаемся получить HTML страницы через CORS-прокси ────
+  // ─── Шаг 1: запрашиваем мета-данные страницы через наш сервер ────
   let pageContext = '';
   let ogImage = '';
   if (urlVal) {
-    // Пробуем два прокси по очереди
-    const proxies = [
-      (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-      (u) => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
-    ];
-    for (const makeProxy of proxies) {
-      try {
-        const pr = await fetch(makeProxy(urlVal), { signal: AbortSignal.timeout(6000) });
-        if (!pr.ok) continue;
-        let html = '';
-        const ct = pr.headers.get('content-type') || '';
-        if (ct.includes('json')) {
-          // allorigins возвращает { contents: "..." }
-          const pj = await pr.json();
-          html = pj.contents || '';
-        } else {
-          html = await pr.text();
+    try {
+      const pr = await fetch(
+        `https://barista-school.online/api/proxy-meta?url=${encodeURIComponent(urlVal)}`,
+        { signal: AbortSignal.timeout(10000) }
+      );
+      if (pr.ok) {
+        const meta = await pr.json();
+        if (meta.ok) {
+          ogImage = meta.og_image || '';
+          pageContext = [
+            meta.og_title    && `Заголовок: ${meta.og_title}`,
+            meta.description && `Описание: ${meta.description}`,
+            ogImage          && `og:image: ${ogImage}`,
+            meta.prices?.length && `Цены на странице (руб): ${meta.prices.join(', ')}`,
+          ].filter(Boolean).join('\n');
         }
-        if (!html || html.length < 500) continue;
-
-        // og:image — два варианта порядка атрибутов
-        const imgM = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)/i)
-                  || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
-        if (imgM) ogImage = imgM[1].trim();
-
-        // og:title / <title>
-        const titleM = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']{1,300})/i)
-                    || html.match(/<meta[^>]+content=["']([^"']{1,300})["'][^>]+property=["']og:title["']/i)
-                    || html.match(/<title[^>]*>([^<]{1,200})/i);
-        const title = titleM ? titleM[1].trim() : '';
-
-        // og:description
-        const descM = html.match(/<meta[^>]+(?:property=["']og:description["']|name=["']description["'])[^>]+content=["']([^"']{1,300})/i)
-                   || html.match(/<meta[^>]+content=["']([^"']{1,300})["'][^>]+(?:property=["']og:description["']|name=["']description["'])/i);
-        const desc = descM ? descM[1].trim() : '';
-
-        // Цена: ищем широко — числа 4-7 цифр рядом с ₽/руб/price/data-price
-        const priceRaw = [
-          ...html.matchAll(/["'\s>](\d{4,7})\s*(?:₽|руб\.?|rub)/gi),
-          ...html.matchAll(/(?:data-price|"price"|'price')\s*[=:]\s*["']?(\d{4,7})/gi),
-          ...html.matchAll(/(\d{3})\s{0,1}(\d{3})\s*(?:₽|руб)/gi),
-        ].map(m => m[1] ? parseInt(m[1].replace(/\s/g,'')) : parseInt(m[1]+m[2])).filter(n => n >= 1000 && n <= 9999999);
-        const prices = [...new Set(priceRaw)].slice(0, 5);
-
-        pageContext = [
-          title  && `Заголовок: ${title}`,
-          desc   && `Описание: ${desc.slice(0, 250)}`,
-          ogImage && `og:image: ${ogImage}`,
-          prices.length && `Найденные цены на странице (руб): ${prices.join(', ')}`,
-        ].filter(Boolean).join('\n');
-
-        break; // успешно
-      } catch (_) { continue; }
-    }
+      }
+    } catch (_) { /* сервер недоступен — работаем без контекста */ }
   }
 
   if (btn) btn.innerHTML = '<span class="oci-ai-spinner"></span> Анализирую…';
@@ -608,12 +580,17 @@ ${pageContext ? `\nДанные со страницы товара:\n${pageConte
     // Фото: og:image берём напрямую из HTML (не через GPT), затем из ответа GPT
     const photoSrc = ogImage || (parsed.photo && parsed.photo !== 'пустая строка' ? parsed.photo : '');
     if (photoSrc) {
-      const photoImg  = document.getElementById('oci-photo-img');
-      const photoWrap = document.getElementById('oci-photo-preview');
-      if (photoImg && photoWrap) {
-        photoImg.src = photoSrc;
-        photoImg.onerror = () => { photoWrap.style.display = 'none'; };
-        photoWrap.style.display = '';
+      const photoImg2  = document.getElementById('oci-photo-img');
+      const photoBox2  = document.getElementById('oci-photo-preview');
+      const photoPlaceholder2 = document.getElementById('oci-photo-placeholder');
+      if (photoImg2 && photoBox2) {
+        photoImg2.src = photoSrc;
+        photoImg2.onerror = () => {
+          photoBox2.style.display = 'none';
+          if (photoPlaceholder2) photoPlaceholder2.style.display = '';
+        };
+        photoBox2.style.display = '';
+        if (photoPlaceholder2) photoPlaceholder2.style.display = 'none';
       }
     }
   } catch (e) {
