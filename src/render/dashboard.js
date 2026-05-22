@@ -524,7 +524,7 @@ export async function ocAiFill() {
             meta.description && `Описание: ${meta.description}`,
             ogImage          && `og:image: ${ogImage}`,
             meta.prices?.length
-              ? `Найденные цены на странице (руб): ${meta.prices.join(', ')} — выбери наиболее вероятную цену ТОВАРА (не скидки, не рассрочки, не "от X руб/мес")`
+              ? `Цена товара (руб): ${meta.prices[0]}${meta.prices.length > 1 ? ` (также найдены: ${meta.prices.slice(1).join(', ')})` : ''} — ПЕРВАЯ цена наиболее достоверна, используй её`
               : `Цена на странице не найдена (сайт загружает её через JS) — верни price: 0`,
           ].filter(Boolean).join('\n');
         }
