@@ -372,6 +372,20 @@ export function ocOpenItem(id) {
   urlBtn.href         = item.url || '#';
   urlBtn.style.display = item.url ? '' : 'none';
 
+  // Подкатегория (тип оборудования) — показываем только для equipment
+  const subcatRow = document.getElementById('oci-subcategory-row');
+  if (subcatRow) subcatRow.style.display = item.category === 'equipment' ? '' : 'none';
+  const subcatInp = document.getElementById('oci-subcategory');
+  if (subcatInp) subcatInp.value = item.subcategory || '';
+
+  // Фото-превью
+  const photoWrap = document.getElementById('oci-photo-preview');
+  const photoImg  = document.getElementById('oci-photo-img');
+  if (photoWrap && photoImg) {
+    if (item.photo) { photoImg.src = item.photo; photoWrap.style.display = ''; }
+    else { photoWrap.style.display = 'none'; photoImg.src = ''; }
+  }
+
   // Категории select
   const catSel = document.getElementById('oci-cat');
   catSel.innerHTML = Object.entries(OC_CATS).map(([c, inf]) =>
@@ -391,6 +405,12 @@ export function ocOpenItem(id) {
     const btn = document.getElementById('oci-url-open');
     btn.href         = v || '#';
     btn.style.display = v ? '' : 'none';
+  };
+
+  // При смене категории — показывать/скрывать поле подкатегории
+  document.getElementById('oci-cat').onchange = (e) => {
+    const subcatRow = document.getElementById('oci-subcategory-row');
+    if (subcatRow) subcatRow.style.display = e.target.value === 'equipment' ? '' : 'none';
   };
 
   // Enter = Сохранить (кроме textarea)
@@ -425,10 +445,14 @@ export function ocItemSave() {
   const meta = _ocMeta();
   const cur  = meta.currency || 'RUB';
 
-  item.name     = document.getElementById('oci-name').value.trim();
-  item.qty      = parseFloat(document.getElementById('oci-qty').value) || 1;
-  item.category = document.getElementById('oci-cat').value;
-  item.url      = document.getElementById('oci-url').value.trim();
+  item.name        = document.getElementById('oci-name').value.trim();
+  item.qty         = parseFloat(document.getElementById('oci-qty').value) || 1;
+  item.category    = document.getElementById('oci-cat').value;
+  item.url         = document.getElementById('oci-url').value.trim();
+  item.subcategory = (document.getElementById('oci-subcategory')?.value || '').trim();
+  const photoImg   = document.getElementById('oci-photo-img');
+  if (photoImg && photoImg.src && !photoImg.src.endsWith('#')) item.photo = photoImg.src;
+  else if (!photoImg?.src) item.photo = '';
 
   const rawPrice = parseFloat(document.getElementById('oci-price').value) || 0;
   item.price = cur === 'RUB' ? rawPrice
@@ -437,6 +461,104 @@ export function ocItemSave() {
   _ocSyncInvestment();
   if (window.closeModal) closeModal('modal-oc-item');
   renderDashboard();
+}
+
+// ─── AI-заполнение карточки ─────────────────────────────────────────
+export function ocSetApiKey() {
+  const current = localStorage.getItem('oc_openai_key') || '';
+  const key = prompt('Введите ваш OpenAI API ключ (sk-...):\n\nКлюч сохраняется только в вашем браузере (localStorage).', current);
+  if (key === null) return; // отмена
+  if (key.trim()) {
+    localStorage.setItem('oc_openai_key', key.trim());
+    alert('✅ API ключ сохранён');
+  } else {
+    localStorage.removeItem('oc_openai_key');
+    alert('Ключ удалён');
+  }
+}
+
+export async function ocAiFill() {
+  const apiKey = localStorage.getItem('oc_openai_key');
+  if (!apiKey) {
+    const go = confirm('Для AI-заполнения нужен OpenAI API ключ.\n\nОткрыть настройку ключа?');
+    if (go) ocSetApiKey();
+    return;
+  }
+
+  const urlVal  = (document.getElementById('oci-url')?.value || '').trim();
+  const nameVal = (document.getElementById('oci-name')?.value || '').trim();
+  if (!urlVal && !nameVal) {
+    alert('Укажите ссылку на товар или название — AI нужна хоть какая-то информация.');
+    return;
+  }
+
+  const btn = document.getElementById('oci-ai-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="oci-ai-spinner"></span> Загружаю…'; }
+
+  const prompt = `Ты помощник для планирования бюджета кофейни. 
+Пользователь указал следующие данные о товаре/оборудовании:
+- Ссылка: ${urlVal || '(не указана)'}
+- Название (если есть): ${nameVal || '(не указано)'}
+
+Верни ТОЛЬКО JSON-объект (без markdown, без пояснений) с полями:
+{
+  "name": "краткое понятное название товара",
+  "subcategory": "тип оборудования (напр. Кофемашина, Кофемолка, Ледогенератор, Холодильник, Посудомоечная машина, Блендер, Кассовое оборудование или другое)",
+  "price": числовая цена в рублях (или 0 если не известна),
+  "photo": "URL фотографии товара если можешь определить, иначе пустая строка"
+}
+Если ссылка на Яндекс.Маркет, DNS, Кант, Ozon или другой магазин — постарайся извлечь название и цену из URL и контекста.`;
+
+  try {
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 300,
+        temperature: 0.2,
+      }),
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `HTTP ${resp.status}`);
+    }
+    const data = await resp.json();
+    const text = data.choices?.[0]?.message?.content || '';
+    // Извлечь JSON из ответа
+    const match = text.match(/\{[\s\S]*?\}/);
+    if (!match) throw new Error('AI не вернул JSON');
+    const parsed = JSON.parse(match[0]);
+
+    if (parsed.name)  { document.getElementById('oci-name').value = parsed.name; document.getElementById('oci-title').textContent = parsed.name; }
+    if (parsed.subcategory) {
+      const subcatInp = document.getElementById('oci-subcategory');
+      if (subcatInp) subcatInp.value = parsed.subcategory;
+      // Показать поле подкатегории
+      const subcatRow = document.getElementById('oci-subcategory-row');
+      if (subcatRow) subcatRow.style.display = '';
+    }
+    if (parsed.price && parsed.price > 0) {
+      document.getElementById('oci-price').value = parsed.price;
+      // Пересчитать итог
+      const qty = parseFloat(document.getElementById('oci-qty').value) || 1;
+      document.getElementById('oci-total').textContent = _ocFmtAmt(qty * parsed.price);
+    }
+    if (parsed.photo) {
+      const photoImg  = document.getElementById('oci-photo-img');
+      const photoWrap = document.getElementById('oci-photo-preview');
+      if (photoImg && photoWrap) {
+        photoImg.src = parsed.photo;
+        photoImg.onerror = () => { photoWrap.style.display = 'none'; };
+        photoWrap.style.display = '';
+      }
+    }
+  } catch (e) {
+    alert('Ошибка AI: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="sparkles" class="icon"></i> Заполнить через AI'; if (window.lucide) lucide.createIcons(); }
+  }
 }
 
 function _ocInitDrag() {

@@ -92,6 +92,7 @@ import {
   ocAddRow, ocDeleteRow, ocUpdateField, ocLoadTemplate, ocSetFormat, ocSetCurrency, ocUpdateRate,
   ocToggleCat, ocMoveRow, ocClearAll,
   ocOpenItem, ocItemSave, ocItemDelete,
+  ocAiFill, ocSetApiKey,
   _ocCalcTotal, _ocFmtAmt,
 } from './render/dashboard.js';
 
@@ -294,7 +295,7 @@ const _srcExports = {
   OC_CATS, OC_FORMATS, OC_TEMPLATES,
   ocAddRow, ocDeleteRow, ocUpdateField, ocLoadTemplate, ocSetFormat, ocSetCurrency, ocUpdateRate,
   ocToggleCat, ocMoveRow, ocClearAll,
-  ocOpenItem, ocItemSave, ocItemDelete,
+  ocOpenItem, ocItemSave, ocItemDelete, ocAiFill, ocSetApiKey,
   _ocCalcTotal, _ocFmtAmt,
   // render/cost
   renderCost, filterSupCost, filterIngCost, filterSemiCost,

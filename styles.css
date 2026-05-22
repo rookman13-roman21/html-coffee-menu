@@ -2802,6 +2802,38 @@ body.dark .oc-cat-total.has-value { color: #89d185; }
 .oc-clear-btn:hover { background: #fff0f0 !important; }
 body.dark .oc-clear-btn { border-color: #8b3a3a !important; color: #f48771 !important; }
 
+/* AI fill button */
+.oci-ai-btn {
+  display: flex; align-items: center; gap: 6px; margin-top: 8px;
+  padding: 7px 14px; border-radius: 9px; font-size: 13px; font-weight: 700;
+  border: 1.5px solid #a259ff; background: #f3ecff; color: #7c3aed;
+  cursor: pointer; font-family: var(--font); transition: all .15s;
+  width: 100%;
+}
+.oci-ai-btn:hover { background: #e9d8ff; border-color: #7c3aed; }
+.oci-ai-btn:disabled { opacity: .55; cursor: not-allowed; }
+body.dark .oci-ai-btn { background: #2a1e3a; border-color: #7c3aed; color: #c4b5fd; }
+body.dark .oci-ai-btn:hover { background: #341e50; }
+
+/* AI spinner */
+.oci-ai-spinner {
+  width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
+  border: 2px solid #c4b5fd; border-top-color: #7c3aed;
+  animation: oci-spin .7s linear infinite;
+}
+@keyframes oci-spin { to { transform: rotate(360deg); } }
+
+/* Key button */
+.oci-key-btn { color: var(--muted); font-size: 14px; }
+.oci-key-btn:hover { color: var(--navy); }
+
+/* Photo preview */
+.oci-photo-wrap { justify-content: center; padding: 4px 0 8px; }
+.oci-photo-img {
+  max-width: 100%; max-height: 180px; border-radius: 10px;
+  object-fit: contain; border: 1px solid var(--border);
+}
+
 /* Saved badge */
 .oc-saved-badge {
   display: inline-flex; align-items: center; gap: 3px;
