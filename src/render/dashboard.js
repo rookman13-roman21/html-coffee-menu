@@ -493,21 +493,54 @@ export async function ocAiFill() {
   }
 
   const btn = document.getElementById('oci-ai-btn');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="oci-ai-spinner"></span> Загружаю…'; }
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="oci-ai-spinner"></span> Загружаю страницу…'; }
 
-  const prompt = `Ты помощник для планирования бюджета кофейни. 
-Пользователь указал следующие данные о товаре/оборудовании:
-- Ссылка: ${urlVal || '(не указана)'}
-- Название (если есть): ${nameVal || '(не указано)'}
+  // ─── Шаг 1: пытаемся получить HTML страницы через CORS-прокси ────
+  let pageContext = '';
+  let ogImage = '';
+  if (urlVal) {
+    try {
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(urlVal)}`;
+      const pr = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
+      if (pr.ok) {
+        const pj = await pr.json();
+        const html = pj.contents || '';
+        // Извлекаем только нужные фрагменты — title, meta, цену, чтобы не перегружать контекст
+        const getTag = (h, tag) => { const m = h.match(new RegExp(`<${tag}[^>]*>([^<]{1,300})`, 'i')); return m ? m[1].trim() : ''; };
+        const getMeta = (h, prop) => { const m = h.match(new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]+content=["']([^"']{1,300})`, 'i'))
+                                                    || h.match(new RegExp(`<meta[^>]+content=["']([^"']{1,300})["'][^>]+(?:property|name)=["']${prop}["']`, 'i')); return m ? m[1].trim() : ''; };
+        const title   = getMeta(html, 'og:title') || getTag(html, 'title') || '';
+        ogImage = getMeta(html, 'og:image') || '';
+        const desc    = getMeta(html, 'og:description') || '';
+        // Ищем цены — числа рядом со словами цена/price/руб/₽
+        const priceMatches = [...html.matchAll(/(?:цена|price|стоит|₽|руб)[^\d]{0,20}([\d\s]{3,10})/gi)]
+          .map(m => m[1].replace(/\s/g, '')).filter(p => +p > 100 && +p < 10000000).slice(0, 5);
+        pageContext = [
+          title && `Заголовок: ${title}`,
+          desc  && `Описание: ${desc.slice(0, 200)}`,
+          ogImage && `og:image: ${ogImage}`,
+          priceMatches.length && `Найденные цены на странице (руб): ${priceMatches.join(', ')}`,
+        ].filter(Boolean).join('\n');
+      }
+    } catch (_) { /* прокси недоступен — работаем без него */ }
+  }
+
+  if (btn) btn.innerHTML = '<span class="oci-ai-spinner"></span> Анализирую…';
+
+  // ─── Шаг 2: передаём контекст GPT ────────────────────────────────
+  const prompt = `Ты помощник для планирования бюджета кофейни.
+Пользователь добавляет позицию оборудования. Вот данные:
+- URL товара: ${urlVal || '(не указан)'}
+- Текущее название: ${nameVal || '(не указано)'}
+${pageContext ? `\nДанные со страницы товара:\n${pageContext}` : ''}
 
 Верни ТОЛЬКО JSON-объект (без markdown, без пояснений) с полями:
 {
-  "name": "краткое понятное название товара",
-  "subcategory": "тип оборудования (напр. Кофемашина, Кофемолка, Ледогенератор, Холодильник, Посудомоечная машина, Блендер, Кассовое оборудование или другое)",
-  "price": числовая цена в рублях (или 0 если не известна),
-  "photo": "URL фотографии товара если можешь определить, иначе пустая строка"
-}
-Если ссылка на Яндекс.Маркет, DNS, Кант, Ozon или другой магазин — постарайся извлечь название и цену из URL и контекста.`;
+  "name": "краткое читаемое название товара (до 60 символов)",
+  "subcategory": "тип оборудования: одно из — Кофемашина, Кофемолка, Ледогенератор, Холодильник, Посудомоечная машина, Блендер, Водонагреватель/бойлер, Кассовое оборудование, Вытяжка/вентиляция, Другое",
+  "price": числовая цена в рублях без пробелов (0 если не известна),
+  "photo": "${ogImage || 'URL фото если есть в данных выше, иначе пустая строка'}"
+}`;
 
   try {
     const resp = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -517,7 +550,7 @@ export async function ocAiFill() {
         model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 300,
-        temperature: 0.2,
+        temperature: 0.1,
       }),
     });
     if (!resp.ok) {
@@ -526,7 +559,6 @@ export async function ocAiFill() {
     }
     const data = await resp.json();
     const text = data.choices?.[0]?.message?.content || '';
-    // Извлечь JSON из ответа
     const match = text.match(/\{[\s\S]*?\}/);
     if (!match) throw new Error('AI не вернул JSON');
     const parsed = JSON.parse(match[0]);
@@ -535,21 +567,21 @@ export async function ocAiFill() {
     if (parsed.subcategory) {
       const subcatInp = document.getElementById('oci-subcategory');
       if (subcatInp) subcatInp.value = parsed.subcategory;
-      // Показать поле подкатегории
       const subcatRow = document.getElementById('oci-subcategory-row');
       if (subcatRow) subcatRow.style.display = '';
     }
     if (parsed.price && parsed.price > 0) {
       document.getElementById('oci-price').value = parsed.price;
-      // Пересчитать итог
       const qty = parseFloat(document.getElementById('oci-qty').value) || 1;
       document.getElementById('oci-total').textContent = _ocFmtAmt(qty * parsed.price);
     }
-    if (parsed.photo) {
+    // Фото: сначала из og:image (уже есть), потом из ответа GPT
+    const photoSrc = ogImage || parsed.photo || '';
+    if (photoSrc) {
       const photoImg  = document.getElementById('oci-photo-img');
       const photoWrap = document.getElementById('oci-photo-preview');
       if (photoImg && photoWrap) {
-        photoImg.src = parsed.photo;
+        photoImg.src = photoSrc;
         photoImg.onerror = () => { photoWrap.style.display = 'none'; };
         photoWrap.style.display = '';
       }
