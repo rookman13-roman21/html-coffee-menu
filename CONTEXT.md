@@ -1,7 +1,7 @@
 # CONTEXT — MBS* Coffee Menu
 
 > CFO-инструментарий для владельца кофейни. SPA на Vite + ES-модули.  
-> Последнее обновление: 22 мая 2026 (сессия 39 — OC item modal: загрузка фото с устройства + скролл на мобиле)
+> Последнее обновление: 22 мая 2026 (сессия 40 — fix: незакрытый modal-oc-item блокировал все попапы)
 
 ---
 
@@ -638,6 +638,7 @@ resetAll()  // confirm → восстанавливает S из DEFAULTS + FIXE
 | Вкладки Дашборд / Продажи / Поставщики отображались с неправильной шириной (узко на десктопе, шире viewport на мобайле) | **Причина:** `body { display: flex; flex-direction: column }` (добавлен для sticky-footer) делает `<main class="main">` flex-child. В flex-column `margin: 0 auto` не растягивает элемент до полной ширины — он сжимается до ширины контента. **Решение:** `width: 100%` на `.main` — до применения `max-width: 1440px` и `margin: 0 auto`. **Правило:** при `body { display: flex }` все дочерние блоки-контейнеры должны иметь явный `width: 100%`. |
 | В модалке «Новый полуфабрикат» поле «Цена» не обновлялось при вводе кол-ва; ячейка «Потери» не работала | **Причина:** `addSemiIngRow` строила HTML с inline `oninput="_updateSemiIngCost(this)"`. В Vite-сборке имена функций минифицируются → `window._updateSemiIngCost` не находилась. **Решение:** убрать все inline-обработчики из HTML-строки; после `wrap.appendChild(row)` навесить `addEventListener('input'/'change'/'click')` напрямую на DOM-элементы внутри замыкания. **Правило:** в Vite ES-модулях не использовать `oninput="moduleFn(this)"` — только `addEventListener`. |
 | В модалке «Новый полуфабрикат» поле «Цена» не обновлялось при вводе кол-ва / потерь; ячейка «Потери» не работала | **Причина:** `addSemiIngRow` строила HTML через innerHTML со строками `oninput="_updateSemiIngCost(this)"` и `onchange="_onSemiMatChange(this)"`. В Vite-сборке имена функций минифицируются → `window._updateSemiIngCost` не находилась. **Решение:** убрать все inline-обработчики из HTML-строки; после `wrap.appendChild(row)` навесить `addEventListener('input')` / `addEventListener('change')` / `addEventListener('click')` напрямую на DOM-элементы внутри замыкания функции. **Правило:** в Vite ES-модулях нельзя использовать `oninput="moduleFn(this)"` для функций из модулей — они не гарантированно попадают в `window`. Использовать `addEventListener`. |
+| Все попапы (рецепты, ингредиенты, полуфабрикаты, ингредиенты напитка) переставали открываться: скролл блокировался, но ничего не появлялось | **Причина:** незакрытый `</div>` у `div.modal-bg#modal-oc-item` в `index.html` — все последующие модалы (начиная с `modal-drink-view`) были вложены внутрь `modal-oc-item`. При его состоянии `display:none` дочерние попапы тоже были невидимы, но `openModal()` всё равно добавлял `html.modal-open` → скролл блокировался. **Решение:** добавить закрывающий `</div>` перед `<div class="modal-bg" id="modal-drink-view">` в `index.html`. **Правило:** при добавлении нового `modal-bg` в `index.html` — обязательно проверять баланс `<div>`/`</div>` через счётчик глубины (ожидаемое закрытие после двух `</div>` — один для `.modal`, один для `.modal-bg`). |
 
 ---
 
@@ -2199,6 +2200,33 @@ const MODAL_IDS = [
 | Коммит | Описание |
 |--------|----------|
 | *(deploy)* | fix: add modal-oc-item to MODAL_IDS — Escape now closes the popup |
+
+---
+
+### Сессия 40 (22 мая 2026) — fix: незакрытый modal-oc-item блокировал все попапы
+
+**Проблема:** после добавления `modal-oc-item` (сессия 38–39) все попапы перестали открываться: рецепты, ингредиенты, полуфабрикаты, ингредиенты напитка. При нажатии скролл страницы блокировался, но попап не появлялся. Починить можно было только перезагрузкой страницы.
+
+**Диагностика:** подсчёт баланса `<div>`/`</div>` внутри `modal-oc-item` показал, что после `</div>` строки 195 `index.html` глубина вложенности = **1** (не 0). Все модалы начиная с `modal-drink-view` были вложены внутрь `modal-oc-item`. Поскольку `modal-oc-item` имеет `display:none` по умолчанию, все дочерние попапы тоже не отображались. `openModal()` при этом честно добавлял `html.modal-open` → скролл блокировался.
+
+**Исправление** (`index.html`): добавлен один `</div>` (закрывает `div.modal-bg#modal-oc-item`) перед `<div class="modal-bg" id="modal-drink-view">`.
+
+**Правило:** при добавлении нового `modal-bg` — структура всегда:
+```html
+<div class="modal-bg" id="modal-XYZ">
+  <div class="modal">
+    ...
+  </div>
+</div>  ← этот тег часто теряется!
+```
+После добавления нового модала проверять: `modal.modal-bg` закрывается двумя `</div>` — один для `.modal`, один для `.modal-bg`.
+
+**Дополнительное исправление:** добавлен явный `import { openModal, closeModal } from './modals.js'` в `src/ui/recipe-view.js` + null-check в `openModal()` (`src/ui/modals.js`).
+
+| Коммит | Описание |
+|--------|----------|
+| `64c606f` | fix: import openModal/closeModal in recipe-view.js; null-check in openModal |
+| `7571a0a` | fix: close modal-oc-item modal-bg — all modals were nested inside it |
 
 ---
 
