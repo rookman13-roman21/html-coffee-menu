@@ -1,6 +1,6 @@
 # PROJECT_MAP.md — Coffee Menu SPA
 
-> Последнее обновление: май 2026  
+> Последнее обновление: 24 мая 2026 (сессия 49)  
 > Стек: **Vite 5.4 + Vanilla JS (ES-модули) + FastAPI + SQLite**  
 > Продакшн: `https://barista-school.online`
 
@@ -56,9 +56,23 @@ server/
 ├── coffee-menu-api.service  ← systemd unit-файл (деплой на VPS)
 ├── .env.example             ← Пример конфига окружения
 └── admin/
-    ├── admin-panel.js       ← SPA-панель администратора (Vanilla JS)
+    ├── admin-panel.js       ← SPA-панель администратора (Vanilla JS, генерируется build.sh)
+    ├── build.sh             ← Сборка admin-panel.js из src/*.js (cat конкатенация)
     ├── index.html           ← Заглушка-страница CP (не используется напрямую)
-    └── tilda-admin.html     ← Вставка на Тильду
+    ├── tilda-admin.html     ← Вставка на Тильду
+    └── src/                 ← Исходные части admin-panel.js (12 файлов)
+        ├── _header.js       (строки   1–24)  — IIFE-открытие + state vars
+        ├── _styles.js       (строки  25–500) — injectStyles()
+        ├── _html.js         (строки 501–859) — injectHTML() + _overlay
+        ├── _utils.js        (строки 860–907) — toast, api, fmtDate, avatar, isOnline
+        ├── _drawer.js       (строки 908–1001) — openDrawer/closeDrawer (пользователи)
+        ├── _tab.js          (строки 1002–1020) — switchAdmTab
+        ├── _equipment.js    (строки 1021–1587) — OC_MAIN_CATS + CRUD оборудования
+        ├── _suppliers.js    (строки 1588–1722) — CRUD поставщиков
+        ├── _presets.js      (строки 1723–1983) — CRUD пресетов
+        ├── _render.js       (строки 1984–2077) — render(), renderPagination(), exportCsv()
+        ├── _auth.js         (строки 2078–2123) — showPanel, doLogout, doLogin
+        └── _events.js       (строки 2124–2701) — делегированные события + })();
 ```
 
 ---
@@ -123,6 +137,24 @@ APP_URL=https://barista-school.online
 - **Тип:** SQLite
 - **Путь на сервере:** `/var/www/coffee-menu/server/data/app.db`
 - **Таблицы:** `users`, `oc_library`, `password_resets`, `user_data`
+
+#### Схема `oc_library`
+
+| Поле | Тип | Описание |
+|---|---|---|
+| `id` | `INTEGER PRIMARY KEY` | Автоинкремент |
+| `name` | `TEXT` | Название товара/позиции |
+| `subcategory` | `TEXT DEFAULT 'equipment'` | Под-категория (ключ) |
+| `category` | `TEXT DEFAULT 'equipment'` | Главная категория |
+| `price` | `REAL DEFAULT 0` | Цена |
+| `photo` | `TEXT DEFAULT ''` | URL или base64 фото |
+| `url` | `TEXT DEFAULT ''` | Ссылка на товар |
+| `is_public` | `INTEGER DEFAULT 1` | Видимость в SPA |
+| `is_featured` | `INTEGER DEFAULT 0` | Выделение (featured) |
+| `sort_order` | `INTEGER DEFAULT 0` | Порядок сортировки |
+| `description` | `TEXT DEFAULT ''` | Описание / партнёрская заметка |
+| `promo_code` | `TEXT DEFAULT ''` | Промокод |
+| `promo_expires` | `TEXT DEFAULT ''` | Дата окончания промокода (ISO) |
 
 ---
 
@@ -240,7 +272,8 @@ APP_URL=https://barista-school.online
 | `styles.css` | Единый файл — нет изоляции. Изменение `.modal` влияет на все 15+ модалов |
 | `server/main.py` | Единый монолит API. Синтаксическая ошибка → весь бэкенд падает |
 | `server/data/app.db` | **Реальная БД на сервере.** Локальная копия отсутствует — бэкапы вручную |
-| `server/admin/admin-panel.js` | Деплоится через `scp` напрямую в `dist/`. **Не затирать `rsync --delete`** |
+| `server/admin/admin-panel.js` | Генерируется `build.sh`. Деплоится через `scp` напрямую в `dist/`. **Не затирать `rsync --delete`** |
+| `server/admin/src/_*.js` | Исходники admin-panel.js. Редактировать только их — собирать через `build.sh` |
 
 ### ⚠️ Архитектурные ловушки
 
@@ -251,6 +284,8 @@ APP_URL=https://barista-school.online
 ❌ НЕ ставить switchTab() ДО window.activeTab = ...
 ❌ НЕ использовать oninput если обработчик делает полный ре-рендер — только onchange
 ❌ НЕ делать rsync --delete при деплое — удалит admin-panel.js
+⚠️  После certbot renew (~2026-08-19) — проверить: curl https://barista-school.online/api/health
+   (location /api/ теперь в snippet и не перезаписывается, но проверка не лишняя)
 ```
 
 ---
@@ -326,7 +361,8 @@ scp -i ~/.ssh/id_ed25519 server/main.py \
 ssh -i ~/.ssh/id_ed25519 root@159.194.233.13 \
   'systemctl restart coffee-menu-api && systemctl is-active coffee-menu-api'
 
-# 5. Задеплоить admin-panel.js отдельно
+# 5. Задеплоить admin-panel.js отдельно (build.sh → scp)
+bash server/admin/build.sh
 scp -i ~/.ssh/id_ed25519 server/admin/admin-panel.js \
   root@159.194.233.13:/var/www/coffee-menu/dist/admin-panel.js
 ```
@@ -354,6 +390,71 @@ ssh -i ~/.ssh/id_ed25519 root@159.194.233.13 \
 | `https://barista-school.online` | Продакшн SPA |
 | `https://barista-school.online/api/health` | Статус API |
 | `https://baristaschool.online` | Tilda + Админ-панель |
+
+---
+
+## 11. Админ-панель (`server/admin/admin-panel.js`)
+
+**Деплой:** `scp ... root@159.194.233.13:/var/www/coffee-menu/dist/admin-panel.js`  
+**Встраивается:** на Tilda (`baristaschool.online`) через `<div id="adm-root"></div><script src="https://barista-school.online/admin-panel.js?v=N">`
+
+### Сборка
+
+```bash
+# Отредактировать нужный src/_*.js, затем:
+bash server/admin/build.sh
+# → собирает admin-panel.js (2700 строк) из 12 файлов src/
+```
+
+Задача VS Code **deploy-admin-drawer** автоматически запускает `build.sh` перед `scp`.
+
+### Архитектура
+
+- Весь код завёрнут в **IIFE** `(function(){...})()` — функции не в глобальном скоупе автоматически
+- Глобальные функции (для `onclick="..."` в HTML) **обязательно** экспортируются через `window.xxx = xxx`
+- CSS-переменные темизации: `--adm-navy`, `--adm-red`, `--adm-red-bg`, `--adm-border`, `--adm-light`, `--adm-soft`, `--adm-text`, `--adm-muted`, `--adm-card`, `--adm-input`
+- Шрифт: **Mulish** (Google Fonts, подключён в head)
+
+### Менеджер подкатегорий оборудования
+
+| Функция | Описание |
+|---|---|
+| `openSubcatManager(mainCat)` | Открывает модал менеджера для указанной главной категории |
+| `_renderSubcatMgr(mainCat)` | Перерисовывает список подкатегорий в модале |
+| `_subcatMgrRow(name, i, mainCat)` | Генерирует HTML одной строки списка |
+| `_bindSubcatMgrEvents()` | Делегированные события на список (edit/save/del) |
+| `addSubcatFromMgr()` | Добавляет новую подкатегорию из поля ввода |
+| `resetSubcats(mainCat)` | Сброс к дефолтным подкатегориям |
+| `closeSubcatMgr()` | Закрывает модал |
+
+**Хранилище:** `localStorage['adm_subcats']` → `{equipment: {list: [...], initialized: bool}, ...}`  
+**Счётчик позиций:** `_oc_items.filter(it => (it.category||'equipment') === mainCat && it.subcategory === name).length`  
+**Защита удаления:** кнопка ✕ рендерится с `disabled` если `count > 0`; в обработчике `del` стоит дополнительная проверка `if (btn.disabled) return`
+
+### CSS-классы админ-панели
+
+| Префикс | Назначение |
+|---|---|
+| `.adm-scm-*` | Модал менеджера подкатегорий |
+| `.adm-eq-*` | Редактор позиций оборудования |
+| `.adm-drawer-*` | Боковая панель настроек пользователя |
+| `var(--adm-*)` | CSS-переменные темизации |
+
+---
+
+## 12. История изменений (сессии 41–44)
+
+| Сессия | Дата | Изменение |
+|---|---|---|
+| 41 | май 2026 | Динамический `<select>` подкатегорий: мерж `OC_SUBCATS` + уникальных из `_oc_items` |
+| 42 | 23 мая 2026 | Добавлен менеджер подкатегорий (CRUD через localStorage); фикс IIFE-скоупа (`window.xxx`); CSS-стилизация через `.adm-scm-*` и `var(--adm-*)` |
+| 43 | 23 мая 2026 | `_subcatMgrRow`: счётчик позиций (badge «N поз.») + `disabled` на кнопке удаления если `count > 0`; двойная защита в обработчике `del` |
+| 44 | 23 мая 2026 | **Поставщики (admin-panel.js):** UX-улучшения — превью логотипа, rich name cell (phone/site/promo/tags), фильтры Все/Партнёры/Публичные/Скрытые, поиск по тегам. **Bugfix:** `closeSupDrawer()` не сбрасывал `saveBtn.disabled = false` → второй поставщик нельзя было сохранить без перезагрузки. **Аудит:** все `close*Drawer()` проверены — `closeEqDrawer()` уже корректен, `closeDrawer()` (пользователи) не имеет проблемы т.к. footer пересоздаётся через `innerHTML` при каждом `openDrawer()`. Правило задокументировано как §15 в `copilot-instructions.md` |
+| 45 | 24 мая 2026 | **Фикс полного отказа авторизации (сессия 45):** 1) `.env.production` — `VITE_API_URL` сброшен в пустую строку (был `https://barista-school.online/api` → двойной prefix `/api/api/` в запросах → 404 на все эндпоинты); 2) `server/main.py` — `create_access_token` → `create_token(user.id)` в Yandex OAuth callback (NameError → OAuth всегда падал); 3) nginx HTTPS блок — добавлен `location /api/` proxy (certbot не добавляет его автоматически при выпуске сертификата); 4) пароль admin сброшен через `forgot-password` (перезаписан при диагностике). |
+| 46 | 24 мая 2026 | **nginx include-файл для certbot:** `location /api/` вынесен из основного конфига в `/etc/nginx/snippets/coffee-api.conf`; в `/etc/nginx/sites-available/coffee-menu` заменён на `include /etc/nginx/snippets/coffee-api.conf;` — теперь `certbot renew` может перезаписывать секцию `server {}`, не затрагивая прокси-блок. `nginx -t` + `systemctl reload nginx` — OK, `curl /api/health` → `{"ok":true}`. |
+| 49 | 24 мая 2026 | **Рефакторинг admin-panel.js (Вариант А):** файл (2701 строк) разрезан на 12 независимых модулей в `server/admin/src/_*.js`. Создан `server/admin/build.sh` — конкатенирует части в `admin-panel.js` через `cat`. Задача `deploy-admin-drawer` обновлена: добавлен шаг `bash build.sh &&` перед `scp`. Проверка: `node --check admin-panel.js` → SYNTAX_OK, `diff` с оригиналом → DIFF_CLEAN. Логика кода не изменялась. |
+| 48 | 24 мая 2026 | **Security audit:** credentials в `tasks.json` заменены на плейсхолдеры `REDACTED`. Git-история проверена — секретов в коммитах нет. Документация `AUTH_SYSTEM.md` и `copilot-instructions.md` актуализированы (правила §13–§16). |
+| 47 | 24 мая 2026 | **Фикс admin-panel.js (drawer-кнопки):** `adm-drawer` и `adm-confirm` живут в `_overlay` (`document.body`), вне `#adm-root` — `root.addEventListener` их не ловил. Решение: извлечена именованная `_handleClick`, подписана на оба контейнера (`root` + `_overlay`). Удалён `onclick="event.stopPropagation()"` с `.adm-row-actions` — блокировал кнопки в таблице. Инициализация `adm-confirm`/`keydown` listeners вынесена из тела обработчика (раньше добавлялась при каждом клике). **Новая функция:** поле «Комментарий» (📝) в карточке пользователя — `textarea` с авто-сохранением (debounce 1.2с + blur), метка времени изменения (`notes_updated_at`), стили `.adm-drawer-notes-*`. В `server/main.py`: колонка `notes VARCHAR` + `notes_updated_at DATETIME` в таблице `users`, автомиграция, GET и PATCH `/api/admin/users/` обновлены. |
 
 ---
 
