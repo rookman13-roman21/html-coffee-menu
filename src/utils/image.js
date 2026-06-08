@@ -10,36 +10,36 @@
  * Одно фото на тип: пары 300/400 мл используют одно изображение.
  */
 export const DRINK_IMAGES = {
-   0: 'images/Эспрессо.jpg',
-   1: 'images/Американо.jpg',
-   2: 'images/Американо.jpg',
-   3: 'images/Капучино.jpg',
-   4: 'images/Капучино.jpg',
-   5: 'images/Латте.jpg',
-   6: 'images/Латте.jpg',
-   7: 'images/Флэт уайт.jpg',
-   8: 'images/Моккачино.jpg',
-   9: 'images/Моккачино.jpg',
-  10: 'images/Раф ванильный.jpg',
-  11: 'images/Раф ванильный.jpg',
-  12: 'images/Раф апельсиновый.jpg',
-  13: 'images/Раф апельсиновый.jpg',
-  14: 'images/Какао.jpg',
-  15: 'images/Какао.jpg',
-  16: 'images/Ванильное облако.jpg',
-  17: 'images/Чай.jpg',
-  18: 'images/Матча.jpg',
-  19: 'images/Матча.jpg',
-  20: 'images/Айс-латте.jpg',
-  21: 'images/Айс-латте.jpg',
-  22: 'images/Айс-какао.jpg',
-  23: 'images/Айс-какао.jpg',
-  24: 'images/Бамбл.jpg',
-  25: 'images/Бамбл.jpg',
-  26: 'images/Эспрессо -тоник.jpg',
-  27: 'images/Фильтр-кофе.jpg',
-  28: 'images/Фильтр-кофе.jpg',
-  29: 'images/Пуровер.jpg',
+   0: 'images/espresso.jpg',
+   1: 'images/americano.jpg',
+   2: 'images/americano.jpg',
+   3: 'images/cappuccino.jpg',
+   4: 'images/cappuccino.jpg',
+   5: 'images/latte.jpg',
+   6: 'images/latte.jpg',
+   7: 'images/flat-white.jpg',
+   8: 'images/moccacino.jpg',
+   9: 'images/moccacino.jpg',
+  10: 'images/raf-vanilla.jpg',
+  11: 'images/raf-vanilla.jpg',
+  12: 'images/raf-orange.jpg',
+  13: 'images/raf-orange.jpg',
+  14: 'images/cacao.jpg',
+  15: 'images/cacao.jpg',
+  16: 'images/vanilla-cloud.jpg',
+  17: 'images/tea.jpg',
+  18: 'images/matcha.jpg',
+  19: 'images/matcha.jpg',
+  20: 'images/ice-latte.jpg',
+  21: 'images/ice-latte.jpg',
+  22: 'images/ice-latte.jpg',
+  23: 'images/ice-latte.jpg',
+  24: 'images/bumble.jpg',
+  25: 'images/bumble.jpg',
+  26: 'images/espresso-tonic.jpg',
+  27: 'images/latte.jpg',
+  28: 'images/latte.jpg',
+  29: 'images/latte.jpg',
 };
 
 /**
@@ -49,7 +49,7 @@ export const DRINK_IMAGES = {
  * @returns {string|null}
  */
 export function getDrinkImage(d) {
-  return d.image || DRINK_IMAGES[d.id] || null;
+  return d.image || null;
 }
 
 /**

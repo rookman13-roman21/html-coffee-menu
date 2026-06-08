@@ -307,8 +307,10 @@ export function filterRecipes(val) {
   window.withABC(enriched).forEach(d => { abcMap[d.id] = d.abc; abcTipMap[d.id] = d.abcTip; });
 
   let list = DRINKS.filter(d => {
+    if (d._hidden) return false;
     if (recipeGroup !== 'all' && d.group !== recipeGroup) return false;
-    if (recipeSearch && !d.name.toLowerCase().includes(recipeSearch.toLowerCase())) return false;
+    const displayName = d._serverName || d.name;
+    if (recipeSearch && !displayName.toLowerCase().includes(recipeSearch.toLowerCase())) return false;
     return true;
   });
 
@@ -350,7 +352,7 @@ export function filterRecipes(val) {
         return { name: MAT[ing.mat].name, dispAmt, unit, cost: window.calcIngCost(ing) };
       });
     const totalCost = ings.reduce((s, i) => s + i.cost, 0);
-    const price = S.salePrices[d.id];
+    const price = d._serverPrice != null ? d._serverPrice : (S.salePrices[d.id] || 0);
     const fc = price > 0 ? totalCost / price : 0;
     const ingRows = ings.map(ing => {
       const share = totalCost > 0 ? (ing.cost / totalCost * 100).toFixed(0) : 0;
@@ -375,7 +377,7 @@ export function filterRecipes(val) {
     return `<div class="recipe-card" onclick="openViewDrink(${d.id})">
       ${imgHtml}
       <div class="recipe-card-title" style="margin-top:${d.image ? '10px' : '0'}">
-        <span>${d.name}</span>
+        <span>${d._serverName || d.name}</span>
         <div style="display:flex;align-items:center;gap:6px">${videoIconHtml}${resetBtn}</div>
       </div>
       <div class="recipe-card-sub">

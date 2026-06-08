@@ -3,43 +3,127 @@
 
 // ── Перенесено из public/app.js ──
 
-export function openSupplierInfo(key) {
-  if (!window.window.MAT[key]) return;
-  const s = (window.S.suppliers && window.S.suppliers[key]) || {};
-  document.getElementById('si-mat-name').textContent = window.MAT[key].name;
-  document.getElementById('si-name').textContent = s.name || '—';
-  // телефон
-  const phoneEl = document.getElementById('si-phone');
+export function openSupplierInfo(name) {
+  const g = (window._supGroups && window._supGroups[name]) || {};
+
+  // Заголовок — имя поставщика
+  document.getElementById('si-title').textContent = g.name || 'Поставщик';
+
+  // Логотип
+  const logoWrap = document.getElementById('si-logo-wrap');
+  const logoImg  = document.getElementById('si-logo');
+  if (g.logo_url) { logoImg.src = g.logo_url; logoWrap.style.display = 'flex'; }
+  else { logoWrap.style.display = 'none'; }
+
+  // Партнёрский бейдж
+  document.getElementById('si-partner-wrap').style.display = g.is_featured ? '' : 'none';
+
+  // Телефон
+  const phoneEl   = document.getElementById('si-phone');
   const phoneWrap = document.getElementById('si-phone-wrap');
-  if (s.phone) {
-    phoneEl.textContent = s.phone;
-    phoneEl.href = s.phone.includes('@') ? `mailto:${s.phone}` : `tel:${s.phone.replace(/\s/g,'')}`;
+  if (g.phone) {
+    phoneEl.textContent = g.phone;
+    phoneEl.href = g.phone.includes('@') ? `mailto:${g.phone}` : `tel:${g.phone.replace(/\s/g,'')}`;
     phoneWrap.style.display = '';
   } else { phoneWrap.style.display = 'none'; }
-  // сайт
-  const siteEl = document.getElementById('si-site');
+
+  // Сайт
+  const siteEl   = document.getElementById('si-site');
   const siteWrap = document.getElementById('si-site-wrap');
-  if (s.site) {
-    siteEl.textContent = s.site;
-    siteEl.href = s.site;
+  if (g.site) {
+    siteEl.textContent = g.site.replace(/^https?:\/\//, '');
+    siteEl.href = g.site;
     siteWrap.style.display = '';
   } else { siteWrap.style.display = 'none'; }
-  // заметка
-  const noteEl = document.getElementById('si-note');
+
+  // Заметка
+  const noteEl   = document.getElementById('si-note');
   const noteWrap = document.getElementById('si-note-wrap');
-  if (s.note) {
-    noteEl.textContent = s.note;
+  if (g.note) {
+    noteEl.textContent = g.note;
     noteWrap.style.display = '';
   } else { noteWrap.style.display = 'none'; }
-  // сохраняем ключ для редактирования
-  document.getElementById('modal-supplier-info').dataset.matKey = key;
+
+  // Промокод
+  const promoWrap = document.getElementById('si-promo-wrap');
+  const _today = new Date().toISOString().slice(0,10);
+  const _promoOk = g.promo_code && (!g.promo_expires || g.promo_expires >= _today);
+  if (_promoOk) {
+    promoWrap.style.display = '';
+    promoWrap.innerHTML = `<div class="sup-promo-block">
+      <span class="sup-promo-code">${g.promo_code}</span>
+      ${g.promo_desc ? `<span class="sup-promo-desc"> — ${g.promo_desc}</span>` : ''}
+      ${g.promo_expires ? `<span class="sup-promo-exp"> до ${g.promo_expires}</span>` : ''}
+    </div>`;
+  } else { promoWrap.style.display = 'none'; promoWrap.innerHTML = ''; }
+
+  // Привязанные ингредиенты
+  const matsWrap = document.getElementById('si-mats-wrap');
+  const matsEl   = document.getElementById('si-mats');
+  if (g.mats && g.mats.length) {
+    matsEl.innerHTML = g.mats.map(m => `<span class="sup-mat-tag">${m}</span>`).join('');
+    matsWrap.style.display = '';
+  } else { matsWrap.style.display = 'none'; }
+
+  // Кнопка «Удалить» — показываем для любого найденного поставщика
+  const delBtn = document.getElementById('si-delete-btn');
+  delBtn.style.display = g.name ? '' : 'none';
+
+  // Кнопка «Редактировать» — показываем для любого найденного поставщика
+  document.getElementById('si-edit-btn').style.display = g.name ? '' : 'none';
+
+  document.getElementById('modal-supplier-info').dataset.supName = g.name || '';
   openModal('modal-supplier-info');
   if (window.lucide) lucide.createIcons();
 }
+
+export function siCopyPhone() {
+  const phone = document.getElementById('si-phone').textContent;
+  if (!phone || phone === '—') return;
+  navigator.clipboard.writeText(phone).then(() => {
+    const btn = document.getElementById('si-phone-copy');
+    if (btn) { btn.textContent = '✓'; setTimeout(() => { btn.textContent = '📋'; }, 1500); }
+  }).catch(() => {});
+}
+
+export function siDeleteSupplier() {
+  const name = document.getElementById('modal-supplier-info').dataset.supName;
+  const g = window._supGroups && window._supGroups[name];
+  if (!g) return;
+  window.showConfirm(`Удалить поставщика «${name}»?`, () => {
+    if (g.matKeys && g.matKeys.length && window.S.suppliers) {
+      g.matKeys.forEach(k => { delete window.S.suppliers[k]; });
+    }
+    if (window.S.supplierBook) {
+      if (g.bookId) {
+        // удаляем по id
+        window.S.supplierBook = window.S.supplierBook.filter(b => String(b.id) !== String(g.bookId));
+      } else {
+        // fallback: удаляем по имени (если id не был сохранён)
+        window.S.supplierBook = window.S.supplierBook.filter(b => b.name !== name);
+      }
+    }
+    saveState();
+    closeModal('modal-supplier-info');
+    renderCost();
+  });
+}
+
 export function siOpenEdit() {
-  const key = document.getElementById('modal-supplier-info').dataset.matKey;
+  const name = document.getElementById('modal-supplier-info').dataset.supName;
+  const g = window._supGroups && window._supGroups[name];
   closeModal('modal-supplier-info');
-  openSupplierModal(key);
+  if (g && g.matKeys && g.matKeys.length) {
+    openSupplierModal(g.matKeys[0]);
+    return;
+  }
+  // Ищем запись в supplierBook: сначала по bookId, если не работает — по имени
+  const bookEntry = (window.S.supplierBook || []).find(b =>
+    (g && g.bookId != null && String(b.id) === String(g.bookId)) || b.name === name
+  );
+  if (bookEntry) {
+    openSupplierBookModal(bookEntry.id);
+  }
 }
 
 export function openSupplierModal(key) {
@@ -96,10 +180,20 @@ export function openSuppliersList() {
   openModal('modal-suppliers-list');
   if (window.lucide) lucide.createIcons();
 }
+// Маппинг category из MAT_CATEGORIES → ключи фильтр-чипов
+const _CAT_TO_FILTER = {
+  coffee: 'coffee', dairy: 'dairy', tea: 'tea',
+  bakery: 'sugar',    // бакалея → Сахар
+  supplies: 'pack',   // расходники → Упаковка
+  drinks: 'other',    // напитки → Прочее
+  fruits: 'other',    // фрукты → Прочее
+  other: 'other',
+};
 function _getMatCat(key) {
   if (window.MAT_CATEGORY && window.MAT_CATEGORY[key]) return window.MAT_CATEGORY[key];
   const matEntry = (window.MAT && window.MAT[key]) || (window.S && window.S.materials && window.S.materials[key]);
-  return (matEntry && matEntry.category) || 'other';
+  const rawCat = (matEntry && matEntry.category) || 'other';
+  return _CAT_TO_FILTER[rawCat] || 'other';
 }
 
 export function renderSuppliersList() {
@@ -118,12 +212,33 @@ export function renderSuppliersList() {
     if (!byName[nm].note  && v.note)  byName[nm].note  = v.note;
     if (!byName[nm].site  && v.site)  byName[nm].site  = v.site;
   });
-  book.forEach(b => { if (byName[b.name]) byName[b.name].bookId = b.id; });
+  book.forEach(b => {
+    if (byName[b.name]) {
+      byName[b.name].bookId = b.id;
+      if (b.is_featured) byName[b.name].is_featured = b.is_featured;
+      if (b.logo_url)     byName[b.name].logo_url    = b.logo_url;
+      if (b.promo_code)   byName[b.name].promo_code  = b.promo_code;
+      if (b.promo_expires) byName[b.name].promo_expires = b.promo_expires;
+      if (b.promo_desc)   byName[b.name].promo_desc  = b.promo_desc;
+    }
+  });
 
   let groups = Object.values(byName).map(g => ({ ...g, isBookOnly: false }));
   book.forEach(b => {
-    if (!byName[b.name])
-      groups.push({ name: b.name, phone: b.phone||'', note: b.note||'', site: b.site||'', mats: [], matKeys: [], bookId: b.id, isBookOnly: true });
+    if (!byName[b.name]) {
+      groups.push({ name: b.name, phone: b.phone||'', note: b.note||'', site: b.site||'', mats: [], matKeys: [], bookId: b.id, isBookOnly: true,
+        is_featured: b.is_featured || 0, logo_url: b.logo_url || '',
+        promo_code: b.promo_code || '', promo_expires: b.promo_expires || '', promo_desc: b.promo_desc || '' });
+    } else {
+      const g = groups.find(x => x.name === b.name);
+      if (g) {
+        if (b.is_featured) g.is_featured = 1;
+        if (b.logo_url)    g.logo_url    = b.logo_url;
+        if (b.promo_code)  g.promo_code  = b.promo_code;
+        if (b.promo_expires) g.promo_expires = b.promo_expires;
+        if (b.promo_desc)  g.promo_desc  = b.promo_desc;
+      }
+    }
   });
 
   // Поиск
@@ -140,8 +255,10 @@ export function renderSuppliersList() {
   if (supListFilter === 'nomat') {
     filtered = filtered.filter(g => g.mats.length === 0);
   } else if (supListFilter !== 'all') {
-    filtered = filtered.filter(g =>
-      g.mats.some(m => _getMatCat(m.key) === supListFilter));
+    filtered = filtered.filter(g => {
+      if (g.mats.length === 0) return supListFilter === 'other'; // book-only → Прочее
+      return g.mats.some(m => _getMatCat(m.key) === supListFilter);
+    });
   }
 
   // Статистика
@@ -170,19 +287,29 @@ export function renderSuppliersList() {
         `<span class="sup-mat-tag" title="Изменить для ${m.label}" onclick="editSupFromList('${m.key}')">${m.label}</span>`
       ).join('');
       const noMatBadge = g.isBookOnly ? `<span class="sup-book-badge">Без сырья</span>` : '';
+      const partnerBadge = g.is_featured ? `<span class="sup-partner-badge">⭐ Партнёр MBS</span>` : '';
       const editAction = g.isBookOnly
         ? `openSupplierBookModal('${g.bookId}', true)`
         : `editSupFromList('${g.matKeys[0]}')`;
+      const logoHtml = g.logo_url ? `<img class="sup-logo" src="${g.logo_url}" alt="" onerror="this.style.display='none'">` : '';
+      const _tod = new Date().toISOString().slice(0,10);
+      const _promoOk = g.promo_code && (!g.promo_expires || g.promo_expires >= _tod);
+      const promoHtml = _promoOk
+        ? `<div class="sup-promo-block"><span class="sup-promo-code">${g.promo_code}</span>${g.promo_desc ? `<span class="sup-promo-desc"> — ${g.promo_desc}</span>` : ''}${g.promo_expires ? `<span class="sup-promo-exp"> до ${g.promo_expires}</span>` : ''}</div>`
+        : '';
       return `<div class="sup-card">
         <div class="sup-card-header">
+          ${logoHtml ? `<div class="sup-logo-wrap">${logoHtml}</div>` : ''}
           <div class="sup-card-info">
             <span class="sup-card-name"><i data-lucide="building-2" class="icon"></i> ${g.name}</span>
             ${g.phone ? `<span class="sup-card-phone">${g.phone}</span>` : ''}
           </div>
           <button class="btn btn-outline sup-edit-btn" onclick="${editAction}"><i data-lucide="pencil" class="icon"></i> Изменить</button>
         </div>
+        ${partnerBadge ? `<div style="margin:4px 0">${partnerBadge}</div>` : ''}
         ${g.note ? `<div class="sup-card-note">${g.note}</div>` : ''}
         ${g.site ? `<div class="sup-card-note"><a href="${g.site}" target="_blank" style="color:var(--muted);text-decoration:none">🌐 ${g.site}</a></div>` : ''}
+        ${promoHtml}
         <div class="sup-card-mats">${matTags}${noMatBadge}</div>
       </div>`;
     }).join('');
@@ -195,8 +322,8 @@ export function renderSuppliersList() {
 let _supBookFromList = false;
 export function openSupplierBookModal(id, fromList) {
   _supBookFromList = !!fromList;
-  _supBookEditId = id || null;
-  if (id) {
+  _supBookEditId = (id != null && id !== '') ? id : null;
+  if (_supBookEditId != null) {
     const entry = (window.S.supplierBook||[]).find(b => String(b.id) === String(id));
     if (!entry) return;
     document.getElementById('sup-book-title').textContent = 'Редактировать поставщика';

@@ -480,6 +480,22 @@
     .sup-mat-tag:hover { background: #d0eaca; }
     .sup-book-badge { background: #fff3cd; color: #856404; font-size: 11px; font-weight: 600;
       padding: 2px 8px; border-radius: 20px; }
+    .sup-partner-badge { background: #d4edda; color: #155724; font-size: 11px; font-weight: 700;
+      padding: 2px 9px; border-radius: 20px; }
+    body.dark .sup-partner-badge { background: #1a3a22; color: #6abf69; }
+    .sup-logo-wrap { flex-shrink: 0; }
+    .sup-logo { width: 48px; height: 48px; object-fit: contain; border-radius: 8px;
+      border: 1px solid var(--border); background: #fff; display: block; }
+    body.dark .sup-logo { background: #2d2d2d; border-color: #454545; }
+    .sup-promo-block { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px;
+      background: #fffbea; border: 1px solid #f5d060; border-radius: 8px;
+      padding: 5px 10px; margin: 6px 0 2px; font-size: 12px; }
+    body.dark .sup-promo-block { background: #2a2200; border-color: #6a5000; }
+    .sup-promo-code { font-weight: 800; letter-spacing: .06em; color: #856404;
+      background: #fff3cd; border-radius: 5px; padding: 1px 7px; font-size: 12px; }
+    body.dark .sup-promo-code { background: #3a2800; color: #f0c040; }
+    .sup-promo-desc { color: var(--muted); font-size: 12px; }
+    .sup-promo-exp { color: var(--muted); font-size: 11px; margin-left: auto; white-space: nowrap; }
     /* Чипы фильтра */
     .filter-chip { padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); background: var(--gray);
       font-size: 12px; font-weight: 600; cursor: pointer; color: var(--muted); transition: all .15s; }
@@ -2615,7 +2631,9 @@
 .oc-kpi-sync { font-size: 11px; color: #417033; display: flex; align-items: center; gap: 4px; margin-top: 4px; font-weight: 600; }
 .oc-kpi-cats { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; flex: 1; }
 .oc-kpi-cat { display: flex; align-items: center; gap: 5px; background: #fff; border-radius: 8px; padding: 5px 10px; font-size: 12px; border: 1px solid #d4e8cc; }
-.oc-kpi-cat-icon { font-size: 15px; }
+.oc-kpi-cat-icon { display: flex; align-items: center; flex-shrink: 0; }
+.oc-kpi-cat-icon svg { width: 15px; height: 15px; stroke: var(--muted); }
+.oc-addcat-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
 .oc-kpi-cat-name { color: var(--muted); }
 .oc-kpi-cat-val { font-weight: 700; color: var(--navy); margin-left: 2px; }
 
@@ -2638,7 +2656,8 @@
   background: var(--gray); padding: 10px 14px;
   border-bottom: 1px solid var(--border);
 }
-.oc-cat-icon { font-size: 17px; }
+.oc-cat-icon { display: flex; align-items: center; flex-shrink: 0; }
+.oc-cat-icon svg { width: 18px; height: 18px; stroke: var(--navy); }
 .oc-cat-label { font-weight: 700; font-size: 13px; flex: 1; color: var(--navy); }
 .oc-cat-total { font-weight: 700; color: var(--navy); font-size: 13px; white-space: nowrap; min-width: 96px; text-align: right; display: inline-block; }
 .oc-add-in-cat {
@@ -2869,6 +2888,9 @@ body.dark .oc-clear-btn { border-color: #8b3a3a !important; color: #f48771 !impo
   gap: 10px; border: 1.5px dashed var(--border);
   color: var(--muted); font-size: 12px; text-align: center; line-height: 1.4;
 }
+/* Lucide заменяет <i> на <svg> и копирует inline-style, но svg может растянуться
+   на всю ширину flex-контейнера — явно ограничиваем размер */
+.oci-photo-placeholder svg { width: 32px !important; height: 32px !important; flex-shrink: 0; }
 
 /* Кнопка AI */
 .oci-ai-btn {
@@ -2920,7 +2942,7 @@ body.dark .oci-ai-btn { box-shadow: 0 4px 12px rgba(124,58,237,.25); }
   background: var(--card); cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .1s;
   font-family: inherit; text-align: center;
 }
-.oclib-cat-tile:hover { border-color: var(--accent, #7c3aed); box-shadow: 0 4px 14px rgba(124,58,237,.12); transform: translateY(-1px); }
+.oclib-cat-tile:hover { border-color: var(--accent, #7c3aed); box-shadow: 0 4px 14px rgba(124,58,237,.12); transform: translateY(-1px); background: var(--card); }
 .oclib-cat-icon { display: flex; align-items: center; justify-content: center; }
 .oclib-cat-icon .oclib-icon { width: 28px; height: 28px; stroke: var(--accent, #4F883E); }
 .oclib-item-no-photo .oclib-icon { width: 36px; height: 36px; stroke: #bbb; }
@@ -2931,7 +2953,9 @@ body.dark .oci-ai-btn { box-shadow: 0 4px 12px rgba(124,58,237,.25); }
 .oclib-item {
   display: flex; align-items: center; gap: 12px;
   padding: 10px 0; border-bottom: 1px solid var(--border);
+  transition: background .12s;
 }
+.oclib-item:hover { background: var(--row-hover, rgba(0,0,0,.04)); border-radius: 8px; }
 .oclib-item:last-child { border-bottom: none; }
 .oclib-item-thumb {
   width: 56px; height: 56px; border-radius: 10px; overflow: hidden; flex-shrink: 0;
@@ -2943,6 +2967,27 @@ body.dark .oci-ai-btn { box-shadow: 0 4px 12px rgba(124,58,237,.25); }
 .oclib-item-name { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.3; }
 .oclib-item-price { font-size: 13px; font-weight: 700; color: var(--green); margin-top: 2px; }
 .oclib-select-btn { flex-shrink: 0; font-size: 12px; padding: 7px 14px; }
+.oclib-featured-badge { display: inline-block; font-size: 11px; font-weight: 700; color: #b45309; background: #fef3c7; border-radius: 6px; padding: 1px 6px; margin-bottom: 2px; }
+.oclib-promo-badge { display: inline-block; margin-top: 3px; font-size: 11px; font-weight: 600; color: #15803d; background: #dcfce7; border-radius: 6px; padding: 2px 7px; }
+.oclib-promo-badge b { font-family: 'SF Mono', 'Fira Code', monospace; letter-spacing: .04em; }
+body.dark .oclib-promo-badge { background: rgba(74,222,128,.15); color: #4ade80; }
+.oci-featured-badge { display: inline-block; font-size: 11px; font-weight: 600; color: #b45309; background: #fef3c7; border-radius: 6px; padding: 1px 7px; margin-left: 6px; vertical-align: middle; }
+
+/* Промо-блок партнёра */
+.oci-promo-block { margin-top: 12px; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 13px 15px; font-size: 13px; }
+.oci-promo-block .oci-promo-header { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #15803d; margin-bottom: 8px; }
+.oci-promo-desc { color: #374151; line-height: 1.55; margin: 0 0 11px; font-size: 13px; }
+.oci-promo-code-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.oci-promo-code-pill { display: inline-flex; align-items: center; gap: 9px; background: #fff; border: 1.5px solid #86efac; border-radius: 9px; padding: 6px 10px 6px 14px; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+.oci-promo-code-pill:hover { border-color: #4ade80; box-shadow: 0 2px 8px rgba(74,222,128,.18); }
+.oci-promo-code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 17px; font-weight: 800; color: #15803d; letter-spacing: .1em; }
+.oci-promo-copy-btn { font-size: 11px; font-weight: 600; color: #15803d; background: #dcfce7; border: none; border-radius: 6px; padding: 4px 10px; cursor: pointer; transition: background .15s; white-space: nowrap; }
+.oci-promo-copy-btn:hover { background: #bbf7d0; }
+.oci-promo-exp { display: block; font-size: 11px; color: #6b7280; margin-top: 6px; }
+.oclib-item-featured { background: var(--featured-bg, #fffdf0); border-radius: 8px; padding: 10px 8px; margin: 0 -8px; }
+body.dark .oclib-item-featured { background: rgba(255,220,80,.07); }
+.oclib-buy-btn { display: inline-block; margin-top: 4px; font-size: 12px; font-weight: 700; color: var(--accent, #4F883E); text-decoration: none; border: 1.5px solid currentColor; border-radius: 6px; padding: 2px 8px; transition: background .15s, color .15s; }
+.oclib-buy-btn:hover { background: var(--accent, #4F883E); color: #fff; }
 
 @media (max-width: 600px) {
   .oclib-modal { max-width: 100% !important; }

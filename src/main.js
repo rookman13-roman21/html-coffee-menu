@@ -91,7 +91,7 @@ import {
   OC_CATS, OC_FORMATS, OC_TEMPLATES,
   ocAddRow, ocDeleteRow, ocUpdateField, ocLoadTemplate, ocSetFormat, ocSetCurrency, ocUpdateRate,
   ocToggleCat, ocMoveRow, ocClearAll,
-  ocOpenItem, ocItemSave, ocItemDelete,
+  ocOpenItem, ocItemSave, ocItemDelete, ocItemCancel,
   ocAiFill, ocSetApiKey,
   ocOpenLibrary, oclibShowCats, oclibOpenCat, oclibSearch, oclibSelect,
   ociSubcatChange,
@@ -190,6 +190,7 @@ import {
   addFixedCost, addFixedCostInCat, delFixedCost,
   onTaxMode, onInvestment, toggleFcCat,
   openCostEditor, closeCostEditor, saveCostEditor, deleteCostFromEditor,
+  initFcOpenCatsKeeper,
 } from './ui/cost-table.js';
 
 import {
@@ -199,9 +200,10 @@ import {
 } from './ui/ingredients.js';
 
 import {
-  openSupplierInfo, siOpenEdit, openSupplierModal, editSupFromList,
+  openSupplierInfo, siOpenEdit, siCopyPhone, siDeleteSupplier,
+  openSupplierModal, editSupFromList,
   cancelSupplierModal, saveSupplier, openSuppliersList, renderSuppliersList,
-  openSupplierBookModal, cancelSupplierBookModal, deleteSupplierBook,
+  openSupplierBookModal, saveSupplierBook, cancelSupplierBookModal, deleteSupplierBook,
 } from './ui/suppliers.js';
 
 import {
@@ -298,7 +300,7 @@ const _srcExports = {
   OC_CATS, OC_FORMATS, OC_TEMPLATES,
   ocAddRow, ocDeleteRow, ocUpdateField, ocLoadTemplate, ocSetFormat, ocSetCurrency, ocUpdateRate,
   ocToggleCat, ocMoveRow, ocClearAll,
-  ocOpenItem, ocItemSave, ocItemDelete, ocAiFill, ocSetApiKey,
+  ocOpenItem, ocItemSave, ocItemDelete, ocItemCancel, ocAiFill, ocSetApiKey,
   ocOpenLibrary, oclibShowCats, oclibOpenCat, oclibSearch, oclibSelect,
   ociSubcatChange,
   ocPhotoFileChange,
@@ -370,9 +372,10 @@ const _srcExports = {
   _onIngMatChange, _calcIngRowCost, _updateIngRowCost, addIngRow, _autoCalcDrinkIngYield,
   _searchClear, openSupQuickDrop, _fillMatSupBookSelect, _onMatSupBookChange,
   // ui/suppliers
-  openSupplierInfo, siOpenEdit, openSupplierModal, editSupFromList,
+  openSupplierInfo, siOpenEdit, siCopyPhone, siDeleteSupplier,
+  openSupplierModal, editSupFromList,
   cancelSupplierModal, saveSupplier, openSuppliersList, renderSuppliersList,
-  openSupplierBookModal, cancelSupplierBookModal, deleteSupplierBook, exportSuppliersPDF, exportSuppliersXLSX,
+  openSupplierBookModal, saveSupplierBook, cancelSupplierBookModal, deleteSupplierBook,
   // ui/recipe-view
   openViewDrink, openViewSemi, mvdOpenEdit, mvdToggleDownload, _mvdGetData,
   mvdSemiDownloadPDF, mvdSemiDownloadXLSX,
@@ -398,6 +401,10 @@ const _srcExports = {
 Object.entries(_srcExports).forEach(([k, v]) => {
   if (window[k] === undefined) window[k] = v;
 });
+
+// Оборачиваем window.renderFinModel так, чтобы открытые категории
+// постоянных расходов не сворачивались при любом ре-рендере
+initFcOpenCatsKeeper();
 
 // ════════════════════════════════════════════════════════════════════
 //  RUNTIME COUNTERS & SEMI (перенесено из app.js)
@@ -457,6 +464,78 @@ async function _initApp(serverState) {
   }
   if (!Loc.activeId) { Loc.activeId = Loc.list[0].id; saveLocIndex(); }
   loadState();
+
+  // ── Подгружаем публичных поставщиков с сервера (не блокирует старт) ──
+  try {
+    const _apiBase = import.meta.env.VITE_API_URL || 'https://barista-school.online/api';
+    fetch(_apiBase + '/suppliers')
+      .then(r => r.ok ? r.json() : [])
+      .then(serverSups => {
+        if (!Array.isArray(serverSups) || !serverSups.length) return;
+        if (!window.S.supplierBook) window.S.supplierBook = [];
+        // Мержим: сервер → supplierBook. Если запись с таким именем уже есть — обновляем
+        // поля is_featured, logo_url, promo_code и т.д. Пользовательские поля name/phone/note не трогаем.
+        serverSups.forEach(srv => {
+          const idx = window.S.supplierBook.findIndex(b => b.name === srv.name);
+          if (idx >= 0) {
+            // Обновляем только серверные расширенные поля
+            Object.assign(window.S.supplierBook[idx], {
+              is_featured: srv.is_featured,
+              logo_url: srv.logo_url || window.S.supplierBook[idx].logo_url || '',
+              promo_code: srv.promo_code || '',
+              promo_expires: srv.promo_expires || '',
+              promo_desc: srv.promo_desc || '',
+              tags: srv.tags || '',
+              _from_server: true,
+            });
+          } else {
+            window.S.supplierBook.push({
+              id: 'srv_' + srv.id,
+              name: srv.name,
+              phone: srv.phone || '',
+              note: srv.note || '',
+              site: srv.site || '',
+              is_featured: srv.is_featured || 0,
+              logo_url: srv.logo_url || '',
+              promo_code: srv.promo_code || '',
+              promo_expires: srv.promo_expires || '',
+              promo_desc: srv.promo_desc || '',
+              tags: srv.tags || '',
+              _from_server: true,
+            });
+          }
+        });
+        // Ре-рендер вкладки Поставщики если открыта
+        if (window.activeTab === 'cost') {
+          try { window.renderCost && window.renderCost(); } catch(e) {}
+        }
+      })
+      .catch(() => {/* silent fail — используем что есть в localStorage */});
+  } catch(e) {}
+
+  // ── Подгружаем серверные override-ы напитков (не блокирует старт) ──
+  try {
+    const _apiBase2 = import.meta.env.VITE_API_URL || 'https://barista-school.online/api';
+    fetch(_apiBase2 + '/drinks/overrides')
+      .then(r => r.ok ? r.json() : [])
+      .then(overrides => {
+        if (!Array.isArray(overrides) || !overrides.length) return;
+        overrides.forEach(ov => {
+          const idx = DRINKS.findIndex(d => d.id === ov.drink_id);
+          if (idx < 0) return;
+          DRINKS[idx]._hidden = !!ov.is_hidden;
+          if (ov.name  != null) DRINKS[idx]._serverName  = ov.name;
+          if (ov.price != null) DRINKS[idx]._serverPrice = ov.price;
+          if (ov.image_url) DRINKS[idx].image = ov.image_url;
+          else delete DRINKS[idx].image;
+        });
+        // Ре-рендер Рецептур если открыта
+        if (window.activeTab === 'recipes') {
+          try { window.renderRecipes && window.renderRecipes(); } catch(e) {}
+        }
+      })
+      .catch(() => {});
+  } catch(e) {}
 
   try { renderLocSwitcherUI(); } catch(e) { console.error('[renderLocSwitcherUI]', e); }
   // Обновить метку API ключа в loc-menu

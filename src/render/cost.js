@@ -245,12 +245,19 @@ export function renderCost() {
   });
   book.forEach(b => {
     if (!byName[b.name]) {
-      byName[b.name] = { name: b.name, phone: b.phone || '', note: b.note || '', site: b.site || '', mats: [], matKeys: [], bookId: b.id };
+      byName[b.name] = { name: b.name, phone: b.phone || '', note: b.note || '', site: b.site || '', mats: [], matKeys: [], bookId: b.id,
+        is_featured: b.is_featured || 0, logo_url: b.logo_url || '',
+        promo_code: b.promo_code || '', promo_expires: b.promo_expires || '', promo_desc: b.promo_desc || '' };
     } else {
       if (!byName[b.name].note  && b.note)  byName[b.name].note  = b.note;
       if (!byName[b.name].phone && b.phone) byName[b.name].phone = b.phone;
       if (!byName[b.name].site  && b.site)  byName[b.name].site  = b.site;
       if (!byName[b.name].bookId) byName[b.name].bookId = b.id;
+      if (b.is_featured) byName[b.name].is_featured = b.is_featured;
+      if (b.logo_url) byName[b.name].logo_url = b.logo_url;
+      if (b.promo_code) byName[b.name].promo_code = b.promo_code;
+      if (b.promo_expires) byName[b.name].promo_expires = b.promo_expires;
+      if (b.promo_desc) byName[b.name].promo_desc = b.promo_desc;
     }
   });
   const supGroups = Object.values(byName);
@@ -264,22 +271,34 @@ export function renderCost() {
           || g.mats.some(nm => nm.toLowerCase().includes(q));
       })
     : supGroups;
+  // Сохраняем все группы глобально для lookup по имени в openSupplierInfo
+  window._supGroups = {};
+  supGroups.forEach(g => { window._supGroups[g.name] = g; });
   const suppliersHtml = filteredSupGroups.length
     ? '<div class="mat-grid">' + filteredSupGroups.map(g => {
         const matTags = g.mats.map(name => '<span class="sup-mat-tag">' + name + '</span>').join('');
-        const editFn = (g.matKeys && g.matKeys.length)
-          ? "openSupplierModal('" + g.matKeys[0] + "')"
-          : "openSupplierBookModal('" + (g.bookId || '') + "')";
-        return '<div class="sup-card">'
+        const safeName = g.name.replace(/'/g, "\\'");
+        const logoHtml = g.logo_url ? '<img class="sup-logo" src="' + g.logo_url + '" alt="" onerror="this.style.display=\'none\'">' : '';
+        const partnerBadge = g.is_featured ? '<span class="sup-partner-badge">⭐ Партнёр MBS</span>' : '';
+        const _today = new Date().toISOString().slice(0,10);
+        const _promoOk = g.promo_code && (!g.promo_expires || g.promo_expires >= _today);
+        const promoHtml = _promoOk ? '<div class="sup-promo-block">'
+          + '<span class="sup-promo-code">' + g.promo_code + '</span>'
+          + (g.promo_desc ? '<span class="sup-promo-desc"> — ' + g.promo_desc + '</span>' : '')
+          + (g.promo_expires ? '<span class="sup-promo-exp"> до ' + g.promo_expires + '</span>' : '')
+          + '</div>' : '';
+        return '<div class="sup-card" style="cursor:pointer" onclick="openSupplierInfo(\'' + safeName + '\')">'
           + '<div class="sup-card-header">'
+          + (logoHtml ? '<div class="sup-logo-wrap">' + logoHtml + '</div>' : '')
           + '<div class="sup-card-info">'
-          + '<span class="sup-card-name"><i data-lucide="building-2" class="icon"></i> ' + g.name + '</span>'
+          + '<span class="sup-card-name">' + g.name + '</span>'
           + (g.phone ? '<span class="sup-card-phone">' + g.phone + '</span>' : '')
           + '</div>'
-          + '<button class="btn btn-outline sup-edit-btn" onclick="' + editFn + '"><i data-lucide="pencil" class="icon"></i></button>'
           + '</div>'
+          + (partnerBadge ? '<div style="margin:4px 0">' + partnerBadge + '</div>' : '')
           + (g.note ? '<div class="sup-card-note">' + g.note + '</div>' : '')
-          + (g.site ? '<div class="sup-card-note"><a href="' + g.site + '" target="_blank" style="color:var(--muted);text-decoration:none;font-size:12px">🌐 ' + g.site.replace(/^https?:\/\//, '') + '</a></div>' : '')
+          + (g.site ? '<div class="sup-card-note"><a href="' + g.site + '" target="_blank" onclick="event.stopPropagation()" style="color:var(--muted);text-decoration:none;font-size:12px">🌐 ' + g.site.replace(/^https?:\/\//, '') + '</a></div>' : '')
+          + promoHtml
           + (matTags ? '<div class="sup-card-mats">' + matTags + '</div>' : '')
           + '</div>';
       }).join('') + '</div>'
@@ -308,8 +327,8 @@ export function renderCost() {
       const supTitle = sup ? `${sup.name || ''}${sup.phone ? ' · ' + sup.phone : ''}${sup.note ? ' · ' + sup.note : ''}` : 'Указать поставщика';
       const supClr   = sup ? 'var(--green)' : 'var(--muted)';
       const supCell  = sup
-        ? `<button class="sup-name-btn" onclick="openSupplierInfo('${key}')" title="${(sup.phone || '')} ${(sup.note || '')}">${sup.name || 'поставщик'}</button>`
-        : `<button class="mat-del" style="font-size:11px;color:var(--muted)" onclick="openSupQuickDrop('${key}',this)" title="Добавить поставщика">+ добавить</button>`;
+        ? `<button class="sup-name-btn" onclick="event.stopPropagation();openSupplierInfo('${(sup.name||'').replace(/'/g,"\\'")}'" title="${(sup.phone || '')} ${(sup.note || '')}">${sup.name || 'поставщик'}</button>`
+        : `<button class="mat-del" style="font-size:11px;color:var(--muted)" onclick="event.stopPropagation();openSupQuickDrop('${key}',this)" title="Добавить поставщика">+ добавить</button>`;
       const usedIn      = matUsageMap[key] || [];
       const usageBadge  = usedIn.length
         ? `<button class="usage-badge" onclick="event.stopPropagation();openMatUsage('mat','${key}')" title="Нажмите, чтобы увидеть рецепты">${usedIn.length}</button>`

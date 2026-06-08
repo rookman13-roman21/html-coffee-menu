@@ -9,12 +9,17 @@ import { rub } from '../utils/format.js';
 // ─── Stub exports (совместимость с updaters.js / main.js) ────────────
 export function filterDashboard() {}
 export function setDashGroup() {}
-export function toggleDashIntro() {}
+export function toggleDashIntro() {
+  S.dashHintOpen = !S.dashHintOpen;
+  saveState();
+  renderDashboard();
+  if (window.lucide) lucide.createIcons();
+}
 export function toggleTop10() {}
 export function initTop10Collapse() {}
 
 // ─── Категории расходов ──────────────────────────────────────────────
-const _ico = d => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const _ico = d => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0">${d}</svg>`;
 
 export const OC_CATS = {
   renovation:  { icon: _ico('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'),  label: 'Ремонт и отделка' },
@@ -32,44 +37,78 @@ export const OC_CATS = {
 };
 
 export const OC_FORMATS = {
-  kiosk:  { label: 'Киоск',       icon: '🏪', desc: '4–8 м² · ~500–900 тыс. ₽' },
-  island: { label: 'Остров в ТЦ', icon: '🛍', desc: '8–15 м² · ~800 тыс. — 1,5 млн ₽' },
-  full:   { label: 'Кофейня',     icon: '☕', desc: '20–40 м² · ~1,5–3 млн ₽' },
+  kiosk:  { label: 'Киоск',       icon: '🏪', desc: '4–8 м² · ~1,5–2 млн ₽' },
+  island: { label: 'Остров в ТЦ', icon: '🛍', desc: '6–15 м² · ~2–3,5 млн ₽' },
+  full:   { label: 'Кофейня',     icon: '☕', desc: '30–50 м² · ~6–9 млн ₽' },
 };
 
 // ─── Шаблоны ─────────────────────────────────────────────────────────
 const _t = (cat, name, price, qty, url = '') => ({ category: cat, name, price, qty, url, note: '' });
 
+// Оборудование для шаблона «Киоск» — имя → qty (строгий whitelist)
+const OC_KIOSK_EQUIPMENT = {
+  'Весы с таймером Timemore Black Mirror Basic 2':      1,
+  'Врезной ринзер для питчера Inox':                    1,
+  'Нок Бокс из нержавеющей стали 150х150мм':           2,
+  'Диспенсер для стаканов Doppio 4 секции':             1,
+  'Блендер Nutribullet NBF550DG':                       1,
+  'Витрина холодильная EQTA Gusto К 850 Д':            1,
+  'Водонагреватель Marco MT8':                          1,
+  'HIWATER RO 400 LITE':                                1,
+  'Гриль прижимной Airhot CGL':                        1,
+  'Контейнер для мусора Rubbermaid Slim Jim':           1,
+  'Микроволновая печь LG MS-2042DB':                   1,
+  'Кофеварка Marco Bru F60M':                           1,
+  'Кофемашина Sanremo D8.2 PRO':                        1,
+  'Кофемолка EUREKA DROGHERIA/4 85':                   1,
+  'Льдогенератор Brema CB 416A HC B-QUBE':             1,
+  'Морозильник Бирюса M6048':                          1,
+  'Соковыжималка Bork Z800':                           1,
+  'Холодильный шкаф Бирюса В152':                      1,
+};
+
 export const OC_TEMPLATES = {
   kiosk: [
-    _t('renovation', 'Электромонтажные работы',          30000,  1),
-    _t('renovation', 'Водоснабжение и канализация',       25000,  1),
-    _t('renovation', 'Покраска / брендирование фасада',   20000,  1),
-    _t('equipment',  'Кофемашина (2 группы)',             280000, 1, 'https://b2b.rockets.coffee'),
-    _t('equipment',  'Кофегриндер основной',              55000,  1),
-    _t('equipment',  'Кофегриндер on-demand',             30000,  1),
-    _t('equipment',  'Холодильный шкаф 60 л',             35000,  1),
-    _t('equipment',  'Льдогенератор',                     25000,  1),
-    _t('equipment',  'Бойлер / колонка для кипятка',      12000,  1),
-    _t('furniture',  'Стойка под оборудование (готовая)', 60000,  1),
-    _t('furniture',  'Барная полка / витрина',            25000,  1),
+    _t('renovation', 'Электромонтажные работы',          70000,  1),
+    _t('renovation', 'Водоснабжение и канализация',       55000,  1),
+    _t('renovation', 'Покраска / брендирование фасада',  100000,  1),
+    _t('equipment',  'Весы с таймером Timemore Black Mirror Basic 2', 5350,   1),
+    _t('equipment',  'Врезной ринзер для питчера Inox',               4000,   1),
+    _t('equipment',  'Нок Бокс из нержавеющей стали 150х150мм',       5000,   2),
+    _t('equipment',  'Диспенсер для стаканов Doppio 4 секции',        1734,   1),
+    _t('equipment',  'Блендер Nutribullet NBF550DG',                   5990,   1),
+    _t('equipment',  'Витрина холодильная EQTA Gusto К 850 Д',       75849,   1),
+    _t('equipment',  'Водонагреватель Marco MT8',                    103645,   1),
+    _t('equipment',  'HIWATER RO 400 LITE',                           89000,   1, 'https://hiwater.ru/tproduct/461566380-928876245663-hiwater-ro-400-lite'),
+    _t('equipment',  'Гриль прижимной Airhot CGL',                   11426,   1),
+    _t('equipment',  'Контейнер для мусора Rubbermaid Slim Jim',      18331,   1),
+    _t('equipment',  'Микроволновая печь LG MS-2042DB',               7050,   1),
+    _t('equipment',  'Кофеварка Marco Bru F60M',                      61275,   1),
+    _t('equipment',  'Кофемашина Sanremo D8.2 PRO',                  652000,   1, 'https://baristaschool.ru/mixology_drinks/tproduct/1196237361-826720707702-kofemashina-sanremo-d8-pro-2-visokie-gru'),
+    _t('equipment',  'Кофемолка EUREKA DROGHERIA/4 85',              110270,   1),
+    _t('equipment',  'Льдогенератор Brema CB 416A HC B-QUBE',        160084,   1),
+    _t('equipment',  'Морозильник Бирюса M6048',                      22794,   1),
+    _t('equipment',  'Соковыжималка Bork Z800',                       33000,   1),
+    _t('equipment',  'Холодильный шкаф Бирюса В152',                  29070,   1),
+    _t('furniture',  'Стойка под оборудование (готовая)',360000,  1),
+    _t('furniture',  'Барная полка / витрина',            55000,  1),
     _t('automation', 'POS-терминал (онлайн-касса)',       25000,  1),
     _t('automation', 'Принтер чеков',                      8000,  1),
     _t('automation', 'Эквайринг (подключение)',             5000,  1),
-    _t('stock',      'Кофе зерновой (старт 5 кг)',          8000,  5, 'https://b2b.rockets.coffee'),
-    _t('stock',      'Молоко и альтмолоко',                3000, 10),
-    _t('stock',      'Сиропы, топпинги, добавки',         25000,  1),
-    _t('stock',      'Стаканы, крышки, трубочки',         20000,  1),
-    _t('branding',   'Разработка логотипа',               15000,  1),
-    _t('branding',   'Дизайн меню и наклеек',             10000,  1),
+    _t('stock',      'Кофе зерновой (старт 30 кг)',         2000, 30, 'https://b2b.rockets.coffee'),
+    _t('stock',      'Молоко и альтмолоко',                  120,200),
+    _t('stock',      'Сиропы, топпинги, добавки',            900,  5),
+    _t('stock',      'Стаканы, крышки, трубочки',          20000,  1),
+    _t('branding',   'Разработка логотипа',               25000,  1),
+    _t('branding',   'Дизайн меню и наклеек',             15000,  1),
     _t('legal',      'Регистрация ИП / ООО',               4000,  1),
-    _t('legal',      'Санитарные книжки сотрудников',      3000,  2),
-    _t('marketing',  'Печать рекламных материалов',       10000,  1),
+    _t('legal',      'Санитарные книжки сотрудников',      4000,  2),
+    _t('marketing',  'Печать рекламных материалов',       15000,  1),
     _t('marketing',  'Таргетированная реклама (запуск)',  20000,  1),
-    _t('rent',       'Депозит аренды (2 месяца)',         60000,  1),
-    _t('uniform',    'Фирменные фартуки',                  2000,  3),
+    _t('rent',       'Депозит аренды (2 месяца)',         80000,  2),
+    _t('uniform',    'Фирменные фартуки',                  5000,  3),
     _t('training',   'Обучение бариста',                  15000,  1),
-    _t('reserve',    'Оборотный резерв (3 месяца)',       100000, 1),
+    _t('reserve',    'Оборотный резерв (3 месяца)',       150000,  3),
   ],
   island: [
     _t('renovation', 'Проектирование и дизайн острова',   40000,  1),
@@ -283,9 +322,99 @@ export function ocUpdateField(id, field, rawVal) {
 export function ocLoadTemplate(format) {
   window.showConfirm(
     `Загрузить шаблон «${OC_FORMATS[format]?.label}»?<br><span style="font-size:12px;color:var(--muted)">Текущий список будет заменён.</span>`,
-    () => {
+    async () => {
       const tpl = OC_TEMPLATES[format] || [];
-      S.openingCosts = tpl.map((item, i) => ({ ...item, id: 'tpl_' + i + '_' + Date.now() }));
+      // base вычисляется ПОСЛЕ загрузки libEquipment — см. ниже
+      let base = [];
+
+      // Загружаем оборудование из библиотеки
+      let libEquipment = [];
+      try {
+        // Сначала пробуем пресет для данного формата
+        const presetR = await fetch('https://barista-school.online/api/oc-presets/' + format + '?t=' + Date.now());
+        if (presetR.ok) {
+          const presetData = await presetR.json();
+          if (Array.isArray(presetData) && presetData.length > 0) {
+            libEquipment = presetData.map(i => ({
+              category:    i.category || 'equipment',
+              subcategory: i.subcategory || '',
+              name: i.name,
+              price: i.price || 0,
+              qty: i.qty || 1,
+              url: i.url || '',
+              photo: i.photo || '',
+              description: i.description || '',
+              promo_code: i.promo_code || '',
+              promo_expires: i.promo_expires || '',
+              is_featured: i.is_featured || 0,
+              note: '',
+            }));
+          }
+        }
+      } catch (_) { /* fallback ниже */ }
+
+      // Если пресет пустой — загружаем из библиотеки (старый fallback)
+      if (!libEquipment.length) {
+        try {
+          const r = await fetch('https://barista-school.online/api/oc-library?category=equipment&t=' + Date.now());
+          if (r.ok) {
+            const data = await r.json(); // { subcategory: [{name,price,url,is_featured,...}] }
+            _oclibData = data; // обновляем кэш
+            const allItems = Object.entries(data).flatMap(([subcat, items]) =>
+              items.filter(i => i.is_public !== 0).map(i => ({ ...i, subcategory: subcat }))
+            );
+            if (format === 'kiosk') {
+              // Киоск: строгий whitelist по имени + кастомный qty
+              const seen = new Set();
+              libEquipment = allItems
+                .filter(i => OC_KIOSK_EQUIPMENT.hasOwnProperty(i.name) && !seen.has(i.name) && seen.add(i.name))
+                .map(i => ({
+                  category: i.category || 'equipment',
+                  subcategory: i.subcategory || '',
+                  name: i.name,
+                  price: i.price || 0,
+                  qty: OC_KIOSK_EQUIPMENT[i.name] || 1,
+                  url: i.url || '',
+                  photo: i.photo || '',
+                  description: i.description || '',
+                  promo_code: i.promo_code || '',
+                  promo_expires: i.promo_expires || '',
+                  is_featured: i.is_featured || 0,
+                  note: '',
+                }));
+            } else {
+              // Остальные форматы: берём featured, иначе все публичные
+              const featured = allItems.filter(i => i.is_featured);
+              const source = featured.length ? featured : allItems;
+              libEquipment = source.map(i => ({
+                category: i.category || 'equipment',
+                subcategory: i.subcategory || '',
+                name: i.name,
+                price: i.price || 0,
+                qty: 1,
+                url: i.url || '',
+                photo: i.photo || '',
+                description: i.description || '',
+                promo_code: i.promo_code || '',
+                promo_expires: i.promo_expires || '',
+                is_featured: i.is_featured || 0,
+                note: '',
+              }));
+            }
+          }
+        } catch (_) { /* fallback к захардкоженным */ }
+      }
+
+      // Если и библиотека пустая — используем статику из шаблона
+      if (!libEquipment.length) {
+        libEquipment = tpl.filter(item => item.category === 'equipment');
+      }
+
+      // Исключаем из шаблона категории, которые уже покрыты libEquipment
+      const libCats = new Set(libEquipment.map(i => i.category || 'equipment'));
+      base = tpl.filter(item => !libCats.has(item.category || 'equipment'));
+      const merged = [...libEquipment, ...base];
+      S.openingCosts = merged.map((item, i) => ({ ...item, id: 'tpl_' + i + '_' + Date.now() }));
       S.openingMeta  = { ...(S.openingMeta || {}), format };
       _ocSyncInvestment();
       renderDashboard();
@@ -350,6 +479,34 @@ export function ocClearAll() {
   );
 }
 
+function _ociRenderPromoBlock(libItem) {
+  const promoBox = document.getElementById('oci-promo-block');
+  if (!promoBox) return;
+  const desc = libItem && libItem.description ? libItem.description.trim() : '';
+  const code = libItem && libItem.promo_code ? libItem.promo_code.trim() : '';
+  const exp  = libItem && libItem.promo_expires ? libItem.promo_expires.trim() : '';
+  if (!desc && !code) { promoBox.style.display = 'none'; return; }
+  let html = '';
+  if (desc) html += `<p class="oci-promo-desc">${desc}</p>`;
+  if (code) {
+    let expHtml = '';
+    if (exp) {
+      const d = new Date(exp);
+      const fmt = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+      expHtml = `<span class="oci-promo-exp">Действует до ${fmt}</span>`;
+    }
+    html += `<div class="oci-promo-code-row">
+      <div class="oci-promo-code-pill" title="Нажмите, чтобы скопировать" onclick="navigator.clipboard.writeText('${code}').then(()=>{const b=this.querySelector('.oci-promo-copy-btn');b.textContent='✓ Скопировано';b.style.background='#86efac';setTimeout(()=>{b.textContent='Скопировать';b.style.background=''},1800)})">
+        <span class="oci-promo-code">${code}</span>
+        <button class="oci-promo-copy-btn">Скопировать</button>
+      </div>
+    </div>
+    ${expHtml}`;
+  }
+  promoBox.innerHTML = '<div class="oci-promo-header"><span>🏷️</span> Промокод партнёра</div>' + html;
+  promoBox.style.display = '';
+}
+
 export function ocOpenItem(id) {
   const item = (S.openingCosts || []).find(r => r.id === id);
   if (!item) return;
@@ -359,7 +516,25 @@ export function ocOpenItem(id) {
   const info = OC_CATS[item.category];
 
   document.getElementById('oci-title').textContent = item.name || 'Без названия';
-  document.getElementById('oci-cat-label').innerHTML  = info ? info.icon + '\u2009' + info.label : '';
+  // Обновляет badge ⭐ — вызывается сразу и повторно после загрузки библиотеки
+  const _refreshCatLabel = (featured) => {
+    const el = document.getElementById('oci-cat-label');
+    if (el) el.innerHTML = (info ? info.icon + '\u2009' + info.label : '') +
+      (featured ? ' <span class="oci-featured-badge">⭐ Рекомендуем</span>' : '');
+  };
+  // Проверяем item.is_featured, затем ищем по имени в _oclibData (кэш)
+  const _libFeatured = () => {
+    if (!_oclibData || !item.name) return false;
+    return Object.values(_oclibData).flat().some(i => i.name === item.name && i.is_featured);
+  };
+  _refreshCatLabel(item.is_featured || _libFeatured());
+  // Если данных библиотеки нет — грузим в фоне и обновляем badge
+  if (!item.is_featured && !_oclibData) {
+    fetch(`https://barista-school.online/api/oc-library?category=${item.category || 'equipment'}&t=` + Date.now())
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) { _oclibData = data; _refreshCatLabel(item.is_featured || _libFeatured()); _ociRenderPromoBlock(_libPromo()); } })
+      .catch(() => {});
+  }
   document.getElementById('oci-name').value            = item.name || '';
   document.getElementById('oci-qty').value             = item.qty;
 
@@ -436,6 +611,31 @@ export function ocOpenItem(id) {
   const aiBtnEl = document.getElementById('oci-ai-btn');
   if (aiBtnEl) aiBtnEl.style.display = localStorage.getItem('oc_openai_key') ? '' : 'none';
 
+  // Промо-блок партнёра
+  const _libPromo = () => {
+    if (!_oclibData || !item.name) return null;
+    for (const arr of Object.values(_oclibData)) {
+      const found = arr.find(i => i.name === item.name);
+      if (found) return found;
+    }
+    return null;
+  };
+  const promoBox = document.getElementById('oci-promo-block');
+  if (promoBox) promoBox.style.display = 'none';
+  // Сначала пробуем данные прямо из item (сохранены при загрузке шаблона)
+  const itemAsMeta = (item.description || item.promo_code)
+    ? { description: item.description, promo_code: item.promo_code, promo_expires: item.promo_expires }
+    : null;
+  const libMeta = itemAsMeta || _libPromo();
+  if (libMeta) {
+    _ociRenderPromoBlock(libMeta);
+  } else if (!_oclibData) {
+    fetch(`https://barista-school.online/api/oc-library?category=${item.category || 'equipment'}&t=` + Date.now())
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) { _oclibData = data; _ociRenderPromoBlock(_libPromo()); } })
+      .catch(() => {});
+  }
+
   document.getElementById('modal-oc-item').dataset.editId = id;
   if (window.openModal) openModal('modal-oc-item');
   // Автофокус на поле Название
@@ -453,6 +653,21 @@ export function ocItemDelete() {
   ocDeleteRow(id);
 }
 
+export function ocItemCancel() {
+  const modal = document.getElementById('modal-oc-item');
+  const id    = modal?.dataset.editId;
+  if (id) {
+    const item = (S.openingCosts || []).find(r => r.id === id);
+    // Если позиция новая и название не введено — удаляем без следа
+    if (item && !item.name.trim()) {
+      S.openingCosts = (S.openingCosts || []).filter(r => r.id !== id);
+      _ocSyncInvestment();
+    }
+  }
+  if (window.closeModal) closeModal('modal-oc-item');
+  renderDashboard();
+}
+
 export function ocItemSave() {
   const modal = document.getElementById('modal-oc-item');
   const id    = modal?.dataset.editId;
@@ -466,6 +681,11 @@ export function ocItemSave() {
   item.category    = document.getElementById('oci-cat').value;
   item.url         = document.getElementById('oci-url').value.trim();
   item.subcategory = _ociGetSubcat();
+  // Если пришёл из библиотеки — запомнить is_featured
+  if (modal.dataset.libFeatured !== undefined && modal.dataset.libFeatured !== '') {
+    item.is_featured = modal.dataset.libFeatured === '1' ? 1 : (item.is_featured || 0);
+    delete modal.dataset.libFeatured;
+  }
   const photoImg   = document.getElementById('oci-photo-img');
   const pSrc = photoImg?.getAttribute('data-user-url') || (photoImg?.src && !photoImg.src.endsWith(location.href.replace(/#.*/, '') + '#') ? photoImg.src : '');
   item.photo = pSrc || '';
@@ -677,6 +897,7 @@ function _oclibIcon(cat) {
 
 let _oclibData = null;    // { subcategory: [{name,price,photo,url}, ...] }
 let _oclibCurCat = null;  // текущая выбранная подкатегория
+let _oclibFilterCat = 'equipment'; // OC_CATS key, по которому отфильтрована библиотека
 
 export async function ocOpenLibrary() {
   if (window.openModal) openModal('modal-oc-library');
@@ -695,13 +916,25 @@ export async function ocOpenLibrary() {
     });
   }
 
+  // Определяем категорию по текущему редактируемому OC-элементу
+  const ocCat = document.getElementById('oci-cat')?.value || 'equipment';
+  _oclibFilterCat = ocCat;
+
+  // Обновляем заголовок модала, если есть метка категории
+  const catInfo = OC_CATS[ocCat];
+  const titleEl = document.getElementById('oclib-title');
+  if (titleEl && catInfo) {
+    titleEl.innerHTML = catInfo.icon + ' ' + catInfo.label + ' — библиотека';
+    if (window.lucide) lucide.createIcons({ nodes: titleEl.querySelectorAll('[data-lucide]') });
+  }
+
   content.innerHTML = '<div class="oclib-loading">Загружаю библиотеку…</div>';
   document.getElementById('oclib-search').value = '';
   oclibShowCats(); // сбрасываем в режим подкатегорий
 
   // Всегда перезапрашиваем, чтобы photo/url были актуальны
   try {
-    const r = await fetch('https://barista-school.online/api/oc-library?t=' + Date.now());
+    const r = await fetch(`https://barista-school.online/api/oc-library?category=${ocCat}&t=` + Date.now());
     if (!r.ok) throw new Error('HTTP ' + r.status);
     _oclibData = await r.json();
   } catch (e) {
@@ -807,11 +1040,15 @@ function _oclibItemHtml(item, cat) {
     : `<span class="oclib-item-no-photo">${_oclibIcon(cat)}</span>`;
   const safeItem = btoa(unescape(encodeURIComponent(JSON.stringify(item))));
   const safeCat  = encodeURIComponent(cat);
-  return `<div class="oclib-item">
+  const featBadge = item.is_featured ? `<span class="oclib-featured-badge">⭐ Рекомендуем</span>` : '';
+  const promoBadge = item.promo_code ? `<span class="oclib-promo-badge">🏷 Промокод: <b>${item.promo_code}</b></span>` : '';
+  return `<div class="oclib-item${item.is_featured ? ' oclib-item-featured' : ''}">
     <div class="oclib-item-thumb">${photo}</div>
     <div class="oclib-item-info">
+      ${featBadge}
       <div class="oclib-item-name">${item.name}</div>
       ${price}
+      ${promoBadge}
     </div>
     <button class="btn btn-sm btn-primary oclib-select-btn"
       data-item="${safeItem}" data-cat="${safeCat}">
@@ -854,13 +1091,20 @@ export function oclibSelect(item, cat) {
     if (photoPlaceholder) photoPlaceholder.style.display = 'none';
   }
 
-  // Переключаем категорию на equipment
+  // Переключаем категорию на соответствующую категорию библиотеки
   const catSel = document.getElementById('oci-cat');
   if (catSel) {
-    catSel.value = 'equipment';
+    catSel.value = _oclibFilterCat || 'equipment';
     const subcatRow = document.getElementById('oci-subcategory-row');
-    if (subcatRow) subcatRow.style.display = '';
+    if (subcatRow) subcatRow.style.display = (_oclibFilterCat === 'equipment' || !_oclibFilterCat) ? '' : 'none';
   }
+
+  // Сохраняем is_featured чтобы ocItemSave мог записать в S.openingCosts
+  const modalEl2 = document.getElementById('modal-oc-item');
+  if (modalEl2) modalEl2.dataset.libFeatured = item.is_featured ? '1' : '0';
+
+  // Рендерим промо-блок сразу при выборе из библиотеки
+  _ociRenderPromoBlock(item);
 
   if (window.closeModal) closeModal('modal-oc-library');
 }
@@ -874,6 +1118,17 @@ const _OCI_SUBCAT_OPTIONS = [
   'Кассовое оборудование','Вытяжка/вентиляция','Другое',
 ];
 
+// Алиасы: значения из БД (мн.ч./сокр.) → канонические опции select-а
+const _OCI_SUBCAT_ALIASES = {
+  'Кофемашины':     'Кофемашина',
+  'Кофемолки':      'Кофемолка',
+  'Холодильное':    'Холодильник',
+  'Посудомоечное':  'Посудомоечная машина',
+  'Блендеры':       'Блендер',
+  'Вытяжка':        'Вытяжка/вентиляция',
+  'Прочее':         'Другое',
+};
+
 /** Установить значение подкатегории (select + custom-инпут) */
 function _ociSetSubcat(val) {
   const sel    = document.getElementById('oci-subcategory');
@@ -884,14 +1139,16 @@ function _ociSetSubcat(val) {
     if (custom) { custom.style.display = 'none'; custom.value = ''; }
     return;
   }
+  // Нормализуем значение: мн.ч. / сокращённые формы → стандартные
+  const normalized = _OCI_SUBCAT_ALIASES[val] || val;
   // Если значение есть в стандартных — выбираем его
-  if (_OCI_SUBCAT_OPTIONS.includes(val)) {
-    sel.value = val;
+  if (_OCI_SUBCAT_OPTIONS.includes(normalized)) {
+    sel.value = normalized;
     if (custom) { custom.style.display = 'none'; custom.value = ''; }
   } else {
     // Кастомная категория — выбираем "Своя…" и заполняем инпут
     sel.value = '__custom__';
-    if (custom) { custom.style.display = ''; custom.value = val; }
+    if (custom) { custom.style.display = ''; custom.value = normalized; }
   }
 }
 
@@ -1155,6 +1412,7 @@ export function renderDashboard() {
           <span>Стартовые вложения</span>
         </div>
         <div class="oc-page-actions">
+          <button class="fin-hint-toggle" onclick="toggleDashIntro()"><i data-lucide="${S.dashHintOpen ? 'chevron-up' : 'info'}" class="icon"></i> ${S.dashHintOpen ? 'Скрыть' : 'Как пользоваться?'}</button>
           <button class="btn btn-outline" onclick="exportOpeningCostsPDF()">
             <i data-lucide="file-text" class="icon"></i> PDF
           </button>
@@ -1190,6 +1448,17 @@ export function renderDashboard() {
         </div>
         ${kpiCats ? `<div class="oc-kpi-cats">${kpiCats}</div>` : ''}
       </div>
+
+      ${S.dashHintOpen ? `<div class="hint" style="margin-bottom:16px">
+        <i data-lucide="info" class="icon"></i>
+        <strong>Стартовые вложения</strong> — калькулятор всех расходов на открытие кофейни. Сумма автоматически синхронизируется с Финмоделью.
+        <br><br>
+        <strong>Шаблоны</strong> — готовые наборы статей для Киоска, Острова в ТЦ или Кофейни. Загрузите шаблон и отредактируйте под свои условия.
+        <br><br>
+        <strong>Как работать:</strong> нажмите <em>+ Добавить</em> в нужной категории или кликните на существующую строку для редактирования. В карточке позиции можно выбрать товар из библиотеки — там реальные позиции с ценами и промо-кодами партнёров.
+        <br><br>
+        <strong>Валюта</strong> — переключите в $ или € если работаете с импортным оборудованием: суммы пересчитаются по заданному курсу, в Финмодель всегда уходят рубли.
+      </div>` : ''}
 
       <!-- Кнопка шаблона -->
       <div class="oc-tpl-bar">

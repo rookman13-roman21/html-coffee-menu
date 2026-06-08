@@ -1,7 +1,7 @@
 # CONTEXT — MBS* Coffee Menu
 
 > CFO-инструментарий для владельца кофейни. SPA на Vite + ES-модули.  
-> Последнее обновление: 22 мая 2026 (сессия 40 — fix: незакрытый modal-oc-item блокировал все попапы)
+> Последнее обновление: 24 мая 2026 (сессия 49 — fix: теги фильтров в Полном списке поставщиков; fix: двойной модал при клике на поставщика в таблице ингредиентов)
 
 ---
 
@@ -16,6 +16,7 @@
 - **Код бэкенда:** `Coffee_menu/server/main.py`  
 - **БД:** SQLite `/var/www/coffee-menu/server/data/app.db`  
 - **SSL:** Let’s Encrypt, истекает 2026-08-19  
+- **nginx snippet:** `/etc/nginx/snippets/coffee-api.conf` — `location /api/` вынесен туда, в основном конфиге `include /etc/nginx/snippets/coffee-api.conf;` — certbot renew больше не перезапишет прокси-блок  
 
 ### Аутентификация: `src/ui/auth.js`
 - **JWT токен** 30 дней, хранится в `localStorage['coffee_auth_token']`
@@ -124,6 +125,12 @@ TELEGRAM_ADMIN_CHAT_ID=33668380
 - `GET /api/auth/yandex` — редирект на `oauth.yandex.ru/authorize`
 - `GET /api/auth/yandex/callback` — обменивает `code` → токен, получает профиль через `login.yandex.ru/info`, извлекает телефон из `profile.get("default_phone")`, создаёт пользователя с `is_active=False`, отправляет TG-уведомление
 - Редирект на `APP_URL/?oauth_token=...&oauth_user=...` (если `is_active=True`) или на `/` с ошибкой
+
+> ⚠️ **Yandex OAuth callback (server/main.py):** использовать `create_token(user.id)`, не `create_access_token(...)` —
+> функция `create_access_token` не существует, NameError — OAuth всегда падал без видимой ошибки (фикс сессия 45)
+
+> ⚠️ **Yandex OAuth callback (server/main.py):** использовать `create_token(user.id)`, не `create_access_token(...)` —
+> функция `create_access_token` не существует, NameError — OAuth всегда падал без видимой ошибки (фикс сессия 45)
 
 **Frontend (src/ui/auth.js):**
 - Кнопка «Войти через Яндекс ID» под разделителем «или»
@@ -2266,3 +2273,365 @@ const MODAL_IDS = [
 | `fdf11e6` | feat: ручная загрузка фото через URL *(отменено в этой же сессии)* |
 | `2bf15c0` | feat: загрузка фото с устройства (FileReader) вместо URL |
 | `72c04b4` | fix: OC item modal — скролл на мобиле через modal-body |
+
+---
+
+### Сессия 41 — fix: "Ошибка сохранения" при редактировании оборудования в admin-панели
+
+**Проблема:** при нажатии «Сохранить» в drawer оборудования появлялась ошибка «Ошибка сохранения». Прямой вызов API через `curl -X PUT` возвращал `{"ok":true}` HTTP 200.
+
+**Диагностика:** Safari пишет «Load failed» для PUT-запросов, заблокированных CORS preflight. Причина — метод `"PUT"` отсутствовал в `allow_methods` у `CORSMiddleware`.
+
+**Исправление (`server/main.py`):**
+```python
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[...],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],  # PUT добавлен!
+    allow_headers=["Authorization", "Content-Type"],
+)
+```
+
+**Дополнительно (`server/admin/admin-panel.js`):** улучшена обработка ошибок в `saveEqItem()` — теперь выводит реальную причину вместо generic «Ошибка сохранения».
+
+**Правило:** при добавлении нового PUT/PATCH/DELETE-эндпоинта — всегда проверять `allow_methods` в `CORSMiddleware`. Safari блокирует любой метод, не указанный явно, с ошибкой «Load failed» без подробностей.
+
+#### OC-Library CRUD (admin)
+
+| Метод | Путь | Описание |
+|-------|------|----------|
+| `GET` | `/api/admin/oc-library` | список позиций |
+| `POST` | `/api/admin/oc-library` | создать (`{name, subcategory, price, photo, url}`) |
+| `PUT` | `/api/admin/oc-library/{id}` | обновить (тот же body) |
+| `DELETE` | `/api/admin/oc-library/{id}` | удалить |
+| `POST` | `/api/admin/oc-library/bulk-delete` | массовое удаление `{ids: []}` |
+
+Модель: `OcLibraryItem(name, subcategory, price=0.0, photo='', url='', description='', promo_code='', promo_expires='')`
+
+#### Деплой изменений (admin-panel + backend)
+```bash
+scp -i ~/.ssh/id_ed25519 server/admin/admin-panel.js root@159.194.233.13:/var/www/coffee-menu/dist/admin-panel.js
+scp -i ~/.ssh/id_ed25519 server/main.py root@159.194.233.13:/var/www/coffee-menu/server/main.py
+ssh -i ~/.ssh/id_ed25519 root@159.194.233.13 'systemctl restart coffee-menu-api'
+```
+
+---
+
+### Сессия 42 (23 мая 2026) — feat: promo block в OC-карточке + tab-фильтр и UX-улучшения в admin-панели
+
+#### 1. Новые поля `oc_library` (DB + API)
+
+Добавлены три новых колонки в таблицу `oc_library`:
+
+| Поле | Тип | Назначение |
+|---|---|---|
+| `description` | `TEXT DEFAULT ''` | Описание товара / партнёра |
+| `promo_code` | `TEXT DEFAULT ''` | Промокод для скидки |
+| `promo_expires` | `TEXT DEFAULT ''` | Срок действия промокода (ISO-дата) |
+
+Миграция выполняется автоматически при старте сервера (`ALTER TABLE oc_library ADD COLUMN ...`). Все CRUD-эндпоинты (`GET public`, `GET admin`, `POST`, `PUT`) возвращают и принимают новые поля.
+
+**Обновлённая модель:** `OcLibraryItem(name, subcategory, price, photo, url, description, promo_code, promo_expires)`
+
+#### 2. Promo block в SPA (OC item modal)
+
+**Файлы:** `src/render/dashboard.js`, `index.html`, `styles.css`
+
+- `index.html`: добавлен `<div id="oci-promo-block" class="oci-promo-block" style="display:none">` внутри `.oci-right`, после строки с `#oci-cat`
+- `dashboard.js`: функции `_libPromo(name)` (ищет товар в `_oclibData` по имени) и `_renderPromo(libItem)` (формирует HTML блока)
+- Блок показывается только если у товара есть `description` или `promo_code`
+- Промокод: кликабельный pill + кнопка «Скопировать» → «✓ Скопировано» на 1.8с
+- Кэш `_oclibData` заполняется лениво при первом открытии OC-карточки
+- CSS-классы: `.oci-promo-block`, `.oci-promo-header`, `.oci-promo-code-pill`, `.oci-promo-code`, `.oci-promo-copy-btn`, `.oci-promo-exp`
+
+#### 3. Admin-панель — UX-улучшения (`server/admin/admin-panel.js`)
+
+**Drawer — новые поля:**
+- Textarea `#adm-eq-description` (описание)
+- Input `#adm-eq-promo-code` (промокод) + `#adm-eq-promo-expires` (дата, `type=date`) + кнопка `×` для очистки даты
+
+**Сохранение с восстановлением скролла:**
+- `saveEqItem()` сохраняет `_savedScrollY = window.scrollY` до вызова API
+- `loadOcLibrary()` теперь **возвращает промис** (`return api(...)`)
+- После `.then(loadOcLibrary)` → `window.scrollTo(0, _savedScrollY)` восстанавливает позицию
+
+**Tab-фильтр вместо `<select>`:**
+- Глобальные переменные `_oc_main_tab` и `_oc_sub_tab` (строки, пустая = «все»)
+- `updateEqCatFilter()` рендерит двухуровневые pill-табы с счётчиком элементов в каждой группе
+- Клик по таб-пилюле обновляет `_oc_main_tab`/`_oc_sub_tab` и вызывает `renderOcLibrary()`
+- CSS: `.adm-lib-tabs-wrap`, `.adm-lib-main-tabs`, `.adm-lib-sub-tabs`, `.adm-lib-tab`, `.tab-cnt`
+
+**Список позиций:**
+- Удалена колонка «Категория» → 6 колонок: Фото, Название, Цена, Ссылка, 🏷️, Действия
+- Sticky group headers (`position:sticky; top:48px`) по главной + под-категории
+- Кнопки Edit/Delete в `.adm-eq-actions { display:flex }` — не переносятся
+- `stopPropagation()` на всех кнопках строки
+- 🏷️ badge в отдельной колонке, если у позиции заполнен `promo_code`
+
+#### Деплой сессии 42
+
+```bash
+# Бэкенд (миграция + новые поля в API)
+scp -i ~/.ssh/id_ed25519 server/main.py root@159.194.233.13:/var/www/coffee-menu/server/main.py
+ssh -i ~/.ssh/id_ed25519 root@159.194.233.13 'systemctl restart coffee-menu-api'
+
+# Admin-панель
+scp -i ~/.ssh/id_ed25519 server/admin/admin-panel.js root@159.194.233.13:/var/www/coffee-menu/dist/admin-panel.js
+
+# Фронтенд SPA
+cd HTML_coffee_menu && npm run build
+rsync -avz --exclude='admin-panel.js' dist/ root@159.194.233.13:/var/www/coffee-menu/dist/ -e 'ssh -i ~/.ssh/id_ed25519'
+```
+
+---
+
+### Сессия 43 (23 мая 2026) — feat: OC_KIOSK_EQUIPMENT whitelist + полные данные из библиотеки в item
+
+#### 1. `OC_KIOSK_EQUIPMENT` — строгий whitelist для формата «Киоск»
+
+**Файл:** `src/render/dashboard.js`
+
+Добавлена константа `OC_KIOSK_EQUIPMENT` (объект `{ name: qty }`) — 18 позиций оборудования, специфичных для формата киоска:
+
+```js
+const OC_KIOSK_EQUIPMENT = {
+  'Нок Бокс из нержавеющей стали 150х150мм': 2,  // единственная позиция с qty > 1
+  'Кофемашина Sanremo D8.2 PRO': 1,
+  // ... 16 других позиций
+};
+```
+
+**Логика `ocLoadTemplate(format)`:**
+
+| Формат | Источник оборудования | Дедупликация | qty |
+|---|---|---|---|
+| `kiosk` | whitelist `OC_KIOSK_EQUIPMENT` | `Set` по имени | из whitelist (кастомный) |
+| `island` / `full` | `is_featured: true` → fallback все публичные | — | 1 |
+
+**Статический fallback в `OC_TEMPLATES.kiosk`:** обновлён реальными позициями из admin-библиотеки с актуальными ценами (на случай недоступности API).
+
+#### 2. Полные данные из библиотеки сохраняются в item
+
+При загрузке шаблона через API (`/api/oc-library?category=equipment`) все поля библиотеки теперь проставляются в каждый item:
+
+```js
+// Было (только базовые поля):
+{ name, price, url, qty, category }
+
+// Стало (все поля):
+{ name, price, url, qty, category, photo, description, promo_code, promo_expires, is_featured }
+```
+
+**Эффект:** фото и промо-блок показываются мгновенно при открытии карточки — без дополнительных API-запросов.
+
+#### 3. `ocItemEdit()` — обновлённая логика промо-блока
+
+```js
+// Приоритет источника данных для промо:
+// 1. item напрямую (данные загружены с шаблоном)
+const itemAsMeta = (item.description || item.promo_code)
+  ? { description: item.description, promo_code: item.promo_code, promo_expires: item.promo_expires }
+  : null;
+
+// 2. _oclibData кэш (если item пришёл из старого localStorage)
+const libMeta = itemAsMeta || _libPromo();
+if (libMeta) _renderPromo(libMeta);
+
+// 3. Фоновый fetch — обновляет кэш и вызывает _renderPromo(_libPromo())
+```
+
+**Фоновый fetch** теперь также вызывает `_renderPromo` после получения данных — гарантирует обновление блока если item был из старого кэша без полных данных.
+
+#### ⚠️ Важное ограничение
+
+Пользователи с ранее загруженным шаблоном в `localStorage` получат `photo`/`promo_code`/`description` только после повторного нажатия **«Загрузить шаблон»**. Автоматической миграции старых items нет.
+
+#### Деплой сессии 43
+
+```bash
+# Только фронтенд (бэкенд и admin-panel не изменялись)
+cd HTML_coffee_menu && npm run build
+rsync -avz --exclude='admin-panel.js' dist/ root@159.194.233.13:/var/www/coffee-menu/dist/ -e 'ssh -i ~/.ssh/id_ed25519'
+# Собрано: index-BWRepKKY.js
+```
+
+---
+
+### Сессия 47 (май 2026) — fix: drawer-кнопки + поле Комментарий в карточке пользователя
+
+#### 1. Фикс A — drawer-кнопки (Активировать, Заблокировать, Сброс пароля, Удалить, Сделать админом)
+
+**Файл:** `server/admin/admin-panel.js`
+
+**Корень проблемы:** `adm-drawer` и `adm-confirm` живут в `_overlay`, который аппендится в `document.body` **вне** `#adm-root`. `root.addEventListener('click', handler)` физически не может поймать клики по элементам внутри `_overlay`.
+
+**Решение:**
+- Создана именованная функция `_handleClick(e)` (вместо анонимной)
+- Оба контейнера подписаны: `root.addEventListener('click', _handleClick)` + `_overlay.addEventListener('click', _handleClick)`
+- Инициализация вынесена в блок one-time init (слушатели `adm-confirm` и `keydown` Escape больше не дублируются при каждом клике)
+
+**Правило (§16 в copilot-instructions):** всегда подписывать оба контейнера на `_handleClick`.
+
+#### 2. Фикс B — кнопки 🚫 и 👁 в строке таблицы
+
+**Корень проблемы:** `<div class="adm-row-actions">` имел `onclick="event.stopPropagation()"`, что блокировало всплытие кликов к делегированному обработчику `root`.
+
+**Решение:** убран `stopPropagation`. Охрана от случайного открытия drawer встроена в `_handleClick` через `el.closest('[data-act]')`.
+
+#### 3. Фича C — поле «Комментарий» в карточке пользователя
+
+**Файлы:** `server/main.py`, `server/admin/admin-panel.js`
+
+**Бэкенд:**
+- В модель `User` добавлены поля: `notes = Column(String, nullable=True)`, `notes_updated_at = Column(DateTime, nullable=True)`
+- `_run_migrations()` выполняет `ALTER TABLE users ADD COLUMN notes VARCHAR` и `ADD COLUMN notes_updated_at DATETIME` (idempotent)
+- `GET /api/admin/users` — возвращает `notes` и `notes_updated_at`
+- `PATCH /api/admin/users/{user_id}` — при ключе `"notes"` сохраняет текст и `notes_updated_at = datetime.utcnow()`, возвращает `notes_updated_at` в ответе
+
+**Фронтенд:**
+- В `openDrawer(u)` добавлен textarea-блок с CSS-классами `.adm-drawer-notes-row`, `.adm-drawer-notes-ta`, `.adm-drawer-notes-status`
+- Автосохранение: debounce 1.2с на `input` + немедленно на `blur`
+- После сохранения показывает `✓ Сохранено · DD.MM.YYYY HH:MM` на 4с, затем очищает
+- При открытии drawer показывает `Изменено: DD.MM.YYYY HH:MM` если `u.notes_updated_at` установлен
+
+#### Деплой сессии 47
+
+```bash
+# Бэкенд + перезапуск сервиса
+scp -i ~/.ssh/id_ed25519 server/main.py root@159.194.233.13:/var/www/coffee-menu/server/main.py
+ssh -i ~/.ssh/id_ed25519 root@159.194.233.13 'systemctl restart coffee-menu-api'
+
+# Admin-panel
+scp -i ~/.ssh/id_ed25519 server/admin/admin-panel.js root@159.194.233.13:/var/www/coffee-menu/dist/admin-panel.js
+```
+
+---
+
+### Сессия 48 — Admin override рецептур + фото только из admin
+
+#### Фича A — Вкладка «Рецептуры» в admin-panel.js
+
+**Файл:** `server/admin/admin-panel.js`
+
+**Backend (main.py):**
+- Таблица `drink_overrides`: `drink_id` (PK), `name`, `price`, `is_hidden`, `image_url`, `updated_at`
+- `GET /api/admin/drinks/overrides` — возвращает все overrides
+- `POST /api/admin/drinks/override` — создать/обновить override
+- `DELETE /api/admin/drinks/override/{drink_id}` — удалить override (сброс к дефолту)
+
+**Frontend (admin-panel.js):**
+- Вкладка «Рецептуры» с 6-колоночной таблицей: #, Название, Alias, Цена, Фото, Видимость
+- Над таблицей — строка stats: Всего / Alias / Цена ↩ / Фото / Скрыто (ненулевые)
+- Hover строк: `#f5fbf2` (светло-зелёный), dark-тема `#1e2d1e`
+- Миниатюра фото 28×28 в строке таблицы (`<img class="adm-rec-thumb">`), `onerror` → opacity 0.3
+- Дравер редактирования: Название (alias), Цена, URL фото + превью с валидацией, переключатель «Скрыт»
+- Кнопка «🗑 Сбросить»: видна только если есть override; вызывает DELETE-эндпоинт; `resetRecDrawer()`
+- Валидация URL: `onerror`/`onload` на превью + красная надпись `#adm-rec-url-err`
+- Подсказка под полем Название: «Если пусто — студенты видят оригинальное название из базы»
+- Escape закрывает дравер (добавлен в глобальный keydown-handler)
+- `closeRecDrawer()` — сбрасывает `saveBtn.disabled` и `resetBtn.disabled` (§15 compliant)
+
+**Применение overrides во фронтенде (main.js):**
+```js
+// При init: GET /api/drinks/overrides → применяем к DRINKS[]
+if (ov.name)      DRINKS[idx].name      = ov.name;
+if (ov.price)     DRINKS[idx].price     = ov.price;
+if (ov.is_hidden) DRINKS[idx].hidden    = true;
+if (ov.image_url) DRINKS[idx].image     = ov.image_url;
+else              delete DRINKS[idx].image; // ← если нет override — фото нет
+```
+
+#### Фича B — Фото в рецептурах только из admin
+
+**Файл:** `HTML_coffee_menu/src/utils/image.js`
+
+**Изменение:**
+```js
+// БЫЛО:
+export function getDrinkImage(d) {
+  return d.image || DRINK_IMAGES[d.id] || null;
+}
+// СТАЛО:
+export function getDrinkImage(d) {
+  return d.image || null; // нет fallback на статичные файлы
+}
+```
+
+**Смысл:** `DRINK_IMAGES` содержит hardcoded пути к stock-фото (espresso.jpg, cappuccino.jpg и т.д.). После этого изменения:
+- Фото показывается **только** если admin задал `image_url` в override ИЛИ владелец загрузил вручную
+- `DRINK_IMAGES` объект оставлен в файле (не удалён), но не используется как fallback
+- Затрагивает: вкладка Рецептуры, просмотр карточки напитка, экспорт техкарт PDF/Excel
+
+#### Деплой сессии 48
+
+```bash
+# Admin-panel
+scp -i ~/.ssh/id_ed25519 server/admin/admin-panel.js root@159.194.233.13:/var/www/coffee-menu/dist/admin-panel.js
+
+# Фронтенд (build + rsync)
+cd HTML_coffee_menu && npm run build
+rsync -avz --exclude='admin-panel.js' dist/ root@159.194.233.13:/var/www/coffee-menu/dist/ -e 'ssh -i ~/.ssh/id_ed25519'
+```
+
+---
+
+### Сессия 49 (24 мая 2026) — fix: фильтры поставщиков + двойной модал в таблице ингредиентов
+
+#### Баг 1 — Теги фильтров в «Полном списке поставщиков» не работали корректно
+
+**Файл:** `src/ui/suppliers.js`
+
+**Причина:** `_getMatCat(key)` возвращала сырые категории из `MAT_CATEGORIES` (`bakery`, `drinks`, `fruits`, `supplies`), а фильтр-чипы ожидают другие ключи (`sugar`, `other`, `other`, `pack`). Поставщики с такими ингредиентами пропадали из всех фильтров.
+
+Дополнительно: book-only поставщики (без привязанного сырья, например High Water) не попадали в «Прочее».
+
+**Решение:**
+```js
+// Добавлен маппинг сырых категорий → ключи фильтров
+const _CAT_TO_FILTER = {
+  coffee: 'coffee', dairy: 'dairy', tea: 'tea',
+  bakery: 'sugar',    // бакалея → Сахар
+  supplies: 'pack',   // расходники → Упаковка
+  drinks: 'other',    // напитки → Прочее
+  fruits: 'other',    // фрукты → Прочее
+  other: 'other',
+};
+function _getMatCat(key) {
+  // ...
+  return _CAT_TO_FILTER[rawCat] || 'other';
+}
+```
+
+Фильтр по категории: book-only поставщики (без сырья) теперь появляются в «Прочее»:
+```js
+filtered = filtered.filter(g => {
+  if (g.mats.length === 0) return supListFilter === 'other'; // book-only → Прочее
+  return g.mats.some(m => _getMatCat(m.key) === supListFilter);
+});
+```
+
+**⚠️ Важно:** При добавлении новой категории в `MAT_CATEGORIES` (mat.js) — **обязательно** добавить её в `_CAT_TO_FILTER` в `suppliers.js`, иначе поставщики с такими ингредиентами пропадут из всех фильтров.
+
+#### Баг 2 — Клик на поставщика в таблице ингредиентов открывал два модала
+
+**Файл:** `src/render/cost.js`
+
+**Причина 1:** На кнопке поставщика (`sup-name-btn`) не было `event.stopPropagation()` — клик всплывал к `<tr onclick="openViewMat(...)">` → открывались и карточка ингредиента, и инфо-модал поставщика.
+
+**Причина 2:** `openSupplierInfo` вызывался с ключом ингредиента (`matcha`, `tea`...), а `_supGroups` индексирован по **имени поставщика** → `_supGroups['matcha'] = undefined` → пустой модал.
+
+**Причина 3:** Кнопка «+ добавить» тоже не имела `stopPropagation` → при клике открывался dropdown + карточка ингредиента.
+
+**Решение:**
+```js
+// БЫЛО:
+`<button ... onclick="openSupplierInfo('${key}')">`
+// СТАЛО (stopPropagation + передача имени поставщика):
+`<button ... onclick="event.stopPropagation();openSupplierInfo('${(sup.name||'').replace(/'/g,"\\'")}'">`
+
+// БЫЛО:
+`<button ... onclick="openSupQuickDrop('${key}',this)">`
+// СТАЛО:
+`<button ... onclick="event.stopPropagation();openSupQuickDrop('${key}',this)">`
+```

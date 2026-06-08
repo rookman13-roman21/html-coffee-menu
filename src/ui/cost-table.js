@@ -8,6 +8,31 @@
 let _fceIdx = -1;
 let _fceIsNew = false;
 
+// Множество открытых категорий постоянных расходов.
+// Обновляется в toggleFcCat — единственном месте, где они открываются/закрываются.
+const _fcOpenCats = new Set();
+
+// Перерисовывает финмодель, сохраняя открытые категории постоянных расходов.
+// После initFcOpenCatsKeeper() window.renderFinModel уже является keeper-обёрткой,
+// которая сама восстанавливает _fcOpenCats — простой вызов достаточен.
+function _rerenderFinModelKeepFC() {
+  window.renderFinModel();
+}
+
+// Оборачивает window.renderFinModel один раз при инициализации,
+// чтобы ЛЮБОЙ вызов renderFinModel() (из payroll, misc, updaters) сохранял
+// открытые категории постоянных расходов.
+export function initFcOpenCatsKeeper() {
+  const _orig = window.renderFinModel;
+  if (!_orig || _orig._fcKeeper) return; // не оборачивать повторно
+  window.renderFinModel = function() {
+    const open = new Set(_fcOpenCats);
+    _orig.apply(this, arguments);
+    open.forEach(cat => toggleFcCat(cat));
+  };
+  window.renderFinModel._fcKeeper = true;
+}
+
 export function setMatCat(cat) {
   _matActiveCat = cat;
   document.querySelectorAll('.mat-cat-tab').forEach(el => {
@@ -147,16 +172,16 @@ export function openMatUsage(type, key) {
 }
 
 export function addFixedCost() { addFixedCostInCat('other'); }
-export function delFixedCost(i) { if(window.S.fixedCosts.length > 1) { window.S.fixedCosts.splice(i,1); renderFinModel(); saveState(); if(window.lucide) lucide.createIcons(); } }
-export function onTaxMode(v) { S.taxMode = v; renderFinModel(); saveState(); if(window.lucide) lucide.createIcons(); }
-export function onInvestment(v) { const n=parseFloat(v); if(n>=0){ S.investment=n; renderFinModel(); saveState(); if(window.lucide) lucide.createIcons(); } }
+export function delFixedCost(i) { if(window.S.fixedCosts.length > 1) { window.S.fixedCosts.splice(i,1); _rerenderFinModelKeepFC(); saveState(); if(window.lucide) lucide.createIcons(); } }
+export function onTaxMode(v) { S.taxMode = v; _rerenderFinModelKeepFC(); saveState(); if(window.lucide) lucide.createIcons(); }
+export function onInvestment(v) { const n=parseFloat(v); if(n>=0){ S.investment=n; _rerenderFinModelKeepFC(); saveState(); if(window.lucide) lucide.createIcons(); } }
 
 
 export function addFixedCostInCat(cat) {
   window.S.fixedCosts.push({ id: ++_nextCostId, name:'', value:0, category: cat || 'other', isVariable:false });
   const idx = window.S.fixedCosts.length - 1;
   _fceIsNew = true;
-  renderFinModel();
+  _rerenderFinModelKeepFC();
   setTimeout(() => { openCostEditor(idx); if(window.lucide) lucide.createIcons(); }, 80);
 }
 
@@ -166,6 +191,7 @@ export function toggleFcCat(cat) {
   const isHidden = rows.length > 0 && rows[0].style.display === 'none';
   rows.forEach(r => r.style.display = isHidden ? '' : 'none');
   if (chev) chev.textContent = isHidden ? '▼' : '▶';
+  if (isHidden) _fcOpenCats.add(cat); else _fcOpenCats.delete(cat);
 }
 
 export function openCostEditor(idx) {
@@ -256,7 +282,7 @@ export function closeCostEditor() {
   if (ov) ov.style.display = 'none';
   if (_fceIsNew && _fceIdx >= 0 && _fceIdx < window.S.fixedCosts.length) {
     window.S.fixedCosts.splice(_fceIdx, 1);
-    renderFinModel();
+    _rerenderFinModelKeepFC();
   }
   _fceIdx = -1;
   _fceIsNew = false;
@@ -325,7 +351,7 @@ export function saveCostEditor() {
   }
   _fceIsNew = false;
   closeCostEditor();
-  renderFinModel();
+  _rerenderFinModelKeepFC();
   saveState();
   if (window.lucide) lucide.createIcons();
 }
@@ -336,7 +362,7 @@ export function deleteCostFromEditor() {
     window.window.S.fixedCosts.splice(_fceIdx, 1);
     _fceIsNew = false;
     closeCostEditor();
-    renderFinModel();
+    _rerenderFinModelKeepFC();
     saveState();
     if (window.lucide) lucide.createIcons();
   }, { icon: '🗑️', okText: 'Удалить' });

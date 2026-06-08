@@ -46,6 +46,7 @@ export function safeCloseModal(id) {
   // Специальные cancel-функции
   if (id === 'modal-mat')           { cancelMat(true); return; }
   if (id === 'modal-supplier-book') { cancelSupplierBookModal(true); return; }
+  if (id === 'modal-oc-item')       { if (window.ocItemCancel) { window.ocItemCancel(); return; } }
   closeModal(id);
 }
 
@@ -77,6 +78,7 @@ export function _forceCloseModal(id) {
   _clearModalDirty(id); // снимаем dirty чтобы closeModal не заблокировал
   if (id === 'modal-mat')           { cancelMat(true); return; }
   if (id === 'modal-supplier-book') { cancelSupplierBookModal(true); return; }
+  if (id === 'modal-oc-item')       { if (window.ocItemCancel) { window.ocItemCancel(); return; } }
   closeModal(id);
 }
 

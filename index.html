@@ -31,7 +31,7 @@
   <div class="header-actions" style="display:flex;align-items:center;gap:6px">
     <button class="burger-btn" id="burger-btn" onclick="toggleBurger()">☰</button>
     <nav class="nav" id="main-nav">
-      <button class="nav-btn active" data-tab="dashboard"><i data-lucide="layout-dashboard" class="icon"></i> Дашборд</button>
+      <button class="nav-btn active" data-tab="dashboard"><i data-lucide="layout-dashboard" class="icon"></i> Бюджет</button>
       <button class="nav-btn" data-tab="cost"><i data-lucide="truck" class="icon"></i> Поставщики</button>
       <button class="nav-btn" data-tab="sales"><i data-lucide="shopping-cart" class="icon"></i> План продаж</button>
       <button class="nav-btn" data-tab="finmodel"><i data-lucide="banknote" class="icon"></i> Финмодель</button>
@@ -102,7 +102,7 @@
         <span id="oci-cat-label" class="oci-cat-badge"></span>
         <span id="oci-title">Позиция</span>
       </div>
-      <button class="modal-close" onclick="closeModal('modal-oc-item')">&times;</button>
+      <button class="modal-close" onclick="ocItemCancel()">&times;</button>
     </div>
 
     <!-- Горизонтальное тело: фото слева, форма справа -->
@@ -188,6 +188,8 @@
           <div class="modal-label">Категория бюджета</div>
           <select class="modal-select" id="oci-cat"></select>
         </div>
+
+        <div id="oci-promo-block" class="oci-promo-block" style="display:none"></div>
       </div>
     </div><!-- /modal-body -->
 
@@ -197,7 +199,7 @@
         <i data-lucide="trash-2" class="icon"></i> Удалить
       </button>
       <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn btn-outline" onclick="closeModal('modal-oc-item')">Отмена</button>
+        <button class="btn btn-outline" onclick="ocItemCancel()">Отмена</button>
         <button class="btn-primary" onclick="ocItemSave()"><i data-lucide="check" class="icon"></i> Сохранить</button>
       </div>
     </div>
@@ -707,32 +709,48 @@
 
 <!-- Модал: просмотр поставщика сырья -->
 <div class="modal-bg" id="modal-supplier-info">
-  <div class="modal" style="max-width:440px">
+  <div class="modal" style="max-width:520px">
     <div class="modal-title">
-      <span><i data-lucide="truck" class="icon"></i> Поставщик: <span id="si-mat-name" style="color:var(--green)">—</span></span>
+      <span id="si-title">Поставщик</span>
       <button class="modal-close" onclick="closeModal('modal-supplier-info')">&times;</button>
     </div>
-    <div style="display:flex;flex-direction:column;gap:14px;padding:4px 0">
-      <div>
-        <div class="modal-label" style="margin-bottom:4px">Название</div>
-        <div id="si-name" style="font-size:15px;font-weight:700;color:var(--navy)">—</div>
+    <!-- Горизонтальный layout: логотип слева, инфо справа -->
+    <div style="display:flex;gap:16px;padding:4px 0">
+      <!-- Левая колонка — логотип -->
+      <div id="si-logo-wrap" style="display:none;flex-shrink:0;width:100px;display:none;align-items:flex-start;justify-content:center;padding-top:2px">
+        <img id="si-logo" src="" alt="" style="width:100px;max-height:100px;object-fit:contain;border-radius:10px;border:1.5px solid var(--border);background:#fff;padding:6px" onerror="this.parentElement.style.display='none'">
       </div>
-      <div id="si-phone-wrap">
-        <div class="modal-label" style="margin-bottom:4px">Телефон / Email</div>
-        <a id="si-phone" href="#" style="font-size:14px;font-weight:600;color:var(--green);text-decoration:none">—</a>
-      </div>
-      <div id="si-site-wrap">
-        <div class="modal-label" style="margin-bottom:4px">Сайт</div>
-        <a id="si-site" href="#" target="_blank" rel="noopener" style="font-size:13px;color:var(--green);word-break:break-all">—</a>
-      </div>
-      <div id="si-note-wrap">
-        <div class="modal-label" style="margin-bottom:4px">Заметка</div>
-        <div id="si-note" style="font-size:13px;color:var(--muted)">—</div>
+      <!-- Правая колонка — вся информация -->
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px">
+        <div id="si-partner-wrap" style="display:none">
+          <span class="sup-partner-badge">⭐ Партнёр MBS</span>
+        </div>
+        <div id="si-phone-wrap">
+          <div class="modal-label" style="margin-bottom:4px">Телефон / Email</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <a id="si-phone" href="#" style="font-size:14px;font-weight:600;color:var(--green);text-decoration:none">—</a>
+            <button id="si-phone-copy" class="btn btn-outline" style="padding:2px 8px;font-size:12px;line-height:1.4" onclick="siCopyPhone()">📋</button>
+          </div>
+        </div>
+        <div id="si-site-wrap">
+          <div class="modal-label" style="margin-bottom:4px">Сайт</div>
+          <a id="si-site" href="#" target="_blank" rel="noopener" style="font-size:13px;color:var(--green);word-break:break-all">—</a>
+        </div>
+        <div id="si-note-wrap">
+          <div class="modal-label" style="margin-bottom:4px">О поставщике</div>
+          <div id="si-note" style="font-size:13px;color:var(--muted);line-height:1.5">—</div>
+        </div>
+        <div id="si-promo-wrap" style="display:none"></div>
+        <div id="si-mats-wrap" style="display:none">
+          <div class="modal-label" style="margin-bottom:6px">Привязанные ингредиенты</div>
+          <div id="si-mats" class="sup-card-mats"></div>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('modal-supplier-info')" style="margin-right:auto">Закрыть</button>
-      <button class="btn-primary" onclick="siOpenEdit()"><i data-lucide="pencil" class="icon"></i> Редактировать</button>
+      <button id="si-delete-btn" class="btn btn-outline" onclick="siDeleteSupplier()" style="margin-right:auto;color:#e53935;border-color:#e53935" title="Удалить поставщика">🗑️ Удалить</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-supplier-info')">Закрыть</button>
+      <button id="si-edit-btn" class="btn-primary" onclick="siOpenEdit()">✏️ Редактировать</button>
     </div>
   </div>
 </div>
@@ -785,7 +803,7 @@
       <div class="onboard-steps">
         <div class="onboard-step">
           <div class="onboard-step-num">1</div>
-          <div class="onboard-step-text"><strong><i data-lucide="layout-dashboard" class="icon"></i> Дашборд</strong> — сводка по всем напиткам: выручка, прибыль, ABC-анализ и сезонность одним взглядом</div>
+          <div class="onboard-step-text"><strong><i data-lucide="layout-dashboard" class="icon"></i> Бюджет</strong> — сводка по всем напиткам: выручка, прибыль, ABC-анализ и сезонность одним взглядом</div>
         </div>
         <div class="onboard-step">
           <div class="onboard-step-num">2</div>

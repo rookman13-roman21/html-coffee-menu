@@ -433,6 +433,13 @@ export async function exportFullXLSX() {
     { width: 30 }, { width: 18 }, { width: 30 }, { width: 18 },
   ];
 
+  // Строка-подпись
+  const brandRow0 = wsDash.addRow(['Создано в сервисе barista-school.online — Moscow Barista School']);
+  wsDash.mergeCells(1, 1, 1, 4);
+  brandRow0.getCell(1).font = { name: 'Arial', italic: true, size: 9, color: { argb: '999999' } };
+  brandRow0.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+  brandRow0.height = 16;
+
   // Заголовок листа
   const titleRow = wsDash.addRow(['MBS Coffee Menu — финансовый отчёт', '', locName, today]);
   wsDash.mergeCells(1, 1, 1, 2);
@@ -733,8 +740,15 @@ export async function exportSuppliersXLSX() {
     { header: 'Сайт',         key: 'site',  width: 30 },
     { header: 'Ингредиенты',  key: 'mats',  width: 42 },
   ];
+  // Строка-подпись
+  ws.spliceRows(1, 0, ['Создано в сервисе barista-school.online — Moscow Barista School']);
+  ws.mergeCells(1, 1, 1, 6);
+  const brandRowS = ws.getRow(1);
+  brandRowS.getCell(1).font = { name: 'Arial', italic: true, size: 9, color: { argb: '999999' } };
+  brandRowS.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+  brandRowS.height = 16;
   // Заголовок
-  const hRow = ws.getRow(1);
+  const hRow = ws.getRow(2);
   hRow.eachCell(cell => {
     cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'417033' } };
     cell.font = { name:'Arial', bold:true, size:10, color:{ argb:'FFFFFF' } };
@@ -877,7 +891,14 @@ export async function exportMaterialsXLSX() {
   ];
   const fillG  = argb => ({ type:'pattern', pattern:'solid', fgColor:{ argb } });
   const fnt    = (bold, sz=10, color='222222') => ({ name:'Arial', bold, size:sz, color:{ argb:color } });
-  const hRow1  = ws1.getRow(1);
+  // Строка-подпись
+  ws1.spliceRows(1, 0, ['Создано в сервисе barista-school.online — Moscow Barista School']);
+  ws1.mergeCells(1, 1, 1, 7);
+  const brandRowM = ws1.getRow(1);
+  brandRowM.getCell(1).font = { name: 'Arial', italic: true, size: 9, color: { argb: '999999' } };
+  brandRowM.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+  brandRowM.height = 16;
+  const hRow1  = ws1.getRow(2);
   hRow1.eachCell(c => { c.fill=fillG('417033'); c.font=fnt(true,10,'FFFFFF'); c.alignment={vertical:'middle',horizontal:'center'}; });
   hRow1.height = 20;
 
@@ -1640,6 +1661,7 @@ td.url{font-size:8pt;color:#417033;max-width:160px;overflow:hidden;text-overflow
 td.name{font-weight:600}
 tr:nth-child(even) td{background:#fafcf9}
 tr.cat-row td{background:#417033;color:#fff;font-weight:700;font-size:10pt;padding:5px 8px;letter-spacing:0.01em}
+tr.cat-row svg{width:12px;height:12px;vertical-align:middle;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;margin-right:4px;position:relative;top:-1px}
 .footer{margin-top:16px;text-align:right;font-size:8pt;color:#666;border-top:1px solid #ddd;padding-top:4px}
 .total-row td{background:#e8f2e3;font-weight:800;font-size:10pt}
 @media print{.cover,th,tr.cat-row td,.total-row td{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
@@ -1725,8 +1747,16 @@ export async function exportOpeningCostsXLSX() {
     { header: 'Ссылка',        key: 'url',    width: 36  },
   ];
 
+  // Строка-подпись
+  ws.spliceRows(1, 0, ['Создано в сервисе barista-school.online — Moscow Barista School']);
+  ws.mergeCells(1, 1, 1, 7);
+  const brandRowOC = ws.getRow(1);
+  brandRowOC.getCell(1).font = { name: 'Arial', italic: true, size: 9, color: { argb: '999999' } };
+  brandRowOC.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+  brandRowOC.height = 16;
+
   // Заголовок таблицы
-  const hRow = ws.getRow(1);
+  const hRow = ws.getRow(2);
   hRow.eachCell(cell => {
     cell.fill = fill(C.green);
     cell.font = font(true, 10, C.white);
@@ -1743,8 +1773,8 @@ export async function exportOpeningCostsXLSX() {
     const catTotal = items.reduce((s, r) => s + r.price * r.qty, 0);
     const info = OC_CATS[cat];
 
-    // Строка категории
-    const cr = ws.addRow({ cat: `${info.icon} ${info.label}`, total: catTotal });
+    // Строка категории (без SVG-иконки — ExcelJS отображает её как текст)
+    const cr = ws.addRow({ cat: `▌ ${info.label}`, total: catTotal });
     cr.height = 20;
     cr.eachCell(cell => {
       cell.fill = fill(C.catBg);
