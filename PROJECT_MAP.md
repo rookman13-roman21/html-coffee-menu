@@ -47,7 +47,7 @@
 - добавляет комментарий в timeline контакта;
 - не пишет служебную авторскую информацию в `COMMENTS`, чтобы не утащить её в yClients через `sync_comment`.
 
-На production 16 июня 2026 код задеплоен, но `BITRIX_WEBHOOK` ещё не задан в `/var/www/coffee-menu/server/.env`, поэтому реальная синхронизация будет уходить в `bitrix_sync_status='error'` до настройки webhook.
+На production 16 июня 2026 `BITRIX_WEBHOOK`, `BITRIX_AUTHOR_MARK_FIELD` и `BITRIX_AUTHOR_MARK_LABEL` добавлены в `/var/www/coffee-menu/server/.env`; API перезапущен. Перед изменением создан backup `.env`, а перед добавлением enum — snapshot поля Битрикс. Read-only проверка webhook показала: поле `UF_CRM_1766349995197` доступно, enum `Автор рецептов` присутствует.
 
 ---
 
