@@ -30,6 +30,7 @@ def load_config(path: Path) -> dict[str, Any]:
         "base_url": "COFFEE_SMOKE_BASE_URL",
         "admin_email": "COFFEE_SMOKE_ADMIN_EMAIL",
         "admin_password": "COFFEE_SMOKE_ADMIN_PASSWORD",
+        "admin_token": "COFFEE_SMOKE_ADMIN_TOKEN",
         "test_user_email": "COFFEE_SMOKE_TEST_USER_EMAIL",
         "test_user_phone": "COFFEE_SMOKE_TEST_USER_PHONE",
         "expected_bitrix_contact_id": "COFFEE_SMOKE_EXPECTED_BITRIX_CONTACT_ID",
@@ -55,10 +56,9 @@ def load_config(path: Path) -> dict[str, Any]:
 
 
 def require_config(config: dict[str, Any]) -> None:
-    missing = [key for key in ("admin_email", "admin_password") if not config.get(key)]
-    if missing:
+    if not config.get("admin_token") and not (config.get("admin_email") and config.get("admin_password")):
         raise SmokeError(
-            "Не заданы admin credentials. Создайте scripts/smoke_api.local.json "
+            "Не заданы admin credentials или admin_token. Создайте scripts/smoke_api.local.json "
             "из scripts/smoke_api.example.json или задайте COFFEE_SMOKE_ADMIN_EMAIL/"
             "COFFEE_SMOKE_ADMIN_PASSWORD."
         )
@@ -191,16 +191,20 @@ def run(config: dict[str, Any]) -> None:
         fail("/api/health вернул неожиданный ответ")
     ok("health")
 
-    login = request_json(
-        base_url,
-        "POST",
-        "/api/auth/login",
-        {"email": config["admin_email"], "password": config["admin_password"]},
-    )
-    token = login.get("token") if isinstance(login, dict) else None
-    if not token:
-        fail("admin login не вернул token")
-    ok("admin login")
+    token = config.get("admin_token")
+    if token:
+        ok("admin token configured")
+    else:
+        login = request_json(
+            base_url,
+            "POST",
+            "/api/auth/login",
+            {"email": config["admin_email"], "password": config["admin_password"]},
+        )
+        token = login.get("token") if isinstance(login, dict) else None
+        if not token:
+            fail("admin login не вернул token")
+        ok("admin login")
 
     me = request_json(base_url, "GET", "/api/auth/me", token=token)
     if not isinstance(me, dict) or not me.get("is_admin"):

@@ -2,6 +2,7 @@
   "base_url": "https://barista-school.online",
   "admin_email": "admin@example.com",
   "admin_password": "password",
+  "admin_token": "",
   "test_user_email": "",
   "test_user_phone": "+7 903 156-65-66",
   "expected_bitrix_contact_id": "10828",

@@ -40,6 +40,8 @@ cp scripts/smoke_api.example.json scripts/smoke_api.local.json
 - телефон: `+7 903 156-65-66`;
 - ожидаемый контакт Битрикс: `10828`.
 
+Вместо admin email/password можно указать временный `admin_token`. Это удобно для коротких проверок, но токен нельзя коммитить и нельзя хранить в общих документах.
+
 Read-only проверка:
 
 ```bash
