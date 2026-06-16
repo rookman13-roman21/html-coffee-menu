@@ -326,7 +326,13 @@ BITRIX_AUTHOR_MARK_LABEL=Автор рецептов
 | Файл | Назначение |
 |---|---|
 | `HTML_coffee_menu/vite.config.js` | Vite: порт 3000, outDir `dist` |
-| `HTML_coffee_menu/package.json` | npm-скрипты: `dev`, `build`, `preview` |
+| `HTML_coffee_menu/package.json` | npm-скрипты: `dev`, `build`, `preview`, `check`, `deploy:*` |
+| `HTML_coffee_menu/scripts/check.sh` | Единая preflight-проверка: backend compile, admin build, frontend build, docs/secret scan |
+| `HTML_coffee_menu/scripts/deploy_frontend.sh` | Деплой SPA `dist/` без удаления `admin-panel.js` |
+| `HTML_coffee_menu/scripts/deploy_admin.sh` | Сборка и деплой `server/admin/admin-panel.js` |
+| `HTML_coffee_menu/scripts/deploy_backend.sh` | Backup SQLite, деплой `server/main.py`, restart API, health-check |
+| `HTML_coffee_menu/DEPLOY.md` | Короткая инструкция по деплою слоями |
+| `HTML_coffee_menu/CHECKLIST_RELEASE.md` | Release checklist перед production-изменениями |
 | `server/coffee-menu-api.service` | systemd: uvicorn на порту 8000, WorkingDir, .env |
 | `server/.env.example` | Шаблон переменных окружения |
 | `.github/copilot-instructions.md` | Архитектурные правила (читает Copilot) |
@@ -408,37 +414,29 @@ uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ### Локальная проверка фронтенда
 
 ```bash
-# Dev-сервер с HMR (моментальное обновление при сохранении)
-cd HTML_coffee_menu && npm run dev
+# Dev-сервер с HMR
+cd HTML_coffee_menu
+npm run dev
 
-# Проверить что продакшн-билд собирается без ошибок
-npm run build
+# Единая проверка перед деплоем
+npm run check
 ```
 
 ### Деплой на продакшн
 
 ```bash
-# 1. Собрать фронтенд
-cd HTML_coffee_menu && npm run build
+cd HTML_coffee_menu
 
-# 2. Задеплоить фронтенд (НЕ --delete чтобы не удалить admin-panel.js)
-rsync -avz --exclude='admin-panel.js' dist/ \
-  root@159.194.233.13:/var/www/coffee-menu/dist/ \
-  -e 'ssh -i ~/.ssh/id_ed25519'
+# Проверить всё перед деплоем
+npm run check
 
-# 3. Задеплоить бэкенд
-scp -i ~/.ssh/id_ed25519 server/main.py \
-  root@159.194.233.13:/var/www/coffee-menu/server/main.py
-
-# 4. Перезапустить API
-ssh -i ~/.ssh/id_ed25519 root@159.194.233.13 \
-  'systemctl restart coffee-menu-api && systemctl is-active coffee-menu-api'
-
-# 5. Задеплоить admin-panel.js отдельно (build.sh → scp)
-bash server/admin/build.sh
-scp -i ~/.ssh/id_ed25519 server/admin/admin-panel.js \
-  root@159.194.233.13:/var/www/coffee-menu/dist/admin-panel.js
+# Деплоить только нужный слой
+npm run deploy:frontend
+npm run deploy:admin
+npm run deploy:backend
 ```
+
+Подробности и env overrides: `DEPLOY.md`.
 
 ### Проверка сервера
 
