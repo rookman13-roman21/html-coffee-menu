@@ -3,7 +3,7 @@
 // ════════════════════════════════════════════════════════════════════
 
 import { MAT, MAT_ORIG, BASE_MAT_KEYS }            from '../data/mat.js';
-import { pushState as _pushToServer, isLoggedIn }  from '../ui/auth.js';
+import { pushState as _pushToServer, isLoggedIn, getUser }  from '../ui/auth.js';
 import { DRINKS, DRINKS_ORIG, BASE_DRINK_IDS }      from '../data/drinks.js';
 import { FIXED_COSTS_DEF }                          from '../data/constants.js';
 
@@ -15,7 +15,18 @@ export const LOC_INDEX_KEY  = 'mbs_locations';
 export const LOC_ACTIVE_KEY = 'mbs_active_loc';
 export const LOC_DATA_PREFIX = 'mbs_loc_';
 export const OLD_STATE_KEY  = 'mbs_coffee_s';
-export const locDataKey = id => LOC_DATA_PREFIX + id;
+
+function _storageUserScope() {
+  const user = getUser();
+  const raw = user?.id ?? user?.email ?? 'guest';
+  return String(raw).toLowerCase().replace(/[^a-z0-9_.@-]+/gi, '_');
+}
+
+function _userStorageKey(key) {
+  return `${key}__${_storageUserScope()}`;
+}
+
+export const locDataKey = id => _userStorageKey(LOC_DATA_PREFIX + id);
 
 // ─── WhatIf state (мутабельный объект, доступен через window._wif) ────
 export const _wif = { price: 0, cost: 0, traffic: 0 };
@@ -40,33 +51,34 @@ export function getOrgInfo() {
 
 export function loadLocIndex() {
   try {
-    const raw = localStorage.getItem(LOC_INDEX_KEY);
+    const raw = localStorage.getItem(_userStorageKey(LOC_INDEX_KEY));
     if (raw) {
       const arr = JSON.parse(raw);
       if (Array.isArray(arr) && arr.length) Loc.list = arr;
     }
-    const aid = localStorage.getItem(LOC_ACTIVE_KEY);
+    const aid = localStorage.getItem(_userStorageKey(LOC_ACTIVE_KEY));
     if (aid && Loc.list.some(l => l.id === aid)) Loc.activeId = aid;
   } catch(e) {}
 }
 
 export function saveLocIndex() {
   try {
-    localStorage.setItem(LOC_INDEX_KEY, JSON.stringify(Loc.list));
-    if (Loc.activeId) localStorage.setItem(LOC_ACTIVE_KEY, Loc.activeId);
+    localStorage.setItem(_userStorageKey(LOC_INDEX_KEY), JSON.stringify(Loc.list));
+    if (Loc.activeId) localStorage.setItem(_userStorageKey(LOC_ACTIVE_KEY), Loc.activeId);
   } catch(e) {}
 }
 
 export function migrateOldState() {
   try {
-    const old = localStorage.getItem(OLD_STATE_KEY);
+    const oldKey = _userStorageKey(OLD_STATE_KEY);
+    const old = localStorage.getItem(oldKey);
     if (!old) return;
-    if (localStorage.getItem(LOC_INDEX_KEY)) return;
+    if (localStorage.getItem(_userStorageKey(LOC_INDEX_KEY))) return;
     const id = 'loc_' + Date.now();
     Loc.list = [{ id, name: 'Моя кофейня' }];
     Loc.activeId = id;
-    localStorage.setItem(LOC_DATA_PREFIX + id, old);
-    localStorage.removeItem(OLD_STATE_KEY);
+    localStorage.setItem(locDataKey(id), old);
+    localStorage.removeItem(oldKey);
     saveLocIndex();
   } catch(e) {}
 }
@@ -233,6 +245,7 @@ export function saveState() {
 export function loadState() {
   if (!Loc.activeId) return;
   try {
+    resetGlobalsToBase();
     const raw = localStorage.getItem(locDataKey(Loc.activeId));
     if (!raw) return;
     const sv = JSON.parse(raw);
@@ -363,11 +376,11 @@ export function restoreFromServer(serverData) {
     }
     if (serverData.locIndex && Array.isArray(serverData.locIndex)) {
       Loc.list = serverData.locIndex;
-      localStorage.setItem(LOC_INDEX_KEY, JSON.stringify(Loc.list));
+      localStorage.setItem(_userStorageKey(LOC_INDEX_KEY), JSON.stringify(Loc.list));
     }
     if (serverData.activeId) {
       Loc.activeId = serverData.activeId;
-      localStorage.setItem(LOC_ACTIVE_KEY, Loc.activeId);
+      localStorage.setItem(_userStorageKey(LOC_ACTIVE_KEY), Loc.activeId);
     }
     return true;
   } catch(e) { return false; }

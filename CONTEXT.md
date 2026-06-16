@@ -1,7 +1,44 @@
 # CONTEXT — MBS* Coffee Menu
 
-> CFO-инструментарий для владельца кофейни. SPA на Vite + ES-модули.  
-> Последнее обновление: 24 мая 2026 (сессия 49 — fix: теги фильтров в Полном списке поставщиков; fix: двойной модал при клике на поставщика в таблице ингредиентов)
+> Платформа `barista-school.online`: кабинет кофейни, кабинет автора рецептов и витрина авторских рецептов. SPA на Vite + ES-модули.
+> Последнее обновление: 16 июня 2026 — доступы `Напитки/Финансы/Автор`, кабинет автора, public-витрина, Битрикс-синхронизация авторов, user-scoped localStorage.
+
+---
+
+## 0.1. Актуальное состояние на 16 июня 2026
+
+### Слои продукта
+
+- **Напитки** (`access_drinks`): `Поставщики` + `Рецептуры`.
+- **Финансы** (`access_finance`): `Бюджет` + `План продаж` + `Финмодель`.
+- **Автор рецептов** (`access_author`): профиль автора, подготовка рецептов и отправка на модерацию.
+
+Навигация desktop/mobile строится по доступам. `switchTab(tab)` защищён: закрытую вкладку нельзя открыть через старый `localStorage` или прямой вызов.
+
+### Авторская платформа
+
+- `src/ui/author.js` — кабинет автора внутри вкладки `Рецептуры`.
+- `server/main.py` — таблицы `author_profiles`, `recipe_publications`, `recipe_orders`.
+- `server/admin/src/_authors.js` — admin-раздел `Авторы`: список авторов, публикации, статусы, retry синхронизации с Битрикс.
+- `src/ui/public-recipes.js` — public-витрина опубликованных рецептов.
+
+### Битрикс
+
+При включении доступа `Автор рецептов` в admin backend запускает фоновую синхронизацию:
+
+- ищет/создаёт контакт Битрикс;
+- пишет `bitrix_contact_id` в `author_profiles`;
+- добавляет значение `Автор рецептов` в multi-list поле `BITRIX_AUTHOR_MARK_FIELD`;
+- добавляет timeline-комментарий в контакт;
+- не пишет служебные данные в `COMMENTS`, чтобы не утащить их в yClients через `sync_comment`.
+
+Production-важно: код задеплоен, но `BITRIX_WEBHOOK` не задан в `/var/www/coffee-menu/server/.env`. До настройки webhook синхронизация будет уходить в `bitrix_sync_status='error'`.
+
+### Хранение состояния
+
+- Сервер: `user_state.state_json`.
+- Браузер: ключи localStorage имеют user scope: `mbs_locations__<user>` и `mbs_loc_<id>__<user>`.
+- Не возвращать глобальные ключи `mbs_locations`, `mbs_active_loc`, `mbs_loc_*` без user scope: это смешивает проекты разных аккаунтов в одном браузере.
 
 ---
 
@@ -10,18 +47,19 @@
 **Проект работает как облачный SaaS: `https://barista-school.online`**
 
 ### Инфраструктура
-- **Сервер:** Beget VPS `root@159.194.233.13`, Ubuntu 24.04, nginx 1.24, Python 3.12  
-- **SSH:** `ssh -i ~/.ssh/id_ed25519 root@159.194.233.13`  
-- **Бэкенд:** FastAPI 0.111 + SQLite, systemd сервис `coffee-menu-api`, порт 8000  
-- **Код бэкенда:** `Coffee_menu/server/main.py`  
-- **БД:** SQLite `/var/www/coffee-menu/server/data/app.db`  
-- **SSL:** Let’s Encrypt, истекает 2026-08-19  
-- **nginx snippet:** `/etc/nginx/snippets/coffee-api.conf` — `location /api/` вынесен туда, в основном конфиге `include /etc/nginx/snippets/coffee-api.conf;` — certbot renew больше не перезапишет прокси-блок  
+- **Сервер:** Beget VPS `root@159.194.233.13`, Ubuntu 24.04, nginx 1.24, Python 3.12
+- **SSH:** `ssh -i ~/.ssh/id_ed25519 root@159.194.233.13`
+- **Бэкенд:** FastAPI 0.111 + SQLite, systemd сервис `coffee-menu-api`, порт 8000
+- **Код бэкенда:** `Coffee_menu/server/main.py`
+- **БД:** SQLite `/var/www/coffee-menu/server/data/app.db`
+- **SSL:** Let’s Encrypt, истекает 2026-08-19
+- **nginx snippet:** `/etc/nginx/snippets/coffee-api.conf` — `location /api/` вынесен туда, в основном конфиге `include /etc/nginx/snippets/coffee-api.conf;` — certbot renew больше не перезапишет прокси-блок
 
 ### Аутентификация: `src/ui/auth.js`
-- **JWT токен** 30 дней, хранится в `localStorage['coffee_auth_token']`
-- **Логин возвращает:** `{ ok, token, user }` — читать `d.token` (не `d.access_token`!)
-- **Экспорты:** `isLoggedIn`, `showAuthScreen`, `logout`, `fetchState`, `pushState`, `getToken`, `getUser`, `clearAuth`
+- **JWT токен** 30 дней, хранится в `localStorage['cm_token']`; пользователь — `localStorage['cm_user']`.
+- **Логин возвращает:** `{ token, user }` — читать `d.token`.
+- **`user.access`** возвращает объект `{ drinks, finance, author }`.
+- **Экспорты:** `isLoggedIn`, `showAuthScreen`, `logout`, `fetchState`, `pushState`, `getToken`, `getUser`, `clearAuth`, `refreshCurrentUser`, `hasAccess`, `canAccessTab`.
 - **`fetchState()`:** `GET /api/state` → возвращает `serverState` для `_initApp()`
 - **`pushState()`:** `PUT /api/state` — вызывается из `scheduleServerSync()`
 
@@ -31,14 +69,11 @@
 
 ### Поток запуска `main.js`
 ```js
-// 1. Аутентификация
-if (_skipAuth || isLoggedIn()) {
-  fetchState().then(serverState => _initApp(serverState));
-} else {
-  showAuthScreen().then(serverState => _initApp(serverState));
-}
-// 2. _initApp вызывает restoreFromServer(serverState) если serverState != null
-// 3. Затем loadState() + renderAll()
+// 1. Public route /recipes рендерит public-витрину без кабинета.
+// 2. Для кабинета при сохранённом JWT сначала refreshCurrentUser().
+// 3. Затем fetchState() и _initApp(serverState).
+// 4. _initApp сбрасывает runtime, восстанавливает serverState, грузит user-scoped localStorage.
+// 5. Потом применяет доступы и открывает первую разрешённую вкладку.
 ```
 
 ### Ключевые исправления (bcrypt)
@@ -68,15 +103,15 @@ ssh -i ~/.ssh/id_ed25519 root@159.194.233.13 'systemctl restart coffee-menu-api'
 
 ### Email / SMTP (сессия 36)
 
-**Провайдер:** Яндекс SMTP, SSL, порт 465  
-**Отправитель:** `Moscow Barista School <hello@baristaschool.ru>`  
+**Провайдер:** Яндекс SMTP, SSL, порт 465
+**Отправитель:** `Moscow Barista School <hello@baristaschool.ru>`
 **Сервис:** `coffee-menu-api` читает настройки из `/var/www/coffee-menu/server/.env`
 
 ```
 SMTP_HOST=smtp.yandex.ru
 SMTP_PORT=465
 SMTP_USER=hello@baristaschool.ru
-SMTP_PASS=tikcyzpywpomxqvt
+SMTP_PASS=*** хранится только в server/.env ***
 ```
 
 **Ключевые детали:**
@@ -100,10 +135,10 @@ SMTP_PASS=tikcyzpywpomxqvt
 
 ### Yandex OAuth (сессия 36, обновлено сессия 37)
 
-**Приложение:** «Moscow Barista School» на oauth.yandex.ru  
-**ClientID:** `6377f7d0f4c046958fcda1f5a599dc19`  
-**Secret:** `20127c8213fb421ebd14a69fe013485c`  
-**Scopes:** `login:email login:info login:phone`  
+**Приложение:** «Moscow Barista School» на oauth.yandex.ru
+**ClientID:** `6377f7d0f4c046958fcda1f5a599dc19`
+**Secret:** хранится только в `/var/www/coffee-menu/server/.env`, в документации не фиксировать
+**Scopes:** `login:email login:info login:phone`
 **Redirect URI:** `https://barista-school.online/api/auth/yandex/callback`
 
 > ⚠️ Новые пользователи через Яндекс OAuth → `is_active=False` → ожидают ручной активации через admin-панель
@@ -113,11 +148,11 @@ SMTP_PASS=tikcyzpywpomxqvt
 SMTP_HOST=smtp.yandex.ru
 SMTP_PORT=465
 SMTP_USER=hello@baristaschool.ru
-SMTP_PASS=tikcyzpywpomxqvt
-YANDEX_CLIENT_ID=6377f7d0f4c046958fcda1f5a599dc19
-YANDEX_SECRET=20127c8213fb421ebd14a69fe013485c
+SMTP_PASS=***
+YANDEX_CLIENT_ID=***
+YANDEX_SECRET=***
 YANDEX_REDIRECT=https://barista-school.online/api/auth/yandex/callback
-TELEGRAM_BOT_TOKEN=7976269448:AAGL_JKrnXRi8AaMM3KnJl2TVbFyO1G_Ckw
+TELEGRAM_BOT_TOKEN=***
 TELEGRAM_ADMIN_CHAT_ID=33668380
 ```
 
@@ -125,9 +160,6 @@ TELEGRAM_ADMIN_CHAT_ID=33668380
 - `GET /api/auth/yandex` — редирект на `oauth.yandex.ru/authorize`
 - `GET /api/auth/yandex/callback` — обменивает `code` → токен, получает профиль через `login.yandex.ru/info`, извлекает телефон из `profile.get("default_phone")`, создаёт пользователя с `is_active=False`, отправляет TG-уведомление
 - Редирект на `APP_URL/?oauth_token=...&oauth_user=...` (если `is_active=True`) или на `/` с ошибкой
-
-> ⚠️ **Yandex OAuth callback (server/main.py):** использовать `create_token(user.id)`, не `create_access_token(...)` —
-> функция `create_access_token` не существует, NameError — OAuth всегда падал без видимой ошибки (фикс сессия 45)
 
 > ⚠️ **Yandex OAuth callback (server/main.py):** использовать `create_token(user.id)`, не `create_access_token(...)` —
 > функция `create_access_token` не существует, NameError — OAuth всегда падал без видимой ошибки (фикс сессия 45)
@@ -151,9 +183,9 @@ TELEGRAM_ADMIN_CHAT_ID=33668380
 
 ### Telegram-уведомления (сессия 37)
 
-**Бот:** `@baristaschool_admin_bot`  
-**Token:** `7976269448:AAGL_JKrnXRi8AaMM3KnJl2TVbFyO1G_Ckw`  
-**Admin chat ID:** `33668380` (`@DonRomon`)  
+**Бот:** `@baristaschool_admin_bot`
+**Token:** хранится только в `/var/www/coffee-menu/server/.env`, в документации не фиксировать
+**Admin chat ID:** `33668380` (`@DonRomon`)
 **Env vars:** `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ADMIN_CHAT_ID` в `/var/www/coffee-menu/server/.env`
 
 **При регистрации** (email и Яндекс OAuth) отправляется уведомление:

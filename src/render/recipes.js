@@ -12,7 +12,9 @@ export function renderRecipes() {
     openAddDrink, exportTechCards,
     toggleRecipesIntro,
     _searchClear,
+    renderAuthorWorkspace,
   } = window;
+  const authorPanel = renderAuthorWorkspace ? renderAuthorWorkspace() : '';
 
   const sortLabels = [
     { k: 'group',  l: 'По группам' },
@@ -62,6 +64,7 @@ export function renderRecipes() {
         </div>
       </div>
     </div>
+    ${authorPanel}
     <div class="recipes-toolbar">
       <div class="recipes-toolbar-row recipes-toolbar-main">
         <div class="search-wrap" style="margin-bottom:0;flex-shrink:0;min-width:180px;max-width:220px">

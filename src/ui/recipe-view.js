@@ -374,6 +374,13 @@ export function filterRecipes(val) {
     const videoIconHtml = d.videoUrl
       ? `<a class="recipe-card-video-icon" href="${d.videoUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Смотреть видео рецепт"><i data-lucide="play-circle" class="icon"></i></a>`
       : '';
+    const pub = window.authorPublicationForDrink ? window.authorPublicationForDrink(d.id) : null;
+    const pubLabel = pub
+      ? (pub.status === 'published' ? 'Опубликован' : pub.status === 'rejected' ? 'На доработке' : 'На проверке')
+      : 'На витрину';
+    const authorBtn = (window.authorCanPublish && window.authorCanPublish())
+      ? `<button class="recipe-publish-btn ${pub ? 'has-status' : ''}" onclick="event.stopPropagation();submitRecipeForPublication(${d.id})" title="Отправить на модерацию">${pubLabel}</button>`
+      : '';
     return `<div class="recipe-card" onclick="openViewDrink(${d.id})">
       ${imgHtml}
       <div class="recipe-card-title" style="margin-top:${d.image ? '10px' : '0'}">
@@ -389,6 +396,7 @@ export function filterRecipes(val) {
       <div class="recipe-total"><span>Себестоимость</span><span>${window.rub(totalCost)}</span></div>
       <div class="recipe-total" style="font-weight:400;font-size:12px;color:var(--muted)"><span>Цена продажи</span><span>${window.rub(price)}</span></div>
       <div class="recipe-total" style="color:var(--navy)"><span>Прибыль</span><span>${window.rub(price - totalCost)}</span></div>
+      ${authorBtn}
     </div>`;
   }
 

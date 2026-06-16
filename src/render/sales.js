@@ -5,6 +5,8 @@
 //  в конце public/app.js.
 // ════════════════════════════════════════════════════════════════════
 
+import { hasAccess } from '../ui/auth.js';
+
 export function renderSales() {
   const {
     enrich, withABC, salesMetrics,
@@ -27,13 +29,14 @@ export function renderSales() {
 
   const fcClr = wFC > 0.3 ? 'var(--red)' : wFC > 0.25 ? '#b38600' : 'var(--green)';
   const fcBrd = fcClr;
+  const canEditMenu = hasAccess('drinks');
 
   _salesEl.innerHTML = `
     <div class="page-title">
       <span class="page-title-left"><i data-lucide="shopping-cart" class="icon"></i> Планирование продаж</span>
       <div class="sales-hdr-actions">
         <button class="btn btn-outline sales-intro-toggle" id="sales-intro-btn" onclick="toggleSalesIntro()" title="Подсказка"><i data-lucide="info" class="icon"></i> <span class="sales-btn-txt">Подсказка</span></button>
-        <button class="btn btn-outline" onclick="openDropCandidates()" title="Кандидаты на удаление"><i data-lucide="scissors" class="icon"></i> <span class="sales-btn-txt">Кандидаты</span></button>
+        ${canEditMenu ? '<button class="btn btn-outline" onclick="openDropCandidates()" title="Кандидаты на удаление"><i data-lucide="scissors" class="icon"></i> <span class="sales-btn-txt">Кандидаты</span></button>' : ''}
         <button class="btn btn-outline" onclick="exportSales()"><i data-lucide="download" class="icon"></i><span class="sales-btn-txt"> Скачать CSV</span></button>
       </div>
     </div>

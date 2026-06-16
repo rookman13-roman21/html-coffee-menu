@@ -71,7 +71,18 @@ import {
 
 import {
   isLoggedIn, showAuthScreen, logout, fetchState, getUser,
+  refreshCurrentUser, getAllowedTabs, firstAllowedTab,
+  hasAccess, hasAnyProductAccess, canAccessTab,
 } from './ui/auth.js';
+
+import {
+  authorCanPublish, renderAuthorWorkspace, loadAuthorWorkspace,
+  saveAuthorProfile, submitRecipeForPublication, authorPublicationForDrink,
+} from './ui/author.js';
+
+import {
+  isPublicRecipesRoute, renderPublicRecipesApp, submitPublicRecipeOrder,
+} from './ui/public-recipes.js';
 
 import {
   _editMatKey, _pendingMatSelectEl, _pendingSemiMatSelectEl,
@@ -345,6 +356,10 @@ const _srcExports = {
   applySalesPreset, scaleSalesPortions,
   onFixedCost, onFixedCostName,
   flashCells, resetAll, switchTab,
+  getUser,
+  authorCanPublish, renderAuthorWorkspace, loadAuthorWorkspace,
+  saveAuthorProfile, submitRecipeForPublication, authorPublicationForDrink,
+  submitPublicRecipeOrder,
   // ui/payroll
   calcPositionCosts, payrollPositionTotal, payrollTotal, payrollTotals,
   empTypeTip, onPayrollPos, addPayrollPosition, deletePayrollPosition,
@@ -442,9 +457,113 @@ function _renderUserCard() {
 _renderUserCard();
 window._authLogout = logout;
 
+function _applyAccessUI() {
+  const allowed = getAllowedTabs();
+  document.querySelectorAll('.nav-btn, .mobile-tab').forEach(btn => {
+    const tab = btn.dataset.tab;
+    btn.style.display = !tab || allowed.includes(tab) ? '' : 'none';
+  });
+  const exportWrap = document.getElementById('export-wrap');
+  if (exportWrap) exportWrap.style.display = (hasAccess('drinks') && hasAccess('finance')) ? '' : 'none';
+  const resetBtn = document.querySelector('.btn-reset');
+  if (resetBtn) resetBtn.style.display = (hasAccess('drinks') && hasAccess('finance')) ? '' : 'none';
+}
+
+function _showNoAccessScreen() {
+  _applyAccessUI();
+  const main = document.querySelector('.main');
+  if (!main) return;
+  main.innerHTML = `
+    <section class="access-empty-screen">
+      <div class="access-empty-card">
+        <div class="access-empty-icon">🧩</div>
+        <h1>Доступ к разделам ещё не выдан</h1>
+        <p>Аккаунт активен. Администратор Московской школы бариста скоро включит нужные разделы платформы.</p>
+        <button class="btn-primary" onclick="window._authLogout()">Выйти</button>
+      </div>
+    </section>
+  `;
+  const mobileTabbar = document.getElementById('mobile-tabbar');
+  if (mobileTabbar) mobileTabbar.style.display = 'none';
+}
+
+function _renderOnboardingForAccess() {
+  const root = document.getElementById('onboarding');
+  if (!root) return;
+  const title = root.querySelector('.onboard-title');
+  const sub = root.querySelector('.onboard-sub');
+  const steps = root.querySelector('.onboard-steps');
+  const drinks = hasAccess('drinks');
+  const finance = hasAccess('finance');
+  const author = hasAccess('author');
+  let data;
+  if (drinks && finance) {
+    data = {
+      key: 'all',
+      title: 'Инструментарий кофейни',
+      sub: 'У вас открыт полный набор: напитки, поставщики, бюджет, план продаж и финмодель.',
+      steps: [
+        ['truck', 'Поставщики', 'ведите сырьё, цены, контакты и базу поставщиков'],
+        ['clipboard-list', 'Рецептуры', 'создавайте напитки, техкарты и PDF-выгрузки'],
+        ['layout-dashboard', 'Бюджет', 'считайте стартовые вложения и структуру расходов'],
+        ['shopping-cart', 'План продаж', 'задавайте порции и прогнозируйте выручку'],
+        ['banknote', 'Финмодель', 'смотрите точку безубыточности, ФОТ, налоги и сценарии'],
+      ],
+    };
+  } else if (drinks || author) {
+    data = {
+      key: author && !drinks ? 'author' : 'drinks',
+      title: author && !drinks ? 'Кабинет автора рецептов' : 'Рабочее место для напитков',
+      sub: author && !drinks
+        ? 'Здесь можно подготовить авторский рецепт и отправить его на публикацию после проверки.'
+        : 'У вас открыт слой напитков: поставщики, ингредиенты, полуфабрикаты и рецептуры.',
+      steps: author && !drinks
+        ? [
+            ['user', 'Профиль автора', 'заполните публичное имя и данные для связи'],
+            ['clipboard-list', 'Рецептуры', 'подготовьте рецепт и описание для витрины'],
+            ['send', 'Публикация', 'отправьте рецепт на модерацию администратору'],
+          ]
+        : [
+            ['truck', 'Поставщики', 'добавляйте поставщиков, контакты, сайты и условия'],
+            ['package', 'Ингредиенты', 'ведите сырьё, цены и историю изменений'],
+            ['layers', 'Полуфабрикаты', 'собирайте заготовки и вложенные рецептуры'],
+            ['clipboard-list', 'Рецептуры', 'создавайте напитки и выгружайте техкарты'],
+          ],
+    };
+  } else {
+    data = {
+      key: 'finance',
+      title: 'Финансовый блок кофейни',
+      sub: 'У вас открыт слой финансов: бюджет открытия, план продаж и финансовая модель.',
+      steps: [
+        ['layout-dashboard', 'Бюджет', 'соберите стартовые вложения по категориям'],
+        ['shopping-cart', 'План продаж', 'задайте порции, цены и месячную выручку'],
+        ['banknote', 'Финмодель', 'посчитайте расходы, ФОТ, налоги и прибыль'],
+        ['trending-up', 'Сценарии', 'сравните базовый, осторожный и оптимистичный планы'],
+      ],
+    };
+  }
+  window._onboardingKey = 'mbs_onboard_v2_' + data.key;
+  if (title) title.textContent = data.title;
+  if (sub) sub.textContent = data.sub;
+  if (steps) {
+    steps.innerHTML = data.steps.map((step, idx) => `
+      <div class="onboard-step">
+        <div class="onboard-step-num">${idx + 1}</div>
+        <div class="onboard-step-text"><strong><i data-lucide="${step[0]}" class="icon"></i> ${step[1]}</strong> — ${step[2]}</div>
+      </div>
+    `).join('');
+  }
+}
+
 async function _initApp(serverState) {
   // Обновляем карточку пользователя (актуально после логина)
   _renderUserCard();
+
+  // При смене аккаунта не оставляем в runtime данные предыдущего пользователя.
+  Loc.list = [];
+  Loc.activeId = null;
+  resetGlobalsToBase();
 
   // Если пришёл стейт с сервера — восстанавливаем в localStorage
   if (serverState) {
@@ -453,9 +572,7 @@ async function _initApp(serverState) {
 
   loadLocIndex();
   if (!Loc.list.length) {
-    try {
-      if (localStorage.getItem(OLD_STATE_KEY)) migrateOldState();
-    } catch(e) {}
+    try { migrateOldState(); } catch(e) {}
   }
   if (!Loc.list.length) {
     Loc.list = [{ id: 'loc_default', name: 'Моя кофейня', icon: '☕' }];
@@ -464,6 +581,84 @@ async function _initApp(serverState) {
   }
   if (!Loc.activeId) { Loc.activeId = Loc.list[0].id; saveLocIndex(); }
   loadState();
+  _applyAccessUI();
+  if (!hasAnyProductAccess()) {
+    _showNoAccessScreen();
+    if (window.lucide) window.lucide.createIcons();
+    return;
+  }
+
+  // ── Подгружаем публичных поставщиков с сервера (не блокирует старт) ──
+  try {
+    const _apiBase = import.meta.env.VITE_API_URL || 'https://barista-school.online/api';
+    fetch(_apiBase + '/suppliers')
+      .then(r => r.ok ? r.json() : [])
+      .then(serverSups => {
+        if (!Array.isArray(serverSups) || !serverSups.length) return;
+        if (!window.S.supplierBook) window.S.supplierBook = [];
+        // Мержим: сервер → supplierBook. Если запись с таким именем уже есть — обновляем
+        // поля is_featured, logo_url, promo_code и т.д. Пользовательские поля name/phone/note не трогаем.
+        serverSups.forEach(srv => {
+          const idx = window.S.supplierBook.findIndex(b => b.name === srv.name);
+          if (idx >= 0) {
+            // Обновляем только серверные расширенные поля
+            Object.assign(window.S.supplierBook[idx], {
+              is_featured: srv.is_featured,
+              logo_url: srv.logo_url || window.S.supplierBook[idx].logo_url || '',
+              promo_code: srv.promo_code || '',
+              promo_expires: srv.promo_expires || '',
+              promo_desc: srv.promo_desc || '',
+              tags: srv.tags || '',
+              _from_server: true,
+            });
+          } else {
+            window.S.supplierBook.push({
+              id: 'srv_' + srv.id,
+              name: srv.name,
+              phone: srv.phone || '',
+              note: srv.note || '',
+              site: srv.site || '',
+              is_featured: srv.is_featured || 0,
+              logo_url: srv.logo_url || '',
+              promo_code: srv.promo_code || '',
+              promo_expires: srv.promo_expires || '',
+              promo_desc: srv.promo_desc || '',
+              tags: srv.tags || '',
+              _from_server: true,
+            });
+          }
+        });
+        // Ре-рендер вкладки Поставщики если открыта
+        if (window.activeTab === 'cost') {
+          try { window.renderCost && window.renderCost(); } catch(e) {}
+        }
+      })
+      .catch(() => {/* silent fail — используем что есть в localStorage */});
+  } catch(e) {}
+
+  // ── Подгружаем серверные override-ы напитков (не блокирует старт) ──
+  try {
+    const _apiBase2 = import.meta.env.VITE_API_URL || 'https://barista-school.online/api';
+    fetch(_apiBase2 + '/drinks/overrides')
+      .then(r => r.ok ? r.json() : [])
+      .then(overrides => {
+        if (!Array.isArray(overrides) || !overrides.length) return;
+        overrides.forEach(ov => {
+          const idx = DRINKS.findIndex(d => d.id === ov.drink_id);
+          if (idx < 0) return;
+          DRINKS[idx]._hidden = !!ov.is_hidden;
+          if (ov.name  != null) DRINKS[idx]._serverName  = ov.name;
+          if (ov.price != null) DRINKS[idx]._serverPrice = ov.price;
+          if (ov.image_url) DRINKS[idx].image = ov.image_url;
+          else delete DRINKS[idx].image;
+        });
+        // Ре-рендер Рецептур если открыта
+        if (window.activeTab === 'recipes') {
+          try { window.renderRecipes && window.renderRecipes(); } catch(e) {}
+        }
+      })
+      .catch(() => {});
+  } catch(e) {}
 
   // ── Подгружаем публичных поставщиков с сервера (не блокирует старт) ──
   try {
@@ -551,7 +746,9 @@ async function _initApp(serverState) {
       const icon = document.getElementById('theme-icon');
       if (icon) icon.setAttribute('data-lucide', 'sun');
     }
-    if (!localStorage.getItem('mbs_onboard')) {
+    _renderOnboardingForAccess();
+    const onboardingKey = window._onboardingKey || 'mbs_onboard_v2';
+    if (!localStorage.getItem(onboardingKey)) {
       document.getElementById('onboarding').style.display = 'block';
     }
   } catch(e) {}
@@ -560,9 +757,8 @@ async function _initApp(serverState) {
   const _savedTab = (() => {
     try {
       const saved = localStorage.getItem('mbs_active_tab');
-      const valid = ['dashboard','cost','sales','finmodel','recipes'];
-      return (saved && valid.includes(saved)) ? saved : 'dashboard';
-    } catch(e) { return 'dashboard'; }
+      return (saved && canAccessTab(saved)) ? saved : firstAllowedTab();
+    } catch(e) { return firstAllowedTab(); }
   })();
 
   // Рендерим вкладки
@@ -579,9 +775,16 @@ async function _initApp(serverState) {
 // В режиме разработки (localhost без VITE_API_URL) auth можно пропустить
 const _skipAuth = !import.meta.env.VITE_API_URL && location.hostname === 'localhost';
 
-if (_skipAuth || isLoggedIn()) {
-  // Уже авторизован — пробуем подтянуть свежий стейт с сервера
-  fetchState().then(serverState => _initApp(serverState));
+if (isPublicRecipesRoute()) {
+  renderPublicRecipesApp();
+} else if (_skipAuth) {
+  _initApp(null);
+} else if (isLoggedIn()) {
+  // Уже авторизован — обновляем пользователя и пробуем подтянуть свежий стейт с сервера
+  refreshCurrentUser().then(user => {
+    if (!user) return showAuthScreen().then(serverState => _initApp(serverState));
+    return fetchState().then(serverState => _initApp(serverState));
+  });
 } else {
   showAuthScreen().then(serverState => _initApp(serverState));
 }

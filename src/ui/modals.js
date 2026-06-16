@@ -126,7 +126,10 @@ export function showConfirm(msg, onConfirm, opts = {}) {
 
 export function closeOnboarding() {
   document.getElementById('onboarding').style.display = 'none';
-  try { localStorage.setItem('mbs_onboard', '1'); } catch(e) {}
+  try {
+    localStorage.setItem(window._onboardingKey || 'mbs_onboard_v2', '1');
+    localStorage.setItem('mbs_onboard', '1');
+  } catch(e) {}
 }
 
 export function toggleTheme() {

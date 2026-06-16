@@ -811,6 +811,7 @@
     .recipe-card:hover::before { opacity:1; }
     .recipe-card:hover .recipe-card-title { color:var(--soft); }
     .recipe-card:hover .recipe-card-edit-hint { opacity:1; }
+    .recipe-card:focus, .recipe-card:focus-visible { outline:none; }
     .recipe-card-img { margin:-16px -18px 14px; aspect-ratio:4/3; overflow:hidden; border-radius:0; }
     .recipe-card-img img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .35s ease; }
     .recipe-card:hover .recipe-card-img img { transform:scale(1.05); }
@@ -842,6 +843,27 @@
     .recipe-ing-share { font-size:11px; color:var(--muted); white-space:nowrap; min-width:28px; text-align:right; }
     .recipe-ing-cost { font-size:12px; font-weight:700; color:var(--navy); white-space:nowrap; min-width:46px; text-align:right; }
     .recipe-total { display:flex; justify-content:space-between; font-size:13px; font-weight:700; margin-top:10px; padding-top:10px; border-top:1px solid #f0f0f0; }
+    .recipe-publish-btn { margin-top:10px; width:100%; border:1.5px solid #cde3c5; background:#f6faf4; color:#417033; border-radius:8px; padding:8px 10px; font:700 12px Mulish,sans-serif; cursor:pointer; }
+    .recipe-publish-btn:hover { background:#e7f2e3; }
+    .recipe-publish-btn.has-status { background:#fff; border-color:#e0ddd8; color:var(--muted); }
+    .author-workspace { margin:0 0 18px; background:#fff; border:1px solid var(--border); border-radius:12px; padding:14px; box-shadow:0 2px 10px rgba(0,0,0,.04); }
+    .author-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+    .author-head h3 { margin:0; color:var(--navy); font-size:17px; }
+    .author-head p { margin:3px 0 0; color:var(--muted); font-size:13px; }
+    .author-grid { display:grid; grid-template-columns:minmax(420px,460px) minmax(0,1fr); gap:12px; align-items:start; }
+    .author-card { border:1px solid var(--border); border-radius:10px; padding:12px; background:#fafafa; min-width:0; overflow:hidden; }
+    .author-card-title { font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:10px; }
+    .author-fields { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+    .author-fields input,.author-fields textarea { width:100%; min-width:0; border:1.5px solid #e0ddd8; border-radius:8px; padding:9px 10px; font:600 13px Mulish,sans-serif; background:#fff; color:var(--text); outline:none; }
+    .author-fields textarea { grid-column:1/-1; min-height:68px; resize:vertical; }
+    .author-recipe-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); }
+    .author-recipe-row:last-child { border-bottom:none; }
+    .author-recipe-row b { display:block; font-size:13px; color:var(--text); }
+    .author-recipe-row span { display:block; font-size:12px; color:var(--muted); margin-top:2px; }
+    .author-recipe-row a { font-size:12px; font-weight:800; color:#417033; text-decoration:none; white-space:nowrap; }
+    .author-empty { font-size:13px; color:var(--muted); padding:12px 0; }
+    @media(max-width:980px) { .author-grid { grid-template-columns:1fr; } }
+    @media(max-width:760px) { .author-fields { grid-template-columns:1fr; } }
 
     /* ── DOWNLOAD DROPDOWN ──────────────────────────────────────── */
     .mvd-download-wrap { position: relative; }
@@ -1038,9 +1060,27 @@
     body.dark .onboard-step { background: #2d2d2d; }
     body.dark .table-wrap { box-shadow: 0 1px 6px rgba(0,0,0,.5); }
     body.dark .recipe-card { box-shadow: none; }
-    body.dark .recipe-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,.4); border-color: #007fd4; }
+    body.dark .recipe-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,.4); border-color: #4F883E; }
     body.dark .recipe-card:hover .recipe-card-title { color: #89d185; }
     body.dark .recipe-total { border-top-color: #3c3c3c; }
+    body.dark .recipe-publish-btn { background:#1f2f1f; border-color:#3e6b3a; color:#89d185; }
+    body.dark .recipe-publish-btn:hover { background:#263b26; }
+    body.dark .recipe-publish-btn.has-status { background:#2d2d2d; border-color:#454545; color:#a0a0a0; }
+    body.dark .author-workspace { background:#1f1f1f; border-color:#454545; box-shadow:none; }
+    body.dark .author-card { background:#252526; border-color:#454545; }
+    body.dark .author-head h3 { color:#89d185; }
+    body.dark .author-head p,
+    body.dark .author-card-title,
+    body.dark .author-empty { color:#a0a0a0; }
+    body.dark .author-fields input,
+    body.dark .author-fields textarea { background:#1e1e1e; border-color:#454545; color:#d4d4d4; }
+    body.dark .author-fields input::placeholder,
+    body.dark .author-fields textarea::placeholder { color:#858585; }
+    body.dark .author-fields input:focus,
+    body.dark .author-fields textarea:focus { border-color:#4F883E; box-shadow:0 0 0 2px rgba(79,136,62,.18); }
+    body.dark .author-recipe-row { border-bottom-color:#3c3c3c; }
+    body.dark .author-recipe-row b { color:#d4d4d4; }
+    body.dark .author-recipe-row a { color:#89d185; }
     body.dark .section-title { border-bottom-color: #3c3c3c; }
     body.dark .mat-del:hover { color: #f48771; }
     body.dark .ing-del { color: #f48771; }
@@ -2551,6 +2591,48 @@
   display: flex; align-items: center; justify-content: center;
   padding: 16px;
   animation: vmFadeIn .18s ease;
+}
+
+.access-empty-screen {
+  min-height: calc(100vh - 180px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+.access-empty-card {
+  width: min(100%, 460px);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.access-empty-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gray);
+  font-size: 24px;
+}
+
+.access-empty-card h1 {
+  margin: 0 0 10px;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.access-empty-card p {
+  margin: 0 0 20px;
+  color: var(--muted);
+  line-height: 1.55;
 }
 @keyframes vmFadeIn { from { opacity:0 } to { opacity:1 } }
 .video-modal-box {

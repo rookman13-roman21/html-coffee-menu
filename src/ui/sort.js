@@ -1,6 +1,8 @@
 // src/ui/sort.js
 // Сортировка и фильтрация таблиц дашборда и продаж
 
+import { hasAccess } from './auth.js';
+
 const sortState      = { col: 'profit', dir: 'desc' };
 const salesSortState = { col: 'name',   dir: 'asc'  };
 let   salesSearch    = '';
@@ -88,6 +90,7 @@ export function filterSales(val) {
   const _svgTrash     = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`;
   const _svgRotateCcw = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`;
   const _svgPencil    = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:5px;color:var(--muted)"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+  const canEditMenu = hasAccess('drinks');
 
   let lastGroup = null;
   const rows = filtered.map(d => {
@@ -100,7 +103,7 @@ export function filterSales(val) {
       : 'style="color:var(--navy);font-weight:700"';
     const fcWarning  = d.fc > S.targetFC + 0.10
       ? ' <span title="FC% существенно выше целевого" style="font-size:12px">⚠️</span>' : '';
-    const actionBtn  = d.custom
+    const actionBtn  = !canEditMenu ? '' : d.custom
       ? `<button class="btn btn-outline" style="padding:3px 8px;font-size:11px;color:var(--red);border-color:#f4b8c4" onclick="event.stopPropagation();deleteDrink(${d.id})" title="Удалить напиток">${_svgTrash}</button>`
       : d.modified
         ? `<button class="btn btn-outline" style="padding:3px 8px;font-size:11px;color:var(--muted)" onclick="event.stopPropagation();resetDrink(${d.id})" title="Вернуть к исходному">${_svgRotateCcw}</button>`
@@ -110,8 +113,11 @@ export function filterSales(val) {
       lastGroup = d.group;
       grRow = `<tr class="group-row"><td colspan="11">${GROUP_LABEL[d.group]}</td></tr>`;
     }
-    return grRow + `<tr${zeroCls} style="cursor:pointer" onmousedown="if(document.activeElement&&document.activeElement.tagName==='INPUT')window._suppressRowClick=true;" onclick="if(window._suppressRowClick){window._suppressRowClick=false;}else{openEditDrink(${d.id});}">
-      <td class="fw7">${d.name}${(d.custom || d.modified) ? _svgPencil : ''}${p === 0 ? ' <span style="font-size:10px;color:var(--muted)">—</span>' : ''}</td>
+    const rowAction = canEditMenu
+      ? `style="cursor:pointer" onmousedown="if(document.activeElement&&document.activeElement.tagName==='INPUT')window._suppressRowClick=true;" onclick="if(window._suppressRowClick){window._suppressRowClick=false;}else{openEditDrink(${d.id});}"`
+      : '';
+    return grRow + `<tr${zeroCls} ${rowAction}>
+      <td class="fw7">${d.name}${canEditMenu && (d.custom || d.modified) ? _svgPencil : ''}${p === 0 ? ' <span style="font-size:10px;color:var(--muted)">—</span>' : ''}</td>
       <td class="ta-r mob-hide">${rub(d.cost)}</td>
       <td class="ta-c">${fcCombinedHtml(d.fc)}</td>
       <td class="ta-r" onclick="event.stopPropagation()"><span style="display:inline-flex;align-items:center;gap:4px"><input class="inp white dash-price-inp" type="number" inputmode="numeric" min="1" value="${d.price}" onchange="onSalePrice(${d.id},this.value)"><span style="font-size:12px;color:var(--muted)">₽</span></span></td>

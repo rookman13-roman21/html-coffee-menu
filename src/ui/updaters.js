@@ -3,6 +3,7 @@
 
 import { _matPriceBeforeEdit } from '../state/ui-state.js';
 import { SALES_PRESETS } from '../data/constants.js';
+import { canAccessTab, firstAllowedTab } from './auth.js';
 
 export function renderTab(tab) {
   try {
@@ -189,6 +190,11 @@ export function resetAll() {
 }
 
 export function switchTab(tab) {
+  if (!canAccessTab(tab)) {
+    const fallback = firstAllowedTab();
+    if (!fallback || fallback === tab) return;
+    tab = fallback;
+  }
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.mobile-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));

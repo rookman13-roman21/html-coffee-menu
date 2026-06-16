@@ -14,6 +14,59 @@ function saveAuth(token, user) {
   localStorage.setItem(USER_KEY,  JSON.stringify(user));
 }
 
+export async function refreshCurrentUser() {
+  const token = getToken();
+  if (!token) return null;
+  try {
+    const r = await fetch(`${API}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (r.status === 401 || r.status === 403) { clearAuth(); return null; }
+    if (!r.ok) return getUser();
+    const user = await r.json();
+    saveAuth(token, user);
+    return user;
+  } catch {
+    return getUser();
+  }
+}
+
+export const ACCESS_TABS = {
+  drinks: ['cost', 'recipes'],
+  finance: ['dashboard', 'sales', 'finmodel'],
+};
+
+export function hasAccess(key) {
+  const user = getUser();
+  if (!user || user.is_admin) return true;
+  if (user.access && typeof user.access[key] !== 'undefined') return !!user.access[key];
+  const legacyKey = key === 'drinks' ? 'access_drinks' : 'access_finance';
+  if (typeof user[legacyKey] !== 'undefined') return !!user[legacyKey];
+  return true;
+}
+
+export function canAccessTab(tab) {
+  if (ACCESS_TABS.drinks.includes(tab)) return hasAccess('drinks') || hasAccess('author');
+  if (ACCESS_TABS.finance.includes(tab)) return hasAccess('finance');
+  return true;
+}
+
+export function getAllowedTabs() {
+  return ['dashboard', 'cost', 'sales', 'finmodel', 'recipes'].filter(canAccessTab);
+}
+
+export function firstAllowedTab() {
+  const allowed = getAllowedTabs();
+  if (!allowed.length) return null;
+  if (allowed.includes('dashboard')) return 'dashboard';
+  if (allowed.includes('recipes')) return 'recipes';
+  return allowed[0];
+}
+
+export function hasAnyProductAccess() {
+  return hasAccess('drinks') || hasAccess('finance') || hasAccess('author');
+}
+
 export function clearAuth() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);

@@ -1,8 +1,53 @@
 # PROJECT_MAP.md — Coffee Menu SPA
 
-> Последнее обновление: 24 мая 2026 (сессия 49)  
-> Стек: **Vite 5.4 + Vanilla JS (ES-модули) + FastAPI + SQLite**  
+> Последнее обновление: 16 июня 2026
+> Стек: **Vite 5.4 + Vanilla JS (ES-модули) + FastAPI + SQLite**
 > Продакшн: `https://barista-school.online`
+
+---
+
+## 0. Текущее состояние проекта
+
+`Coffee_menu` сейчас является ядром платформы `barista-school.online`:
+
+- **Кабинет клиента кофейни**: напитки, поставщики, бюджет, план продаж, финмодель.
+- **Кабинет автора рецептов**: профиль автора, отправка рецептов на модерацию, подготовка к публикации на витрину.
+- **Публичная витрина авторских рецептов**: безопасный public API/страница без личных данных автора.
+- **Admin backend**: управление пользователями, пакетами доступа, авторами, публикациями, поставщиками, пресетами и библиотекой оборудования.
+
+### Пакеты доступа
+
+| Пакет | Что открывает | Где управляется |
+|---|---|---|
+| `access_drinks` / `drinks` | `Поставщики`, `Рецептуры` | `/admin` → drawer пользователя |
+| `access_finance` / `finance` | `Бюджет`, `План продаж`, `Финмодель` | `/admin` → drawer пользователя |
+| `access_author` / `author` | Кабинет автора рецептов и публикация на витрину | `/admin` → drawer пользователя |
+
+Важно:
+
+- Новые пользователи по умолчанию получают аккаунт без пакетов; доступы выдаёт админ.
+- `author` даёт доступ к вкладке `Рецептуры`, даже если `drinks=false`.
+- Навигация и `switchTab()` защищают закрытые вкладки от открытия через старый `localStorage`.
+- Онбординг динамический: общий, напитки, финансы или автор.
+
+### Хранение пользовательского состояния
+
+- Серверное состояние живёт в `user_state.state_json`.
+- Локальный кэш в браузере теперь привязан к пользователю: `mbs_locations__<user>` и `mbs_loc_<id>__<user>`.
+- Нельзя возвращать глобальные ключи `mbs_locations`, `mbs_active_loc`, `mbs_loc_*` без user scope: это снова смешает проекты разных аккаунтов в одном браузере.
+
+### Битрикс и авторы
+
+При включении доступа `Автор рецептов` backend запускает best-effort синхронизацию с Битрикс:
+
+- ищет контакт по телефону, затем email;
+- если контакт не найден, создаёт новый;
+- пишет `bitrix_contact_id` в `author_profiles`;
+- добавляет метку `Автор рецептов` в multi-list поле `BITRIX_AUTHOR_MARK_FIELD`;
+- добавляет комментарий в timeline контакта;
+- не пишет служебную авторскую информацию в `COMMENTS`, чтобы не утащить её в yClients через `sync_comment`.
+
+На production 16 июня 2026 код задеплоен, но `BITRIX_WEBHOOK` ещё не задан в `/var/www/coffee-menu/server/.env`, поэтому реальная синхронизация будет уходить в `bitrix_sync_status='error'` до настройки webhook.
 
 ---
 
@@ -69,10 +114,11 @@ server/
         ├── _tab.js          (строки 1002–1020) — switchAdmTab
         ├── _equipment.js    (строки 1021–1587) — OC_MAIN_CATS + CRUD оборудования
         ├── _suppliers.js    (строки 1588–1722) — CRUD поставщиков
-        ├── _presets.js      (строки 1723–1983) — CRUD пресетов
-        ├── _render.js       (строки 1984–2077) — render(), renderPagination(), exportCsv()
-        ├── _auth.js         (строки 2078–2123) — showPanel, doLogout, doLogin
-        └── _events.js       (строки 2124–2701) — делегированные события + })();
+        ├── _presets.js      — CRUD пресетов
+        ├── _authors.js      — авторы рецептов, публикации, статусы Битрикс
+        ├── _render.js       — render(), renderPagination(), exportCsv()
+        ├── _auth.js         — showPanel, doLogout, doLogin
+        └── _events.js       — делегированные события + })();
 ```
 
 ---
@@ -84,13 +130,13 @@ server/
 | **SPA-приложение** | `HTML_coffee_menu/index.html` | Единственная HTML-страница; содержит все вкладки и модалы |
 | **Лендинг** | `HTML_coffee_menu/landing.html` | Маркетинговая страница (статическая) |
 | **Админ-панель** | `server/admin/admin-panel.js` | Встраивается на Tilda (`baristaschool.online`) через `<script>` |
+| **Витрина рецептов** | `HTML_coffee_menu/src/ui/public-recipes.js` | Public showcase опубликованных авторских рецептов |
 
 ### Вкладки SPA (переключаются через `switchTab()`)
 
 | Вкладка | `activeTab` | Рендер-модуль |
 |---|---|---|
-| Рецептуры | `'drinks'` | `src/render/recipes.js` |
-| Себестоимость | `'materials'` | `src/render/cost.js` |
+| Рецептуры | `'recipes'` | `src/render/recipes.js` |
 | Поставщики | `'cost'` | `src/render/cost.js` |
 | План продаж | `'sales'` | `src/render/sales.js` |
 | Дашборд | `'dashboard'` | `src/render/dashboard.js` |
@@ -109,10 +155,13 @@ server/
 | Аутентификация | `/api/auth/` | register, login, me, forgot-password, reset-password |
 | Яндекс OAuth | `/api/auth/yandex/` | login, callback |
 | Telegram webhook | `/api/telegram/webhook` | Обработка callback_query (активация пользователей) |
-| Пользователи (admin) | `/api/admin/users` | CRUD пользователей |
+| Пользователи (admin) | `/api/admin/users` | CRUD пользователей, пакеты доступа |
+| Авторы | `/api/author/*` | Профиль автора и отправка рецептов на публикацию |
+| Авторы (admin) | `/api/admin/authors`, `/api/admin/author-recipes` | Модерация авторов и публикаций |
+| Public рецепты | `/api/public/author-recipes` | Витрина опубликованных рецептов |
 | Оборудование (OC) | `/api/oc-library` | CRUD библиотеки оборудования/мебели |
 | Парсинг ссылок | `/api/parse-url` | Извлечение цены/фото товара по URL |
-| Данные пользователя | `/api/data` | GET/POST сохранение стейта SPA |
+| Данные пользователя | `/api/state` | GET/PUT сохранение стейта SPA |
 | Healthcheck | `/api/health` | Статус сервиса |
 
 ### Переменные окружения (`.env` на сервере)
@@ -130,13 +179,33 @@ YANDEX_CLIENT_ID=...
 YANDEX_SECRET=...
 YANDEX_REDIRECT=https://barista-school.online/api/auth/yandex/callback
 APP_URL=https://barista-school.online
+BITRIX_WEBHOOK=...
+BITRIX_AUTHOR_MARK_FIELD=UF_CRM_1766349995197
+BITRIX_AUTHOR_MARK_LABEL=Автор рецептов
 ```
 
 ### База данных
 
 - **Тип:** SQLite
 - **Путь на сервере:** `/var/www/coffee-menu/server/data/app.db`
-- **Таблицы:** `users`, `oc_library`, `password_resets`, `user_data`
+- **Таблицы:** `users`, `user_state`, `author_profiles`, `recipe_publications`, `recipe_orders`, `oc_library`, `sup_library`, `oc_presets`, `drink_overrides`
+
+#### Важные таблицы авторской платформы
+
+| Таблица | Назначение |
+|---|---|
+| `author_profiles` | Профиль автора, публичные данные, статус документов, `bitrix_contact_id`, статус синхронизации с Битрикс |
+| `recipe_publications` | Заявки рецептов на модерацию и опубликованные карточки витрины |
+| `recipe_orders` | Заявки/заказы по опубликованным рецептам, `bitrix_deal_id` |
+
+#### `author_profiles`: поля Битрикс
+
+| Поле | Назначение |
+|---|---|
+| `bitrix_contact_id` | ID контакта Битрикс, найденного или созданного для автора |
+| `bitrix_sync_status` | `pending`, `synced`, `error` или пусто |
+| `bitrix_sync_error` | Короткая ошибка последней синхронизации |
+| `bitrix_synced_at` | Время успешной синхронизации |
 
 #### Схема `oc_library`
 
@@ -173,6 +242,8 @@ APP_URL=https://barista-school.online
 | `.oc-*` | Блок «Стартовые вложения» (Дашборд) |
 | `.fm-*` | Финансовая модель |
 | `.ing-row` | Строки ингредиентов в рецептах |
+| `.author-*` | Кабинет автора рецептов |
+| `.public-recipes-*` | Public-витрина авторских рецептов |
 | `.kpi-*` | KPI-карточки Дашборда |
 | `.sc-*` | Сценарии Финмодели |
 | `.main` | Основной контейнер (`flex:1; width:100%`) |
@@ -236,6 +307,8 @@ APP_URL=https://barista-school.online
 | `events.js` | **Все события** (делегированные), `MODAL_IDS` |
 | `updaters.js` | `switchTab`, `renderAll`, `flashCells` |
 | `auth.js` | Авторизация (login/register/forgot-password/OAuth) |
+| `author.js` | Кабинет автора: профиль, список публикаций, отправка рецепта на модерацию |
+| `public-recipes.js` | Public-витрина опубликованных рецептов и форма заявки |
 | `misc.js` | `exportFullPDF/XLSX`, `_printViaIframe`, `generateInsights` |
 | `suppliers.js` | CRUD поставщиков |
 | `payroll.js` | Калькулятор ФОТ |
@@ -395,7 +468,7 @@ ssh -i ~/.ssh/id_ed25519 root@159.194.233.13 \
 
 ## 11. Админ-панель (`server/admin/admin-panel.js`)
 
-**Деплой:** `scp ... root@159.194.233.13:/var/www/coffee-menu/dist/admin-panel.js`  
+**Деплой:** `scp ... root@159.194.233.13:/var/www/coffee-menu/dist/admin-panel.js`
 **Встраивается:** на Tilda (`baristaschool.online`) через `<div id="adm-root"></div><script src="https://barista-school.online/admin-panel.js?v=N">`
 
 ### Сборка
@@ -427,8 +500,8 @@ bash server/admin/build.sh
 | `resetSubcats(mainCat)` | Сброс к дефолтным подкатегориям |
 | `closeSubcatMgr()` | Закрывает модал |
 
-**Хранилище:** `localStorage['adm_subcats']` → `{equipment: {list: [...], initialized: bool}, ...}`  
-**Счётчик позиций:** `_oc_items.filter(it => (it.category||'equipment') === mainCat && it.subcategory === name).length`  
+**Хранилище:** `localStorage['adm_subcats']` → `{equipment: {list: [...], initialized: bool}, ...}`
+**Счётчик позиций:** `_oc_items.filter(it => (it.category||'equipment') === mainCat && it.subcategory === name).length`
 **Защита удаления:** кнопка ✕ рендерится с `disabled` если `count > 0`; в обработчике `del` стоит дополнительная проверка `if (btn.disabled) return`
 
 ### CSS-классы админ-панели

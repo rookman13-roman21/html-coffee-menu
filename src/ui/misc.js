@@ -1,6 +1,8 @@
 // src/ui/misc.js
 // Разное: шаблоны, инсайты, сезонность, кандидаты на удаление, PDF-отчёты, onWhatIf
 
+import { hasAccess } from './auth.js';
+
 export function openTemplatesModal() {
   const MENU_TEMPLATES = window.MENU_TEMPLATES;
   const grid = document.getElementById('templates-grid');
@@ -1202,6 +1204,10 @@ export function toggleSeasonality() {
 //  MENU CLEANUP — drop candidates
 // ════════════════════════════════════════════════════════════════════
 export function openDropCandidates() {
+  if (!hasAccess('drinks')) {
+    if (window.showAlert) window.showAlert('Этот инструмент доступен только в пакете «Напитки».');
+    return;
+  }
   const drinks = window.withABC(window.enrich());
   const candidates = drinks.map(d => {
     const port = window.S.portions[d.id] || 0;
@@ -1262,6 +1268,10 @@ export function openDropCandidates() {
 }
 
 export function _confirmDeleteDropDrink(id, name) {
+  if (!hasAccess('drinks')) {
+    if (window.showAlert) window.showAlert('Этот инструмент доступен только в пакете «Напитки».');
+    return;
+  }
   window.showConfirm(`Удалить «${name}» из меню?`, () => {
     window.deleteDrink(id);
     window.openDropCandidates();
