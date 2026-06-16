@@ -27,6 +27,33 @@ bash scripts/check.sh
 - синхронизацию `PROJECT_MAP.md`;
 - отсутствие реальных секретов в документации.
 
+## API smoke-тест
+
+Первый раз создать локальный конфиг, который не попадает в Git:
+
+```bash
+cp scripts/smoke_api.example.json scripts/smoke_api.local.json
+```
+
+В `scripts/smoke_api.local.json` заполнить admin email/password. Тестовый контакт уже указан в примере:
+
+- телефон: `+7 903 156-65-66`;
+- ожидаемый контакт Битрикс: `10828`.
+
+Read-only проверка:
+
+```bash
+npm run smoke:api
+```
+
+Проверка с безопасным включением доступа автора тестовому пользователю и ожиданием Битрикс-синхронизации:
+
+```bash
+npm run smoke:api:apply
+```
+
+Скрипт не создаёт сделки и не публикует рецепты. Он проверяет health, admin auth, `access`, тестового автора, `author_profiles`, `bitrix_contact_id` и приватность public API.
+
 ## Деплой по слоям
 
 ### Frontend SPA

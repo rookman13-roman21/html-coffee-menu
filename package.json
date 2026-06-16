@@ -8,6 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "bash scripts/check.sh",
+    "smoke:api": "python3 scripts/smoke_api.py",
+    "smoke:api:apply": "python3 scripts/smoke_api.py --apply --expect-bitrix-synced",
     "deploy:frontend": "bash scripts/deploy_frontend.sh",
     "deploy:admin": "bash scripts/deploy_admin.sh",
     "deploy:backend": "bash scripts/deploy_backend.sh"

@@ -326,8 +326,10 @@ BITRIX_AUTHOR_MARK_LABEL=Автор рецептов
 | Файл | Назначение |
 |---|---|
 | `HTML_coffee_menu/vite.config.js` | Vite: порт 3000, outDir `dist` |
-| `HTML_coffee_menu/package.json` | npm-скрипты: `dev`, `build`, `preview`, `check`, `deploy:*` |
+| `HTML_coffee_menu/package.json` | npm-скрипты: `dev`, `build`, `preview`, `check`, `smoke:api`, `deploy:*` |
 | `HTML_coffee_menu/scripts/check.sh` | Единая preflight-проверка: backend compile, admin build, frontend build, docs/secret scan |
+| `HTML_coffee_menu/scripts/smoke_api.py` | API smoke-тест: health, admin auth, access-флаги, автор, Битрикс sync, приватность public API |
+| `HTML_coffee_menu/scripts/smoke_api.example.json` | Пример локального конфига без реальных admin credentials |
 | `HTML_coffee_menu/scripts/deploy_frontend.sh` | Деплой SPA `dist/` без удаления `admin-panel.js` |
 | `HTML_coffee_menu/scripts/deploy_admin.sh` | Сборка и деплой `server/admin/admin-panel.js` |
 | `HTML_coffee_menu/scripts/deploy_backend.sh` | Backup SQLite, деплой `server/main.py`, restart API, health-check |
@@ -420,6 +422,12 @@ npm run dev
 
 # Единая проверка перед деплоем
 npm run check
+
+# API smoke-тест production
+npm run smoke:api
+
+# API smoke-тест с включением автора тестовому пользователю
+npm run smoke:api:apply
 ```
 
 ### Деплой на продакшн

@@ -1,0 +1,19 @@
+{
+  "base_url": "https://barista-school.online",
+  "admin_email": "admin@example.com",
+  "admin_password": "password",
+  "test_user_email": "",
+  "test_user_phone": "+7 903 156-65-66",
+  "expected_bitrix_contact_id": "10828",
+  "allow_mutation": false,
+  "expect_bitrix_synced": true,
+  "poll_seconds": 35,
+  "forbidden_public_keys": [
+    "email",
+    "phone",
+    "telegram",
+    "yclients",
+    "yclients_id",
+    "bitrix_contact_id"
+  ]
+}

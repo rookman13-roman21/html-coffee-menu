@@ -32,11 +32,26 @@ bash scripts/check.sh
 
 ## 3. Production smoke
 
-- `https://barista-school.online/api/health`
-- Login обычного пользователя.
-- `/api/auth/me` возвращает `access`.
-- Admin открывается на `/admin`.
-- Таблица пользователей показывает доступы.
+```bash
+npm run smoke:api
+```
+
+Для теста выдачи доступа автора и Битрикс-синхронизации:
+
+```bash
+npm run smoke:api:apply
+```
+
+Smoke проверяет:
+
+- `https://barista-school.online/api/health`;
+- admin login;
+- `/api/auth/me` возвращает `access`;
+- `/api/admin/users` возвращает access-флаги;
+- тестовый пользователь найден по телефону/email;
+- `author_profiles` существует;
+- `bitrix_contact_id` совпадает с ожидаемым, если включён `expect_bitrix_synced`;
+- public API не отдаёт приватные поля.
 
 ## 4. Автор рецептов
 

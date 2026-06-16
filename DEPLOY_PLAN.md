@@ -1,8 +1,8 @@
 # 🚀 План развёртывания Coffee Menu как облачного SaaS
 
-**Домен:** `barista-school.online`  
-**Сервер:** `root@159.194.233.13` (Beget VPS, Ubuntu 24.04)  
-**SSH:** `ssh -i ~/.ssh/id_ed25519 root@159.194.233.13`  
+**Домен:** `barista-school.online`
+**Сервер:** `root@159.194.233.13` (Beget VPS, Ubuntu 24.04)
+**SSH:** `ssh -i ~/.ssh/id_ed25519 root@159.194.233.13`
 **Статус:** 🟢 Полностью рабочий — регистрация, логин, синхронизация данных, admin-панель на Tilda, отправка email, вход через Яндекс ID, Escape закрывает все попапы
 
 ---
@@ -10,7 +10,7 @@
 ## ✅ Решённые проблемы (хронология исправлений)
 
 ### Баг 1 — `bcrypt 5.0.0` несовместим с `passlib 1.7.4`
-**Причина:** `bcrypt 5.0.0` удалил `__about__.__version__`, на который опирается `passlib` → `AttributeError` → 500  
+**Причина:** `bcrypt 5.0.0` удалил `__about__.__version__`, на который опирается `passlib` → `AttributeError` → 500
 **Решение:** Заменили `passlib` на прямые вызовы `bcrypt`:
 ```python
 import bcrypt as _bcrypt
@@ -25,17 +25,17 @@ def verify_password(plain: str, hashed: str) -> bool:
 **Решение:** В `src/ui/auth.js` исправлено `saveAuth(d.access_token, ...)` → `saveAuth(d.token, ...)`
 
 ### Баг 3 — `admin-panel.js` тоже читал `d.access_token`
-**Причина:** API всегда возвращает `{"ok":true, "token":"..."}`, а панель проверяла `if (!d.access_token)` → всегда `undefined` → "Неверные данные" при любом правильном пароле  
-**Решение:** В `server/admin/admin-panel.js` исправлено `d.access_token` → `d.token`  
+**Причина:** API всегда возвращает `{"ok":true, "token":"..."}`, а панель проверяла `if (!d.access_token)` → всегда `undefined` → "Неверные данные" при любом правильном пароле
+**Решение:** В `server/admin/admin-panel.js` исправлено `d.access_token` → `d.token`
 **Правило:** Все JS-клиенты должны читать `d.token`, а не `d.access_token`
 
 ### Баг 4 — Email с автокапитализацией на мобильном
-**Причина:** iOS/Android автоматически делает первую букву email заглавной (`Rookman13@...`), а в БД хранится строчная (`rookman13@...`)  
+**Причина:** iOS/Android автоматически делает первую букву email заглавной (`Rookman13@...`), а в БД хранится строчная (`rookman13@...`)
 **Решение:** В `admin-panel.js` добавлено `toLowerCase()` при чтении email + `autocapitalize="none" autocorrect="off"` на `<input type="email">`
 
 ### Баг 5 — Сброс пароля через `passlib` падал с `ValueError`
-**Причина:** `bcrypt 5.0.0` выбрасывает `ValueError: password cannot be longer than 72 bytes` при импорте `main.py` (триггерится startup-код)  
-**Решение:** Сброс пароля напрямую через `sqlite3` + `bcrypt` без импорта `main.py`:  
+**Причина:** `bcrypt 5.0.0` выбрасывает `ValueError: password cannot be longer than 72 bytes` при импорте `main.py` (триггерится startup-код)
+**Решение:** Сброс пароля напрямую через `sqlite3` + `bcrypt` без импорта `main.py`:
 ```python
 import sqlite3, bcrypt
 db_path = "/var/www/coffee-menu/server/data/app.db"  # ← реальный путь к БД
@@ -47,27 +47,27 @@ conn.commit()
 **Внимание:** Колонка называется `password_hash` (не `hashed_password`!)
 
 ### Результат
-- Регистрация `rookman13@gmail.com` — ✅  
-- Активация через SQLite (`is_active=1, is_admin=1`) — ✅  
-- Логин — ✅  
+- Регистрация `rookman13@gmail.com` — ✅
+- Активация через SQLite (`is_active=1, is_admin=1`) — ✅
+- Логин — ✅
 - `restoreFromServer` в `store.js` — уже была реализована, импорт в `main.js` работает — ✅
 - Admin-панель на Tilda (`baristaschool.online`) — ✅
 
 ### Баг 6 — SMTP: `STARTTLS` port 587 не работал с Яндексом
-**Причина:** Яндекс-почта принимает только SSL-соединения на 465, `STARTTLS` отклонялся  
+**Причина:** Яндекс-почта принимает только SSL-соединения на 465, `STARTTLS` отклонялся
 **Решение:** Перешли на `smtplib.SMTP_SSL(host, 465)` вместо `smtplib.SMTP` + `starttls()`
 
 ### Баг 7 — `load_dotenv()` не находил `.env`
-**Причина:** `WorkingDirectory` systemd-сервиса отличался от директории скрипта  
+**Причина:** `WorkingDirectory` systemd-сервиса отличался от директории скрипта
 **Решение:** `load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))` — явный путь относительно `__file__`
 
 ### Баг 8 — inline SVG вместо `<img src>` для иконки Яндекса в кнопке
-**Причина:** `<img src="https://yastatic.net/...">` блокировался CSP → иконка не грузилась (показывалось "❓")  
+**Причина:** `<img src="https://yastatic.net/...">` блокировался CSP → иконка не грузилась (показывалось "❓")
 **Решение:** Заменено на inline SVG в `src/ui/auth.js` — всегда отображается, нет внешних запросов
 
 ### Баг 9 — Yandex OAuth `invalid_scope`
-**Причина:** Параметр `scope` передавался в URL редиректа (`urlencode({..., "scope": "login:email login:info login:phone"})`). Яндекс OAuth **не принимает** `scope` в URL — скоупы задаются только в настройках приложения на [oauth.yandex.ru](https://oauth.yandex.ru) → Яндекс возвращал `invalid_scope` и отклонял весь запрос авторизации  
-**Решение:** Убран параметр `scope` из `urllib.parse.urlencode()` в функции `yandex_oauth_start()` в `server/main.py`. Скоупы (`login:email`, `login:info`, `login:phone`) настраиваются в консоли oauth.yandex.ru  
+**Причина:** Параметр `scope` передавался в URL редиректа (`urlencode({..., "scope": "login:email login:info login:phone"})`). Яндекс OAuth **не принимает** `scope` в URL — скоупы задаются только в настройках приложения на [oauth.yandex.ru](https://oauth.yandex.ru) → Яндекс возвращал `invalid_scope` и отклонял весь запрос авторизации
+**Решение:** Убран параметр `scope` из `urllib.parse.urlencode()` в функции `yandex_oauth_start()` в `server/main.py`. Скоупы (`login:email`, `login:info`, `login:phone`) настраиваются в консоли oauth.yandex.ru
 **Деплой:** `main.py` скопирован на сервер, `coffee-menu-api` перезапущен → `active` ✅
 
 ### Баг 10 — Новые пользователи Яндекс ID должны проходить ручную активацию
@@ -342,14 +342,14 @@ ssh -i ~/.ssh/id_ed25519 root@159.194.233.13 '/var/www/coffee-menu/venv/bin/pyth
 
 ## Email / SMTP (Forgot Password)
 
-**Провайдер:** Яндекс SMTP, SSL 465  
-**Отправитель:** `Moscow Barista School <hello@baristaschool.ru>`  
+**Провайдер:** Яндекс SMTP, SSL 465
+**Отправитель:** `Moscow Barista School <hello@baristaschool.ru>`
 **Креденциалы в `.env`:**
 ```
 SMTP_HOST=smtp.yandex.ru
 SMTP_PORT=465
 SMTP_USER=hello@baristaschool.ru
-SMTP_PASS=tikcyzpywpomxqvt
+SMTP_PASS=***
 ```
 
 **Forgot Password flow:**
@@ -368,11 +368,11 @@ SMTP_PASS=tikcyzpywpomxqvt
 
 ## Yandex OAuth
 
-**Приложение:** «Moscow Barista School» на [oauth.yandex.ru](https://oauth.yandex.ru)  
-**ClientID:** `6377f7d0f4c046958fcda1f5a599dc19`  
-**Secret:** `20127c8213fb421ebd14a69fe013485c`  
-**Scopes (в настройках приложения, НЕ в URL!):** `login:email login:info login:phone`  
-**Redirect URI:** `https://barista-school.online/api/auth/yandex/callback`  
+**Приложение:** «Moscow Barista School» на [oauth.yandex.ru](https://oauth.yandex.ru)
+**ClientID:** `6377f7d0f4c046958fcda1f5a599dc19`
+**Secret:** хранится только в `/var/www/coffee-menu/server/.env`, в документации не фиксировать
+**Scopes (в настройках приложения, НЕ в URL!):** `login:email login:info login:phone`
+**Redirect URI:** `https://barista-school.online/api/auth/yandex/callback`
 
 ⚠️ **Важно:** `scope` НЕ передаётся в URL редиректа — Яндекс возвращает `invalid_scope`. Права задаются только в консоли oauth.yandex.ru.
 
@@ -393,11 +393,11 @@ SMTP_PASS=tikcyzpywpomxqvt
 SMTP_HOST=smtp.yandex.ru
 SMTP_PORT=465
 SMTP_USER=hello@baristaschool.ru
-SMTP_PASS=tikcyzpywpomxqvt
+SMTP_PASS=***
 YANDEX_CLIENT_ID=6377f7d0f4c046958fcda1f5a599dc19
-YANDEX_SECRET=20127c8213fb421ebd14a69fe013485c
+YANDEX_SECRET=***
 YANDEX_REDIRECT=https://barista-school.online/api/auth/yandex/callback
-TELEGRAM_BOT_TOKEN=7976269448:AAGL_JKrnXRi8AaMM3KnJl2TVbFyO1G_Ckw
+TELEGRAM_BOT_TOKEN=***
 TELEGRAM_ADMIN_CHAT_ID=33668380
 ```
 
@@ -405,9 +405,9 @@ TELEGRAM_ADMIN_CHAT_ID=33668380
 
 ## Telegram-уведомления
 
-**Бот:** `@baristaschool_admin_bot`  
-**Token:** `7976269448:AAGL_JKrnXRi8AaMM3KnJl2TVbFyO1G_Ckw`  
-**Admin Chat ID:** `33668380` (`@DonRomon`)  
+**Бот:** `@baristaschool_admin_bot`
+**Token:** хранится только в `/var/www/coffee-menu/server/.env`, в документации не фиксировать
+**Admin Chat ID:** `33668380` (`@DonRomon`)
 **Переменные:** хранятся только в `/var/www/coffee-menu/server/.env` на сервере, **не в репозитории**
 
 **Когда отправляется уведомление:**
@@ -565,5 +565,5 @@ sqlite3 /var/www/coffee-menu/data/app.db \
 
 ---
 
-*Документ обновлён: 22 мая 2026 (сессия 39)*  
+*Документ обновлён: 22 мая 2026 (сессия 39)*
 *Текущий статус: 🟢 Полностью рабочий SaaS — регистрация + логин + автосинхронизация + admin-панель на Tilda + Forgot Password (email) + Yandex OAuth + Telegram-уведомления + fix Escape для всех попапов + загрузка фото товара с устройства в OC item modal. Следующий шаг: тест изоляции данных между пользователями и мобильный тест.*

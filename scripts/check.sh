@@ -37,7 +37,7 @@ diff -u "$PROJECT_ROOT/PROJECT_MAP.md" "$ROOT/PROJECT_MAP.md" >/dev/null
 echo
 echo "== Secret scan in docs =="
 if rg -n 'tikcy|7976269448|20127c8213|AAGL_|SMTP_PASS=[A-Za-z0-9_-]{6,}|YANDEX_SECRET=[A-Za-z0-9_-]{6,}|TELEGRAM_BOT_TOKEN=[0-9]+:|BITRIX_WEBHOOK=https?://|\*\*Token:\*\* `[0-9]+:' \
-  "$PROJECT_ROOT/PROJECT_MAP.md" "$ROOT/PROJECT_MAP.md" "$ROOT/CONTEXT.md"; then
+  "$PROJECT_ROOT/PROJECT_MAP.md" "$ROOT"/*.md; then
   echo "Secret-like value found in docs. Stop."
   exit 1
 fi
