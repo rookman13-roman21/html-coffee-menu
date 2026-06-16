@@ -1,11 +1,13 @@
 # CONTEXT — MBS* Coffee Menu
 
 > Платформа `barista-school.online`: кабинет кофейни, кабинет автора рецептов и витрина авторских рецептов. SPA на Vite + ES-модули.
-> Последнее обновление: 16 июня 2026 — доступы `Напитки/Финансы/Автор`, кабинет автора, public-витрина, Битрикс-синхронизация авторов, user-scoped localStorage.
+> Последнее обновление: 16 июня 2026 — доступы `Напитки/Финансы/Автор`, кабинет автора, public-витрина, Битрикс-синхронизация авторов, user-scoped localStorage, release workflow и API smoke-тесты.
 
 ---
 
 ## 0.1. Актуальное состояние на 16 июня 2026
+
+Для старта нового чата сначала читать `NEXT_CHAT_HANDOFF.md`.
 
 ### Слои продукта
 
@@ -33,6 +35,19 @@
 - не пишет служебные данные в `COMMENTS`, чтобы не утащить их в yClients через `sync_comment`.
 
 Production-важно: 16 июня 2026 `BITRIX_WEBHOOK`, `BITRIX_AUTHOR_MARK_FIELD` и `BITRIX_AUTHOR_MARK_LABEL` добавлены в `/var/www/coffee-menu/server/.env`; API перезапущен. Перед изменением создан backup `.env`, а перед добавлением enum — snapshot поля Битрикс. Read-only проверка webhook показала: поле `UF_CRM_1766349995197` доступно, enum `Автор рецептов` присутствует.
+
+Smoke-проверка `npm run smoke:api:apply` пройдена на тестовом пользователе `suslin21@ya.ru`, телефон `+7 903 156-65-66`, Битрикс contact id `10828`: доступ автора включается, `author_profiles` существует, `bitrix_sync_status=synced`, public API не отдаёт приватные поля.
+
+### Ускорение разработки
+
+- `npm run check` — единая проверка перед правками/деплоем.
+- `npm run smoke:api` — read-only production smoke.
+- `npm run smoke:api:apply` — проверка тестового автора и Битрикс-синхронизации.
+- `npm run deploy:frontend` — деплой SPA.
+- `npm run deploy:admin` — сборка и деплой admin bundle.
+- `npm run deploy:backend` — backup SQLite, деплой backend, restart API.
+
+Локальный `scripts/smoke_api.local.json` ignored и не должен попадать в Git.
 
 ### Хранение состояния
 

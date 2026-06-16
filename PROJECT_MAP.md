@@ -15,6 +15,8 @@
 - **Публичная витрина авторских рецептов**: безопасный public API/страница без личных данных автора.
 - **Admin backend**: управление пользователями, пакетами доступа, авторами, публикациями, поставщиками, пресетами и библиотекой оборудования.
 
+Для передачи контекста в новый чат использовать `HTML_coffee_menu/NEXT_CHAT_HANDOFF.md`.
+
 ### Пакеты доступа
 
 | Пакет | Что открывает | Где управляется |
@@ -48,6 +50,8 @@
 - не пишет служебную авторскую информацию в `COMMENTS`, чтобы не утащить её в yClients через `sync_comment`.
 
 На production 16 июня 2026 `BITRIX_WEBHOOK`, `BITRIX_AUTHOR_MARK_FIELD` и `BITRIX_AUTHOR_MARK_LABEL` добавлены в `/var/www/coffee-menu/server/.env`; API перезапущен. Перед изменением создан backup `.env`, а перед добавлением enum — snapshot поля Битрикс. Read-only проверка webhook показала: поле `UF_CRM_1766349995197` доступно, enum `Автор рецептов` присутствует.
+
+Smoke-проверка `npm run smoke:api:apply` пройдена на тестовом пользователе `suslin21@ya.ru`, телефон `+7 903 156-65-66`, Битрикс contact id `10828`.
 
 ---
 
@@ -335,6 +339,7 @@ BITRIX_AUTHOR_MARK_LABEL=Автор рецептов
 | `HTML_coffee_menu/scripts/deploy_backend.sh` | Backup SQLite, деплой `server/main.py`, restart API, health-check |
 | `HTML_coffee_menu/DEPLOY.md` | Короткая инструкция по деплою слоями |
 | `HTML_coffee_menu/CHECKLIST_RELEASE.md` | Release checklist перед production-изменениями |
+| `HTML_coffee_menu/NEXT_CHAT_HANDOFF.md` | Краткая передача контекста для нового чата |
 | `server/coffee-menu-api.service` | systemd: uvicorn на порту 8000, WorkingDir, .env |
 | `server/.env.example` | Шаблон переменных окружения |
 | `.github/copilot-instructions.md` | Архитектурные правила (читает Copilot) |
