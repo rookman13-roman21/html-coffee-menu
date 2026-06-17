@@ -1063,6 +1063,14 @@
     .author-history-item b { display:block; color:var(--navy); font-size:13px; margin-bottom:3px; }
     .author-history-item span { color:var(--muted); font-size:12px; }
     .author-history-item p { margin:7px 0 0; color:var(--text); font-size:13px; line-height:1.5; }
+    .author-profile-status-card .btn { justify-self:start; }
+    .author-profile-modal { position:fixed; inset:0; z-index:9500; align-items:center; justify-content:center; padding:24px; background:rgba(0,0,0,.58); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); }
+    .author-profile-dialog { width:min(680px,100%); max-height:min(760px,calc(100vh - 48px)); overflow:auto; background:#fff; border:1px solid var(--border); border-radius:14px; box-shadow:0 18px 60px rgba(0,0,0,.28); }
+    .author-profile-dialog-head { position:sticky; top:0; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 18px; background:#fff; border-bottom:1px solid var(--border); }
+    .author-profile-dialog-head h3 { margin:0; color:var(--navy); font-size:18px; }
+    .author-profile-dialog-head p { margin:3px 0 0; color:var(--muted); font-size:13px; }
+    .author-profile-dialog-body { padding:16px 18px 4px; }
+    .author-profile-dialog-footer { display:flex; justify-content:flex-end; gap:8px; padding:14px 18px 18px; }
     @media(max-width:980px) { .author-grid { grid-template-columns:1fr; } }
     @media(max-width:760px) {
       .author-fields { grid-template-columns:1fr; }
@@ -1082,6 +1090,11 @@
       .author-terms-modal,
       .author-history-modal { padding:12px; }
       .author-mini-card-head { flex-direction:column; }
+      .author-profile-status-card .btn { width:100%; justify-content:center; }
+      .author-profile-modal { padding:12px; }
+      .author-profile-dialog-footer { flex-direction:column; }
+      .author-profile-dialog-footer .btn,
+      .author-profile-dialog-footer .btn-green { width:100%; justify-content:center; }
       .author-pub-tabs { overflow:auto; flex-wrap:nowrap; padding-bottom:2px; }
       .author-pub-tabs button { flex:0 0 auto; }
     }
@@ -1398,6 +1411,10 @@
     body.dark .author-history-summary,
     body.dark .author-history-item { background:#1f1f1f; border-color:#454545; }
     body.dark .author-history-item p { color:#d4d4d4; }
+    body.dark .author-profile-dialog { background:#252526; border-color:#454545; box-shadow:0 18px 60px rgba(0,0,0,.6); }
+    body.dark .author-profile-dialog-head { background:#252526; border-color:#454545; }
+    body.dark .author-profile-dialog-head h3 { color:#89d185; }
+    body.dark .author-profile-dialog-head p { color:#a0a0a0; }
     body.dark .section-title { border-bottom-color: #3c3c3c; }
     body.dark .mat-del:hover { color: #f48771; }
     body.dark .ing-del { color: #f48771; }
@@ -2299,10 +2316,20 @@
     }
     .loc-menu.open, .export-menu.open { display: block; }
     .export-menu { min-width: 220px; }
+    .loc-menu-author { min-width: 330px; }
     .loc-menu-header {
       font-size: 10px; font-weight: 700; color: var(--muted);
       text-transform: uppercase; letter-spacing: .06em;
       padding: 8px 10px 4px;
+    }
+    .loc-menu-note,
+    .modal-note {
+      color: var(--muted); font-size: 12px; line-height: 1.45;
+      padding: 0 10px 8px;
+    }
+    .modal-note {
+      padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--light);
     }
     .loc-list { max-height: 280px; overflow-y: auto; padding: 0 0 4px; }
     .loc-menu-divider { height: 1px; background: var(--border); margin: 4px 6px; }
@@ -2360,6 +2387,8 @@
     body.dark .loc-menu-item:hover { background: #2a3d25; color: #89d185; }
     body.dark .loc-menu-item.active { background: #2a3d25; color: #89d185; }
     body.dark .loc-menu-divider { background: #454545; }
+    body.dark .loc-menu-note { color: #a0a0a0; }
+    body.dark .modal-note { background: #1f2a1f; border-color: #3e6b3a; color: #a0a0a0; }
 
     /* ── TEMPLATES GRID ─────────────────────────────────────── */
     .templates-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 12px; }

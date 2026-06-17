@@ -87,6 +87,7 @@ import {
   saveAuthorIngredient, deleteAuthorIngredient,
   saveAuthorSemiForItem, deleteAuthorSemiForItem,
   openAuthorTermsModal, closeAuthorTermsModal,
+  openAuthorProfileModal, closeAuthorProfileModal,
   openAuthorPublicationView, openAuthorPublicationEdit,
   openAuthorPublicationHistory, closeAuthorPublicationHistory, setAuthorPublicationFilter,
 } from './ui/author.js';
@@ -198,7 +199,7 @@ import {
 import {
   renderLocSwitcherUI, renderLocList, toggleLocMenu, toggleExportMenu,
   switchLocation, openAddLocation, renameActiveLocation, deleteActiveLocation,
-  saveLocation,
+  saveLocation, authorOpenTechcardSettings,
 } from './ui/locations.js';
 
 import {
@@ -383,6 +384,7 @@ const _srcExports = {
   saveAuthorIngredient, deleteAuthorIngredient,
   saveAuthorSemiForItem, deleteAuthorSemiForItem,
   openAuthorTermsModal, closeAuthorTermsModal,
+  openAuthorProfileModal, closeAuthorProfileModal,
   openAuthorPublicationView, openAuthorPublicationEdit,
   openAuthorPublicationHistory, closeAuthorPublicationHistory, setAuthorPublicationFilter,
   submitPublicRecipeOrder,
@@ -394,7 +396,7 @@ const _srcExports = {
   // ui/locations
   renderLocSwitcherUI, renderLocList, toggleLocMenu, toggleExportMenu,
   switchLocation, openAddLocation, renameActiveLocation, deleteActiveLocation,
-  saveLocation,
+  saveLocation, authorOpenTechcardSettings,
   // ui/modals
   openModal, closeModal, safeCloseModal,
   _markModalDirty, _clearModalDirty, _isModalDirty,

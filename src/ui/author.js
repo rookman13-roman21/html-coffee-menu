@@ -760,6 +760,70 @@ function _renderAuthorFinanceBlock() {
   `;
 }
 
+function _renderAuthorProfileEditor(profile = _authorProfile || {}) {
+  const avatarUrl = _assetUrl(profile.avatar_url || '');
+  return `
+    <div class="author-avatar-editor">
+      <div class="author-avatar-preview ${avatarUrl ? '' : 'is-empty'}">
+        ${avatarUrl ? `<img src="${_esc(avatarUrl)}" alt="Фото автора">` : '<i data-lucide="user" class="icon"></i>'}
+      </div>
+      <div class="author-avatar-actions">
+        <b>Фото автора</b>
+        <span>Эта фотография будет видна покупателям в карточках рецептов.</span>
+        <label class="btn btn-outline author-avatar-btn">
+          <i data-lucide="image-plus" class="icon"></i>
+          Загрузить фото
+          <input type="file" accept="image/png,image/jpeg,image/webp" onchange="uploadAuthorAvatar(this)" hidden>
+        </label>
+      </div>
+    </div>
+    <div class="author-fields">
+      <label>
+        <span>Фамилия</span>
+        <input id="author-last-name" placeholder="Иванов" value="${_esc(profile.last_name || '')}">
+      </label>
+      <label>
+        <span>Имя</span>
+        <input id="author-first-name" placeholder="Иван" value="${_esc(profile.first_name || '')}">
+      </label>
+      <label>
+        <span>Отчество</span>
+        <input id="author-patronymic" placeholder="Иванович" value="${_esc(profile.patronymic || '')}">
+      </label>
+      <label>
+        <span>Телефон</span>
+        <input id="author-phone" placeholder="Телефон" value="${_esc(profile.phone || '')}">
+      </label>
+      <label class="author-field-wide">
+        <span>Коротко об авторе</span>
+        <textarea id="author-bio" placeholder="Напишите ваши регалии, опыт, достижения и специализацию. Этот текст увидят покупатели в карточках рецептов и профиле автора.">${_esc(profile.bio || '')}</textarea>
+      </label>
+    </div>
+  `;
+}
+
+function _renderAuthorProfileStatus(profile = _authorProfile || {}) {
+  const filled = [
+    !!profile.last_name,
+    !!profile.first_name,
+    !!profile.phone,
+    !!profile.avatar_url,
+    !!profile.bio,
+  ].filter(Boolean).length;
+  return `
+    <div class="author-mini-card author-profile-status-card">
+      <div class="author-mini-card-head">
+        <div>
+          <b>Данные автора</b>
+          <span>${filled >= 4 ? 'Основные данные заполнены. Изменить их можно в меню кабинета автора.' : 'Заполните данные автора, чтобы карточка на витрине выглядела полной.'}</span>
+        </div>
+        <span class="author-mini-status ${filled >= 4 ? 'is-next' : ''}">${filled}/5</span>
+      </div>
+      <button class="btn btn-outline" type="button" onclick="openAuthorProfileModal()"><i data-lucide="user-pen" class="icon"></i> Изменить данные автора</button>
+    </div>
+  `;
+}
+
 function _renderAuthorPublicationRows() {
   const recipes = _filteredAuthorPublications();
   return recipes.length
@@ -908,20 +972,6 @@ function _authorHistoryEsc(e) {
 
 function _renderAuthorTerms() {
   return `
-    <div class="author-card author-terms-card">
-      <div class="author-terms-summary">
-        <div>
-          <div class="author-card-title">Условия сотрудничества</div>
-          <h4>35% авторского вознаграждения с продаж рецептов</h4>
-          <div class="author-terms-chips">
-            <span>Договор ГПХ</span>
-            <span>Выплаты 5-10 числа</span>
-            <span>НДФЛ удерживается из вознаграждения</span>
-          </div>
-        </div>
-        <button class="btn btn-outline" onclick="openAuthorTermsModal()"><i data-lucide="file-text" class="icon"></i> Посмотреть условия</button>
-      </div>
-    </div>
     <div class="author-terms-modal" id="author-terms-modal" style="display:none" onclick="if(event.target===this)closeAuthorTermsModal()">
       <div class="author-terms-dialog">
         <div class="author-terms-dialog-head">
@@ -935,6 +985,16 @@ function _renderAuthorTerms() {
       </div>
     </div>
   `;
+}
+
+function _ensureAuthorTermsModal() {
+  let modal = document.getElementById('author-terms-modal');
+  if (modal) return modal;
+  const wrap = document.createElement('div');
+  wrap.innerHTML = _renderAuthorTerms();
+  modal = wrap.firstElementChild;
+  document.body.appendChild(modal);
+  return modal;
 }
 
 function _renderAuthorTermsBody() {
@@ -967,7 +1027,7 @@ function _renderAuthorTermsBody() {
 }
 
 export function openAuthorTermsModal() {
-  const modal = document.getElementById('author-terms-modal');
+  const modal = _ensureAuthorTermsModal();
   if (!modal) return;
   modal.style.display = 'flex';
   document.body.classList.add('modal-open');
@@ -987,9 +1047,70 @@ function _authorTermsEsc(e) {
   if (e.key === 'Escape') closeAuthorTermsModal();
 }
 
+function _renderAuthorProfileModal() {
+  const profile = _authorProfile || {};
+  return `
+    <div class="author-profile-modal" id="author-profile-modal" style="display:none" onclick="if(event.target===this)closeAuthorProfileModal()">
+      <div class="author-profile-dialog">
+        <div class="author-profile-dialog-head">
+          <div>
+            <h3>Данные автора</h3>
+            <p>Эти данные используются в карточках рецептов и профиле автора на витрине.</p>
+          </div>
+          <button class="modal-close" onclick="closeAuthorProfileModal()">&times;</button>
+        </div>
+        <div class="author-profile-dialog-body">
+          ${_renderAuthorProfileEditor(profile)}
+        </div>
+        <div class="author-profile-dialog-footer">
+          <button class="btn btn-outline" type="button" onclick="closeAuthorProfileModal()">Отмена</button>
+          <button class="btn btn-green" type="button" onclick="saveAuthorProfile()"><i data-lucide="save" class="icon"></i> Сохранить данные</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function _ensureAuthorProfileModal() {
+  let modal = document.getElementById('author-profile-modal');
+  if (!modal) {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = _renderAuthorProfileModal();
+    modal = wrap.firstElementChild;
+    document.body.appendChild(modal);
+  } else {
+    const fresh = document.createElement('div');
+    fresh.innerHTML = _renderAuthorProfileModal();
+    modal.replaceWith(fresh.firstElementChild);
+    modal = document.getElementById('author-profile-modal');
+  }
+  return modal;
+}
+
+export async function openAuthorProfileModal() {
+  if (!authorCanPublish()) return;
+  if (!_authorLoaded && !_authorLoading) await loadAuthorWorkspace(true);
+  const modal = _ensureAuthorProfileModal();
+  modal.style.display = 'flex';
+  document.body.classList.add('modal-open');
+  document.addEventListener('keydown', _authorProfileEsc);
+  if (window.lucide) lucide.createIcons({ nodes: [modal] });
+}
+
+export function closeAuthorProfileModal() {
+  const modal = document.getElementById('author-profile-modal');
+  if (!modal) return;
+  modal.style.display = 'none';
+  document.body.classList.remove('modal-open');
+  document.removeEventListener('keydown', _authorProfileEsc);
+}
+
+function _authorProfileEsc(e) {
+  if (e.key === 'Escape') closeAuthorProfileModal();
+}
+
 function _renderAuthorProfileMarkup() {
   const profile = _authorProfile || {};
-  const avatarUrl = _assetUrl(profile.avatar_url || '');
   const rows = _authorLoading && !_authorLoaded
     ? '<div class="author-empty">Загрузка...</div>'
     : _renderAuthorPublicationRows();
@@ -1000,7 +1121,7 @@ function _renderAuthorProfileMarkup() {
       <div class="author-head">
         <div>
           <h3>Профиль автора</h3>
-          <p>Личные данные, публикации и условия сотрудничества.</p>
+          <p>Публикации, первый рецепт и рабочие статусы автора.</p>
         </div>
         <button class="btn btn-outline" onclick="loadAuthorWorkspace(true)" title="Обновить"><i data-lucide="refresh-cw" class="icon"></i></button>
       </div>
@@ -1008,46 +1129,7 @@ function _renderAuthorProfileMarkup() {
       ${_renderAuthorLaunchGuide()}
       <div class="author-grid">
         <div class="author-profile-side">
-          <div class="author-card">
-            <div class="author-card-title">Профиль</div>
-            <div class="author-avatar-editor">
-              <div class="author-avatar-preview ${avatarUrl ? '' : 'is-empty'}">
-                ${avatarUrl ? `<img src="${_esc(avatarUrl)}" alt="Фото автора">` : '<i data-lucide="user" class="icon"></i>'}
-              </div>
-              <div class="author-avatar-actions">
-                <b>Фото автора</b>
-                <span>Эта фотография будет видна покупателям в карточках рецептов.</span>
-                <label class="btn btn-outline author-avatar-btn">
-                  <i data-lucide="image-plus" class="icon"></i>
-                  Загрузить фото
-                  <input type="file" accept="image/png,image/jpeg,image/webp" onchange="uploadAuthorAvatar(this)" hidden>
-                </label>
-              </div>
-            </div>
-            <div class="author-fields">
-              <label>
-                <span>Фамилия</span>
-                <input id="author-last-name" placeholder="Иванов" value="${_esc(profile.last_name || '')}">
-              </label>
-              <label>
-                <span>Имя</span>
-                <input id="author-first-name" placeholder="Иван" value="${_esc(profile.first_name || '')}">
-              </label>
-              <label>
-                <span>Отчество</span>
-                <input id="author-patronymic" placeholder="Иванович" value="${_esc(profile.patronymic || '')}">
-              </label>
-              <label>
-                <span>Телефон</span>
-                <input id="author-phone" placeholder="Телефон" value="${_esc(profile.phone || '')}">
-              </label>
-              <label class="author-field-wide">
-                <span>Коротко об авторе</span>
-                <textarea id="author-bio" placeholder="Напишите ваши регалии, опыт, достижения и специализацию. Этот текст увидят покупатели в карточках рецептов и профиле автора.">${_esc(profile.bio || '')}</textarea>
-              </label>
-            </div>
-            <button class="btn btn-green" onclick="saveAuthorProfile()">Сохранить профиль</button>
-          </div>
+          ${_renderAuthorProfileStatus(profile)}
           ${_renderAuthorContractBlock()}
           ${_renderAuthorFinanceBlock()}
         </div>
@@ -1244,6 +1326,11 @@ export async function saveAuthorProfile() {
     if (!r.ok) throw new Error('Не удалось сохранить профиль');
     _authorLoaded = false;
     await loadAuthorWorkspace(true);
+    if (document.getElementById('author-profile-modal')?.style.display === 'flex') {
+      const modal = _ensureAuthorProfileModal();
+      modal.style.display = 'flex';
+      if (window.lucide) lucide.createIcons({ nodes: [modal] });
+    }
     _notify('Профиль автора сохранён');
   } catch (e) {
     _notify(e.message);
@@ -1273,6 +1360,11 @@ export async function uploadAuthorAvatar(input) {
     if (!r.ok) throw new Error(data.detail || 'Не удалось загрузить фото');
     _authorLoaded = false;
     await loadAuthorWorkspace(true);
+    if (document.getElementById('author-profile-modal')?.style.display === 'flex') {
+      const modal = _ensureAuthorProfileModal();
+      modal.style.display = 'flex';
+      if (window.lucide) lucide.createIcons({ nodes: [modal] });
+    }
     _notify('Фото автора загружено');
   } catch (e) {
     _notify(e.message);
