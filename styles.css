@@ -26,15 +26,15 @@
       background: var(--navy);
       color: white;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0 28px; height: 92px;
+      padding: 0 28px; height: 62px;
       position: sticky; top: 0; z-index: 200;
       box-shadow: 0 2px 12px rgba(0,0,0,.18);
     }
     .header-brand { display: flex; align-items: center; gap: 12px; }
     .header-logo  { font-size: 26px; }
     .header-logo-img {
-      width: 144px;
-      height: 60px;
+      width: 112px;
+      height: 46px;
       object-fit: contain;
       object-position: left center;
       display: block;
@@ -1686,11 +1686,11 @@
     /* ── RESPONSIVE ─────────────────────────────────────────── */
     @media (max-width: 768px) {
       /* Header: компактный, только бренд + утилиты */
-      .header { padding: 0 14px; height: 76px; }
+      .header { padding: 0 14px; height: 52px; }
       .header-sub { display: none; }
       .header-name { font-size: 15px; }
       .header-logo svg { width: 18px !important; height: 18px !important; }
-      .header-logo-img { width: 128px; height: 56px; }
+      .header-logo-img { width: 104px; height: 42px; }
 
       /* Footer mobile */
       .footer-desktop { display: none; }
