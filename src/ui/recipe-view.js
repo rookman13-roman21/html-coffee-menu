@@ -407,6 +407,19 @@ export function filterRecipes(val) {
     const authorBtn = (window.authorCanPublish && window.authorCanPublish())
       ? `<button class="recipe-publish-btn ${pub ? 'has-status' : ''}" onclick="event.stopPropagation();submitRecipeForPublication(${d.id})" title="Отправить на модерацию">${pubLabel}</button>`
       : '';
+    const progress = (window.authorCanPublish && window.authorCanPublish() && d._authorDraft && window.authorRecipeProgress)
+      ? window.authorRecipeProgress(d)
+      : null;
+    const progressHtml = progress ? `
+      <div class="recipe-progress-box">
+        <div class="recipe-progress-head">
+          <span>Готовность</span>
+          <b>${progress.done}/${progress.total}</b>
+        </div>
+        <div class="author-progress-bar"><i style="width:${progress.percent}%"></i></div>
+        ${progress.missing.length ? `<div class="recipe-progress-missing">Не хватает: ${progress.missing.slice(0, 3).map(_html).join(', ')}${progress.missing.length > 3 ? '...' : ''}</div>` : ''}
+      </div>
+    ` : '';
     return `<div class="recipe-card" onclick="openViewDrink(${d.id})">
       ${imgHtml}
       <div class="recipe-card-title" style="margin-top:${d.image ? '10px' : '0'}">
@@ -423,6 +436,7 @@ export function filterRecipes(val) {
       <div class="recipe-total"><span>Себестоимость</span><span>${window.rub(totalCost)}</span></div>
       <div class="recipe-total" style="font-weight:400;font-size:12px;color:var(--muted)"><span>Цена продажи</span><span>${window.rub(price)}</span></div>
       <div class="recipe-total" style="color:var(--navy)"><span>Прибыль</span><span>${window.rub(price - totalCost)}</span></div>
+      ${progressHtml}
       ${authorBtn}
     </div>`;
   }
@@ -434,8 +448,8 @@ export function filterRecipes(val) {
         <div class="author-recipe-empty-icon"><i data-lucide="sparkles" class="icon"></i></div>
         <div>
           <h3>Создайте первый авторский рецепт</h3>
-          <p>Добавьте напиток, заполните состав, процесс приготовления и подготовьте рецепт к публикации на витрину.</p>
-          <button class="btn btn-green" onclick="openAddDrink()"><i data-lucide="plus" class="icon"></i> Создать рецепт</button>
+          <p>Начните с напитка, который вы готовили на Mixology Cup. Заполните состав, процесс приготовления, фото и отправьте рецепт на проверку.</p>
+          <button class="btn btn-green" onclick="openAddDrink({ name: 'Мой напиток Mixology Cup', group: 'author' })"><i data-lucide="sparkles" class="icon"></i> Создать рецепт Mixology Cup</button>
         </div>
       </div>
     `;

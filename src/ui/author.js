@@ -150,6 +150,16 @@ function _formatAuthorDate(value) {
   return date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
+const RECIPE_PROGRESS_LABELS = {
+  basics: 'название, цена и объём',
+  ingredients: 'ингредиенты',
+  photo: 'фото напитка',
+  process: 'процесс приготовления',
+  equipment: 'оборудование',
+  serving: 'подача и срок',
+  organoleptic: 'органолептика',
+};
+
 function _publicationCounts() {
   return {
     attention: _authorRecipes.filter(r => r.status === 'rejected').length,
@@ -313,6 +323,29 @@ function _ingredientRows(ingredients = []) {
       return `<span>${_esc(_ingredientLabel(row))} · ${_esc(displayAmount)} ${_esc(_ingredientUnit(row))}</span>`;
     })
     .join('');
+}
+
+export function authorRecipeProgress(drink = {}) {
+  const price = Number((window.S?.salePrices || {})[drink.id] ?? drink.price ?? 0);
+  const ingredients = drink.recipe || drink.ingredients || [];
+  const equipment = _equipmentNames(drink.equipment || drink.recipeEquipment || []);
+  const checks = [
+    ['basics', !!(String(drink.name || '').trim() && String(drink.group || '').trim() && Number(drink.vol || 0) > 0 && price > 0)],
+    ['ingredients', ingredients.some(row => (row.mat || row.semi != null) && Number(row.amt || 0) > 0)],
+    ['photo', !!_authorRecipeImageUrl(drink)],
+    ['process', !!String(drink.process || '').trim()],
+    ['equipment', equipment.length > 0],
+    ['serving', !!(String(drink.storage_temp || '').trim() && String(drink.storage_life || '').trim())],
+    ['organoleptic', !!(String(drink.appearance || '').trim() && String(drink.taste || '').trim() && String(drink.consistency || '').trim())],
+  ];
+  const done = checks.filter(([, ok]) => ok).length;
+  const total = checks.length;
+  return {
+    done,
+    total,
+    percent: Math.round((done / total) * 100),
+    missing: checks.filter(([, ok]) => !ok).map(([key]) => RECIPE_PROGRESS_LABELS[key] || key),
+  };
 }
 
 function _publicationChecklist(pub, localDrink, recipe, equipment) {
@@ -599,6 +632,71 @@ async function _migrateLocalAuthorIngredients() {
     await saveAuthorIngredient(key, { silent: true });
   }
   if (window.saveState) window.saveState();
+}
+
+function _firstAuthorDraftDrink() {
+  return (_authorDrafts || []).map(_draftDrink).find(drink => drink?.id) || null;
+}
+
+function _renderLaunchStep(ok, label, hint) {
+  return `
+    <div class="author-launch-step ${ok ? 'is-done' : ''}">
+      <span><i data-lucide="${ok ? 'check' : 'circle'}" class="icon"></i></span>
+      <div>
+        <b>${_esc(label)}</b>
+        <em>${_esc(hint)}</em>
+      </div>
+    </div>
+  `;
+}
+
+function _renderAuthorLaunchGuide() {
+  if (_authorLoading && !_authorLoaded) return '';
+  const profile = _authorProfile || {};
+  const draft = _firstAuthorDraftDrink();
+  const publication = draft ? authorPublicationForDrink(draft.id) : null;
+  const progress = draft ? authorRecipeProgress(draft) : null;
+  const profileDone = !!(profile.first_name && profile.last_name && profile.phone);
+  const avatarDone = !!profile.avatar_url;
+  const recipeReady = !!progress && progress.done === progress.total;
+  const submitted = !!publication && ['submitted', 'published'].includes(publication.status);
+  const rejected = publication?.status === 'rejected';
+  const cta = !draft
+    ? `<button class="btn btn-green" type="button" onclick="openAddDrink({ name: 'Мой напиток Mixology Cup', group: 'author' })"><i data-lucide="sparkles" class="icon"></i> Создать рецепт Mixology Cup</button>`
+    : submitted
+      ? `<button class="btn btn-outline" type="button" onclick="switchTab('recipes')"><i data-lucide="list-checks" class="icon"></i> Открыть рецепты</button>`
+      : !recipeReady || rejected
+      ? `<button class="btn btn-green" type="button" onclick="openEditDrink(${Number(draft.id)})"><i data-lucide="pencil" class="icon"></i> Продолжить рецепт</button>`
+      : `<button class="btn btn-green" type="button" onclick="submitRecipeForPublication(${Number(draft.id)})"><i data-lucide="send" class="icon"></i> Отправить на проверку</button>`;
+  const missing = progress?.missing?.length
+    ? `<div class="author-launch-missing">Не хватает: ${_esc(progress.missing.slice(0, 4).join(', '))}${progress.missing.length > 4 ? '...' : ''}</div>`
+    : '';
+  return `
+    <div class="author-launch-card">
+      <div class="author-launch-main">
+        <div>
+          <div class="author-launch-kicker">Первый рецепт</div>
+          <h4>Подготовьте напиток с Mixology Cup к публикации</h4>
+          <p>Заполните профиль и карточку рецепта. После отправки команда Moscow Barista School проверит материалы и подготовит публикацию на витрине.</p>
+        </div>
+        <div class="author-launch-action">${cta}</div>
+      </div>
+      <div class="author-launch-steps">
+        ${_renderLaunchStep(profileDone, 'Профиль автора', profileDone ? 'ФИО и телефон заполнены.' : 'Заполните ФИО и телефон.')}
+        ${_renderLaunchStep(avatarDone, 'Фото автора', avatarDone ? 'Фото загружено.' : 'Добавьте фото для карточки автора.')}
+        ${_renderLaunchStep(!!draft, 'Черновик рецепта', draft ? 'Черновик создан.' : 'Начните с рецепта чемпионатного напитка.')}
+        ${_renderLaunchStep(recipeReady, 'Готовность рецепта', progress ? `${progress.done} из ${progress.total} блоков заполнено.` : 'Пока нет черновика.')}
+        ${_renderLaunchStep(submitted, 'Отправка на проверку', submitted ? _statusLabel(publication.status) : 'Отправьте рецепт, когда все блоки заполнены.')}
+      </div>
+      ${progress ? `
+        <div class="author-launch-progress">
+          <div><span>Готовность рецепта</span><b>${progress.done}/${progress.total}</b></div>
+          <div class="author-progress-bar"><i style="width:${progress.percent}%"></i></div>
+          ${missing}
+        </div>
+      ` : ''}
+    </div>
+  `;
 }
 
 function _renderAuthorAttention() {
@@ -907,6 +1005,7 @@ function _renderAuthorProfileMarkup() {
         <button class="btn btn-outline" onclick="loadAuthorWorkspace(true)" title="Обновить"><i data-lucide="refresh-cw" class="icon"></i></button>
       </div>
       ${attention}
+      ${_renderAuthorLaunchGuide()}
       <div class="author-grid">
         <div class="author-profile-side">
           <div class="author-card">

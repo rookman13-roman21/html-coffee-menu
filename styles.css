@@ -916,6 +916,32 @@
     }
     .author-recipe-empty-card h3 { margin:0 0 6px; color:var(--navy); font-size:17px; }
     .author-recipe-empty-card p { margin:0 0 14px; color:var(--muted); font-size:13px; line-height:1.5; max-width:430px; }
+    .author-launch-card {
+      margin:0 0 12px; padding:14px; border:1px solid #b6d8ab; border-radius:10px;
+      background:#f8fcf6; display:grid; gap:12px;
+    }
+    .author-launch-main { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+    .author-launch-kicker { color:#417033; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; margin-bottom:4px; }
+    .author-launch-card h4 { margin:0 0 5px; color:var(--navy); font-size:18px; }
+    .author-launch-card p { margin:0; color:var(--muted); font-size:13px; line-height:1.45; max-width:760px; }
+    .author-launch-action { flex-shrink:0; }
+    .author-launch-steps { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; }
+    .author-launch-step { display:flex; gap:8px; align-items:flex-start; min-width:0; padding:9px; border:1px solid var(--border); border-radius:8px; background:#fff; }
+    .author-launch-step > span { width:22px; height:22px; border-radius:999px; flex-shrink:0; display:grid; place-items:center; color:var(--muted); background:#fafafa; border:1px solid var(--border); }
+    .author-launch-step > span .icon { width:13px; height:13px; }
+    .author-launch-step b { display:block; color:var(--navy); font-size:12px; line-height:1.25; }
+    .author-launch-step em { display:block; margin-top:2px; color:var(--muted); font-size:11px; font-style:normal; line-height:1.35; }
+    .author-launch-step.is-done > span { background:#e7f2e3; border-color:#b6d8ab; color:#417033; }
+    .author-launch-progress { display:grid; gap:6px; }
+    .author-launch-progress > div:first-child,
+    .recipe-progress-head { display:flex; align-items:center; justify-content:space-between; gap:10px; color:var(--muted); font-size:12px; font-weight:800; }
+    .author-launch-progress b,
+    .recipe-progress-head b { color:#417033; }
+    .author-progress-bar { height:8px; border-radius:999px; background:#e6eee2; overflow:hidden; }
+    .author-progress-bar i { display:block; height:100%; border-radius:inherit; background:#417033; transition:width .2s ease; }
+    .author-launch-missing,
+    .recipe-progress-missing { color:var(--muted); font-size:11px; line-height:1.4; }
+    .recipe-progress-box { margin:10px 0 0; padding:9px; border:1px solid #cde3c5; border-radius:8px; background:#f8fcf6; display:grid; gap:6px; }
     .author-workspace { margin:0 0 18px; background:#fff; border:1px solid var(--border); border-radius:12px; padding:14px; box-shadow:0 2px 10px rgba(0,0,0,.04); }
     .author-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
     .author-head h3 { margin:0; color:var(--navy); font-size:17px; }
@@ -1046,6 +1072,10 @@
       .author-pub-image { width:100%; max-height:220px; }
       .author-pub-top { flex-direction:column; }
       .author-pub-actions .btn { width:100%; justify-content:center; }
+      .author-launch-main { flex-direction:column; }
+      .author-launch-action,
+      .author-launch-action .btn { width:100%; justify-content:center; }
+      .author-launch-steps { grid-template-columns:1fr; }
       .author-terms-summary { flex-direction:column; align-items:flex-start; }
       .author-terms-summary .btn { width:100%; justify-content:center; }
       .author-terms-examples { grid-template-columns:1fr; }
@@ -1272,6 +1302,22 @@
     body.dark .author-recipe-empty-icon { background:#1e3a28; color:#89d185; }
     body.dark .author-recipe-empty-card h3 { color:#89d185; }
     body.dark .author-recipe-empty-card p { color:#a0a0a0; }
+    body.dark .author-launch-card,
+    body.dark .recipe-progress-box { background:#1f2a1f; border-color:#3e6b3a; }
+    body.dark .author-launch-kicker,
+    body.dark .author-launch-progress b,
+    body.dark .recipe-progress-head b { color:#89d185; }
+    body.dark .author-launch-card h4,
+    body.dark .author-launch-step b { color:#d4d4d4; }
+    body.dark .author-launch-card p,
+    body.dark .author-launch-step em,
+    body.dark .author-launch-missing,
+    body.dark .recipe-progress-missing { color:#a0a0a0; }
+    body.dark .author-launch-step { background:#252526; border-color:#454545; }
+    body.dark .author-launch-step > span { background:#1f1f1f; border-color:#454545; color:#a0a0a0; }
+    body.dark .author-launch-step.is-done > span { background:#1f3a22; border-color:#3d6b32; color:#89d185; }
+    body.dark .author-progress-bar { background:#2d2d2d; }
+    body.dark .author-progress-bar i { background:#89d185; }
     body.dark .author-workspace { background:#1f1f1f; border-color:#454545; box-shadow:none; }
     body.dark .author-card,
     body.dark .author-mini-card { background:#252526; border-color:#454545; }

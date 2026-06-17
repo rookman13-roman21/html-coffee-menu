@@ -82,6 +82,7 @@ import { tabFromPath, syncUrlForTab } from './access/app-routes.js';
 import {
   authorCanPublish, renderAuthorWorkspace, renderAuthorProfile, loadAuthorWorkspace,
   saveAuthorProfile, uploadAuthorAvatar, submitRecipeForPublication, authorPublicationForDrink,
+  authorRecipeProgress,
   saveAuthorDraftForDrink, deleteAuthorDraftForDrink, uploadAuthorRecipeImage,
   saveAuthorIngredient, deleteAuthorIngredient,
   saveAuthorSemiForItem, deleteAuthorSemiForItem,
@@ -377,6 +378,7 @@ const _srcExports = {
   getUser,
   authorCanPublish, renderAuthorWorkspace, renderAuthorProfile, loadAuthorWorkspace,
   saveAuthorProfile, uploadAuthorAvatar, submitRecipeForPublication, authorPublicationForDrink,
+  authorRecipeProgress,
   saveAuthorDraftForDrink, deleteAuthorDraftForDrink, uploadAuthorRecipeImage,
   saveAuthorIngredient, deleteAuthorIngredient,
   saveAuthorSemiForItem, deleteAuthorSemiForItem,

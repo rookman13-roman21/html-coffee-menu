@@ -279,7 +279,8 @@ export function removeDrinkEquipment(id) {
   renderDrinkEquipment();
 }
 
-export function openAddDrink() {
+export function openAddDrink(preset = {}) {
+  const initial = preset && typeof preset === 'object' ? preset : {};
   _setDrinkAuthorUi();
   _clearPublicationMarks();
   document.getElementById('modal-drink-title').innerHTML = '<i data-lucide="plus" class="icon"></i> Новый напиток';
@@ -296,10 +297,10 @@ export function openAddDrink() {
   document.getElementById('md-img-placeholder').style.display = '';
   document.getElementById('md-img-clear').style.display = 'none';
   document.getElementById('md-delete-btn').style.display = 'none';
-  document.getElementById('md-name').value  = '';
-  document.getElementById('md-price').value = '';
-  document.getElementById('md-vol').value   = '';
-  document.getElementById('md-group').value = _isAuthorDrinkMode() ? 'author' : 'hot';
+  document.getElementById('md-name').value  = initial.name || '';
+  document.getElementById('md-price').value = initial.price || '';
+  document.getElementById('md-vol').value   = initial.vol || '';
+  document.getElementById('md-group').value = initial.group || (_isAuthorDrinkMode() ? 'author' : 'hot');
   document.getElementById('md-edit-id').value = '';
   setDrinkEquipmentSelection([]);
   closeDrinkEquipmentCustomPopover();
