@@ -16,10 +16,7 @@
 
 <header class="header">
   <div class="header-brand" onclick="switchTab('dashboard')" style="cursor:pointer" title="Перейти на дашборд">
-    <picture>
-      <source media="(max-width: 768px)" srcset="/images/MBS logo.svg">
-      <img src="/images/moscow barista school logo.svg" alt="Moscow Barista School" class="header-logo-img">
-    </picture>
+    <img src="https://static.tildacdn.com/tild6362-6535-4934-b866-656531303037/MBS_logo_black_1_1.svg" alt="Moscow Barista School" class="header-logo-img">
   </div>
 
   <!-- Селектор локаций -->
@@ -36,6 +33,7 @@
       <button class="nav-btn" data-tab="sales"><i data-lucide="shopping-cart" class="icon"></i> План продаж</button>
       <button class="nav-btn" data-tab="finmodel"><i data-lucide="banknote" class="icon"></i> Финмодель</button>
       <button class="nav-btn" data-tab="recipes"><i data-lucide="clipboard-list" class="icon"></i> Рецептуры</button>
+      <button class="nav-btn" data-tab="authorProfile"><i data-lucide="user" class="icon"></i> Мой профиль</button>
     </nav>
     <button class="btn-reset" onclick="resetAll()"><i data-lucide="rotate-ccw" class="icon"></i> Сброс</button>
 
@@ -89,6 +87,10 @@
   <button class="mobile-tab" data-tab="recipes">
     <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
     <span>Рецепты</span>
+  </button>
+  <button class="mobile-tab" data-tab="authorProfile">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
+    <span>Профиль</span>
   </button>
 </nav>
 <!-- Модал: просмотр напитка (техкарта) -->
@@ -260,13 +262,15 @@
       <button class="modal-close" onclick="safeCloseModal('modal-drink')">&times;</button>
     </div>
     <div class="modal-body">
+    <div class="md-author-required-note" id="md-author-required-note" style="display:none">* обязательные поля для публикации на витрине</div>
+    <div class="md-publication-errors" id="md-publication-errors" style="display:none"></div>
     <div class="modal-row">
       <div>
-        <div class="modal-label">Название</div>
+        <div class="modal-label md-publish-required">Название</div>
         <input class="modal-inp" id="md-name" type="text" placeholder="Например: Раф фисташковый 300">
       </div>
       <div>
-        <div class="modal-label">Группа</div>
+        <div class="modal-label md-publish-required">Группа</div>
         <select class="modal-select" id="md-group">
           <option value="hot">☕ Горячие кофейные</option>
           <option value="tea">🍵 Чай и матча</option>
@@ -278,15 +282,15 @@
     </div>
     <div class="modal-row">
       <div>
-        <div class="modal-label">Цена продажи, ₽</div>
+        <div class="modal-label md-publish-required md-price-label"><span id="md-price-label-text">Цена продажи, ₽</span> <span id="md-price-tip" class="loss-hint" data-tip="Автор указывает рекомендованную цену продажи напитка для кофейни, которая планирует купить и внедрить рецепт." style="display:none">?</span></div>
         <input class="modal-inp" id="md-price" type="number" min="1" inputmode="numeric" placeholder="350">
       </div>
       <div>
-        <div class="modal-label">Объём, мл</div>
+        <div class="modal-label md-publish-required">Объём, мл</div>
         <input class="modal-inp" id="md-vol" type="number" min="1" inputmode="decimal" placeholder="300">
       </div>
     </div>
-    <div class="modal-label" style="margin-top:4px;margin-bottom:4px;font-size:13px;color:var(--navy)"><i data-lucide="package" class="icon"></i> Ингредиенты рецептуры</div>
+    <div class="modal-label md-publish-required md-required-block-label" style="margin-top:4px;margin-bottom:4px;font-size:13px;color:var(--navy)"><i data-lucide="package" class="icon"></i> Ингредиенты рецептуры</div>
     <div class="modal-ings-header">
       <span>Ингредиент</span>
       <span>Кол-во</span>
@@ -300,7 +304,7 @@
     <input type="hidden" id="md-edit-id" value="">
 
     <!-- Изображение напитка -->
-    <div class="modal-label" style="margin-top:14px;margin-bottom:6px"><i data-lucide="image" class="icon"></i> Изображение</div>
+    <div class="modal-label md-publish-required" style="margin-top:14px;margin-bottom:6px"><i data-lucide="image" class="icon"></i> Изображение</div>
     <div class="md-img-area" id="md-img-area" onclick="document.getElementById('md-img-file').click()">
       <img id="md-img-preview" style="display:none;max-height:130px;max-width:100%;border-radius:8px;object-fit:cover">
       <span id="md-img-placeholder" style="display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--muted)"><i data-lucide="upload" class="icon"></i><span style="font-size:12px">Нажмите, чтобы загрузить фото</span></span>
@@ -309,8 +313,29 @@
     <button id="md-img-clear" class="btn btn-outline" style="display:none;margin-top:6px;font-size:12px;color:var(--muted)" onclick="clearDrinkImg()"><i data-lucide="x" class="icon"></i> Удалить фото</button>
 
     <!-- Процесс приготовления -->
-    <div class="modal-label" style="margin-top:14px;margin-bottom:4px"><i data-lucide="chef-hat" class="icon"></i> Процесс приготовления</div>
+    <div class="modal-label md-publish-required" style="margin-top:14px;margin-bottom:4px"><i data-lucide="chef-hat" class="icon"></i> Процесс приготовления</div>
     <textarea class="modal-inp" id="md-process" rows="4" placeholder="Опишите шаги приготовления: 1. Приготовить эспрессо..." style="resize:vertical;font-family:inherit;line-height:1.6"></textarea>
+
+    <!-- Оборудование -->
+    <div class="modal-label md-publish-required" style="margin-top:14px;margin-bottom:6px"><i data-lucide="wrench" class="icon"></i> Оборудование для приготовления</div>
+    <div class="md-equipment-box">
+      <div class="md-equipment-chips" id="md-equipment-selected"></div>
+      <div class="md-equipment-add">
+        <select class="modal-select" id="md-equipment-select" onchange="onDrinkEquipmentSelect(this)">
+          <option value="">Добавить оборудование...</option>
+        </select>
+        <div class="md-equipment-popover" id="md-equipment-popover" style="display:none">
+          <div class="md-equipment-popover-title">Своё оборудование</div>
+          <input class="modal-inp" id="md-equipment-custom" type="text" placeholder="Например: термомиксер" onkeydown="if(event.key==='Enter'){event.preventDefault();addDrinkEquipmentCustom()}">
+          <div class="md-equipment-popover-actions">
+            <button class="btn btn-outline" type="button" onclick="closeDrinkEquipmentCustomPopover()">Отмена</button>
+            <button class="btn btn-green" type="button" onclick="addDrinkEquipmentCustom()"><i data-lucide="plus" class="icon"></i> Добавить</button>
+          </div>
+        </div>
+      </div>
+      <div class="md-equipment-hint">Покупатель увидит этот список перед покупкой рецепта и сможет оценить, какое оборудование потребуется.</div>
+      <div class="md-equipment-error" id="md-equipment-error" style="display:none"></div>
+    </div>
 
     <!-- Ссылка на видео -->
     <div class="modal-label" style="margin-top:10px;margin-bottom:4px"><i data-lucide="video" class="icon"></i> Ссылка на видео / рецепт</div>
@@ -319,22 +344,22 @@
     <!-- Условия хранения -->
     <div class="modal-row" style="margin-top:12px;gap:10px">
       <div style="flex:1">
-        <div class="modal-label"><i data-lucide="thermometer" class="icon"></i> Температура подачи</div>
+        <div class="modal-label md-publish-required"><i data-lucide="thermometer" class="icon"></i> Температура подачи</div>
         <input class="modal-inp" id="md-storage-temp" type="text" placeholder="не ниже 60°C">
       </div>
       <div style="flex:1">
-        <div class="modal-label"><i data-lucide="clock" class="icon"></i> Срок реализации</div>
+        <div class="modal-label md-publish-required"><i data-lucide="clock" class="icon"></i> Срок реализации</div>
         <input class="modal-inp" id="md-storage-life" type="text" placeholder="15 минут с момента приготовления">
       </div>
     </div>
 
     <!-- Органолептика -->
     <div class="modal-label" style="margin-top:12px;margin-bottom:4px"><i data-lucide="eye" class="icon"></i> Органолептические показатели</div>
-    <div class="modal-label" style="font-weight:500;font-size:12px;margin-bottom:4px">Внешний вид</div>
+    <div class="modal-label md-publish-required" style="font-weight:500;font-size:12px;margin-bottom:4px">Внешний вид</div>
     <textarea class="modal-inp" id="md-appearance" rows="2" placeholder="Однородный напиток, слой плотной пены..." style="resize:vertical;font-family:inherit;line-height:1.6"></textarea>
-    <div class="modal-label" style="font-weight:500;font-size:12px;margin-top:8px;margin-bottom:4px">Вкус и запах</div>
+    <div class="modal-label md-publish-required" style="font-weight:500;font-size:12px;margin-top:8px;margin-bottom:4px">Вкус и запах</div>
     <textarea class="modal-inp" id="md-taste" rows="2" placeholder="Мягкий, кофейный, без посторонних привкусов..." style="resize:vertical;font-family:inherit;line-height:1.6"></textarea>
-    <div class="modal-label" style="font-weight:500;font-size:12px;margin-top:8px;margin-bottom:4px">Консистенция</div>
+    <div class="modal-label md-publish-required" style="font-weight:500;font-size:12px;margin-top:8px;margin-bottom:4px">Консистенция</div>
     <textarea class="modal-inp" id="md-consistency" rows="2" placeholder="Жидкая, однородная, лёгкая пена..." style="resize:vertical;font-family:inherit;line-height:1.6"></textarea>
     </div><!-- /.modal-body -->
     <div class="modal-footer" style="justify-content:space-between;align-items:center">
@@ -837,6 +862,7 @@
   <div id="tab-sales"     class="tab"></div>
   <div id="tab-finmodel"  class="tab"></div>
   <div id="tab-recipes"   class="tab"></div>
+  <div id="tab-authorProfile" class="tab"></div>
 </main>
 
 <footer class="site-footer">
@@ -854,7 +880,7 @@
       </a>
     </div>
     <div class="footer-col footer-col-center">
-      <img src="images/moscow barista school logo.svg" alt="MBS" class="footer-logo">
+      <img src="https://static.tildacdn.com/tild6362-6535-4934-b866-656531303037/MBS_logo_black_1_1.svg" alt="MBS" class="footer-logo">
       <div class="footer-social">
         <a href="https://instagram.com/barista_school" target="_blank" class="footer-social-btn" title="Instagram">
           <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
@@ -882,7 +908,7 @@
 
   <!-- MOBILE: тёмная полоса -->
   <div class="footer-mobile">
-    <img src="images/MBS logo.svg" alt="MBS" class="footer-mobile-logo">
+    <img src="https://static.tildacdn.com/tild6362-6535-4934-b866-656531303037/MBS_logo_black_1_1.svg" alt="MBS" class="footer-mobile-logo">
     <div class="footer-mobile-social">
       <a href="tel:+79959992836" class="footer-mobile-icon" title="Позвонить">
         <svg class="icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.07 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16z"/></svg>

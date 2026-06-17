@@ -1,6 +1,6 @@
 # PROJECT_MAP.md — Coffee Menu SPA
 
-> Последнее обновление: 16 июня 2026
+> Последнее обновление: 17 июня 2026
 > Стек: **Vite 5.4 + Vanilla JS (ES-модули) + FastAPI + SQLite**
 > Продакшн: `https://barista-school.online`
 
@@ -28,9 +28,51 @@
 Важно:
 
 - Новые пользователи по умолчанию получают аккаунт без пакетов; доступы выдаёт админ.
-- `author` даёт доступ к вкладке `Рецептуры`, даже если `drinks=false`.
+- `author` даёт доступ к вкладкам `Поставщики`, `Рецептуры`, `Мой профиль`, даже если `drinks=false`.
+- Если у пользователя одновременно включены `author` и `drinks/finance`, frontend считает это режимом `Автор`, чтобы не открыть обычный клиентский набор данных.
 - Навигация и `switchTab()` защищают закрытые вкладки от открытия через старый `localStorage`.
 - Онбординг динамический: общий, напитки, финансы или автор.
+
+### Author layer
+
+Frontend-правила режима `Автор` вынесены в `src/access/author-layer.js`.
+
+Что отличается от обычного режима `Напитки`:
+
+- в авторских рецептурах пустой старт без демо-рецептов;
+- авторские рецепты, фото рецептов, ингредиенты и полуфабрикаты сохраняются на backend;
+- `customDrinks`, `customMats`, `semiItems` в режиме `Автор` не являются источником правды в localStorage;
+- поставщики `Hiwater`, `Baristaline`, `МайТаймКап` скрыты только для author-слоя;
+- в профиле автора есть ФИО, телефон, описание, аватар и popup с условиями сотрудничества;
+- публикации в профиле автора сгруппированы по статусам: требуют внимания, на проверке, опубликованы, сняты, все;
+- карточка авторского рецепта поддерживает обязательные поля для публикации, оборудование, фото, процесс, подачу/срок и органолептику;
+- Telegram в author frontend-форме не показывается и не отправляется при сохранении профиля.
+
+Backend-хранилище author-слоя:
+
+| Таблица | Назначение |
+|---|---|
+| `author_recipe_drafts` | Черновики рецептов автора до отправки на модерацию |
+| `author_ingredients` | Кастомные ингредиенты конкретного автора |
+| `author_semis` | Кастомные полуфабрикаты конкретного автора |
+| `recipe_publications` | Активная карточка публикации, статус, цена/описание витрины, validation/review |
+| `recipe_publication_versions` | Снимки версий, которые автор отправлял на проверку |
+| `recipe_publication_events` | История событий модерации и публикации |
+
+ID-изоляция frontend:
+
+- рецепты автора: `100000000 + draft_id`;
+- полуфабрикаты автора: `200000000 + semi_id`.
+
+Это нужно, чтобы данные разных авторов не пересекались и чтобы старые локальные ID не конфликтовали с базовой библиотекой.
+
+Авто-доступ Mixology Cup:
+
+- приватный whitelist хранится в runtime-файле `server/data/mixology_author_access.json` и не коммитится;
+- импорт whitelist делает `server/scripts/import_mixology_author_access.py` из `YClients-Dashboard/data/mixology/reports/generated/*.clients.json`;
+- доступ автора выдаётся только при совпадении телефона и фактическом статусе `visited` / «пришёл»;
+- `no_show`, `canceled`, `pending`, `confirmed` не дают author-доступ;
+- при совпадении `POST /api/auth/register` сразу создаёт активного пользователя с `access_author=true`, `access_drinks=false`, `access_finance=false`, создаёт/обновляет author profile, запускает Битрикс-синхронизацию и возвращает `auto_author:true`.
 
 ### Хранение пользовательского состояния
 
@@ -46,7 +88,8 @@
 - если контакт не найден, создаёт новый;
 - пишет `bitrix_contact_id` в `author_profiles`;
 - добавляет метку `Автор рецептов` в multi-list поле `BITRIX_AUTHOR_MARK_FIELD`;
-- добавляет комментарий в timeline контакта;
+- добавляет комментарий в timeline контакта только при первом добавлении автора;
+- при сохранении author profile обновляет `NAME`, `LAST_NAME`, `SECOND_NAME` и фото контакта;
 - не пишет служебную авторскую информацию в `COMMENTS`, чтобы не утащить её в yClients через `sync_comment`.
 
 На production 16 июня 2026 `BITRIX_WEBHOOK`, `BITRIX_AUTHOR_MARK_FIELD` и `BITRIX_AUTHOR_MARK_LABEL` добавлены в `/var/www/coffee-menu/server/.env`; API перезапущен. Перед изменением создан backup `.env`, а перед добавлением enum — snapshot поля Битрикс. Read-only проверка webhook показала: поле `UF_CRM_1766349995197` доступно, enum `Автор рецептов` присутствует.
@@ -145,6 +188,13 @@ server/
 | План продаж | `'sales'` | `src/render/sales.js` |
 | Дашборд | `'dashboard'` | `src/render/dashboard.js` |
 | Финмодель | `'finmodel'` | `src/render/finmodel.js` |
+| Мой профиль автора | `'authorProfile'` | `src/ui/author.js` |
+
+Author routes:
+
+- `/app/author/suppliers` → `Поставщики`;
+- `/app/author/recipes` → `Рецептуры`;
+- `/app/author/profile` → `Мой профиль`.
 
 ---
 
@@ -160,7 +210,7 @@ server/
 | Яндекс OAuth | `/api/auth/yandex/` | login, callback |
 | Telegram webhook | `/api/telegram/webhook` | Обработка callback_query (активация пользователей) |
 | Пользователи (admin) | `/api/admin/users` | CRUD пользователей, пакеты доступа |
-| Авторы | `/api/author/*` | Профиль автора и отправка рецептов на публикацию |
+| Авторы | `/api/author/*` | Профиль автора, черновики, ингредиенты, полуфабрикаты, фото и отправка рецептов на публикацию |
 | Авторы (admin) | `/api/admin/authors`, `/api/admin/author-recipes` | Модерация авторов и публикаций |
 | Public рецепты | `/api/public/author-recipes` | Витрина опубликованных рецептов |
 | Оборудование (OC) | `/api/oc-library` | CRUD библиотеки оборудования/мебели |
@@ -192,14 +242,19 @@ BITRIX_AUTHOR_MARK_LABEL=Автор рецептов
 
 - **Тип:** SQLite
 - **Путь на сервере:** `/var/www/coffee-menu/server/data/app.db`
-- **Таблицы:** `users`, `user_state`, `author_profiles`, `recipe_publications`, `recipe_orders`, `oc_library`, `sup_library`, `oc_presets`, `drink_overrides`
+- **Таблицы:** `users`, `user_state`, `author_profiles`, `author_recipe_drafts`, `author_ingredients`, `author_semis`, `recipe_publications`, `recipe_publication_versions`, `recipe_publication_events`, `recipe_orders`, `oc_library`, `sup_library`, `oc_presets`, `drink_overrides`
 
 #### Важные таблицы авторской платформы
 
 | Таблица | Назначение |
 |---|---|
 | `author_profiles` | Профиль автора, публичные данные, статус документов, `bitrix_contact_id`, статус синхронизации с Битрикс |
-| `recipe_publications` | Заявки рецептов на модерацию и опубликованные карточки витрины |
+| `author_recipe_drafts` | Серверные черновики авторских рецептов |
+| `author_ingredients` | Кастомные ингредиенты автора, отдельно по `author_user_id` |
+| `author_semis` | Кастомные полуфабрикаты автора, отдельно по `author_user_id` |
+| `recipe_publications` | Заявки рецептов на модерацию и опубликованные карточки витрины; содержит `source_draft_id`, `version`, `validation_json`, `review_flags_json`, `review_comment`, `public_description` |
+| `recipe_publication_versions` | История отправленных версий публикации, включая snapshot рецепта |
+| `recipe_publication_events` | Журнал событий публикации: submitted, review_saved, rejected, published, archived |
 | `recipe_orders` | Заявки/заказы по опубликованным рецептам, `bitrix_deal_id` |
 
 #### `author_profiles`: поля Битрикс
@@ -297,6 +352,15 @@ BITRIX_AUTHOR_MARK_LABEL=Автор рецептов
 | `mat.js` | `openEditMat`, `saveMat`, `cancelMat`, `deleteMat` |
 | `semi.js` | `openAddSemi`, `openEditSemi`, `saveSemi`, `deleteSemi` |
 
+`drink.js` в author mode:
+
+- новый рецепт открывается с группой `Авторские`;
+- черновик можно сохранить неполным;
+- перед отправкой `На витрину` проверяются обязательные поля публикации;
+- цена подписана как `Рекомендуемая цена продажи` с tooltip;
+- блок оборудования стоит после `Процесс приготовления`;
+- своё оборудование добавляется через пункт выпадающего списка и popup, похожие названия блокируются на frontend.
+
 ### `src/export/` — Экспорт данных
 
 | Файл | Функции |
@@ -311,7 +375,7 @@ BITRIX_AUTHOR_MARK_LABEL=Автор рецептов
 | `events.js` | **Все события** (делегированные), `MODAL_IDS` |
 | `updaters.js` | `switchTab`, `renderAll`, `flashCells` |
 | `auth.js` | Авторизация (login/register/forgot-password/OAuth) |
-| `author.js` | Кабинет автора: профиль, список публикаций, отправка рецепта на модерацию |
+| `author.js` | Кабинет автора: профиль, аватар, условия, вкладки публикаций, статусы/ОС, отправка рецепта на модерацию |
 | `public-recipes.js` | Public-витрина опубликованных рецептов и форма заявки |
 | `misc.js` | `exportFullPDF/XLSX`, `_printViaIframe`, `generateInsights` |
 | `suppliers.js` | CRUD поставщиков |
@@ -498,6 +562,26 @@ bash server/admin/build.sh
 - Глобальные функции (для `onclick="..."` в HTML) **обязательно** экспортируются через `window.xxx = xxx`
 - CSS-переменные темизации: `--adm-navy`, `--adm-red`, `--adm-red-bg`, `--adm-border`, `--adm-light`, `--adm-soft`, `--adm-text`, `--adm-muted`, `--adm-card`, `--adm-input`
 - Шрифт: **Mulish** (Google Fonts, подключён в head)
+- `server/admin/admin-panel.js` — generated bundle; руками править только `server/admin/src/*`, затем запускать `server/admin/build.sh` или `npm run deploy:admin`
+- `server/admin/src/_styles.js` задаёт layout админки: `#adm-root` занимает всю ширину viewport для Tilda-фона, `#adm-panel` центрирован и ограничен `max-width: 1100px` по design system.
+
+### Модерация авторских рецептов
+
+| Файл / endpoint | Назначение |
+|---|---|
+| `server/admin/src/_authors.js` | Вкладка `Авторы`, список публикаций, drawer проверки рецепта |
+| `GET /api/admin/author-recipes` | Компактный список публикаций для админки |
+| `GET /api/admin/author-recipes/{pub_id}` | Полная карточка рецепта: фото, состав, оборудование, процесс, подача/срок, органолептика, история, версии |
+| `PATCH /api/admin/author-recipes/{pub_id}` | Цена/описание витрины, статус, `review_flags`, `review_comment` |
+
+Статусы:
+
+- `pending` / `На проверке` — автор отправил версию, админ проверяет.
+- `published` / `Опубликован` — рецепт доступен public-витрине; review flags/comment очищаются.
+- `rejected` / `На доработке` — автор видит комментарий и чеклист блоков, которые нужно поправить.
+- `archived` / `Снят` — публикация снята с витрины.
+
+Повторная отправка того же серверного черновика обновляет активную публикацию через `source_draft_id`, увеличивает `version` и пишет snapshot в `recipe_publication_versions`, а не создаёт дубль карточки.
 
 ### Менеджер подкатегорий оборудования
 
@@ -522,6 +606,7 @@ bash server/admin/build.sh
 | `.adm-scm-*` | Модал менеджера подкатегорий |
 | `.adm-eq-*` | Редактор позиций оборудования |
 | `.adm-drawer-*` | Боковая панель настроек пользователя |
+| `.adm-author-*` | Вкладка авторов и drawer модерации рецепта |
 | `var(--adm-*)` | CSS-переменные темизации |
 
 ---
@@ -539,6 +624,7 @@ bash server/admin/build.sh
 | 49 | 24 мая 2026 | **Рефакторинг admin-panel.js (Вариант А):** файл (2701 строк) разрезан на 12 независимых модулей в `server/admin/src/_*.js`. Создан `server/admin/build.sh` — конкатенирует части в `admin-panel.js` через `cat`. Задача `deploy-admin-drawer` обновлена: добавлен шаг `bash build.sh &&` перед `scp`. Проверка: `node --check admin-panel.js` → SYNTAX_OK, `diff` с оригиналом → DIFF_CLEAN. Логика кода не изменялась. |
 | 48 | 24 мая 2026 | **Security audit:** credentials в `tasks.json` заменены на плейсхолдеры `REDACTED`. Git-история проверена — секретов в коммитах нет. Документация `AUTH_SYSTEM.md` и `copilot-instructions.md` актуализированы (правила §13–§16). |
 | 47 | 24 мая 2026 | **Фикс admin-panel.js (drawer-кнопки):** `adm-drawer` и `adm-confirm` живут в `_overlay` (`document.body`), вне `#adm-root` — `root.addEventListener` их не ловил. Решение: извлечена именованная `_handleClick`, подписана на оба контейнера (`root` + `_overlay`). Удалён `onclick="event.stopPropagation()"` с `.adm-row-actions` — блокировал кнопки в таблице. Инициализация `adm-confirm`/`keydown` listeners вынесена из тела обработчика (раньше добавлялась при каждом клике). **Новая функция:** поле «Комментарий» (📝) в карточке пользователя — `textarea` с авто-сохранением (debounce 1.2с + blur), метка времени изменения (`notes_updated_at`), стили `.adm-drawer-notes-*`. В `server/main.py`: колонка `notes VARCHAR` + `notes_updated_at DATETIME` в таблице `users`, автомиграция, GET и PATCH `/api/admin/users/` обновлены. |
+| 50 | 17 июня 2026 | **Author platform:** author layer вынесен в `src/access/author-layer.js`; авторские черновики/ингредиенты/полуфабрикаты сохраняются на backend; добавлен Mixology auto-author по whitelist `visited`; профиль автора получил ФИО, аватар, условия, вкладки публикаций и ОС; карточка рецепта получила обязательные поля для публикации и оборудование; admin-модерация получила full drawer, review flags/comment, versions/events; admin layout выровнен под `mbs-design-system` (`#adm-root` full-width, `#adm-panel` 1100px centered). |
 
 ---
 

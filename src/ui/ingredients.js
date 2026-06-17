@@ -1,6 +1,8 @@
 // src/ui/ingredients.js
 // Управление строками ингредиентов в модалке напитка
 
+import { filterAuthorSupplierBook } from '../access/author-layer.js';
+
 export function matOptions(selected='') {
   const placeholderOpt = `<option value="" disabled ${!selected ? 'selected' : ''} style="color:var(--muted)">— Выберите ингредиент —</option>`;
   const createOpt = `<option value="__create_mat__" style="font-weight:700;color:var(--green)">＋ Создать ингредиент...</option>`;
@@ -315,7 +317,7 @@ export function addIngRow(selected='', amt='', loss='') {
 export function _fillMatSupBookSelect() {
   const sel = document.getElementById('mm-sup-book');
   if (!sel) return;
-  const book = S.supplierBook || [];
+  const book = filterAuthorSupplierBook(S.supplierBook || []);
   sel.innerHTML = '<option value="">— Не указан —</option>' +
     book.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
 }
@@ -343,7 +345,7 @@ export function _onMatSupBookChange(sel) {
 export function openSupQuickDrop(key, btnEl) {
   _supQuickKey = key;
   _supQuickEl  = btnEl;
-  const book = S.supplierBook || [];
+  const book = filterAuthorSupplierBook(S.supplierBook || []);
   const cur  = (S.suppliers || {})[key] || {};
 
   // Удаляем старый дроп

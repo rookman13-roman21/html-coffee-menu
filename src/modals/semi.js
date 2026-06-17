@@ -417,7 +417,7 @@ export function openEditSemi(id) {
   if (window.lucide) lucide.createIcons();
 }
 
-export function saveSemi() {
+export async function saveSemi() {
   const name    = document.getElementById('ms-name').value.trim();
   const unit    = document.getElementById('ms-unit').value;
   const yieldV  = parseFloat(document.getElementById('ms-yield').value);
@@ -437,6 +437,9 @@ export function saveSemi() {
   if (_dupSemi) { window.showAlert(`Полуфабрикат с названием «${name}» уже существует`); return; }
   const imgEl = document.getElementById('ms-img-preview');
   const image = (imgEl && imgEl.style.display !== 'none' && imgEl.src) ? imgEl.src : '';
+  const previousSemi = editId
+    ? SEMI.find(s => s.id === parseInt(editId))
+    : null;
 
   const recipe = [];
   document.querySelectorAll('#ms-ings .ing-row').forEach(row => {
@@ -455,17 +458,36 @@ export function saveSemi() {
   });
   if (!recipe.length) { window.showAlert('Добавьте хотя бы один ингредиент'); return; }
 
+  let savedSemi = null;
   if (editId) {
     const idx = SEMI.findIndex(s => s.id === parseInt(editId));
     if (idx >= 0) SEMI[idx] = { id: parseInt(editId), name, unit, yield: yieldV, process, image, storage_temp, storage_life, appearance, taste, consistency, category, recipe };
   } else {
     SEMI.push({ id: window.nextSemiId++, name, unit, yield: yieldV, process, image, storage_temp, storage_life, appearance, taste, consistency, category, recipe });
   }
+  const currentSemi = editId
+    ? SEMI.find(s => s.id === parseInt(editId))
+    : SEMI[SEMI.length - 1];
+  if (window.authorCanPublish && window.authorCanPublish() && window.saveAuthorSemiForItem && currentSemi) {
+    try {
+      savedSemi = await window.saveAuthorSemiForItem(currentSemi, { silent: true });
+    } catch (e) {
+      if (editId && previousSemi) {
+        const rollbackIdx = SEMI.findIndex(s => s.id === parseInt(editId));
+        if (rollbackIdx >= 0) SEMI[rollbackIdx] = previousSemi;
+      } else if (currentSemi) {
+        const rollbackIdx = SEMI.findIndex(s => s.id === currentSemi.id);
+        if (rollbackIdx >= 0) SEMI.splice(rollbackIdx, 1);
+      }
+      window.showAlert(e.message || 'Не удалось сохранить полуфабрикат автора');
+      return;
+    }
+  }
   _clearModalDirty('modal-semi');
   closeModal('modal-semi');
   // Если открыто из строки ингредиента напитка — вставить новый п/ф в тот select
   if (!editId && window._pendingSemiSelectFromDrink) {
-    const newSemi = SEMI[SEMI.length - 1];
+    const newSemi = savedSemi || SEMI[SEMI.length - 1];
     const selEl = window._pendingSemiSelectFromDrink;
     selEl.innerHTML = window.matOptions(`semi:${newSemi.id}`);
     selEl.value = `semi:${newSemi.id}`;
@@ -482,8 +504,17 @@ export function deleteSemi(idRaw) {
   const id = parseInt(idRaw);
   const usedInDrink = DRINKS.some(d => d.recipe.some(r => r.semi === id));
   if (usedInDrink) { window.showAlert('Полуфабрикат используется в рецептурах напитков — сначала удалите его из напитков'); return; }
-  window.showConfirm('Удалить полуфабрикат?', () => {
-    SEMI = SEMI.filter(s => s.id !== id);
+  window.showConfirm('Удалить полуфабрикат?', async () => {
+    const semi = SEMI.find(s => s.id === id);
+    if (window.authorCanPublish && window.authorCanPublish() && window.deleteAuthorSemiForItem && semi?._authorSemi) {
+      try {
+        await window.deleteAuthorSemiForItem(semi, { silent: true });
+      } catch (e) {
+        window.showAlert(e.message || 'Не удалось удалить полуфабрикат автора');
+        return;
+      }
+    }
+    window.SEMI.splice(0, window.SEMI.length, ...window.SEMI.filter(s => s.id !== id));
     _clearModalDirty('modal-semi');
     closeModal('modal-semi');
     markDirtyDebounce();

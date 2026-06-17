@@ -4,6 +4,8 @@
 import { _matPriceBeforeEdit } from '../state/ui-state.js';
 import { SALES_PRESETS } from '../data/constants.js';
 import { canAccessTab, firstAllowedTab } from './auth.js';
+import { isAuthorMode } from '../access/author-layer.js';
+import { syncUrlForTab } from '../access/app-routes.js';
 
 export function renderTab(tab) {
   try {
@@ -12,6 +14,7 @@ export function renderTab(tab) {
     else if (tab === 'sales')     window.renderSales();
     else if (tab === 'finmodel')  window.renderFinModel();
     else if (tab === 'recipes')   window.renderRecipes();
+    else if (tab === 'authorProfile') window.renderAuthorProfile();
     if (window.lucide) window.lucide.createIcons();
   } catch(e) {
     console.error('[renderTab ' + tab + ']', e);
@@ -189,9 +192,10 @@ export function resetAll() {
   }, { icon: '🔄', okText: 'Сбросить', danger: false });
 }
 
-export function switchTab(tab) {
-  if (!canAccessTab(tab)) {
-    const fallback = firstAllowedTab();
+export function switchTab(tab, opts = {}) {
+  const canOpenTab = isAuthorMode() ? ['cost', 'recipes', 'authorProfile'].includes(tab) : canAccessTab(tab);
+  if (!canOpenTab) {
+    const fallback = isAuthorMode() ? 'recipes' : firstAllowedTab();
     if (!fallback || fallback === tab) return;
     tab = fallback;
   }
@@ -203,4 +207,5 @@ export function switchTab(tab) {
   if (tabEl) tabEl.classList.add('active');
   if (window.dirty && window.dirty[tab]) { renderTab(tab); window.dirty[tab] = false; }
   try { localStorage.setItem('mbs_active_tab', tab); } catch(e) {}
+  syncUrlForTab(tab, { replace: !!opts.replaceUrl });
 }

@@ -9,6 +9,12 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
+function assetUrl(src) {
+  if (!src) return '';
+  if (/^https?:\/\//i.test(src) || src.startsWith('data:')) return src;
+  return `${API}${src}`;
+}
+
 function publicStyles() {
   if (document.getElementById('public-recipes-styles')) return;
   const s = document.createElement('style');
@@ -25,6 +31,11 @@ function publicStyles() {
     .public-recipe-title { font-size:17px; font-weight:900; color:var(--navy); margin:0 0 6px; }
     .public-recipe-meta { display:flex; gap:8px; flex-wrap:wrap; color:var(--muted); font-size:12px; margin-bottom:10px; }
     .public-recipe-desc { color:var(--text); font-size:13px; line-height:1.5; margin:0 0 12px; }
+    .public-recipe-author { display:flex; align-items:center; gap:9px; margin:10px 0 12px; color:var(--text); }
+    .public-recipe-author-avatar { width:34px; height:34px; border-radius:50%; object-fit:cover; background:#e7f2e3; border:1px solid var(--border); flex:0 0 auto; }
+    .public-recipe-author-initial { width:34px; height:34px; border-radius:50%; display:grid; place-items:center; background:#e7f2e3; color:#417033; font-weight:900; flex:0 0 auto; }
+    .public-recipe-author b { display:block; color:var(--navy); font-size:13px; line-height:1.2; }
+    .public-recipe-author span { display:block; color:var(--muted); font-size:12px; line-height:1.35; margin-top:2px; }
     .public-recipe-price { font-weight:900; color:#417033; }
     .public-recipe-detail { display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:22px; align-items:start; }
     .public-recipe-hero { background:#fff; border:1px solid var(--border); border-radius:12px; overflow:hidden; }
@@ -78,14 +89,23 @@ export async function renderPublicRecipesApp() {
 }
 
 function recipeCard(r) {
+  const author = r.author || {};
+  const authorName = author.name || 'Moscow Barista School';
+  const avatar = assetUrl(author.avatar_url || '');
   return `
     <a class="public-recipe-card" href="/recipes/${esc(r.public_slug || r.id)}">
       ${r.image_url ? `<img src="${esc(r.image_url)}" alt="${esc(r.title)}">` : ''}
       <div class="public-recipe-body">
         <h2 class="public-recipe-title">${esc(r.title)}</h2>
         <div class="public-recipe-meta">
-          <span>${esc((r.author && r.author.name) || 'Moscow Barista School')}</span>
           ${r.volume_ml ? `<span>${Number(r.volume_ml)} мл</span>` : ''}
+        </div>
+        <div class="public-recipe-author">
+          ${avatar ? `<img class="public-recipe-author-avatar" src="${esc(avatar)}" alt="${esc(authorName)}">` : `<span class="public-recipe-author-initial">${esc(authorName.charAt(0) || 'M')}</span>`}
+          <div>
+            <b>${esc(authorName)}</b>
+            ${author.bio ? `<span>${esc(author.bio)}</span>` : ''}
+          </div>
         </div>
         <p class="public-recipe-desc">${esc(r.public_description || '')}</p>
         <div class="public-recipe-price">${Number(r.price || 0).toLocaleString('ru-RU')} ₽</div>
@@ -101,6 +121,9 @@ async function renderPublicRecipeDetail(main, slug) {
     return;
   }
   const recipe = await r.json();
+  const author = recipe.author || {};
+  const authorName = author.name || 'Moscow Barista School';
+  const avatar = assetUrl(author.avatar_url || '');
   main.innerHTML = `
     <section class="public-recipes">
       <p><a href="/recipes">← Все рецепты</a></p>
@@ -110,8 +133,14 @@ async function renderPublicRecipeDetail(main, slug) {
           <div class="public-recipe-hero-body">
             <h1>${esc(recipe.title)}</h1>
             <p class="public-recipes-sub">${esc(recipe.public_description || '')}</p>
+            <div class="public-recipe-author">
+              ${avatar ? `<img class="public-recipe-author-avatar" src="${esc(avatar)}" alt="${esc(authorName)}">` : `<span class="public-recipe-author-initial">${esc(authorName.charAt(0) || 'M')}</span>`}
+              <div>
+                <b>${esc(authorName)}</b>
+                ${author.bio ? `<span>${esc(author.bio)}</span>` : ''}
+              </div>
+            </div>
             <div class="public-recipe-meta">
-              <span>${esc((recipe.author && recipe.author.name) || 'Moscow Barista School')}</span>
               ${recipe.volume_ml ? `<span>${Number(recipe.volume_ml)} мл</span>` : ''}
               <span>${Number(recipe.price || 0).toLocaleString('ru-RU')} ₽</span>
             </div>

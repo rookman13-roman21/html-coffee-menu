@@ -74,10 +74,20 @@ import {
   refreshCurrentUser, getAllowedTabs, firstAllowedTab,
   hasAccess, hasAnyProductAccess, canAccessTab,
 } from './ui/auth.js';
+import {
+  isAuthorMode, filterAuthorServerSuppliers,
+} from './access/author-layer.js';
+import { tabFromPath, syncUrlForTab } from './access/app-routes.js';
 
 import {
-  authorCanPublish, renderAuthorWorkspace, loadAuthorWorkspace,
-  saveAuthorProfile, submitRecipeForPublication, authorPublicationForDrink,
+  authorCanPublish, renderAuthorWorkspace, renderAuthorProfile, loadAuthorWorkspace,
+  saveAuthorProfile, uploadAuthorAvatar, submitRecipeForPublication, authorPublicationForDrink,
+  saveAuthorDraftForDrink, deleteAuthorDraftForDrink, uploadAuthorRecipeImage,
+  saveAuthorIngredient, deleteAuthorIngredient,
+  saveAuthorSemiForItem, deleteAuthorSemiForItem,
+  openAuthorTermsModal, closeAuthorTermsModal,
+  openAuthorPublicationView, openAuthorPublicationEdit,
+  openAuthorPublicationHistory, closeAuthorPublicationHistory, setAuthorPublicationFilter,
 } from './ui/author.js';
 
 import {
@@ -137,6 +147,10 @@ import {
 import {
   openAddDrink, openEditDrink, saveDrink, deleteDrink, resetDrink,
   mdDeleteAction, onDrinkImgChange, clearDrinkImg,
+  onDrinkEquipmentSelect, addDrinkEquipmentCustom, removeDrinkEquipment,
+  openDrinkEquipmentCustomPopover, closeDrinkEquipmentCustomPopover,
+  renderDrinkEquipment, getDrinkEquipmentSelection, setDrinkEquipmentSelection,
+  markDrinkPublicationMissing,
 } from './modals/drink.js';
 
 import {
@@ -333,6 +347,10 @@ const _srcExports = {
   // modals/drink
   openAddDrink, openEditDrink, saveDrink, deleteDrink, resetDrink,
   mdDeleteAction, onDrinkImgChange, clearDrinkImg,
+  onDrinkEquipmentSelect, addDrinkEquipmentCustom, removeDrinkEquipment,
+  openDrinkEquipmentCustomPopover, closeDrinkEquipmentCustomPopover,
+  renderDrinkEquipment, getDrinkEquipmentSelection, setDrinkEquipmentSelection,
+  markDrinkPublicationMissing,
   // modals/semi
   openAddSemi, openEditSemi, saveSemi, deleteSemi,
   addSemiIngRow, onSemiImgChange, clearSemiImg,
@@ -357,8 +375,14 @@ const _srcExports = {
   onFixedCost, onFixedCostName,
   flashCells, resetAll, switchTab,
   getUser,
-  authorCanPublish, renderAuthorWorkspace, loadAuthorWorkspace,
-  saveAuthorProfile, submitRecipeForPublication, authorPublicationForDrink,
+  authorCanPublish, renderAuthorWorkspace, renderAuthorProfile, loadAuthorWorkspace,
+  saveAuthorProfile, uploadAuthorAvatar, submitRecipeForPublication, authorPublicationForDrink,
+  saveAuthorDraftForDrink, deleteAuthorDraftForDrink, uploadAuthorRecipeImage,
+  saveAuthorIngredient, deleteAuthorIngredient,
+  saveAuthorSemiForItem, deleteAuthorSemiForItem,
+  openAuthorTermsModal, closeAuthorTermsModal,
+  openAuthorPublicationView, openAuthorPublicationEdit,
+  openAuthorPublicationHistory, closeAuthorPublicationHistory, setAuthorPublicationFilter,
   submitPublicRecipeOrder,
   // ui/payroll
   calcPositionCosts, payrollPositionTotal, payrollTotal, payrollTotals,
@@ -458,15 +482,27 @@ _renderUserCard();
 window._authLogout = logout;
 
 function _applyAccessUI() {
-  const allowed = getAllowedTabs();
+  const allowed = _getAllowedTabsForMode();
   document.querySelectorAll('.nav-btn, .mobile-tab').forEach(btn => {
     const tab = btn.dataset.tab;
     btn.style.display = !tab || allowed.includes(tab) ? '' : 'none';
   });
   const exportWrap = document.getElementById('export-wrap');
-  if (exportWrap) exportWrap.style.display = (hasAccess('drinks') && hasAccess('finance')) ? '' : 'none';
+  if (exportWrap) exportWrap.style.display = (!isAuthorMode() && hasAccess('drinks') && hasAccess('finance')) ? '' : 'none';
   const resetBtn = document.querySelector('.btn-reset');
-  if (resetBtn) resetBtn.style.display = (hasAccess('drinks') && hasAccess('finance')) ? '' : 'none';
+  if (resetBtn) resetBtn.style.display = (!isAuthorMode() && hasAccess('drinks') && hasAccess('finance')) ? '' : 'none';
+}
+
+function _getAllowedTabsForMode() {
+  return isAuthorMode() ? ['cost', 'recipes', 'authorProfile'] : getAllowedTabs();
+}
+
+function _canAccessTabForMode(tab) {
+  return isAuthorMode() ? ['cost', 'recipes', 'authorProfile'].includes(tab) : canAccessTab(tab);
+}
+
+function _firstAllowedTabForMode() {
+  return isAuthorMode() ? 'recipes' : firstAllowedTab();
 }
 
 function _showNoAccessScreen() {
@@ -496,8 +532,20 @@ function _renderOnboardingForAccess() {
   const drinks = hasAccess('drinks');
   const finance = hasAccess('finance');
   const author = hasAccess('author');
+  const authorMode = isAuthorMode();
   let data;
-  if (drinks && finance) {
+  if (authorMode) {
+    data = {
+      key: 'author',
+      title: 'Кабинет автора рецептов',
+      sub: 'Здесь можно подготовить авторский рецепт и отправить его на публикацию после проверки.',
+      steps: [
+        ['user', 'Профиль автора', 'заполните публичное имя и данные для связи'],
+        ['clipboard-list', 'Рецептуры', 'подготовьте рецепт и описание для витрины'],
+        ['send', 'Публикация', 'отправьте рецепт на модерацию администратору'],
+      ],
+    };
+  } else if (drinks && finance) {
     data = {
       key: 'all',
       title: 'Инструментарий кофейни',
@@ -598,7 +646,8 @@ async function _initApp(serverState) {
         if (!window.S.supplierBook) window.S.supplierBook = [];
         // Мержим: сервер → supplierBook. Если запись с таким именем уже есть — обновляем
         // поля is_featured, logo_url, promo_code и т.д. Пользовательские поля name/phone/note не трогаем.
-        serverSups.forEach(srv => {
+        const visibleServerSups = filterAuthorServerSuppliers(serverSups);
+        visibleServerSups.forEach(srv => {
           const idx = window.S.supplierBook.findIndex(b => b.name === srv.name);
           if (idx >= 0) {
             // Обновляем только серверные расширенные поля
@@ -670,7 +719,8 @@ async function _initApp(serverState) {
         if (!window.S.supplierBook) window.S.supplierBook = [];
         // Мержим: сервер → supplierBook. Если запись с таким именем уже есть — обновляем
         // поля is_featured, logo_url, promo_code и т.д. Пользовательские поля name/phone/note не трогаем.
-        serverSups.forEach(srv => {
+        const visibleServerSups = filterAuthorServerSuppliers(serverSups);
+        visibleServerSups.forEach(srv => {
           const idx = window.S.supplierBook.findIndex(b => b.name === srv.name);
           if (idx >= 0) {
             // Обновляем только серверные расширенные поля
@@ -753,18 +803,21 @@ async function _initApp(serverState) {
     }
   } catch(e) {}
 
-  // Восстанавливаем activeTab из localStorage
+  // Восстанавливаем activeTab из URL или localStorage
   const _savedTab = (() => {
     try {
+      const routed = tabFromPath();
+      if (routed && _canAccessTabForMode(routed)) return routed;
       const saved = localStorage.getItem('mbs_active_tab');
-      return (saved && canAccessTab(saved)) ? saved : firstAllowedTab();
-    } catch(e) { return firstAllowedTab(); }
+      return (saved && _canAccessTabForMode(saved)) ? saved : _firstAllowedTabForMode();
+    } catch(e) { return _firstAllowedTabForMode(); }
   })();
 
   // Рендерим вкладки
   window.activeTab = _savedTab;
-  const _dirty = window.dirty || { dashboard:true, cost:true, sales:true, finmodel:true, recipes:true };
+  const _dirty = window.dirty || { dashboard:true, cost:true, sales:true, finmodel:true, recipes:true, authorProfile:true };
   Object.keys(_dirty).forEach(k => _dirty[k] = true);
+  syncUrlForTab(_savedTab, { replace: true });
   switchTab(_savedTab);
   if (window.lucide) window.lucide.createIcons();
 }

@@ -6,6 +6,7 @@
 
 import { closeModal, safeCloseModal, _markModalDirty } from './modals.js';
 import { switchTab } from './updaters.js';
+import { tabFromPath } from '../access/app-routes.js';
 
 const MODAL_IDS = [
   'modal-drink','modal-mat','modal-semi','modal-templates','modal-loc',
@@ -83,3 +84,8 @@ if (_mobileTabbar) {
     }
   });
 }
+
+window.addEventListener('popstate', () => {
+  const tab = tabFromPath();
+  if (tab) switchTab(tab, { replaceUrl: true });
+});

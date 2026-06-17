@@ -1,6 +1,8 @@
 // src/ui/suppliers.js
 // Модальные окна и список поставщиков
 
+import { filterAuthorSupplierGroups } from '../access/author-layer.js';
+
 // ── Перенесено из public/app.js ──
 
 export function openSupplierInfo(name) {
@@ -240,6 +242,7 @@ export function renderSuppliersList() {
       }
     }
   });
+  groups = filterAuthorSupplierGroups(groups);
 
   // Поиск
   const q = supListSearch.toLowerCase();
@@ -389,4 +392,3 @@ export function deleteSupplierBook() {
     if (fromList) openSuppliersList();
   }, { icon: '🗑️', okText: 'Удалить' });
 }
-

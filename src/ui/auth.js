@@ -500,7 +500,14 @@ export function showAuthScreen() {
             submitBtn.textContent = 'Зарегистрироваться';
             return;
           }
-          await authRequest('register', email, password, name, true, phone);
+          const d = await authRequest('register', email, password, name, true, phone);
+          if (d && d.token && d.user) {
+            saveAuth(d.token, d.user);
+            const state = await fetchState();
+            overlay.remove();
+            window._initApp(state);
+            return;
+          }
           pendingEl.classList.add('visible');
           submitBtn.disabled = false;
           submitBtn.textContent = 'Зарегистрироваться';

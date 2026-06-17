@@ -6,6 +6,8 @@
 //  app.js сделал Object.assign(window, {...}) в конце своего файла.
 // ═══════════════════════════════════════════════════════════════════
 
+import { filterAuthorSupplierGroups } from '../access/author-layer.js';
+
 let _supSearch  = '';
 let _ingSearch  = '';
 let _semiSearch = '';
@@ -260,7 +262,7 @@ export function renderCost() {
       if (b.promo_desc) byName[b.name].promo_desc = b.promo_desc;
     }
   });
-  const supGroups = Object.values(byName);
+  const supGroups = filterAuthorSupplierGroups(Object.values(byName));
   const filteredSupGroups = _supSearch
     ? supGroups.filter(g => {
         const q = _supSearch.toLowerCase();

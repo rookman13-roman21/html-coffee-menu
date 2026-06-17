@@ -74,6 +74,12 @@ bash scripts/deploy_admin.sh
 
 Собирает `server/admin/admin-panel.js`, проверяет синтаксис, загружает bundle в `/var/www/coffee-menu/dist/admin-panel.js`.
 
+Правила:
+
+- редактировать только `server/admin/src/*`;
+- `server/admin/admin-panel.js` — generated bundle, напрямую не править;
+- layout админки задаётся в `server/admin/src/_styles.js`: `#adm-root` должен занимать всю ширину viewport на Tilda, `#adm-panel` центрируется и ограничивается `max-width: 1100px` по `mbs-design-system`.
+
 ### Backend API
 
 ```bash
@@ -85,6 +91,29 @@ bash scripts/deploy_backend.sh
 `/var/www/coffee-menu/server/backups/app-YYYYMMDD-HHMMSS.before-backend-deploy.db`
 
 После загрузки перезапускает `coffee-menu-api.service` и проверяет локальный health.
+
+Практический нюанс: сразу после `systemctl restart` скрипт иногда получает ранний `curl: (7)` на `127.0.0.1:8000`, хотя сервис затем поднимается штатно. В этом случае не считать деплой успешным автоматически, а проверить отдельно:
+
+```bash
+ssh -i "$HOME/.ssh/id_ed25519" root@159.194.233.13 \
+  'systemctl is-active coffee-menu-api.service && curl -fsS http://127.0.0.1:8000/api/health'
+
+curl -fsS https://barista-school.online/api/health
+```
+
+Для author-изменений после backend-деплоя проверить наличие таблиц:
+
+```bash
+ssh -i "$HOME/.ssh/id_ed25519" root@159.194.233.13 \
+  'sqlite3 /var/www/coffee-menu/server/data/app.db ".tables" | tr " " "\n" | grep -E "author_(recipe_drafts|ingredients|semis)|recipe_publication_(versions|events)"'
+```
+
+Для Mixology auto-author:
+
+- whitelist `server/data/mixology_author_access.json` — приватный runtime-файл с телефонами, не коммитить и не печатать в логах;
+- импорт whitelist: `server/scripts/import_mixology_author_access.py`;
+- источник v1: `YClients-Dashboard/data/mixology/reports/generated/*.clients.json`;
+- доступ выдаётся только для `visited` / «пришёл», остальные статусы не активируют автора.
 
 ## Переменные для переопределения
 
@@ -99,6 +128,7 @@ COFFEE_HEALTH_URL=https://barista-school.online/api/health
 ## Что не автоматизировано
 
 - Изменение production `.env`.
-- Миграции с ручными SQL-командами.
+- Ручные SQL-миграции. Новые author-таблицы сейчас создаются через backend startup/init.
+- Ручное обновление приватного Mixology whitelist на production.
 - Создание новых Bitrix/userfield enum.
 - Публикация в GitHub, если локальная ветка не поверх свежего `origin/main`.

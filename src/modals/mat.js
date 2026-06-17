@@ -54,7 +54,7 @@ export function openEditMat(key) {
   lucide.createIcons();
 }
 
-export function saveMat() {
+export async function saveMat() {
   const name  = document.getElementById('mm-name').value.trim();
   const unit  = document.getElementById('mm-unit').value || 'шт';
   const price = parseFloat(document.getElementById('mm-price').value) || 0;
@@ -81,6 +81,16 @@ export function saveMat() {
   if (supName || supPhone || supNote) {
     if (!S.suppliers) S.suppliers = {};
     S.suppliers[key] = { name: supName, phone: supPhone, note: supNote, site: '' };
+  } else if (S.suppliers && S.suppliers[key]) {
+    delete S.suppliers[key];
+  }
+  if (!isBase && window.authorCanPublish && window.authorCanPublish() && window.saveAuthorIngredient) {
+    try {
+      await window.saveAuthorIngredient(key, { silent: true });
+    } catch (e) {
+      window.showAlert(e.message || 'Не удалось сохранить ингредиент автора');
+      return;
+    }
   }
   _clearModalDirty('modal-mat');
   closeModal('modal-mat');
@@ -279,9 +289,18 @@ export function deleteMat(key) {
   const used = DRINKS.some(d => d.recipe.some(r => r.mat === key));
   const usedInSemi = (window.SEMI || []).some(s => (s.recipe || []).some(r => r.mat === key));
   if (used || usedInSemi) { window.showAlert('Сырьё используется в рецептурах — сначала удалите его из напитков/полуфабрикатов'); return; }
-  window.showConfirm('Удалить позицию сырья?', () => {
+  window.showConfirm('Удалить позицию сырья?', async () => {
+    if (window.authorCanPublish && window.authorCanPublish() && window.deleteAuthorIngredient && MAT[key]?._authorIngredient) {
+      try {
+        await window.deleteAuthorIngredient(key, { silent: true });
+      } catch (e) {
+        window.showAlert(e.message || 'Не удалось удалить ингредиент автора');
+        return;
+      }
+    }
     delete MAT[key];
     delete S.prices[key];
+    if (S.suppliers) delete S.suppliers[key];
     markDirtyDebounce();
     saveState();
   }, { icon: '🗑️', okText: 'Удалить' });

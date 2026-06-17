@@ -2,6 +2,7 @@
 // Просмотр карточки напитка (попап рецептуры) + фильтры вкладки Рецептуры
 
 import { openModal, closeModal } from './modals.js';
+import { filterAuthorDrinks, isAuthorMode } from '../access/author-layer.js';
 
 // ── Перенесено из public/app.js ──
 
@@ -48,8 +49,22 @@ function _videoModalEsc(e) {
   if (e.key === 'Escape') closeVideoModal();
 }
 
+function _html(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function _equipmentList(d) {
+  return (d.equipment || [])
+    .map(item => typeof item === 'string' ? item : item?.name)
+    .filter(Boolean);
+}
+
 export function openViewDrink(id) {
-  const d = window.DRINKS.find(x => x.id === id);
+  const d = window.DRINKS.find(x => x.id === id && x.custom) || window.DRINKS.find(x => x.id === id);
   if (!d) return;
   _mvdId = id;
   const enriched = window.enrich();
@@ -92,6 +107,10 @@ export function openViewDrink(id) {
   const processHtml = d.process
     ? `<div class="mvd-section"><div class="mvd-section-title"><i data-lucide="chef-hat" class="icon"></i> Процесс приготовления</div><div class="mvd-process">${d.process.replace(/\n/g,'<br>')}</div></div>`
     : '';
+  const equipment = _equipmentList(d);
+  const equipmentHtml = equipment.length
+    ? `<div class="mvd-section"><div class="mvd-section-title"><i data-lucide="wrench" class="icon"></i> Оборудование</div><div class="recipe-equipment-tags">${equipment.map(name => `<span>${_html(name)}</span>`).join('')}</div></div>`
+    : '';
   const videoHtml = d.videoUrl
     ? `<button class="recipe-card-video" onclick="openVideoModal('${d.videoUrl}')" style="margin-top:4px"><i data-lucide="play-circle" class="icon"></i> Смотреть видео рецепт</button>`
     : '';
@@ -120,6 +139,7 @@ export function openViewDrink(id) {
         <div class="mvd-nut-item"><span class="mvd-nut-val">${nut.carbs}</span><span class="mvd-nut-lbl">углеводы, г</span></div>
       </div>
     </div>
+    ${equipmentHtml}
     ${processHtml}
     ${videoHtml}
   `;
@@ -306,7 +326,9 @@ export function filterRecipes(val) {
   const abcMap = {}; const abcTipMap = {};
   window.withABC(enriched).forEach(d => { abcMap[d.id] = d.abc; abcTipMap[d.id] = d.abcTip; });
 
-  let list = DRINKS.filter(d => {
+  const authorMode = isAuthorMode();
+  const authorBaseList = filterAuthorDrinks(DRINKS).filter(d => !d._hidden);
+  let list = authorBaseList.filter(d => {
     if (d._hidden) return false;
     if (recipeGroup !== 'all' && d.group !== recipeGroup) return false;
     const displayName = d._serverName || d.name;
@@ -374,6 +396,10 @@ export function filterRecipes(val) {
     const videoIconHtml = d.videoUrl
       ? `<a class="recipe-card-video-icon" href="${d.videoUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Смотреть видео рецепт"><i data-lucide="play-circle" class="icon"></i></a>`
       : '';
+    const equipment = _equipmentList(d);
+    const equipmentHtml = equipment.length
+      ? `<div class="recipe-equipment-line"><i data-lucide="wrench" class="icon"></i><span>${equipment.slice(0, 3).map(_html).join(', ')}${equipment.length > 3 ? ` +${equipment.length - 3}` : ''}</span></div>`
+      : '';
     const pub = window.authorPublicationForDrink ? window.authorPublicationForDrink(d.id) : null;
     const pubLabel = pub
       ? (pub.status === 'published' ? 'Опубликован' : pub.status === 'rejected' ? 'На доработке' : 'На проверке')
@@ -392,6 +418,7 @@ export function filterRecipes(val) {
         <span>·</span>
         <span style="color:${fcClr};font-weight:700">FC ${window.pct(fc)}</span>
       </div>
+      ${equipmentHtml}
       <div class="recipe-ings">${ingRows}</div>
       <div class="recipe-total"><span>Себестоимость</span><span>${window.rub(totalCost)}</span></div>
       <div class="recipe-total" style="font-weight:400;font-size:12px;color:var(--muted)"><span>Цена продажи</span><span>${window.rub(price)}</span></div>
@@ -401,7 +428,18 @@ export function filterRecipes(val) {
   }
 
   let html = '';
-  if (!list.length) {
+  if (!list.length && authorMode && !authorBaseList.length) {
+    html = `
+      <div class="author-recipe-empty-card">
+        <div class="author-recipe-empty-icon"><i data-lucide="sparkles" class="icon"></i></div>
+        <div>
+          <h3>Создайте первый авторский рецепт</h3>
+          <p>Добавьте напиток, заполните состав, процесс приготовления и подготовьте рецепт к публикации на витрину.</p>
+          <button class="btn btn-green" onclick="openAddDrink()"><i data-lucide="plus" class="icon"></i> Создать рецепт</button>
+        </div>
+      </div>
+    `;
+  } else if (!list.length) {
     html = `<p style="padding:32px;text-align:center;color:var(--muted)">Ничего не найдено — измените поиск или фильтр</p>`;
   } else if (useGroups) {
     ['hot', 'tea', 'cold', 'filter', 'author'].forEach(grp => {

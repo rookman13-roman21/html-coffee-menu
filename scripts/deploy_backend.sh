@@ -20,8 +20,16 @@ ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$REMOTE" \
 
 echo
 echo "== Upload backend =="
+ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$REMOTE" \
+  "set -e; mkdir -p '$REMOTE_SERVER/scripts' '$REMOTE_SERVER/data'"
 scp -i "$SSH_KEY" -o StrictHostKeyChecking=no \
   "$SERVER_DIR/main.py" "$REMOTE:$REMOTE_SERVER/main.py"
+scp -i "$SSH_KEY" -o StrictHostKeyChecking=no \
+  "$SERVER_DIR/scripts/import_mixology_author_access.py" "$REMOTE:$REMOTE_SERVER/scripts/import_mixology_author_access.py"
+if [[ -f "$SERVER_DIR/data/mixology_author_access.json" ]]; then
+  scp -i "$SSH_KEY" -o StrictHostKeyChecking=no \
+    "$SERVER_DIR/data/mixology_author_access.json" "$REMOTE:$REMOTE_SERVER/data/mixology_author_access.json"
+fi
 
 echo
 echo "== Restart API and health =="

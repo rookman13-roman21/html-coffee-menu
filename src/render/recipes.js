@@ -5,6 +5,8 @@
 //  в конце public/app.js.
 // ════════════════════════════════════════════════════════════════════
 
+import { filterAuthorDrinks, isAuthorMode } from '../access/author-layer.js';
+
 export function renderRecipes() {
   const {
     recipeSort, recipeGroup, recipeSearch,
@@ -12,9 +14,10 @@ export function renderRecipes() {
     openAddDrink, exportTechCards,
     toggleRecipesIntro,
     _searchClear,
-    renderAuthorWorkspace,
+    loadAuthorWorkspace,
   } = window;
-  const authorPanel = renderAuthorWorkspace ? renderAuthorWorkspace() : '';
+  if (isAuthorMode() && loadAuthorWorkspace) setTimeout(() => loadAuthorWorkspace(), 0);
+  const authorEmpty = isAuthorMode() && !filterAuthorDrinks(window.DRINKS || []).filter(d => !d._hidden).length;
 
   const sortLabels = [
     { k: 'group',  l: 'По группам' },
@@ -64,8 +67,7 @@ export function renderRecipes() {
         </div>
       </div>
     </div>
-    ${authorPanel}
-    <div class="recipes-toolbar">
+    <div class="recipes-toolbar${authorEmpty ? ' is-hidden' : ''}">
       <div class="recipes-toolbar-row recipes-toolbar-main">
         <div class="search-wrap" style="margin-bottom:0;flex-shrink:0;min-width:180px;max-width:220px">
           <span class="search-icon"><i data-lucide="search" class="icon"></i></span>

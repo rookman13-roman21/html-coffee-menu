@@ -178,9 +178,15 @@ export function resetGlobalsToBase() {
   S.openingMeta  = { format: 'full', currency: 'RUB', usdRate: 90, eurRate: 98 };
 
   // Сбрасываем счётчики (через window — они ещё в app.js)
-  window.nextDrinkId = 27;
+  window.nextDrinkId = DRINKS.reduce((max, d) => Math.max(max, Number(d.id) || 0), 0) + 1;
   window.nextSemiId  = 1;
   if (window.SEMI) window.SEMI.splice(0);
+}
+
+function nextFreeDrinkId() {
+  const maxId = DRINKS.reduce((max, d) => Math.max(max, Number(d.id) || 0), 0);
+  window.nextDrinkId = Math.max(Number(window.nextDrinkId) || 1, maxId + 1);
+  return window.nextDrinkId++;
 }
 
 // ─── Дебаунс-синхронизация с сервером ─────────────────────────────
@@ -207,6 +213,7 @@ export function scheduleServerSync() {
 export function saveState() {
   if (!Loc.activeId) return;
   const SEMI = window.SEMI || [];
+  const authorMode = !!(window.authorCanPublish && window.authorCanPublish());
   try {
     localStorage.setItem(locDataKey(Loc.activeId), JSON.stringify({
       schemaVersion: DATA_SCHEMA_VERSION,
@@ -219,7 +226,7 @@ export function saveState() {
       seasonality: S.seasonality, seasonalityOpen: S.seasonalityOpen,
       wif: { price: _wif.price, cost: _wif.cost, traffic: _wif.traffic },
       suppliers: S.suppliers, supplierBook: S.supplierBook, priceLog: S.priceLog,
-      customDrinks: DRINKS.filter(d => d.custom),
+      customDrinks: authorMode ? [] : DRINKS.filter(d => d.custom && !d._authorDraft),
       modifiedDrinks: DRINKS.filter(d => d.modified).map(d => ({
         id: d.id, name: d.name, group: d.group, vol: d.vol, recipe: d.recipe,
       })),
@@ -231,12 +238,12 @@ export function saveState() {
         if (Object.keys(patch).length) acc[d.id] = patch;
         return acc;
       }, {}),
-      customMats: Object.entries(MAT).filter(([,v]) => v.custom).map(([k,v]) => ({ key: k, ...v })),
+      customMats: authorMode ? [] : Object.entries(MAT).filter(([,v]) => v.custom).map(([k,v]) => ({ key: k, ...v })),
       customCategories: S.customCategories,
       semiCustomCategories: S.semiCustomCategories,
       openingCosts: S.openingCosts,
       openingMeta: S.openingMeta,
-      semiItems: SEMI,
+      semiItems: authorMode ? [] : SEMI,
     }));
     scheduleServerSync();
   } catch(e) {}
@@ -249,6 +256,7 @@ export function loadState() {
     const raw = localStorage.getItem(locDataKey(Loc.activeId));
     if (!raw) return;
     const sv = JSON.parse(raw);
+    let migratedCustomDrinks = false;
 
     if (sv.prices)      Object.assign(S.prices, sv.prices);
     if (sv.salePrices)  Object.assign(S.salePrices, sv.salePrices);
@@ -329,12 +337,22 @@ export function loadState() {
     }
     if (sv.customDrinks) {
       sv.customDrinks.forEach(d => {
-        if (!DRINKS.find(x => x.id === d.id)) {
-          DRINKS.push(d);
-          if (window.nextDrinkId <= d.id) window.nextDrinkId = d.id + 1;
+        let id = Number(d.id);
+        if (!id || DRINKS.find(x => Number(x.id) === id)) {
+          const oldId = id;
+          id = nextFreeDrinkId();
+          d = { ...d, id };
+          migratedCustomDrinks = true;
+          if (oldId) {
+            if (S.salePrices[id] == null && S.salePrices[oldId] != null) S.salePrices[id] = S.salePrices[oldId];
+            if (S.portions[id] == null && S.portions[oldId] != null) S.portions[id] = S.portions[oldId];
+          }
+        } else if (window.nextDrinkId <= id) {
+          window.nextDrinkId = id + 1;
         }
-        if (S.salePrices[d.id] == null) S.salePrices[d.id] = d.price;
-        if (S.portions[d.id]   == null) S.portions[d.id]   = 5;
+        DRINKS.push(d);
+        if (S.salePrices[id] == null) S.salePrices[id] = d.price;
+        if (S.portions[id]   == null) S.portions[id]   = 5;
       });
     }
     if (sv.modifiedDrinks) {
@@ -362,6 +380,7 @@ export function loadState() {
       window.SEMI.splice(0, window.SEMI.length, ...sv.semiItems);
       window.nextSemiId = Math.max(...window.SEMI.map(s => s.id), 0) + 1;
     }
+    if (migratedCustomDrinks) setTimeout(() => saveState(), 0);
   } catch(e) {}
 }
 

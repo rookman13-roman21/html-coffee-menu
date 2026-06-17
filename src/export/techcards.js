@@ -1,13 +1,13 @@
 // src/export/techcards.js
 // Экспорт технологических карт (печать через iframe)
 
-
+import { filterAuthorDrinks } from '../access/author-layer.js';
 
 export function exportTechCards() {
   const { getOrgInfo, DRINKS, _buildTechCardBlock, _openTechCardsWindow } = window;
   const org = getOrgInfo();
   const orgName = org.name;
-  let list = DRINKS.slice();
+  let list = filterAuthorDrinks(DRINKS).slice();
   const recipeGroup = window.recipeGroup;
   const recipeSearch = window.recipeSearch;
   if (recipeGroup !== 'all') list = list.filter(d => d.group === recipeGroup);
@@ -1006,4 +1006,3 @@ export function _buildSemiTechCardBlock(s, org, cardNum, isLast) {
   </div>
 </div>`;
 }
-

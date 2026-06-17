@@ -1,6 +1,6 @@
 # NEXT_CHAT_HANDOFF — Coffee_menu / barista-school.online
 
-Дата актуализации: 16 июня 2026.
+Дата актуализации: 17 июня 2026.
 
 Этот файл нужен, чтобы новый чат быстро понял контекст проекта и мог продолжить работу без повторной раскачки.
 
@@ -12,7 +12,9 @@
 
 Текущий главный продуктовый вектор: **платформа авторских рецептов**.
 
-Идея: участники Mixology Cup и внешние авторы получают кабинет, вносят свои рецепты, отправляют их на модерацию, после публикации рецепты продаются через витрину и CRM-процесс в Битрикс. На первом релизе полноценная онлайн-оплата и автоматическая выдача доступа внутри платформы не обязательны: заявка и обработка могут идти через Битрикс.
+Идея: участники Mixology Cup и внешние авторы получают кабинет, вносят свои рецепты, отправляют их на модерацию, после публикации рецепты продаются через витрину и CRM-процесс в Битрикс. На первом релизе полноценная онлайн-оплата и автоматическая выдача доступа к купленному рецепту внутри платформы не обязательны: заявка и обработка могут идти через Битрикс.
+
+На 17 июня 2026 добавлен автоматический author-доступ для участников Mixology Cup из server whitelist: при регистрации телефон сверяется с участником, у которого в yClients-отчёте есть фактический статус `visited` / «пришёл».
 
 ## 2. Связанные проекты
 
@@ -87,20 +89,82 @@
 
 - backend-таблица `author_profiles`;
 - backend-таблица `recipe_publications`;
+- backend-таблица `recipe_publication_versions`;
+- backend-таблица `recipe_publication_events`;
 - backend-таблица `recipe_orders`;
-- авторский блок во вкладке `Рецептуры`;
+- backend-таблица `author_recipe_drafts`;
+- backend-таблица `author_ingredients`;
+- backend-таблица `author_semis`;
+- отдельные author routes: `/app/author/suppliers`, `/app/author/recipes`, `/app/author/profile`;
 - admin-раздел `Авторы`;
 - public API/страница витрины опубликованных рецептов;
 - статусы публикаций: черновик/на проверке/опубликован/отклонён/архив;
-- профиль автора: публичное имя, контакты, описание, статус документов;
+- профиль автора: фамилия, имя, отчество, телефон, описание, аватар, статус документов;
 - синхронизация автора с Битрикс при выдаче доступа.
+- полноценная admin-модерация публикаций: карточка проверки, цена/описание для витрины, чеклист проблем, комментарий автору, история событий и версии.
+
+Актуальная логика режима `Автор` на 17 июня 2026:
+
+- правила author-слоя централизованы в `src/access/author-layer.js`;
+- если у пользователя случайно включены `author` вместе с `drinks/finance`, frontend считает это режимом `Автор`, чтобы не открыть обычный клиентский набор данных;
+- во вкладке `Рецептуры` у автора пустой старт: без демо-рецептов, с карточкой `Создайте первый авторский рецепт`;
+- во вкладке `Рецептуры` доступны только разделы: `Горячие`, `Чай`, `Холодные`, `Пуровер`, `Авторские`;
+- во вкладке `Поставщики` для автора скрыты `Hiwater`, `Baristaline`, `МайТаймКап`;
+- вкладка `Мой профиль` доступна только author-слою;
+- блок условий сотрудничества открыт через popup, не является юридическим акцептом;
+- `Мой профиль` показывает публикации по статусам: требуют внимания, на проверке, опубликованы, сняты, все;
+- в профиле автора есть блоки-заготовки `Данные для договора` и `Финансы`, без backend-учёта выплат на этом этапе.
+
+Карточка авторского рецепта:
+
+- для нового авторского рецепта дефолтная группа — `Авторские`;
+- автор может сохранять неполный черновик;
+- отправка `На витрину` блокируется, пока не заполнены обязательные поля: название, группа, рекомендуемая цена продажи, объём, ингредиенты, изображение, процесс, оборудование, температура подачи, срок реализации, органолептика;
+- ссылка на видеорецепт необязательна;
+- блок оборудования находится после `Процесс приготовления`;
+- оборудование выбирается мультиселектом, своё оборудование добавляется через пункт выпадающего списка и popup; похожие названия блокируются на frontend.
+
+Серверное хранение author-данных:
+
+- черновики рецептов автора сохраняются в `author_recipe_drafts`;
+- фото рецептов автора загружаются через `POST /api/author/recipe-image` в runtime-папку `server/data/public_uploads/author-recipes`;
+- кастомные ингредиенты автора сохраняются в `author_ingredients`;
+- кастомные полуфабрикаты автора сохраняются в `author_semis`;
+- при первой загрузке author workspace старые локальные авторские рецепты/ингредиенты/полуфабрикаты мигрируют на backend;
+- в режиме `Автор` `customDrinks`, `customMats` и `semiItems` больше не сохраняются как общий источник правды в browser localStorage;
+- для авторских рецептов используется client id offset `100000000 + draft_id`;
+- для авторских полуфабрикатов используется client id offset `200000000 + semi_id`;
+- обычный клиентский режим `Напитки` продолжает использовать прежнюю клиентскую библиотеку.
+
+Модерация публикаций:
+
+- `recipe_publications.source_draft_id` связывает публикацию с серверным черновиком автора;
+- повторная отправка того же черновика обновляет существующую активную публикацию и увеличивает `version`, а не плодит дубли;
+- `recipe_publications.validation_json` хранит server-side результат проверки обязательных блоков;
+- `recipe_publications.review_flags_json` хранит чеклист обратной связи админа;
+- `recipe_publication_versions` хранит снимки отправленных версий;
+- `recipe_publication_events` хранит события: submitted, published, rejected, archived, review_saved;
+- `GET /api/admin/author-recipes/{pub_id}` отдаёт полную карточку рецепта для admin drawer.
+
+Mixology auto-author:
+
+- runtime whitelist: `server/data/mixology_author_access.json`;
+- импорт: `server/scripts/import_mixology_author_access.py`;
+- источник импорта v1: `YClients-Dashboard/data/mixology/reports/generated/*.clients.json`;
+- засчитываются только строки, где `mixology_records` содержит `visited`;
+- `no_show`, `canceled`, `pending`, `confirmed` не дают author-доступ;
+- при совпадении телефона `POST /api/auth/register` создаёт активного пользователя с `access_author=true`, `access_drinks=false`, `access_finance=false`, создаёт/обновляет `author_profiles`, запускает author Bitrix sync и возвращает `token`, `user`, `auto_author:true`;
+- whitelist содержит телефоны и не должен попадать в Git или публичные документы.
 
 Основные файлы:
 
 - `server/main.py` — backend API, миграции, Битрикс-синхронизация.
 - `server/admin/src/_authors.js` — admin-раздел авторов.
+- `server/admin/src/_styles.js` — стили admin; `#adm-root` full-width, `#adm-panel` центрирован до `1100px` по design system.
 - `server/admin/src/_drawer.js` — drawer пользователя и access toggles.
 - `HTML_coffee_menu/src/ui/author.js` — кабинет автора.
+- `HTML_coffee_menu/src/modals/drink.js` — форма рецепта, обязательные поля author-публикации, оборудование.
+- `HTML_coffee_menu/src/access/author-layer.js` — frontend-правила author-слоя.
 - `HTML_coffee_menu/src/ui/public-recipes.js` — public-витрина.
 - `HTML_coffee_menu/src/render/recipes.js` — интеграция авторского блока во вкладку рецептур.
 
@@ -115,8 +179,10 @@
 5. Если контакт не найден, создаёт контакт.
 6. Пишет `bitrix_contact_id` в `author_profiles`.
 7. Добавляет метку `Автор рецептов` в multi-list поле.
-8. Добавляет комментарий в timeline контакта.
+8. Добавляет комментарий в timeline контакта только при первом добавлении автора, не при каждом сохранении профиля/аватара.
 9. Не пишет служебные данные в `COMMENTS`, чтобы не утащить их в yClients через `sync_comment`.
+
+При сохранении профиля автора backend обновляет в Битрикс `NAME`, `LAST_NAME`, `SECOND_NAME` и фото контакта. Telegram убран из author frontend-формы, чтобы не затирать старые данные.
 
 Production-настройки:
 
@@ -215,10 +281,11 @@ cp scripts/smoke_api.example.json scripts/smoke_api.local.json
 
 ## 12. Git-состояние
 
-На момент handoff:
+На момент handoff 17 июня 2026:
 
-- `Coffee_menu/HTML_coffee_menu`: `main...origin/main`, чисто.
-- Последний коммит: `5f06321 docs: add next chat handoff`.
+- `Coffee_menu/HTML_coffee_menu`: `main...origin/main`, рабочая папка dirty после серии изменений author-слоя.
+- Backend `Coffee_menu/server` не является отдельным git repo; изменения backend лежат в соседнем `server/main.py`.
+- Последний известный коммит до серии author-правок: `5f06321 docs: add next chat handoff`.
 - `bitrix-tools`: ранее был dirty, не чистили глубоко, есть backup patch в `/private/tmp/mbs-risk-backups/`.
 
 Последние важные коммиты:
@@ -246,6 +313,14 @@ Production:
 - DB: `/var/www/coffee-menu/server/data/app.db`.
 
 Перед backend-деплоем обязательно делать SQLite backup.
+
+Последний production deploy author-слоя:
+
+- backend и frontend выкатаны 17 июня 2026;
+- production health: `https://barista-school.online/api/health` отвечает `{"ok":true,"version":"1.0.0"}`;
+- production HTML подключал bundle `/assets/index-CIQA3tiy.js`;
+- на production SQLite проверены таблицы `author_recipe_drafts`, `author_ingredients`, `author_semis`;
+- `npm run deploy:backend` может показать ранний `curl: (7)` сразу после restart API, но повторная проверка `systemctl is-active coffee-menu-api.service` и `/api/health` проходит.
 
 ## 14. Правила безопасности
 
@@ -311,12 +386,26 @@ Admin:
 - `GET /api/admin/authors`;
 - `POST /api/admin/authors/{user_id}/sync-bitrix`;
 - `GET /api/admin/author-recipes`;
+- `GET /api/admin/author-recipes/{pub_id}`;
 - `PATCH /api/admin/author-recipes/{pub_id}`.
 
 Author:
 
 - `GET /api/author/profile`;
 - `PUT /api/author/profile`;
+- `POST /api/author/profile/avatar`;
+- `GET /api/author/drafts`;
+- `POST /api/author/drafts`;
+- `PUT /api/author/drafts/{draft_id}`;
+- `DELETE /api/author/drafts/{draft_id}`;
+- `GET /api/author/ingredients`;
+- `PUT /api/author/ingredients/{mat_key}`;
+- `DELETE /api/author/ingredients/{mat_key}`;
+- `GET /api/author/semis`;
+- `POST /api/author/semis`;
+- `PUT /api/author/semis/{semi_id}`;
+- `DELETE /api/author/semis/{semi_id}`;
+- `POST /api/author/recipe-image`;
 - `GET /api/author/recipes`;
 - `POST /api/author/recipes`.
 
@@ -329,6 +418,12 @@ Public:
 Health:
 
 - `GET /api/health`.
+
+Mixology author access:
+
+- публичного endpoint нет;
+- импорт whitelist выполняется серверным скриптом `server/scripts/import_mixology_author_access.py`;
+- runtime-файл `server/data/mixology_author_access.json` приватный.
 
 ## 17. Следующие возможные направления
 
@@ -353,21 +448,20 @@ Health:
 
 Возможные задачи:
 
-- улучшить профиль автора;
-- добавить понятные статусы публикации;
-- добавить preview публичной карточки;
-- улучшить UX отправки рецепта на модерацию;
-- добавить подсказки по заполнению.
+- добавить реальные поля/статусы договора ГПХ;
+- добавить банковские/налоговые данные автора после согласования юридической модели;
+- добавить реальные продажи/начисления/выплаты в блок `Финансы`;
+- сделать публичный preview карточки перед отправкой;
+- добавить подсказки по заполнению сложных блоков рецепта.
 
 ### C. Модерация и admin workflow
 
 Возможные задачи:
 
-- удобнее смотреть рецепт в admin;
-- фильтры по авторам/статусам;
-- кнопки публикации/отклонения;
-- review comments;
-- повторная отправка после доработки.
+- добавить уведомления автору о доработке/публикации;
+- добавить очередь модерации и сортировку по дате/статусу;
+- добавить более подробную историю действий администратора;
+- добавить internal notes, не видимые автору.
 
 ### D. Public-витрина
 
