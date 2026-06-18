@@ -10,6 +10,7 @@ let _authorRecipes = [];
 let _authorDrafts = [];
 let _authorIngredients = [];
 let _authorSemis = [];
+let _authorTelegramStatus = null;
 let _authorPublicationFilter = 'attention';
 
 function _authHeaders() {
@@ -150,11 +151,28 @@ function _formatAuthorDate(value) {
   return date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
+function _authorChampionships(profile = _authorProfile || {}) {
+  return Array.isArray(profile.championship_participations)
+    ? profile.championship_participations.filter(item => item?.event_key)
+    : [];
+}
+
+export function authorHasMixologyParticipation() {
+  return _authorChampionships().some(item => String(item.event_key || '').startsWith('mixology-cup'));
+}
+
+function _formatChampionshipDates(dates = []) {
+  const clean = (dates || []).map(_formatAuthorDate).filter(Boolean);
+  if (!clean.length) return 'Дата выступления уточняется';
+  return clean.join(', ');
+}
+
 const RECIPE_PROGRESS_LABELS = {
   basics: 'название, цена и объём',
   ingredients: 'ингредиенты',
   photo: 'фото напитка',
   process: 'процесс приготовления',
+  description: 'описание для витрины',
   equipment: 'оборудование',
   serving: 'подача и срок',
   organoleptic: 'органолептика',
@@ -214,7 +232,12 @@ function _findAuthorDrinkForPublication(pub) {
   const fromDrinks = drinks.find(d => localId && String(d.id) === localId) ||
     drinks.find(d => String(d.name || '').trim().toLowerCase() === String(pub?.title || '').trim().toLowerCase()) ||
     null;
-  if (fromDrinks) return fromDrinks;
+  if (fromDrinks) {
+    if (!fromDrinks.public_description && pub?.public_description) {
+      fromDrinks.public_description = pub.public_description;
+    }
+    return fromDrinks;
+  }
   const draftRecord = _authorDrafts.find(record => {
     const drink = record?.drink || {};
     return (localId && (
@@ -224,7 +247,12 @@ function _findAuthorDrinkForPublication(pub) {
     )) ||
       String(drink.name || '').trim().toLowerCase() === String(pub?.title || '').trim().toLowerCase();
   });
-  return draftRecord ? _draftDrink(draftRecord) : null;
+  if (!draftRecord) return null;
+  const draftDrink = _draftDrink(draftRecord);
+  if (!draftDrink.public_description && pub?.public_description) {
+    draftDrink.public_description = pub.public_description;
+  }
+  return draftDrink;
 }
 
 function _publicationImageUrl(pub, localDrink) {
@@ -257,6 +285,7 @@ function _fallbackPublicationDrink(pub) {
     recipe: recipe.ingredients || draft.recipe || [],
     equipment: recipe.equipment || draft.equipment || [],
     process: recipe.process || draft.process || pub?.public_description || '',
+    public_description: pub?.public_description || recipe.public_description || draft.public_description || '',
     image: _publicationImageUrl(pub, draft),
     videoUrl: pub?.video_url || draft.videoUrl || '',
     storage_temp: recipe.storage_temp || draft.storage_temp || '',
@@ -284,6 +313,7 @@ function _publicationRecipe(pub, localDrink) {
     ingredients: recipe.ingredients || localDrink?.recipe || [],
     equipment: recipe.equipment || localDrink?.equipment || [],
     process: recipe.process || localDrink?.process || '',
+    public_description: recipe.public_description || localDrink?.public_description || '',
   };
 }
 
@@ -334,6 +364,7 @@ export function authorRecipeProgress(drink = {}) {
     ['ingredients', ingredients.some(row => (row.mat || row.semi != null) && Number(row.amt || 0) > 0)],
     ['photo', !!_authorRecipeImageUrl(drink)],
     ['process', !!String(drink.process || '').trim()],
+    ['description', !!_authorPublicDescription(drink)],
     ['equipment', equipment.length > 0],
     ['serving', !!(String(drink.storage_temp || '').trim() && String(drink.storage_life || '').trim())],
     ['organoleptic', !!(String(drink.appearance || '').trim() && String(drink.taste || '').trim() && String(drink.consistency || '').trim())],
@@ -354,6 +385,7 @@ function _publicationChecklist(pub, localDrink, recipe, equipment) {
     ['Ингредиенты', (recipe.ingredients || []).some(row => (row.mat || row.semi != null) && Number(row.amt || 0) > 0)],
     ['Фото', !!(pub?.image_url || recipe.image_url || recipe.image || localDrink?.image)],
     ['Процесс', !!String(recipe.process || '').trim()],
+    ['Описание витрины', !!String(pub?.public_description || localDrink?.public_description || recipe.public_description || '').trim()],
     ['Оборудование', equipment.length > 0],
     ['Органолептика', !!((recipe.appearance || localDrink?.appearance) && (recipe.taste || localDrink?.taste) && (recipe.consistency || localDrink?.consistency))],
     ['Подача и срок', !!((recipe.storage_temp || localDrink?.storage_temp) && (recipe.storage_life || localDrink?.storage_life))],
@@ -444,8 +476,11 @@ function _syncAuthorSemisToState(records = []) {
 
 function _authorDraftBody(drink) {
   const price = Number((window.S && window.S.salePrices && window.S.salePrices[drink.id]) ?? drink.price ?? 0);
+  const imageUrl = _authorRecipeImageUrl(drink);
   const draft = {
     ...drink,
+    image: imageUrl,
+    image_url: imageUrl,
     price,
     custom: true,
   };
@@ -485,8 +520,27 @@ function _authorSemiBody(semi) {
   };
 }
 
+function _normalizeAuthorRecipeImageUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  if (raw.startsWith('data:image/')) return raw;
+  const uploadPrefix = '/api/uploads/author-recipes/';
+  if (raw.startsWith(uploadPrefix)) return raw;
+  try {
+    const url = new URL(raw, window.location.origin);
+    if (url.pathname.startsWith(uploadPrefix)) return url.pathname;
+  } catch (e) {
+    // Оставляем исходное значение: серверная валидация даст точную ошибку.
+  }
+  return raw;
+}
+
 function _authorRecipeImageUrl(drink) {
-  return String(drink?.image_url || drink?.image || drink?.draft?.image || '').trim();
+  return _normalizeAuthorRecipeImageUrl(drink?.image_url || drink?.image || drink?.draft?.image || '');
+}
+
+function _authorPublicDescription(drink) {
+  return String(drink?.public_description || drink?.publicDescription || drink?.draft?.public_description || '').trim();
 }
 
 function _authorIngredientPayload(ingredients = []) {
@@ -510,9 +564,11 @@ function _authorIngredientPayload(ingredients = []) {
 function _authorRecipeSnapshot(drink, equipment = [], price = 0) {
   const imageUrl = _authorRecipeImageUrl(drink);
   const videoUrl = String(drink?.videoUrl || drink?.video_url || '').trim();
+  const publicDescription = _authorPublicDescription(drink);
   return {
     imageUrl,
     videoUrl,
+    publicDescription,
     recipe: {
       title: drink?._serverName || drink?.name || '',
       group: drink?.group || '',
@@ -521,6 +577,7 @@ function _authorRecipeSnapshot(drink, equipment = [], price = 0) {
       ingredients: _authorIngredientPayload(drink?.recipe || []),
       equipment,
       process: drink?.process || '',
+      public_description: publicDescription,
       quality: drink?.quality || '',
       storage_temp: drink?.storage_temp || '',
       storage_life: drink?.storage_life || '',
@@ -638,6 +695,27 @@ function _firstAuthorDraftDrink() {
   return (_authorDrafts || []).map(_draftDrink).find(drink => drink?.id) || null;
 }
 
+function _firstAuthorPublication() {
+  return (_authorRecipes || []).find(recipe => recipe?.status && recipe.status !== 'archived') ||
+    (_authorRecipes || [])[0] ||
+    null;
+}
+
+function _authorProfileCompletion(profile = _authorProfile || {}) {
+  const filled = [
+    !!profile.last_name,
+    !!profile.first_name,
+    !!profile.phone,
+    !!profile.avatar_url,
+    !!profile.bio,
+  ].filter(Boolean).length;
+  return {
+    filled,
+    total: 5,
+    complete: filled >= 4,
+  };
+}
+
 function _renderLaunchStep(ok, label, hint) {
   return `
     <div class="author-launch-step ${ok ? 'is-done' : ''}">
@@ -654,20 +732,40 @@ function _renderAuthorLaunchGuide() {
   if (_authorLoading && !_authorLoaded) return '';
   const profile = _authorProfile || {};
   const draft = _firstAuthorDraftDrink();
-  const publication = draft ? authorPublicationForDrink(draft.id) : null;
+  const publication = (draft ? authorPublicationForDrink(draft.id) : null) || _firstAuthorPublication();
+  if (publication?.status === 'published') return '';
   const progress = draft ? authorRecipeProgress(draft) : null;
   const profileDone = !!(profile.first_name && profile.last_name && profile.phone);
   const avatarDone = !!profile.avatar_url;
   const recipeReady = !!progress && progress.done === progress.total;
-  const submitted = !!publication && ['submitted', 'published'].includes(publication.status);
+  const submitted = publication?.status === 'submitted';
   const rejected = publication?.status === 'rejected';
-  const cta = !draft
-    ? `<button class="btn btn-green" type="button" onclick="openAddDrink({ name: 'Мой напиток Mixology Cup', group: 'author' })"><i data-lucide="sparkles" class="icon"></i> Создать рецепт Mixology Cup</button>`
-    : submitted
+  const mixologyAuthor = authorHasMixologyParticipation();
+  const recipeSeed = mixologyAuthor
+    ? { name: 'Мой напиток Mixology Cup', title: 'Подготовьте напиток с Mixology Cup к публикации', kicker: 'Чемпионатный рецепт' }
+    : { name: 'Мой авторский напиток', title: 'Подготовьте первый авторский рецепт к публикации', kicker: 'Первый рецепт' };
+  const statusMode = submitted && !rejected;
+  const headline = statusMode
+    ? 'Рецепт на проверке'
+    : rejected
+      ? 'Рецепт вернулся на доработку'
+      : recipeSeed.title;
+  const description = statusMode
+    ? 'Команда Moscow Barista School проверяет материалы. Если понадобятся правки, они появятся в блоке «Требуют внимания».'
+    : rejected
+      ? 'Посмотрите комментарий проверки, внесите правки и отправьте обновлённую версию повторно.'
+      : mixologyAuthor
+        ? 'Опишите напиток, с которым вы выступали на чемпионате. После проверки мы подготовим его к публикации на витрине.'
+        : 'Заполните профиль и карточку рецепта. После отправки команда Moscow Barista School проверит материалы и подготовит публикацию на витрине.';
+  const cta = submitted
       ? `<button class="btn btn-outline" type="button" onclick="switchTab('recipes')"><i data-lucide="list-checks" class="icon"></i> Открыть рецепты</button>`
-      : !recipeReady || rejected
-      ? `<button class="btn btn-green" type="button" onclick="openEditDrink(${Number(draft.id)})"><i data-lucide="pencil" class="icon"></i> Продолжить рецепт</button>`
-      : `<button class="btn btn-green" type="button" onclick="submitRecipeForPublication(${Number(draft.id)})"><i data-lucide="send" class="icon"></i> Отправить на проверку</button>`;
+      : rejected && publication?.id && !draft
+        ? `<button class="btn btn-green" type="button" onclick="openAuthorPublicationEdit(${Number(publication.id)})"><i data-lucide="pencil" class="icon"></i> Доработать рецепт</button>`
+        : !draft
+          ? `<button class="btn btn-green" type="button" onclick="openAddDrink({ name: '${_esc(recipeSeed.name)}', group: 'author' })"><i data-lucide="sparkles" class="icon"></i> ${mixologyAuthor ? 'Создать рецепт Mixology Cup' : 'Создать рецепт'}</button>`
+          : !recipeReady || rejected
+            ? `<button class="btn btn-green" type="button" onclick="openEditDrink(${Number(draft.id)})"><i data-lucide="pencil" class="icon"></i> ${rejected ? 'Доработать рецепт' : 'Продолжить рецепт'}</button>`
+            : `<button class="btn btn-green" type="button" onclick="submitRecipeForPublication(${Number(draft.id)})"><i data-lucide="send" class="icon"></i> Отправить на проверку</button>`;
   const missing = progress?.missing?.length
     ? `<div class="author-launch-missing">Не хватает: ${_esc(progress.missing.slice(0, 4).join(', '))}${progress.missing.length > 4 ? '...' : ''}</div>`
     : '';
@@ -675,16 +773,16 @@ function _renderAuthorLaunchGuide() {
     <div class="author-launch-card">
       <div class="author-launch-main">
         <div>
-          <div class="author-launch-kicker">Первый рецепт</div>
-          <h4>Подготовьте напиток с Mixology Cup к публикации</h4>
-          <p>Заполните профиль и карточку рецепта. После отправки команда Moscow Barista School проверит материалы и подготовит публикацию на витрине.</p>
+          <div class="author-launch-kicker">${_esc(recipeSeed.kicker)}</div>
+          <h4>${_esc(headline)}</h4>
+          <p>${_esc(description)}</p>
         </div>
         <div class="author-launch-action">${cta}</div>
       </div>
       <div class="author-launch-steps">
         ${_renderLaunchStep(profileDone, 'Профиль автора', profileDone ? 'ФИО и телефон заполнены.' : 'Заполните ФИО и телефон.')}
         ${_renderLaunchStep(avatarDone, 'Фото автора', avatarDone ? 'Фото загружено.' : 'Добавьте фото для карточки автора.')}
-        ${_renderLaunchStep(!!draft, 'Черновик рецепта', draft ? 'Черновик создан.' : 'Начните с рецепта чемпионатного напитка.')}
+        ${_renderLaunchStep(!!draft, 'Черновик рецепта', draft ? 'Черновик создан.' : (mixologyAuthor ? 'Начните с рецепта чемпионатного напитка.' : 'Создайте первый авторский рецепт.'))}
         ${_renderLaunchStep(recipeReady, 'Готовность рецепта', progress ? `${progress.done} из ${progress.total} блоков заполнено.` : 'Пока нет черновика.')}
         ${_renderLaunchStep(submitted, 'Отправка на проверку', submitted ? _statusLabel(publication.status) : 'Отправьте рецепт, когда все блоки заполнены.')}
       </div>
@@ -695,6 +793,43 @@ function _renderAuthorLaunchGuide() {
           ${missing}
         </div>
       ` : ''}
+    </div>
+  `;
+}
+
+function _renderAuthorChampionships(profile = _authorProfile || {}) {
+  const items = _authorChampionships(profile);
+  if (!items.length) return '';
+  const draft = _firstAuthorDraftDrink();
+  const publication = (draft ? authorPublicationForDrink(draft.id) : null) || _firstAuthorPublication();
+  const published = publication?.status === 'published';
+  const submitted = publication?.status === 'submitted';
+  const rejected = publication?.status === 'rejected';
+  const action = published
+    ? ''
+    : submitted
+      ? '<div class="author-championship-state"><i data-lucide="clock" class="icon"></i> Рецепт на проверке</div>'
+      : draft
+        ? `<button class="btn btn-outline" type="button" onclick="openEditDrink(${Number(draft.id)})"><i data-lucide="pencil" class="icon"></i> ${rejected ? 'Доработать рецепт' : 'Продолжить рецепт'}</button>`
+        : `<button class="btn btn-green" type="button" onclick="openAddDrink({ name: 'Мой напиток Mixology Cup', group: 'author' })"><i data-lucide="sparkles" class="icon"></i> Создать рецепт Mixology Cup</button>`;
+  return `
+    <div class="author-mini-card author-championship-card">
+      <div class="author-mini-card-head">
+        <div>
+          <b>Вы участник MBS MIXOLOGY CUP</b>
+          <span>Добавьте рецепт напитка, с которым вы выступали на чемпионате. После проверки мы подготовим его к публикации на витрине.</span>
+        </div>
+        <span class="author-mini-status is-next">Участник</span>
+      </div>
+      <div class="author-championship-list">
+        ${items.map(item => `
+          <div class="author-championship-item">
+            <strong>${_esc(item.event_title || 'Чемпионат')}</strong>
+            <span>${_esc(_formatChampionshipDates(item.dates || []))}</span>
+          </div>
+        `).join('')}
+      </div>
+      ${action ? `<div class="author-championship-action">${action}</div>` : ''}
     </div>
   `;
 }
@@ -803,23 +938,57 @@ function _renderAuthorProfileEditor(profile = _authorProfile || {}) {
 }
 
 function _renderAuthorProfileStatus(profile = _authorProfile || {}) {
-  const filled = [
-    !!profile.last_name,
-    !!profile.first_name,
-    !!profile.phone,
-    !!profile.avatar_url,
-    !!profile.bio,
-  ].filter(Boolean).length;
+  const completion = _authorProfileCompletion(profile);
+  if (completion.complete) return '';
   return `
     <div class="author-mini-card author-profile-status-card">
       <div class="author-mini-card-head">
         <div>
           <b>Данные автора</b>
-          <span>${filled >= 4 ? 'Основные данные заполнены. Изменить их можно в меню кабинета автора.' : 'Заполните данные автора, чтобы карточка на витрине выглядела полной.'}</span>
+          <span>Заполните данные автора, чтобы карточка на витрине выглядела полной.</span>
         </div>
-        <span class="author-mini-status ${filled >= 4 ? 'is-next' : ''}">${filled}/5</span>
+        <span class="author-mini-status">${completion.filled}/${completion.total}</span>
       </div>
-      <button class="btn btn-outline" type="button" onclick="openAuthorProfileModal()"><i data-lucide="user-pen" class="icon"></i> Изменить данные автора</button>
+      <button class="btn btn-outline" type="button" onclick="openAuthorProfileModal()"><i data-lucide="user-pen" class="icon"></i> Заполнить данные автора</button>
+    </div>
+  `;
+}
+
+function _renderAuthorTelegramStatus() {
+  const status = _authorTelegramStatus || {};
+  const configured = status.configured !== false;
+  const connected = !!status.connected;
+  const username = String(status.username || '').trim();
+  const notifyEnabled = status.notify_enabled !== false;
+  const statusLabel = !configured ? 'Не настроен' : connected ? 'Подключён' : 'Не подключён';
+  const description = !configured
+    ? 'Бот уведомлений пока не настроен на сервере.'
+    : connected
+      ? `Уведомления по проверке рецептов приходят ${username ? `в @${_esc(username)}` : 'в подключённый Telegram'}.`
+      : 'Подключите Telegram, чтобы получать комментарии проверки и статус публикации.';
+  return `
+    <div class="author-mini-card author-telegram-card">
+      <div class="author-mini-card-head">
+        <div>
+          <b>Telegram-уведомления</b>
+          <span>${description}</span>
+        </div>
+        <span class="author-mini-status ${connected ? 'is-next' : ''}">${_esc(statusLabel)}</span>
+      </div>
+      <div class="author-telegram-actions">
+        ${connected ? `
+          <button class="btn btn-outline" type="button" onclick="toggleAuthorTelegramNotifications(${notifyEnabled ? 'false' : 'true'})">
+            <i data-lucide="${notifyEnabled ? 'bell-off' : 'bell'}" class="icon"></i> ${notifyEnabled ? 'Выключить' : 'Включить'}
+          </button>
+          <button class="btn btn-outline" type="button" onclick="disconnectAuthorTelegram()">
+            <i data-lucide="unlink" class="icon"></i> Отключить
+          </button>
+        ` : `
+          <button class="btn btn-green" type="button" onclick="connectAuthorTelegram()" ${configured ? '' : 'disabled'}>
+            <i data-lucide="send" class="icon"></i> Подключить Telegram
+          </button>
+        `}
+      </div>
     </div>
   `;
 }
@@ -878,7 +1047,8 @@ function _renderAuthorPublicationCard(r) {
             ${publicUrl ? `<a class="btn btn-outline" href="${publicUrl}" target="_blank" rel="noopener"><i data-lucide="external-link" class="icon"></i> Открыть на витрине</a>` : ''}
             ${canOpenFallback ? `<button class="btn btn-outline" type="button" onclick="openAuthorPublicationView(${Number(r.id)})"><i data-lucide="eye" class="icon"></i> Посмотреть карточку</button>` : ''}
             ${canOpenFallback ? `<button class="btn btn-outline" type="button" onclick="openAuthorPublicationHistory(${Number(r.id)})"><i data-lucide="history" class="icon"></i> История</button>` : ''}
-            ${canOpenFallback && !['published', 'archived'].includes(r.status) ? `<button class="btn btn-green" type="button" onclick="openAuthorPublicationEdit(${Number(r.id)})"><i data-lucide="pencil" class="icon"></i> Редактировать рецепт</button>` : ''}
+            ${canOpenFallback && r.status === 'rejected' ? `<button class="btn btn-green" type="button" onclick="resubmitAuthorPublication(${Number(r.id)})"><i data-lucide="send" class="icon"></i> Отправить повторно на проверку</button>` : ''}
+            ${canOpenFallback && !['published', 'archived'].includes(r.status) ? `<button class="${r.status === 'rejected' ? 'btn btn-outline' : 'btn btn-green'}" type="button" onclick="openAuthorPublicationEdit(${Number(r.id)})"><i data-lucide="pencil" class="icon"></i> Редактировать рецепт</button>` : ''}
           </div>
         </div>
       </div>
@@ -917,6 +1087,15 @@ export function openAuthorPublicationEdit(publicationId) {
   const drink = _fallbackPublicationDrink(publication);
   if (!drink?.id || !window.openEditDrink) return _notify('Не удалось открыть редактирование рецепта');
   window.openEditDrink(drink.id);
+}
+
+export async function resubmitAuthorPublication(publicationId) {
+  const publication = _publicationById(publicationId);
+  if (!publication) return _notify('Публикация не найдена');
+  if (publication.status !== 'rejected') return _notify('Повторная отправка доступна только для рецептов на доработке');
+  const drink = _fallbackPublicationDrink(publication);
+  if (!drink?.id) return _notify('Не удалось подготовить рецепт к повторной отправке');
+  await submitRecipeForPublication(drink.id);
 }
 
 export function setAuthorPublicationFilter(filter) {
@@ -1003,22 +1182,29 @@ function _renderAuthorTermsBody() {
       <div class="author-terms-text">
         <p>Moscow Barista School помогает авторам монетизировать авторские рецепты через платформу школы. Автор готовит рецепт и отправляет его на проверку, а команда школы берёт на себя модерацию, публикацию на сайте, продвижение, анонсы, приём оплат от покупателей и сопровождение продажи.</p>
         <p>После проверки рецепта мы заключаем с автором договор ГПХ. Публикация рецепта на витрине происходит после оформления договора и согласования материалов.</p>
+        <p>Для рецептов участников Mixology Cup цена продажи зависит от результата на чемпионате: напитки авторов, занявших 1, 2 или 3 место, продаются покупателям за 12 000 ₽; 4, 5 или 6 место - за 8 000 ₽; остальные участники чемпионата - за 6 000 ₽.</p>
         <p>Авторское вознаграждение составляет 35% от каждой фактически оплаченной продажи рецепта. Вознаграждение начисляется только по оплатам, которые не были отменены или возвращены покупателю.</p>
         <p>Moscow Barista School выступает налоговым агентом: удерживает НДФЛ из суммы авторского вознаграждения и перечисляет его в бюджет. Остальные обязательные начисления по договору, если они применимы, школа оплачивает за свой счёт.</p>
         <p>Выплата авторского вознаграждения производится один раз в месяц, с 5 по 10 число следующего месяца, за продажи предыдущего месяца.</p>
       </div>
       <div class="author-terms-examples">
         <div class="author-terms-example">
-          <b>Если рецепт продан за 1 000 ₽</b>
-          <span>35% авторского вознаграждения = 350 ₽</span>
-          <span>НДФЛ 13% = 45,50 ₽</span>
-          <strong>К выплате автору = 304,50 ₽</strong>
+          <b>1-3 место: продажа за 12 000 ₽</b>
+          <span>35% авторского вознаграждения = 4 200 ₽</span>
+          <span>НДФЛ 13% = 546 ₽</span>
+          <strong>К выплате автору = 3 654 ₽</strong>
         </div>
         <div class="author-terms-example">
-          <b>Если за месяц рецепт продан на 20 000 ₽</b>
-          <span>35% авторского вознаграждения = 7 000 ₽</span>
-          <span>НДФЛ 13% = 910 ₽</span>
-          <strong>К выплате автору = 6 090 ₽</strong>
+          <b>4-6 место: продажа за 8 000 ₽</b>
+          <span>35% авторского вознаграждения = 2 800 ₽</span>
+          <span>НДФЛ 13% = 364 ₽</span>
+          <strong>К выплате автору = 2 436 ₽</strong>
+        </div>
+        <div class="author-terms-example">
+          <b>Участник чемпионата: продажа за 6 000 ₽</b>
+          <span>35% авторского вознаграждения = 2 100 ₽</span>
+          <span>НДФЛ 13% = 273 ₽</span>
+          <strong>К выплате автору = 1 827 ₽</strong>
         </div>
       </div>
       <p class="author-terms-note">Расчёты приведены как пример для налогового резидента РФ при ставке НДФЛ 13%. Фактический размер удержаний может зависеть от налогового статуса автора и действующего законодательства. Публикация рецепта не гарантирует определённый объём продаж.</p>
@@ -1130,6 +1316,8 @@ function _renderAuthorProfileMarkup() {
       <div class="author-grid">
         <div class="author-profile-side">
           ${_renderAuthorProfileStatus(profile)}
+          ${_renderAuthorChampionships(profile)}
+          ${_renderAuthorTelegramStatus()}
           ${_renderAuthorContractBlock()}
           ${_renderAuthorFinanceBlock()}
         </div>
@@ -1173,12 +1361,13 @@ export async function loadAuthorWorkspace(force = false) {
   if (_authorLoading || (_authorLoaded && !force)) return;
   _authorLoading = true;
   try {
-    const [profileRes, recipesRes, ingredientsRes, semisRes, draftsRes] = await Promise.all([
+    const [profileRes, recipesRes, ingredientsRes, semisRes, draftsRes, telegramRes] = await Promise.all([
       fetch(`${API}/api/author/profile`, { headers: _authHeaders() }),
       fetch(`${API}/api/author/recipes`, { headers: _authHeaders() }),
       fetch(`${API}/api/author/ingredients`, { headers: _authHeaders() }),
       fetch(`${API}/api/author/semis`, { headers: _authHeaders() }),
       fetch(`${API}/api/author/drafts`, { headers: _authHeaders() }),
+      fetch(`${API}/api/author/telegram/status`, { headers: _authHeaders() }).catch(() => null),
     ]);
     if (!profileRes.ok || !recipesRes.ok || !ingredientsRes.ok || !semisRes.ok || !draftsRes.ok) throw new Error('Не удалось загрузить кабинет автора');
     _authorProfile = await profileRes.json();
@@ -1186,6 +1375,9 @@ export async function loadAuthorWorkspace(force = false) {
     _authorIngredients = await ingredientsRes.json();
     _authorSemis = await semisRes.json();
     _authorDrafts = await draftsRes.json();
+    _authorTelegramStatus = telegramRes && telegramRes.ok
+      ? await telegramRes.json()
+      : { configured: true, connected: false, notify_enabled: true, bot_username: 'Join_MBS_bot' };
     _authorSemis.forEach(record => {
       const legacyId = record?.semi?._legacyLocalId;
       if (legacyId) _replaceSemiRefs(legacyId, record.client_id);
@@ -1337,6 +1529,74 @@ export async function saveAuthorProfile() {
   }
 }
 
+export async function refreshAuthorTelegramStatus() {
+  if (!authorCanPublish()) return null;
+  try {
+    const r = await fetch(`${API}/api/author/telegram/status`, { headers: _authHeaders() });
+    if (!r.ok) throw new Error('Не удалось обновить статус Telegram');
+    _authorTelegramStatus = await r.json();
+    if (window.activeTab === 'authorProfile' && window.renderTab) window.renderTab('authorProfile');
+    return _authorTelegramStatus;
+  } catch (e) {
+    _notify(e.message);
+    return null;
+  }
+}
+
+export async function connectAuthorTelegram() {
+  if (!authorCanPublish()) return _notify('Доступ автора не выдан');
+  try {
+    const r = await fetch(`${API}/api/author/telegram/link`, {
+      method: 'POST',
+      headers: _authHeaders(),
+      body: JSON.stringify({}),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.detail || 'Не удалось создать ссылку для Telegram');
+    if (data.url) window.open(data.url, '_blank', 'noopener');
+    _notify('Откройте Telegram и нажмите Start. После подключения обновите кабинет автора.');
+  } catch (e) {
+    _notify(e.message);
+  }
+}
+
+export async function disconnectAuthorTelegram() {
+  if (!authorCanPublish()) return;
+  const ok = window.showConfirm
+    ? await window.showConfirm('Отключить Telegram-уведомления для этого автора?')
+    : confirm('Отключить Telegram-уведомления для этого автора?');
+  if (!ok) return;
+  try {
+    const r = await fetch(`${API}/api/author/telegram/link`, {
+      method: 'DELETE',
+      headers: _authHeaders(),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.detail || 'Не удалось отключить Telegram');
+    await refreshAuthorTelegramStatus();
+    _notify('Telegram отключён');
+  } catch (e) {
+    _notify(e.message);
+  }
+}
+
+export async function toggleAuthorTelegramNotifications(enabled) {
+  if (!authorCanPublish()) return;
+  try {
+    const r = await fetch(`${API}/api/author/telegram/settings`, {
+      method: 'PUT',
+      headers: _authHeaders(),
+      body: JSON.stringify({ notify_enabled: !!enabled }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.detail || 'Не удалось обновить уведомления');
+    await refreshAuthorTelegramStatus();
+    _notify(enabled ? 'Telegram-уведомления включены' : 'Telegram-уведомления выключены');
+  } catch (e) {
+    _notify(e.message);
+  }
+}
+
 export async function uploadAuthorAvatar(input) {
   const file = input?.files?.[0];
   if (!file) return;
@@ -1413,8 +1673,9 @@ export function validateAuthorRecipeForPublication(drink, price, equipment = [])
   if (!(Number(price || 0) > 0)) add('price', 'Рекомендуемая цена продажи');
   if (!(Number(drink?.vol || 0) > 0)) add('volume', 'Объём');
   if (!_hasValidRecipeIngredient(drink?.recipe || [])) add('ingredients', 'Ингредиенты');
-  if (!_textFilled(drink?.image)) add('image', 'Изображение');
+  if (!_textFilled(_authorRecipeImageUrl(drink))) add('image', 'Изображение');
   if (!_textFilled(drink?.process)) add('process', 'Процесс приготовления');
+  if (!_textFilled(_authorPublicDescription(drink))) add('description', 'Описание для витрины');
   if (!equipment.length) add('equipment', 'Оборудование для приготовления');
   if (!_textFilled(drink?.storage_temp)) add('storage_temp', 'Температура подачи');
   if (!_textFilled(drink?.storage_life)) add('storage_life', 'Срок реализации');
@@ -1465,7 +1726,6 @@ export async function submitRecipeForPublication(drinkId) {
     _notify(e.message || 'Не удалось сохранить актуальную версию рецепта перед отправкой');
     return;
   }
-  const description = prompt('Короткое описание для витрины рецептов', d.process || '') || '';
   const snapshot = _authorRecipeSnapshot(d, equipment, price);
   const body = {
     recipe_local_id: String(d.id),
@@ -1475,7 +1735,7 @@ export async function submitRecipeForPublication(drinkId) {
     price: Number(price || 0),
     cost: Number(window.calcCost ? window.calcCost(d) : 0),
     recipe: snapshot.recipe,
-    public_description: description,
+    public_description: snapshot.publicDescription,
     image_url: snapshot.imageUrl,
     video_url: snapshot.videoUrl,
   };

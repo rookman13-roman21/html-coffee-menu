@@ -1,6 +1,6 @@
 # PROJECT_MAP.md — Coffee Menu SPA
 
-> Последнее обновление: 17 июня 2026
+> Последнее обновление: 18 июня 2026
 > Стек: **Vite 5.4 + Vanilla JS (ES-модули) + FastAPI + SQLite**
 > Продакшн: `https://barista-school.online`
 
@@ -47,6 +47,7 @@ Frontend-правила режима `Автор` вынесены в `src/acces
 - публикации в профиле автора сгруппированы по статусам: требуют внимания, на проверке, опубликованы, сняты, все;
 - карточка авторского рецепта поддерживает обязательные поля для публикации, оборудование, фото, процесс, подачу/срок и органолептику;
 - Telegram в author frontend-форме не показывается и не отправляется при сохранении профиля.
+- Telegram-уведомления авторов подключаются через `@Join_MBS_bot` отдельной привязкой: одноразовая ссылка в кабинете автора, приватный `telegram_chat_id` на backend, уведомления о проверке рецептов.
 
 Backend-хранилище author-слоя:
 
@@ -55,6 +56,7 @@ Backend-хранилище author-слоя:
 | `author_recipe_drafts` | Черновики рецептов автора до отправки на модерацию |
 | `author_ingredients` | Кастомные ингредиенты конкретного автора |
 | `author_semis` | Кастомные полуфабрикаты конкретного автора |
+| `author_championship_participations` | Очищенные данные участий автора в чемпионатах для личного профиля |
 | `recipe_publications` | Активная карточка публикации, статус, цена/описание витрины, validation/review |
 | `recipe_publication_versions` | Снимки версий, которые автор отправлял на проверку |
 | `recipe_publication_events` | История событий модерации и публикации |
@@ -70,9 +72,14 @@ ID-изоляция frontend:
 
 - приватный whitelist хранится в runtime-файле `server/data/mixology_author_access.json` и не коммитится;
 - импорт whitelist делает `server/scripts/import_mixology_author_access.py` из `YClients-Dashboard/data/mixology/reports/generated/*.clients.json`;
+- свежий yClients-отчёт для импорта создаётся в `YClients-Dashboard` скриптом `scripts/mbs_mixology_cup_report.js`;
 - доступ автора выдаётся только при совпадении телефона и фактическом статусе `visited` / «пришёл»;
 - `no_show`, `canceled`, `pending`, `confirmed` не дают author-доступ;
 - при совпадении `POST /api/auth/register` сразу создаёт активного пользователя с `access_author=true`, `access_drinks=false`, `access_finance=false`, создаёт/обновляет author profile, запускает Битрикс-синхронизацию и возвращает `auto_author:true`.
+- очищенные данные выступлений Mixology Cup lazy-синхронизируются в `author_championship_participations` и показываются только самому автору в `Мой профиль`;
+- `GET /api/author/profile` отдаёт `championship_participations`, `PUT /api/author/profile` их не принимает;
+- если у автора есть участие Mixology Cup, UI показывает блок `Участие в чемпионатах` и сценарий создания рецепта Mixology Cup; если участия нет, остаётся нейтральный сценарий первого авторского рецепта;
+- после новых записей или смены статуса в yClients нужно вручную обновить whitelist на production, иначе блок в профиле не появится.
 
 ### Хранение пользовательского состояния
 
@@ -208,13 +215,14 @@ Author routes:
 |---|---|---|
 | Аутентификация | `/api/auth/` | register, login, me, forgot-password, reset-password |
 | Яндекс OAuth | `/api/auth/yandex/` | login, callback |
-| Telegram webhook | `/api/telegram/webhook` | Обработка callback_query (активация пользователей) |
+| Telegram webhook | `/api/telegram/webhook` | Обработка callback_query (активация пользователей), protected by Telegram secret header + admin chat check |
+| Telegram авторов | `/api/telegram/join-mbs/webhook`, `/api/author/telegram/*` | Привязка `@Join_MBS_bot` и уведомления по модерации рецептов |
 | Пользователи (admin) | `/api/admin/users` | CRUD пользователей, пакеты доступа |
 | Авторы | `/api/author/*` | Профиль автора, черновики, ингредиенты, полуфабрикаты, фото и отправка рецептов на публикацию |
 | Авторы (admin) | `/api/admin/authors`, `/api/admin/author-recipes` | Модерация авторов и публикаций |
 | Public рецепты | `/api/public/author-recipes` | Витрина опубликованных рецептов |
 | Оборудование (OC) | `/api/oc-library` | CRUD библиотеки оборудования/мебели |
-| Парсинг ссылок | `/api/parse-url` | Извлечение цены/фото товара по URL |
+| Парсинг ссылок | `/api/proxy-meta`, `/api/admin/parse-url` | Извлечение цены/фото товара по URL с SSRF-фильтром public/private host |
 | Данные пользователя | `/api/state` | GET/PUT сохранение стейта SPA |
 | Healthcheck | `/api/health` | Статус сервиса |
 
@@ -229,6 +237,8 @@ SMTP_USER=hello@baristaschool.ru
 SMTP_PASS=...
 TELEGRAM_BOT_TOKEN=...
 TELEGRAM_ADMIN_CHAT_ID=33668380
+TELEGRAM_WEBHOOK_SECRET=...  # optional; production can derive from JWT_SECRET
+JOIN_MBS_WEBHOOK_SECRET=...  # optional for @Join_MBS_bot webhook
 YANDEX_CLIENT_ID=...
 YANDEX_SECRET=...
 YANDEX_REDIRECT=https://barista-school.online/api/auth/yandex/callback
@@ -376,7 +386,7 @@ BITRIX_AUTHOR_MARK_LABEL=Автор рецептов
 | `updaters.js` | `switchTab`, `renderAll`, `flashCells` |
 | `auth.js` | Авторизация (login/register/forgot-password/OAuth) |
 | `author.js` | Кабинет автора: профиль, аватар, условия, вкладки публикаций, статусы/ОС, отправка рецепта на модерацию |
-| `public-recipes.js` | Public-витрина опубликованных рецептов и форма заявки |
+| `public-recipes.js` | Public-витрина опубликованных рецептов: каталог, фильтры, detail-превью, корзина-заявка |
 | `misc.js` | `exportFullPDF/XLSX`, `_printViaIframe`, `generateInsights` |
 | `suppliers.js` | CRUD поставщиков |
 | `payroll.js` | Калькулятор ФОТ |
@@ -404,6 +414,7 @@ BITRIX_AUTHOR_MARK_LABEL=Автор рецептов
 | `HTML_coffee_menu/DEPLOY.md` | Короткая инструкция по деплою слоями |
 | `HTML_coffee_menu/CHECKLIST_RELEASE.md` | Release checklist перед production-изменениями |
 | `HTML_coffee_menu/NEXT_CHAT_HANDOFF.md` | Краткая передача контекста для нового чата |
+| `server/scripts/import_mixology_author_access.py` | Сборка приватного Mixology author whitelist из yClients-отчёта |
 | `server/coffee-menu-api.service` | systemd: uvicorn на порту 8000, WorkingDir, .env |
 | `server/.env.example` | Шаблон переменных окружения |
 | `.github/copilot-instructions.md` | Архитектурные правила (читает Copilot) |
@@ -422,6 +433,7 @@ BITRIX_AUTHOR_MARK_LABEL=Автор рецептов
 | `styles.css` | Единый файл — нет изоляции. Изменение `.modal` влияет на все 15+ модалов |
 | `server/main.py` | Единый монолит API. Синтаксическая ошибка → весь бэкенд падает |
 | `server/data/app.db` | **Реальная БД на сервере.** Локальная копия отсутствует — бэкапы вручную |
+| `server/data/mixology_author_access.json` | Приватный runtime whitelist Mixology с телефонами/yClients ID. Не коммитить, не печатать |
 | `server/admin/admin-panel.js` | Генерируется `build.sh`. Деплоится через `scp` напрямую в `dist/`. **Не затирать `rsync --delete`** |
 | `server/admin/src/_*.js` | Исходники admin-panel.js. Редактировать только их — собирать через `build.sh` |
 
@@ -429,13 +441,17 @@ BITRIX_AUTHOR_MARK_LABEL=Автор рецептов
 
 ```
 ❌ НЕ восстанавливать public/app.js — удалён навсегда (коммит 05a6bf2)
-❌ НЕ делать import ExcelJS — только CDN (window.ExcelJS)
+❌ НЕ подключать внешние CDN на старте приложения; ExcelJS грузить лениво через `ensureExcelJS()` из локального `/vendor/exceljs/exceljs.min.js`
 ❌ НЕ использовать window.print() — только _printViaIframe()
 ❌ НЕ ставить switchTab() ДО window.activeTab = ...
 ❌ НЕ использовать oninput если обработчик делает полный ре-рендер — только onchange
 ❌ НЕ делать rsync --delete при деплое — удалит admin-panel.js
 ⚠️  После certbot renew (~2026-08-19) — проверить: curl https://barista-school.online/api/health
    (location /api/ теперь в snippet и не перезаписывается, но проверка не лишняя)
+⚠️  Если сайт в РФ открывается только через VPN — сначала проверить HTTP/2:
+   curl -Iv --http2 https://barista-school.online/
+   Ожидаемо: ALPN server accepted h2 и HTTP/2 200.
+   Backup nginx-конфигов не класть в /etc/nginx/sites-enabled/, там wildcard include.
 ```
 
 ---
@@ -521,6 +537,10 @@ npm run deploy:backend
 # Статус API
 curl -s https://barista-school.online/api/health
 
+# Проверка HTTP/2 после nginx/frontend deploy
+curl -Iv --http2 https://barista-school.online/
+curl -fsS --http2 https://barista-school.online/api/health
+
 # Логи бэкенда
 ssh -i ~/.ssh/id_ed25519 root@159.194.233.13 \
   'journalctl -u coffee-menu-api -n 50 --no-pager'
@@ -574,6 +594,15 @@ bash server/admin/build.sh
 | `GET /api/admin/author-recipes/{pub_id}` | Полная карточка рецепта: фото, состав, оборудование, процесс, подача/срок, органолептика, история, версии |
 | `PATCH /api/admin/author-recipes/{pub_id}` | Цена/описание витрины, статус, `review_flags`, `review_comment` |
 
+Public-витрина:
+
+- `GET /api/public/author-recipes` отдаёт только опубликованные рецепты без приватных полей автора и без полного `recipe`;
+- `GET /api/public/author-recipes/meta` отдаёт метаданные фильтров: авторы, категории, диапазон цен, Mixology Cup;
+- `GET /api/public/author-recipes/{slug}` отдаёт продающее превью рецепта и блок `related` с другими рецептами автора;
+- `POST /api/public/author-recipes/cart-order` создаёт корзину-заявку на несколько рецептов; старый `POST /api/public/author-recipes/{recipe_id}/order` сохранён для обратной совместимости;
+- HTML-блок для Tilda: `public/tilda-blocks/author-recipes-widget.html`.
+- Production CORS должен разрешать `https://baristaschool.ru` и `https://www.baristaschool.ru`; иначе Tilda-блок показывает ошибку загрузки при рабочем public API.
+
 Статусы:
 
 - `pending` / `На проверке` — автор отправил версию, админ проверяет.
@@ -625,6 +654,9 @@ bash server/admin/build.sh
 | 48 | 24 мая 2026 | **Security audit:** credentials в `tasks.json` заменены на плейсхолдеры `REDACTED`. Git-история проверена — секретов в коммитах нет. Документация `AUTH_SYSTEM.md` и `copilot-instructions.md` актуализированы (правила §13–§16). |
 | 47 | 24 мая 2026 | **Фикс admin-panel.js (drawer-кнопки):** `adm-drawer` и `adm-confirm` живут в `_overlay` (`document.body`), вне `#adm-root` — `root.addEventListener` их не ловил. Решение: извлечена именованная `_handleClick`, подписана на оба контейнера (`root` + `_overlay`). Удалён `onclick="event.stopPropagation()"` с `.adm-row-actions` — блокировал кнопки в таблице. Инициализация `adm-confirm`/`keydown` listeners вынесена из тела обработчика (раньше добавлялась при каждом клике). **Новая функция:** поле «Комментарий» (📝) в карточке пользователя — `textarea` с авто-сохранением (debounce 1.2с + blur), метка времени изменения (`notes_updated_at`), стили `.adm-drawer-notes-*`. В `server/main.py`: колонка `notes VARCHAR` + `notes_updated_at DATETIME` в таблице `users`, автомиграция, GET и PATCH `/api/admin/users/` обновлены. |
 | 50 | 17 июня 2026 | **Author platform:** author layer вынесен в `src/access/author-layer.js`; авторские черновики/ингредиенты/полуфабрикаты сохраняются на backend; добавлен Mixology auto-author по whitelist `visited`; профиль автора получил ФИО, аватар, условия, вкладки публикаций и ОС; карточка рецепта получила обязательные поля для публикации и оборудование; admin-модерация получила full drawer, review flags/comment, versions/events; admin layout выровнен под `mbs-design-system` (`#adm-root` full-width, `#adm-panel` 1100px centered). |
+| 51 | 17 июня 2026 | **Mixology championship profile:** добавлена таблица `author_championship_participations`; `GET /api/author/profile` отдаёт очищенные `championship_participations`; авторский профиль показывает блок `Участие в чемпионатах` и CTA на рецепт Mixology Cup; production backend/frontend выкатаны, whitelist обновлён из свежего yClients-отчёта. |
+| 52 | 18 июня 2026 | **Author Telegram notifications:** добавлена привязка авторов к `@Join_MBS_bot`, отдельные env `JOIN_MBS_*`, webhook `/api/telegram/join-mbs/webhook`, API `/api/author/telegram/*` и best-effort уведомления команде/автору по событиям проверки рецептов. Production env настроен из `schedule-online/events-schedule-sync`, webhook установлен, привязка из кабинета автора проверена вручную. |
+| 53 | 18 июня 2026 | **Production HTTP/2 / доступность из РФ:** после жалоб “сайт открывается только через VPN” включён HTTP/2 на nginx для `barista-school.online` и `www.barista-school.online` (`/etc/nginx/sites-enabled/coffee-menu`, `listen 443 ssl http2;`). Проверка: `curl -Iv --http2 https://barista-school.online/` → `ALPN: server accepted h2`, `HTTP/2 200`; `/api/health` → `HTTP/2 200`. Backup nginx-конфига перенесён из `sites-enabled` в `/root/nginx-backups/`, потому что wildcard include создавал warning `conflicting server name`. Соседний VPS `159.194.202.120` / `159-194-202-120.sslip.io` тоже отвечал только HTTP/1.1, но текущий SSH-ключ туда не пускал; при доступе включить HTTP/2 аналогично. |
 
 ---
 

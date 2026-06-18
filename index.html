@@ -4,11 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MBS* Coffee Menu</title>
-  <link rel="icon" type="image/svg+xml" href="https://static.tildacdn.com/tild3638-6136-4039-b639-633937393438/Group_23.svg">
-  <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <link rel="icon" type="image/svg+xml" href="/images/MBS%20logo.svg">
+  <link href="/vendor/fonts/mulish.css" rel="stylesheet">
+  <script src="/vendor/lucide/lucide.min.js"></script>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -16,7 +14,7 @@
 
 <header class="header">
   <div class="header-brand" onclick="switchTab('dashboard')" style="cursor:pointer" title="Перейти на дашборд">
-    <img src="https://static.tildacdn.com/tild6362-6535-4934-b866-656531303037/MBS_logo_black_1_1.svg" alt="Moscow Barista School" class="header-logo-img">
+    <img src="/images/MBS%20logo.svg" alt="Moscow Barista School" class="header-logo-img">
   </div>
 
   <!-- Селектор локаций -->
@@ -316,6 +314,13 @@
     <div class="modal-label md-publish-required" style="margin-top:14px;margin-bottom:4px"><i data-lucide="chef-hat" class="icon"></i> Процесс приготовления</div>
     <textarea class="modal-inp" id="md-process" rows="4" placeholder="Опишите шаги приготовления: 1. Приготовить эспрессо..." style="resize:vertical;font-family:inherit;line-height:1.6"></textarea>
 
+    <!-- Описание для витрины -->
+    <div class="md-author-only">
+      <div class="modal-label md-publish-required" style="margin-top:14px;margin-bottom:4px"><i data-lucide="store" class="icon"></i> Описание для витрины</div>
+      <textarea class="modal-inp" id="md-public-description" rows="3" placeholder="Коротко опишите идею напитка, вкус и кому подойдёт этот рецепт." style="resize:vertical;font-family:inherit;line-height:1.6"></textarea>
+      <div class="md-author-field-hint">Этот текст увидят покупатели в карточке рецепта до покупки.</div>
+    </div>
+
     <!-- Оборудование -->
     <div class="modal-label md-publish-required" style="margin-top:14px;margin-bottom:6px"><i data-lucide="wrench" class="icon"></i> Оборудование для приготовления</div>
     <div class="md-equipment-box">
@@ -505,6 +510,7 @@
         </select>
       </div>
     </div>
+    <div class="modal-row">
       <div>
         <div class="modal-label">Единица выхода</div>
         <select class="modal-select" id="ms-unit" onchange="_updateSemiCostPreview()">
@@ -881,7 +887,7 @@
       </a>
     </div>
     <div class="footer-col footer-col-center">
-      <img src="https://static.tildacdn.com/tild6362-6535-4934-b866-656531303037/MBS_logo_black_1_1.svg" alt="MBS" class="footer-logo">
+      <img src="/images/MBS%20logo.svg" alt="MBS" class="footer-logo">
       <div class="footer-social">
         <a href="https://instagram.com/barista_school" target="_blank" class="footer-social-btn" title="Instagram">
           <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
@@ -909,7 +915,7 @@
 
   <!-- MOBILE: тёмная полоса -->
   <div class="footer-mobile">
-    <img src="https://static.tildacdn.com/tild6362-6535-4934-b866-656531303037/MBS_logo_black_1_1.svg" alt="MBS" class="footer-mobile-logo">
+    <img src="/images/MBS%20logo.svg" alt="MBS" class="footer-mobile-logo">
     <div class="footer-mobile-social">
       <a href="tel:+79959992836" class="footer-mobile-icon" title="Позвонить">
         <svg class="icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.07 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16z"/></svg>

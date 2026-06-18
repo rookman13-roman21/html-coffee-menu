@@ -1,6 +1,6 @@
 # NEXT_CHAT_HANDOFF — Coffee_menu / barista-school.online
 
-Дата актуализации: 17 июня 2026.
+Дата актуализации: 19 июня 2026.
 
 Этот файл нужен, чтобы новый чат быстро понял контекст проекта и мог продолжить работу без повторной раскачки.
 
@@ -14,7 +14,11 @@
 
 Идея: участники Mixology Cup и внешние авторы получают кабинет, вносят свои рецепты, отправляют их на модерацию, после публикации рецепты продаются через витрину и CRM-процесс в Битрикс. На первом релизе полноценная онлайн-оплата и автоматическая выдача доступа к купленному рецепту внутри платформы не обязательны: заявка и обработка могут идти через Битрикс.
 
-На 17 июня 2026 добавлен автоматический author-доступ для участников Mixology Cup из server whitelist: при регистрации телефон сверяется с участником, у которого в yClients-отчёте есть фактический статус `visited` / «пришёл».
+На 17 июня 2026 добавлен автоматический author-доступ для участников Mixology Cup из server whitelist: при регистрации телефон сверяется с участником, у которого в yClients-отчёте есть фактический статус `visited` / «пришёл». Профиль автора также показывает очищенные участия в чемпионатах и CTA на рецепт Mixology Cup, если такие участия есть.
+
+На 18 июня 2026 production-доступность из РФ стабилизирована включением HTTP/2 на nginx для `barista-school.online`. Симптом был: сайт открывается через VPN, но не грузится у части пользователей из РФ. Корень похож на ТСПУ/HTTP/1.1-сценарий: браузер создаёт много параллельных TLS-соединений, а сеть их подвешивает. Проверка после правки: `curl -Iv --http2 https://barista-school.online/` показывает `ALPN: server accepted h2` и `HTTP/2 200`.
+
+На 18 июня 2026 сделан первый динамический каталог авторских рецептов для Tilda + платформы: `/recipes` показывает каталог с фильтрами, detail-превью и корзиной-заявкой, а `public/tilda-blocks/author-recipes-widget.html` можно вставлять на Tilda-страницы `baristaschool.ru` (`/drinks`, `/summer_drinks` и т.п.). Production CORS для `https://baristaschool.ru` включён вручную деплоем только `server/main.py`; опубликованный рецепт `Плакучая Ива` проверенно отдаётся public API.
 
 ## 2. Связанные проекты
 
@@ -27,6 +31,8 @@
 - `/Users/Romka/Downloads/All_Code/mbs-mixology-cup` — контекст по участникам чемпионата.
 
 Важно: пока не делать глубокую чистку `bitrix-tools`, если задача не про него напрямую. Для нового продукта использовать его как reference по Битрикс-паттернам.
+
+Важно по Git: активный Git-репозиторий сейчас только `HTML_coffee_menu`. Backend `Coffee_menu/server/main.py` лежит рядом и не находится в этом Git-репозитории, но `npm run check` компилирует его и production-деплой берёт его из соседней папки.
 
 ## 3. Термины и стиль
 
@@ -151,8 +157,14 @@ Mixology auto-author:
 - runtime whitelist: `server/data/mixology_author_access.json`;
 - импорт: `server/scripts/import_mixology_author_access.py`;
 - источник импорта v1: `YClients-Dashboard/data/mixology/reports/generated/*.clients.json`;
+- свежий yClients-отчёт генерируется в проекте `YClients-Dashboard` скриптом `scripts/mbs_mixology_cup_report.js`;
 - засчитываются только строки, где `mixology_records` содержит `visited`;
 - `no_show`, `canceled`, `pending`, `confirmed` не дают author-доступ;
+- очищенные участия Mixology Cup сохраняются в `author_championship_participations` и возвращаются автору как `championship_participations` без телефонов/yClients ID;
+- `GET /api/author/profile` lazy-синхронизирует участия из whitelist в SQLite и отдаёт их только самому автору;
+- `PUT /api/author/profile` не принимает и не перезаписывает участия;
+- Telegram-уведомления авторов идут через `@Join_MBS_bot`: `/api/author/telegram/*` создаёт одноразовую ссылку привязки, `/api/telegram/join-mbs/webhook` сохраняет приватный `telegram_chat_id`, команда и автор получают best-effort уведомления по проверке рецептов; на production env настроен, webhook установлен, привязка из кабинета автора проверена вручную 18 июня 2026.
+- frontend показывает блок `Участие в чемпионатах` только при непустом `championship_participations`;
 - при совпадении телефона `POST /api/auth/register` создаёт активного пользователя с `access_author=true`, `access_drinks=false`, `access_finance=false`, создаёт/обновляет `author_profiles`, запускает author Bitrix sync и возвращает `token`, `user`, `auto_author:true`;
 - whitelist содержит телефоны и не должен попадать в Git или публичные документы.
 
@@ -182,12 +194,14 @@ Mixology auto-author:
 8. Добавляет комментарий в timeline контакта только при первом добавлении автора, не при каждом сохранении профиля/аватара.
 9. Не пишет служебные данные в `COMMENTS`, чтобы не утащить их в yClients через `sync_comment`.
 
-При сохранении профиля автора backend обновляет в Битрикс `NAME`, `LAST_NAME`, `SECOND_NAME` и фото контакта. Telegram убран из author frontend-формы, чтобы не затирать старые данные.
+При сохранении профиля автора backend обновляет в Битрикс `NAME`, `LAST_NAME`, `SECOND_NAME` и фото контакта. Telegram убран из author frontend-формы, чтобы не затирать старые данные; новая Telegram-привязка живёт отдельно и не отправляется в Битрикс/yClients.
 
 Production-настройки:
 
 - `BITRIX_WEBHOOK` добавлен в `/var/www/coffee-menu/server/.env`.
 - `BITRIX_AUTHOR_MARK_FIELD=UF_CRM_1766349995197`.
+- `JOIN_MBS_BOT_TOKEN`, `JOIN_MBS_BOT_USERNAME=Join_MBS_bot`, `JOIN_MBS_AUTHOR_REVIEW_CHAT_ID` добавлены в `/var/www/coffee-menu/server/.env`; токен взят из локального проекта `schedule-online/events-schedule-sync`, значение не фиксировать в документации.
+- Webhook `@Join_MBS_bot` установлен на `/api/telegram/join-mbs/webhook`.
 - `BITRIX_AUTHOR_MARK_LABEL=Автор рецептов`.
 - Enum `Автор рецептов` добавлен в поле Битрикс.
 
@@ -314,12 +328,22 @@ Production:
 
 Перед backend-деплоем обязательно делать SQLite backup.
 
+Инфраструктурная заметка 18 июня 2026:
+
+- `barista-school.online` / `www.barista-school.online` на `159.194.233.13` должны отвечать по HTTP/2;
+- active nginx config: `/etc/nginx/sites-enabled/coffee-menu`, строка `listen 443 ssl http2;`;
+- `nginx -t` после исправления проходит без warning;
+- backup nginx-конфигов нельзя хранить в `/etc/nginx/sites-enabled/`, потому что `nginx.conf` включает wildcard `sites-enabled/*`; backup перенесён в `/root/nginx-backups/`;
+- если снова жалуются “из России не грузит без VPN”, сначала проверить `curl -Iv --http2 https://barista-school.online/`, `curl -fsS --http2 https://barista-school.online/api/health`, `nginx -t`, access/error logs;
+- соседний хост `https://159-194-202-120.sslip.io/` на 18 июня 2026 тоже отвечал только HTTP/1.1, но текущий SSH-ключ туда не пускал; при доступе включить HTTP/2 аналогично.
+
 Последний production deploy author-слоя:
 
 - backend и frontend выкатаны 17 июня 2026;
 - production health: `https://barista-school.online/api/health` отвечает `{"ok":true,"version":"1.0.0"}`;
-- production HTML подключал bundle `/assets/index-CIQA3tiy.js`;
-- на production SQLite проверены таблицы `author_recipe_drafts`, `author_ingredients`, `author_semis`;
+- production HTML подключал bundle `/assets/index-Cs-cp-iA.js` после деплоя блока чемпионатов;
+- на production SQLite проверены таблицы `author_recipe_drafts`, `author_ingredients`, `author_semis`, `author_championship_participations`;
+- production whitelist Mixology обновлён 17 июня 2026 из свежего yClients-отчёта: 55 строк author-доступа, тестовый участник найден, 1 участие и 1 дата; содержимое whitelist не выводилось;
 - `npm run deploy:backend` может показать ранний `curl: (7)` сразу после restart API, но повторная проверка `systemctl is-active coffee-menu-api.service` и `/api/health` проходит.
 
 ## 14. Правила безопасности
@@ -424,6 +448,7 @@ Mixology author access:
 - публичного endpoint нет;
 - импорт whitelist выполняется серверным скриптом `server/scripts/import_mixology_author_access.py`;
 - runtime-файл `server/data/mixology_author_access.json` приватный.
+- если в yClients добавили нового участника или поменяли статус на `пришёл`, блок чемпионатов появится только после свежей выгрузки Mixology и обновления production whitelist.
 
 ## 17. Следующие возможные направления
 
@@ -467,11 +492,11 @@ Mixology author access:
 
 Возможные задачи:
 
-- список опубликованных рецептов;
-- страница рецепта;
-- форма заявки;
-- безопасный public API;
-- встраивание на `baristaschool.ru` или Tilda-блок.
+- динамический каталог опубликованных рецептов с поиском, фильтрами по автору/категории/цене/Mixology Cup и сортировкой;
+- страница рецепта показывает продающее превью, автора, цену, объём, что входит в покупку и другие рецепты автора, но не раскрывает полную технологию;
+- корзина-заявка поддерживает несколько рецептов и пишет заявки в `recipe_orders`, Битрикс-сделки создаются best-effort;
+- public API очищает служебные поля: не отдаёт телефон, email, Telegram, `author_user_id`, себестоимость, review-комментарии и внутреннее `recipe`;
+- Tilda-блок для встраивания: `HTML_coffee_menu/public/tilda-blocks/author-recipes-widget.html`.
 
 ### E. Битрикс и выплаты
 

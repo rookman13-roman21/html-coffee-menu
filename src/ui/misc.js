@@ -2,6 +2,7 @@
 // Разное: шаблоны, инсайты, сезонность, кандидаты на удаление, PDF-отчёты, onWhatIf
 
 import { hasAccess } from './auth.js';
+import { ensureExcelJS } from '../utils/vendor.js';
 
 export function openTemplatesModal() {
   const MENU_TEMPLATES = window.MENU_TEMPLATES;
@@ -239,7 +240,7 @@ export function exportFullPDF() {
   }).join('');
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Финансовый отчёт — ${locName}</title>
-<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="/vendor/fonts/mulish.css" rel="stylesheet">
 <style>
 * { box-sizing:border-box; margin:0; padding:0; }
 body { font-family:'Mulish',Arial,sans-serif; font-size:10pt; color:#222; background:#fff; }
@@ -346,7 +347,7 @@ ${investment > 0 ? `
 
 export async function exportFullXLSX() {
   document.getElementById('export-menu')?.classList.remove('open');
-  if (!window.ExcelJS) { window.showAlert('Библиотека ExcelJS не загрузилась. Проверьте интернет.'); return; }
+  try { await ensureExcelJS(); } catch (e) { window.showAlert(e.message || 'Библиотека ExcelJS не загрузилась.'); return; }
 
   const loc    = window.activeLoc();
   const drinks = window.withABC(window.enrich());
@@ -675,7 +676,7 @@ export function exportSuppliersPDF() {
     </tr>`).join('');
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Поставщики — ${locName}</title>
-<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="/vendor/fonts/mulish.css" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Mulish',Arial,sans-serif;font-size:10pt;color:#222;background:#fff}
@@ -708,7 +709,7 @@ td.bold{font-weight:700}
 }
 
 export async function exportSuppliersXLSX() {
-  if (!window.ExcelJS) { window.showAlert('Библиотека ExcelJS не загрузилась.'); return; }
+  try { await ensureExcelJS(); } catch (e) { window.showAlert(e.message || 'Библиотека ExcelJS не загрузилась.'); return; }
   const book   = window.S.supplierBook || [];
   const sups   = window.S.suppliers   || {};
   const loc    = window.activeLoc();
@@ -829,7 +830,7 @@ export function exportMaterialsPDF() {
   }).join('');
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ингредиенты — ${locName}</title>
-<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="/vendor/fonts/mulish.css" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Mulish',Arial,sans-serif;font-size:9.5pt;color:#222;background:#fff}
@@ -871,7 +872,7 @@ ${SEMI.length ? `
 }
 
 export async function exportMaterialsXLSX() {
-  if (!window.ExcelJS) { window.showAlert('Библиотека ExcelJS не загрузилась.'); return; }
+  try { await ensureExcelJS(); } catch (e) { window.showAlert(e.message || 'Библиотека ExcelJS не загрузилась.'); return; }
   const loc      = window.activeLoc();
   const locName  = loc?.name || 'Кофейня';
   const todayISO = new Date().toISOString().slice(0,10);
@@ -1650,7 +1651,7 @@ export function exportOpeningCostsPDF() {
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
 <title>Стартовые вложения — ${locName}</title>
-<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="/vendor/fonts/mulish.css" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Mulish',Arial,sans-serif;font-size:10pt;color:#222;background:#fff}
@@ -1711,7 +1712,7 @@ tr.cat-row svg{width:12px;height:12px;vertical-align:middle;fill:none;stroke:#ff
 }
 
 export async function exportOpeningCostsXLSX() {
-  if (!window.ExcelJS) { window.showAlert('Библиотека ExcelJS не загрузилась.'); return; }
+  try { await ensureExcelJS(); } catch (e) { window.showAlert(e.message || 'Библиотека ExcelJS не загрузилась.'); return; }
   const S        = window.S;
   const costs    = S.openingCosts || [];
   const meta     = S.openingMeta  || {};

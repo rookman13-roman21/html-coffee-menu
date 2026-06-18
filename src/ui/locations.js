@@ -42,6 +42,13 @@ function _renderMenuUserCard() {
   `;
 }
 
+export function authorOpenTermsFromMenu() {
+  document.getElementById('loc-menu')?.classList.remove('open');
+  setTimeout(() => {
+    if (window.openAuthorTermsModal) window.openAuthorTermsModal();
+  }, 0);
+}
+
 function renderAuthorCabinetMenu() {
   const menu = document.getElementById('loc-menu');
   const loc = window.activeLoc ? window.activeLoc() : null;
@@ -54,7 +61,7 @@ function renderAuthorCabinetMenu() {
       <i data-lucide="user-pen" class="icon"></i>
       <span>Данные автора</span>
     </button>
-    <button class="loc-menu-item" type="button" onclick="openAuthorTermsModal();document.getElementById('loc-menu')?.classList.remove('open')">
+    <button class="loc-menu-item" type="button" onclick="authorOpenTermsFromMenu()">
       <i data-lucide="file-text" class="icon"></i>
       <span>Условия сотрудничества</span>
     </button>

@@ -26,7 +26,12 @@ scp -i "$SSH_KEY" -o StrictHostKeyChecking=no \
   "$SERVER_DIR/main.py" "$REMOTE:$REMOTE_SERVER/main.py"
 scp -i "$SSH_KEY" -o StrictHostKeyChecking=no \
   "$SERVER_DIR/scripts/import_mixology_author_access.py" "$REMOTE:$REMOTE_SERVER/scripts/import_mixology_author_access.py"
-if [[ -f "$SERVER_DIR/data/mixology_author_access.json" ]]; then
+if [[ -f "$SERVER_DIR/data/mixology_author_access.json" && "${COFFEE_UPLOAD_MIXOLOGY_WHITELIST:-}" != "1" ]]; then
+  echo "ERROR: Local private mixology whitelist exists and will not be uploaded automatically." >&2
+  echo "Use the dedicated whitelist refresh flow, or set COFFEE_UPLOAD_MIXOLOGY_WHITELIST=1 intentionally." >&2
+  exit 1
+fi
+if [[ -f "$SERVER_DIR/data/mixology_author_access.json" && "${COFFEE_UPLOAD_MIXOLOGY_WHITELIST:-}" == "1" ]]; then
   scp -i "$SSH_KEY" -o StrictHostKeyChecking=no \
     "$SERVER_DIR/data/mixology_author_access.json" "$REMOTE:$REMOTE_SERVER/data/mixology_author_access.json"
 fi

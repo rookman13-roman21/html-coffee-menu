@@ -66,6 +66,35 @@ bash scripts/deploy_frontend.sh
 
 Делает `npm run build`, загружает `dist/` на production и проверяет `/api/health`.
 
+После frontend-деплоя, особенно если пользователи из РФ жалуются, что сайт грузится только через VPN, проверить HTTP/2:
+
+```bash
+curl -Iv --http2 https://barista-school.online/ 2>&1 | grep -E 'ALPN|HTTP/2|HTTP/1.1'
+curl -fsS --http2 https://barista-school.online/api/health
+```
+
+Ожидаемо:
+
+- `ALPN: server accepted h2`;
+- `HTTP/2 200` на главной;
+- `/api/health` возвращает `{"ok":true,"version":"1.0.0"}`.
+
+Контекст инцидента 18 июня 2026: без HTTP/2 сайт на Beget VPS `159.194.233.13` открывался через VPN, но зависал у части российских провайдеров. Симптом совпал с описанным сценарием ТСПУ/HTTP/1.1: браузер открывает много параллельных TLS-соединений, а сеть их режет/подвешивает. На production включено `listen 443 ssl http2;` в `/etc/nginx/sites-enabled/coffee-menu`.
+
+Если нужно править nginx:
+
+```bash
+ssh -i "$HOME/.ssh/id_ed25519" root@159.194.233.13 \
+  'nginx -t && systemctl reload nginx'
+```
+
+Правила:
+
+- backup конфигов nginx не класть в `/etc/nginx/sites-enabled/`, потому что `nginx.conf` включает wildcard `sites-enabled/*`;
+- backup класть в `/root/nginx-backups/` или другое место вне include;
+- после правки проверять отсутствие warning `conflicting server name`;
+- второй VPS `159.194.202.120` / `159-194-202-120.sslip.io` на 18 июня 2026 тоже отвечал только HTTP/1.1, но текущий SSH-ключ туда не пускал; при доступе включить HTTP/2 аналогично.
+
 ### Admin panel
 
 ```bash
@@ -108,12 +137,68 @@ ssh -i "$HOME/.ssh/id_ed25519" root@159.194.233.13 \
   'sqlite3 /var/www/coffee-menu/server/data/app.db ".tables" | tr " " "\n" | grep -E "author_(recipe_drafts|ingredients|semis)|recipe_publication_(versions|events)"'
 ```
 
+Для public Tilda-витрины после backend-деплоя проверить CORS:
+
+```bash
+curl -i -H 'Origin: https://baristaschool.ru' \
+  https://barista-school.online/api/public/author-recipes
+curl -i -H 'Origin: https://baristaschool.ru' \
+  -H 'Access-Control-Request-Method: GET' \
+  -X OPTIONS https://barista-school.online/api/public/author-recipes
+```
+
+Ожидаемо: `access-control-allow-origin: https://baristaschool.ru`, HTTP 200 и опубликованные рецепты в JSON.
+
+Если `scripts/deploy_backend.sh` останавливается из-за локального `server/data/mixology_author_access.json`, не загружать whitelist вместе с обычным backend-деплоем. Для правок только `server/main.py` можно вручную загрузить файл и перезапустить API, не трогая приватный whitelist:
+
+```bash
+scp -i "$HOME/.ssh/id_ed25519" server/main.py \
+  root@159.194.233.13:/var/www/coffee-menu/server/main.py
+ssh -i "$HOME/.ssh/id_ed25519" root@159.194.233.13 \
+  'systemctl restart coffee-menu-api.service && sleep 3 && curl -fsS http://127.0.0.1:8000/api/health'
+```
+
+Для Telegram-уведомлений авторов:
+
+- реальные `JOIN_MBS_BOT_TOKEN`, `JOIN_MBS_BOT_USERNAME`, `JOIN_MBS_AUTHOR_REVIEW_CHAT_ID`, опционально `JOIN_MBS_WEBHOOK_SECRET` задаются только в production `.env`;
+- для старого регистрационного бота используется `TELEGRAM_WEBHOOK_SECRET`; если env не задан, production формирует secret из `JWT_SECRET`, после backend-деплоя перерегистрировать `/api/admin/register-webhook`;
+- токен `@Join_MBS_bot` можно сверить с локальным проектом `schedule-online/events-schedule-sync`, но не выводить его в терминал/чат;
+- после backend-деплоя зарегистрировать webhook `@Join_MBS_bot` через admin endpoint `/api/admin/register-join-mbs-webhook` или прямым `setWebhook` с сервера; если задан `JOIN_MBS_WEBHOOK_SECRET`, регистрация передаст secret_token;
+- на 18 июня 2026 production webhook уже установлен на `/api/telegram/join-mbs/webhook`, после смены домена/бота/токена регистрировать заново;
+- не выводить токены и chat_id авторов в логи, документацию и ответы.
+
 Для Mixology auto-author:
 
 - whitelist `server/data/mixology_author_access.json` — приватный runtime-файл с телефонами, не коммитить и не печатать в логах;
 - импорт whitelist: `server/scripts/import_mixology_author_access.py`;
 - источник v1: `YClients-Dashboard/data/mixology/reports/generated/*.clients.json`;
 - доступ выдаётся только для `visited` / «пришёл», остальные статусы не активируют автора.
+- если в yClients только что добавили участника или поменяли статус на «пришёл», сначала нужно создать свежий отчёт в `YClients-Dashboard`; старый whitelist сам не обновится.
+
+Безопасное ручное обновление production whitelist:
+
+```bash
+cd /Users/Romka/Downloads/All_Code/YClients-Dashboard
+MBS_MIXOLOGY_DATE_FROM=2024-01-01 MBS_MIXOLOGY_DATE_TO=YYYY-MM-DD node scripts/mbs_mixology_cup_report.js
+
+cd /Users/Romka/Downloads/All_Code/Coffee_menu
+python3 server/scripts/import_mixology_author_access.py \
+  --source /path/to/fresh/mbs-mixology-cup-clients-YYYY-MM-DDTHH-MM-SS.clients.json \
+  --output /tmp/mixology_author_access.fresh.json
+
+ssh -i "$HOME/.ssh/id_ed25519" root@159.194.233.13 \
+  'cd /var/www/coffee-menu/server && mkdir -p backups && cp data/mixology_author_access.json backups/mixology_author_access-$(date +%Y%m%d-%H%M%S).before-refresh.json'
+
+scp -i "$HOME/.ssh/id_ed25519" /tmp/mixology_author_access.fresh.json \
+  root@159.194.233.13:/var/www/coffee-menu/server/data/mixology_author_access.json
+```
+
+Правила:
+
+- не открывать и не печатать содержимое whitelist в чат или логи;
+- проверять только агрегаты: количество items, наличие участия без вывода телефона/yClients ID;
+- после обновления whitelist restart API не обязателен: `GET /api/author/profile` читает whitelist и lazy-синхронизирует участия;
+- если одновременно деплоится backend, `scripts/deploy_backend.sh` теперь останавливается при наличии локального `server/data/mixology_author_access.json`; whitelist обновлять отдельным refresh-flow или явно ставить `COFFEE_UPLOAD_MIXOLOGY_WHITELIST=1` только при осознанной загрузке свежего файла.
 
 ## Переменные для переопределения
 
@@ -129,6 +214,6 @@ COFFEE_HEALTH_URL=https://barista-school.online/api/health
 
 - Изменение production `.env`.
 - Ручные SQL-миграции. Новые author-таблицы сейчас создаются через backend startup/init.
-- Ручное обновление приватного Mixology whitelist на production.
+- Ручное обновление приватного Mixology whitelist на production после изменений в yClients.
 - Создание новых Bitrix/userfield enum.
 - Публикация в GitHub, если локальная ветка не поверх свежего `origin/main`.

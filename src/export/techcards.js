@@ -2,6 +2,7 @@
 // Экспорт технологических карт (печать через iframe)
 
 import { filterAuthorDrinks } from '../access/author-layer.js';
+import { ensureExcelJS } from '../utils/vendor.js';
 
 export function exportTechCards() {
   const { getOrgInfo, DRINKS, _buildTechCardBlock, _openTechCardsWindow } = window;
@@ -46,7 +47,7 @@ export function exportSemiTechCards() {
 
 export function _techCardCSS() {
   return `
-  @import url('https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&display=swap');
+  @import url('/vendor/fonts/mulish.css');
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Mulish', Arial, sans-serif; font-size: 9.5pt; color: #222; padding-top: 52px; }
   @page { size: A4; margin: 15mm 12mm; }
@@ -341,7 +342,7 @@ export function mvdDownloadPDF() {
 }
 export async function mvdDownloadExcel() {
   document.getElementById('mvd-download-menu').classList.remove('open');
-  if (!window.ExcelJS) { window.showAlert('Библиотека ExcelJS не загрузилась. Проверьте интернет.'); return; }
+  try { await ensureExcelJS(); } catch (e) { window.showAlert(e.message || 'Библиотека ExcelJS не загрузилась.'); return; }
   const data = _mvdGetData(); if (!data) return;
   const { d, ings, totalCost, price, profit, fc, nut, groupName } = data;
   const today  = new Date().toLocaleDateString('ru');
@@ -743,7 +744,7 @@ export function exportSingleSemiPDF(idRaw) {
 }
 
 export async function exportSingleSemiXLSX(idRaw) {
-  if (!window.ExcelJS) { window.showAlert('Библиотека ExcelJS не загрузилась.'); return; }
+  try { await ensureExcelJS(); } catch (e) { window.showAlert(e.message || 'Библиотека ExcelJS не загрузилась.'); return; }
   const s = window.SEMI.find(x => x.id === Number(idRaw));
   if (!s) return;
 

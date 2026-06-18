@@ -443,13 +443,19 @@ export function filterRecipes(val) {
 
   let html = '';
   if (!list.length && authorMode && !authorBaseList.length) {
+    const mixologyAuthor = !!(window.authorHasMixologyParticipation && window.authorHasMixologyParticipation());
+    const emptyTitle = mixologyAuthor ? 'Создайте рецепт Mixology Cup' : 'Создайте первый авторский рецепт';
+    const emptyText = mixologyAuthor
+      ? 'Начните с напитка, который вы готовили на Mixology Cup. Заполните состав, процесс приготовления, фото и отправьте рецепт на проверку.'
+      : 'Добавьте авторский напиток, заполните состав, процесс приготовления, фото и отправьте рецепт на проверку.';
+    const emptyName = mixologyAuthor ? 'Мой напиток Mixology Cup' : 'Мой авторский напиток';
     html = `
       <div class="author-recipe-empty-card">
         <div class="author-recipe-empty-icon"><i data-lucide="sparkles" class="icon"></i></div>
         <div>
-          <h3>Создайте первый авторский рецепт</h3>
-          <p>Начните с напитка, который вы готовили на Mixology Cup. Заполните состав, процесс приготовления, фото и отправьте рецепт на проверку.</p>
-          <button class="btn btn-green" onclick="openAddDrink({ name: 'Мой напиток Mixology Cup', group: 'author' })"><i data-lucide="sparkles" class="icon"></i> Создать рецепт Mixology Cup</button>
+          <h3>${emptyTitle}</h3>
+          <p>${emptyText}</p>
+          <button class="btn btn-green" onclick="openAddDrink({ name: '${emptyName}', group: 'author' })"><i data-lucide="sparkles" class="icon"></i> ${mixologyAuthor ? 'Создать рецепт Mixology Cup' : 'Создать рецепт'}</button>
         </div>
       </div>
     `;

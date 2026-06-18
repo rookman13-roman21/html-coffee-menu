@@ -141,6 +141,7 @@ function _publicationFieldTargets(field) {
     ingredients: ['#md-ings'],
     image: ['#md-img-area'],
     process: ['#md-process'],
+    description: ['#md-public-description'],
     equipment: ['.md-equipment-box'],
     storage_temp: ['#md-storage-temp'],
     storage_life: ['#md-storage-life'],
@@ -286,6 +287,7 @@ export function openAddDrink(preset = {}) {
   document.getElementById('modal-drink-title').innerHTML = '<i data-lucide="plus" class="icon"></i> Новый напиток';
   if (window.lucide) lucide.createIcons({ nodes: [document.getElementById('modal-drink-title')] });
   document.getElementById('md-process').value = '';
+  document.getElementById('md-public-description').value = initial.public_description || '';
   document.getElementById('md-video').value    = '';
   document.getElementById('md-storage-temp').value = '';
   document.getElementById('md-storage-life').value = '';
@@ -322,6 +324,7 @@ export function openEditDrink(id) {
   document.getElementById('md-group').value = d.group;
   document.getElementById('md-edit-id').value = id;
   document.getElementById('md-process').value = d.process || '';
+  document.getElementById('md-public-description').value = d.public_description || d.publicDescription || '';
   document.getElementById('md-video').value    = d.videoUrl || '';
   const _isCold = d.group === 'cold';
   const _defTemp = _isCold ? 'не выше +10°C' : 'не ниже 60°C';
@@ -414,6 +417,7 @@ export async function saveDrink() {
   });
   if (recipe.length === 0) { window.showAlert('Добавьте хотя бы один ингредиент'); return; }
   const process  = document.getElementById('md-process').value.trim();
+  const public_description = document.getElementById('md-public-description')?.value.trim() || '';
   const videoUrl = document.getElementById('md-video').value.trim();
   const storage_temp  = document.getElementById('md-storage-temp').value.trim();
   const storage_life  = document.getElementById('md-storage-life').value.trim();
@@ -431,7 +435,7 @@ export async function saveDrink() {
       : DRINKS.findIndex(x=>x.id===id);
     if (idx >= 0) {
       const wasCustom = DRINKS[idx].custom || false;
-      DRINKS[idx] = {...DRINKS[idx], name, group, vol, recipe, process, videoUrl, image,
+      DRINKS[idx] = {...DRINKS[idx], name, group, vol, recipe, process, public_description, videoUrl, image,
         equipment,
         storage_temp, storage_life, appearance, taste, consistency,
         custom: wasCustom,
@@ -442,7 +446,7 @@ export async function saveDrink() {
     S.salePrices[id] = price;
   } else {
     const id = _nextFreeDrinkId();
-    savedDrink = { id, group, name, vol, recipe, process, videoUrl, image,
+    savedDrink = { id, group, name, vol, recipe, process, public_description, videoUrl, image,
       equipment,
       storage_temp, storage_life, appearance, taste, consistency, price, custom:true };
     DRINKS.push(savedDrink);

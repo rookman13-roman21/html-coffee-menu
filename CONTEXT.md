@@ -1,11 +1,11 @@
 # CONTEXT — MBS* Coffee Menu
 
 > Платформа `barista-school.online`: кабинет кофейни, кабинет автора рецептов и витрина авторских рецептов. SPA на Vite + ES-модули.
-> Последнее обновление: 17 июня 2026 — author layer выделен отдельно, рецепты/ингредиенты/полуфабрикаты автора сохраняются на backend, профиль автора поддерживает ФИО и аватар, public-витрина получает публичные данные автора, admin-модерация хранит версии/события/ОС.
+> Последнее обновление: 18 июня 2026 — author layer выделен отдельно, рецепты/ингредиенты/полуфабрикаты автора сохраняются на backend, профиль автора поддерживает ФИО, аватар и блок участий в чемпионатах, public-витрина получает публичные данные автора, admin-модерация хранит версии/события/ОС. Production nginx переведён на HTTP/2 для стабильной загрузки из РФ без VPN.
 
 ---
 
-## 0.1. Актуальное состояние на 17 июня 2026
+## 0.1. Актуальное состояние на 18 июня 2026
 
 Для старта нового чата сначала читать `NEXT_CHAT_HANDOFF.md`.
 
@@ -25,7 +25,8 @@
 - `src/ui/author.js` — кабинет автора, профиль, условия, загрузка аватара, server sync авторских данных.
 - `server/main.py` — таблицы `author_profiles`, `author_recipe_drafts`, `author_ingredients`, `author_semis`, `recipe_publications`, `recipe_publication_versions`, `recipe_publication_events`, `recipe_orders`.
 - `server/admin/src/_authors.js` — admin-раздел `Авторы`: список авторов, публикации, статусы, retry синхронизации с Битрикс.
-- `src/ui/public-recipes.js` — public-витрина опубликованных рецептов.
+- `src/ui/public-recipes.js` — public-витрина опубликованных рецептов: каталог, фильтры, detail-превью, корзина-заявка.
+- `public/tilda-blocks/author-recipes-widget.html` — самодостаточный HTML-блок для Tilda-страниц `baristaschool.ru` (`/drinks`, `/summer_drinks` и другие посадочные страницы с рецептурным каталогом).
 
 В режиме `Автор`:
 
@@ -35,6 +36,7 @@
 - скрытые поставщики: `Hiwater`, `Baristaline`, `МайТаймКап`;
 - author profile: `Фамилия`, `Имя`, `Отчество`, телефон, описание автора, аватар;
 - Telegram не показывается в frontend-форме и не отправляется при сохранении;
+- Telegram-уведомления автора подключаются отдельно через `@Join_MBS_bot`; frontend показывает только статус привязки, `telegram_chat_id` остаётся приватным backend-полем.
 - условия сотрудничества показываются в popup, без сохранения юридического акцепта.
 - публикации в `Мой профиль` сгруппированы по статусам: требуют внимания, на проверке, опубликованы, сняты, все;
 - заготовки `Данные для договора` и `Финансы` пока информационные, без backend-учёта выплат.
@@ -71,9 +73,16 @@ Mixology auto-author:
 
 - whitelist хранится приватно в runtime-файле `server/data/mixology_author_access.json`, не в Git;
 - импорт делает `server/scripts/import_mixology_author_access.py` из `YClients-Dashboard/data/mixology/reports/generated/*.clients.json`;
+- свежий отчёт из yClients создаётся в соседнем проекте `YClients-Dashboard` скриптом `scripts/mbs_mixology_cup_report.js`;
 - author-доступ при регистрации выдаётся только при совпадении телефона и статусе `visited` / «пришёл»;
 - `no_show`, `canceled`, `pending`, `confirmed` не дают author-доступ;
 - обычная регистрация без совпадения остаётся pending.
+- очищенные данные участий Mixology Cup сохраняются в `author_championship_participations` и отдаются автору в `/api/author/profile` как `championship_participations` без телефонов и yClients ID.
+- `GET /api/author/profile` lazy-синхронизирует участия из whitelist; повторная загрузка профиля не должна создавать дубликаты.
+- `PUT /api/author/profile` не принимает участия от frontend.
+- В `Мой профиль` блок `Участие в чемпионатах` показывается только самому автору и только при непустом `championship_participations`; покупателям и admin drawer v1 этот блок не отдаётся.
+- Сценарий первого рецепта условный: для Mixology-участника текст и CTA ведут к рецепту Mixology Cup, для обычного автора остаётся нейтральный первый авторский рецепт.
+- Если статус участника в yClients изменился после последнего импорта, UI не обновится сам: нужно заново собрать Mixology-отчёт и обновить production whitelist.
 
 ### Битрикс
 
@@ -128,6 +137,9 @@ Admin panel:
 - **БД:** SQLite `/var/www/coffee-menu/server/data/app.db`
 - **SSL:** Let’s Encrypt, истекает 2026-08-19
 - **nginx snippet:** `/etc/nginx/snippets/coffee-api.conf` — `location /api/` вынесен туда, в основном конфиге `include /etc/nginx/snippets/coffee-api.conf;` — certbot renew больше не перезапишет прокси-блок
+- **HTTP/2:** включён 18 июня 2026 в active nginx config `/etc/nginx/sites-enabled/coffee-menu` (`listen 443 ssl http2;`) после проблемы, когда сайты на Beget/VPS не открывались из РФ без VPN. Симптом совпал со сценарием ТСПУ/HTTP/1.1 из Habr: много параллельных TLS-соединений при HTTP/1.1 зависают у части российских провайдеров. Проверка после правки: `curl -Iv --http2 https://barista-school.online/` должен показывать `ALPN: server accepted h2` и `HTTP/2 200`.
+
+Важно для nginx: не хранить backup-файлы внутри `/etc/nginx/sites-enabled/`, потому что `/etc/nginx/nginx.conf` включает wildcard `sites-enabled/*`. Backup active config класть, например, в `/root/nginx-backups/`, иначе nginx подхватит старый server block и покажет warnings `conflicting server name`.
 
 ### Аутентификация: `src/ui/auth.js`
 - **JWT токен** 30 дней, хранится в `localStorage['cm_token']`; пользователь — `localStorage['cm_user']`.
@@ -143,12 +155,22 @@ Admin panel:
 
 ### Поток запуска `main.js`
 ```js
-// 1. Public route /recipes рендерит public-витрину без кабинета.
+// 1. Public route /recipes рендерит public-витрину без кабинета: каталог, фильтры, detail и корзину-заявку.
 // 2. Для кабинета при сохранённом JWT сначала refreshCurrentUser().
 // 3. Затем fetchState() и _initApp(serverState).
 // 4. _initApp сбрасывает runtime, восстанавливает serverState, грузит user-scoped localStorage.
 // 5. Потом применяет доступы и открывает первую разрешённую вкладку.
 ```
+
+Public API витрины не должен раскрывать приватные данные автора и полный recipe snapshot. До покупки покупатель видит только продающее превью рецепта, цену, объём, автора и описание для витрины.
+
+Если Tilda-блок показывает `Не удалось загрузить каталог`, а `https://barista-school.online/api/public/author-recipes` отдаёт опубликованные рецепты, первым делом проверять CORS:
+
+```bash
+curl -i -H 'Origin: https://baristaschool.ru' https://barista-school.online/api/public/author-recipes
+```
+
+Ожидаемо в ответе должен быть `access-control-allow-origin: https://baristaschool.ru`.
 
 ### Ключевые исправления (bcrypt)
 ```python
@@ -197,13 +219,13 @@ SMTP_PASS=*** хранится только в server/.env ***
 **Forgot Password flow:**
 - `POST /api/auth/forgot-password` принимает `{ email, source }` (`source: 'admin' | 'user'`)
 - Генерирует 8-символьный temp_pass, хэширует, сохраняет в БД, отправляет email
-- Всегда возвращает `{ ok, temp_password, email_sent }` — temp_password показывать в UI даже если письмо не дошло
+- Всегда возвращает одинаковый безопасный ответ `{ ok, email_sent }`; временный пароль не возвращается в API и не показывается в UI
 - `login_url` в письме зависит от `source`: admin → `https://baristaschool.online`, user → `https://barista-school.online`
 
 **Admin-panel (tilda-admin.html + admin-panel.js):**
 - Inline forgot-form прямо в карточке логина (не отдельный модал)
 - `body: JSON.stringify({ email: fEmail, source: 'admin' })` — всегда source='admin'
-- UI всегда показывает temp_password в форме: `✓ Временный пароль: <b>XXXX</b>`
+- UI показывает только статус отправки письма; временный пароль через API не раскрывается
 
 ---
 
@@ -228,6 +250,7 @@ YANDEX_SECRET=***
 YANDEX_REDIRECT=https://barista-school.online/api/auth/yandex/callback
 TELEGRAM_BOT_TOKEN=***
 TELEGRAM_ADMIN_CHAT_ID=33668380
+TELEGRAM_WEBHOOK_SECRET=***  # optional; если не задан, production берёт derived secret из JWT_SECRET
 ```
 
 **Backend endpoints (server/main.py):**
@@ -260,7 +283,7 @@ TELEGRAM_ADMIN_CHAT_ID=33668380
 **Бот:** `@baristaschool_admin_bot`
 **Token:** хранится только в `/var/www/coffee-menu/server/.env`, в документации не фиксировать
 **Admin chat ID:** `33668380` (`@DonRomon`)
-**Env vars:** `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ADMIN_CHAT_ID` в `/var/www/coffee-menu/server/.env`
+**Env vars:** `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ADMIN_CHAT_ID`, опционально `TELEGRAM_WEBHOOK_SECRET` в `/var/www/coffee-menu/server/.env`
 
 **При регистрации** (email и Яндекс OAuth) отправляется уведомление:
 - Имя, email, телефон, источник (`email` или `yandex`)
@@ -274,7 +297,29 @@ TG_ADMIN_CHAT = os.getenv("TELEGRAM_ADMIN_CHAT_ID")
 ```
 Если env vars не заданы — функция молча игнорируется (нет crash).
 
+Webhook `/api/telegram/webhook` проверяет `X-Telegram-Bot-Api-Secret-Token` и admin chat. После смены `JWT_SECRET`/`TELEGRAM_WEBHOOK_SECRET` webhook нужно перерегистрировать через `/api/admin/register-webhook`.
+
+Разовый endpoint просмотра updates перенесён в admin-only `/api/admin/telegram/setup`; публичного `/api/telegram/setup` быть не должно.
+
 **Важно:** не хранить токен и chat_id в коде или репозитории — только в `.env` на сервере.
+
+### Telegram-уведомления авторов через `@Join_MBS_bot`
+
+Для авторских рецептов используется отдельная конфигурация, чтобы не ломать старый бот регистраций:
+
+- env: `JOIN_MBS_BOT_TOKEN`, `JOIN_MBS_BOT_USERNAME=Join_MBS_bot`, опционально `JOIN_MBS_AUTHOR_REVIEW_CHAT_ID`, `JOIN_MBS_WEBHOOK_SECRET`;
+- author API: `/api/author/telegram/status`, `/api/author/telegram/link`, `/api/author/telegram/settings`;
+- webhook: `/api/telegram/join-mbs/webhook`, регистрация через `/api/admin/register-join-mbs-webhook`;
+- автор привязывает Telegram по одноразовой ссылке `/start author_<token>`;
+- команда получает уведомления об отправке/повторной отправке рецепта на проверку;
+- автор получает уведомления о доработке, публикации, снятии и комментариях проверки.
+
+Production на 18 июня 2026:
+
+- `JOIN_MBS_BOT_TOKEN`, `JOIN_MBS_BOT_USERNAME=Join_MBS_bot`, `JOIN_MBS_AUTHOR_REVIEW_CHAT_ID` добавлены в `/var/www/coffee-menu/server/.env`;
+- исходный токен `@Join_MBS_bot` хранится в локальном проекте `schedule-online/events-schedule-sync`, в документации значение не указывать;
+- webhook установлен на `/api/telegram/join-mbs/webhook`;
+- привязка Telegram из кабинета автора проверена вручную, работает.
 
 ---
 

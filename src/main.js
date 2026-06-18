@@ -82,13 +82,16 @@ import { tabFromPath, syncUrlForTab } from './access/app-routes.js';
 import {
   authorCanPublish, renderAuthorWorkspace, renderAuthorProfile, loadAuthorWorkspace,
   saveAuthorProfile, uploadAuthorAvatar, submitRecipeForPublication, authorPublicationForDrink,
-  authorRecipeProgress,
+  authorRecipeProgress, authorHasMixologyParticipation,
   saveAuthorDraftForDrink, deleteAuthorDraftForDrink, uploadAuthorRecipeImage,
   saveAuthorIngredient, deleteAuthorIngredient,
   saveAuthorSemiForItem, deleteAuthorSemiForItem,
   openAuthorTermsModal, closeAuthorTermsModal,
   openAuthorProfileModal, closeAuthorProfileModal,
   openAuthorPublicationView, openAuthorPublicationEdit,
+  resubmitAuthorPublication,
+  connectAuthorTelegram, disconnectAuthorTelegram, toggleAuthorTelegramNotifications,
+  refreshAuthorTelegramStatus,
   openAuthorPublicationHistory, closeAuthorPublicationHistory, setAuthorPublicationFilter,
 } from './ui/author.js';
 
@@ -199,7 +202,7 @@ import {
 import {
   renderLocSwitcherUI, renderLocList, toggleLocMenu, toggleExportMenu,
   switchLocation, openAddLocation, renameActiveLocation, deleteActiveLocation,
-  saveLocation, authorOpenTechcardSettings,
+  saveLocation, authorOpenTechcardSettings, authorOpenTermsFromMenu,
 } from './ui/locations.js';
 
 import {
@@ -379,13 +382,16 @@ const _srcExports = {
   getUser,
   authorCanPublish, renderAuthorWorkspace, renderAuthorProfile, loadAuthorWorkspace,
   saveAuthorProfile, uploadAuthorAvatar, submitRecipeForPublication, authorPublicationForDrink,
-  authorRecipeProgress,
+  authorRecipeProgress, authorHasMixologyParticipation,
   saveAuthorDraftForDrink, deleteAuthorDraftForDrink, uploadAuthorRecipeImage,
   saveAuthorIngredient, deleteAuthorIngredient,
   saveAuthorSemiForItem, deleteAuthorSemiForItem,
   openAuthorTermsModal, closeAuthorTermsModal,
   openAuthorProfileModal, closeAuthorProfileModal,
   openAuthorPublicationView, openAuthorPublicationEdit,
+  resubmitAuthorPublication,
+  connectAuthorTelegram, disconnectAuthorTelegram, toggleAuthorTelegramNotifications,
+  refreshAuthorTelegramStatus,
   openAuthorPublicationHistory, closeAuthorPublicationHistory, setAuthorPublicationFilter,
   submitPublicRecipeOrder,
   // ui/payroll
@@ -396,7 +402,7 @@ const _srcExports = {
   // ui/locations
   renderLocSwitcherUI, renderLocList, toggleLocMenu, toggleExportMenu,
   switchLocation, openAddLocation, renameActiveLocation, deleteActiveLocation,
-  saveLocation, authorOpenTechcardSettings,
+  saveLocation, authorOpenTechcardSettings, authorOpenTermsFromMenu,
   // ui/modals
   openModal, closeModal, safeCloseModal,
   _markModalDirty, _clearModalDirty, _isModalDirty,

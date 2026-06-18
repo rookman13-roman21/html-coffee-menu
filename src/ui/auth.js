@@ -306,7 +306,7 @@ export function showAuthScreen() {
     overlay.id = 'auth-overlay';
     overlay.innerHTML = `
       <div class="auth-card">
-        <p class="auth-logo"><img src="https://static.tildacdn.com/tild6131-3765-4030-a666-656363633265/_1_1.svg" alt="Moscow Barista School"></p>
+        <p class="auth-logo"><img src="/images/moscow%20barista%20school%20logo.svg" alt="Moscow Barista School"></p>
         <p class="auth-sub">Управление кофейней — вход в аккаунт</p>
         <div class="auth-tabs">
           <button class="auth-tab active" data-tab="login">Войти</button>
