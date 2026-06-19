@@ -47,7 +47,7 @@ Frontend-правила режима `Автор` вынесены в `src/acces
 - публикации в профиле автора сгруппированы по статусам: требуют внимания, на проверке, опубликованы, сняты, все;
 - карточка авторского рецепта поддерживает обязательные поля для публикации, оборудование, фото, процесс, подачу/срок и органолептику;
 - Telegram в author frontend-форме не показывается и не отправляется при сохранении профиля.
-- Telegram-уведомления авторов подключаются через `@Join_MBS_bot` отдельной привязкой: одноразовая ссылка в кабинете автора, приватный `telegram_chat_id` на backend, уведомления о проверке рецептов.
+- Telegram-уведомления авторов подключаются через `@MBS_work_bot` отдельной привязкой: одноразовая ссылка в кабинете автора, приватный `telegram_chat_id` на backend, уведомления о проверке рецептов. `@Join_MBS_bot` не использовать для webhook платформы, он остаётся за BotHelp.
 
 Backend-хранилище author-слоя:
 
@@ -216,7 +216,7 @@ Author routes:
 | Аутентификация | `/api/auth/` | register, login, me, forgot-password, reset-password |
 | Яндекс OAuth | `/api/auth/yandex/` | login, callback |
 | Telegram webhook | `/api/telegram/webhook` | Обработка callback_query (активация пользователей), protected by Telegram secret header + admin chat check |
-| Telegram авторов | `/api/telegram/join-mbs/webhook`, `/api/author/telegram/*` | Привязка `@Join_MBS_bot` и уведомления по модерации рецептов |
+| Telegram авторов | `/api/telegram/join-mbs/webhook`, `/api/author/telegram/*` | Привязка `@MBS_work_bot` и уведомления по модерации рецептов |
 | Пользователи (admin) | `/api/admin/users` | CRUD пользователей, пакеты доступа |
 | Авторы | `/api/author/*` | Профиль автора, черновики, ингредиенты, полуфабрикаты, фото и отправка рецептов на публикацию |
 | Авторы (admin) | `/api/admin/authors`, `/api/admin/author-recipes` | Модерация авторов и публикаций |
@@ -238,7 +238,7 @@ SMTP_PASS=...
 TELEGRAM_BOT_TOKEN=...
 TELEGRAM_ADMIN_CHAT_ID=33668380
 TELEGRAM_WEBHOOK_SECRET=...  # optional; production can derive from JWT_SECRET
-JOIN_MBS_WEBHOOK_SECRET=...  # optional for @Join_MBS_bot webhook
+JOIN_MBS_WEBHOOK_SECRET=...  # optional for author Telegram webhook (@MBS_work_bot)
 YANDEX_CLIENT_ID=...
 YANDEX_SECRET=...
 YANDEX_REDIRECT=https://barista-school.online/api/auth/yandex/callback
@@ -653,7 +653,7 @@ Public-витрина:
 | 47 | 24 мая 2026 | **Фикс admin-panel.js (drawer-кнопки):** `adm-drawer` и `adm-confirm` живут в `_overlay` (`document.body`), вне `#adm-root` — `root.addEventListener` их не ловил. Решение: извлечена именованная `_handleClick`, подписана на оба контейнера (`root` + `_overlay`). Удалён `onclick="event.stopPropagation()"` с `.adm-row-actions` — блокировал кнопки в таблице. Инициализация `adm-confirm`/`keydown` listeners вынесена из тела обработчика (раньше добавлялась при каждом клике). **Новая функция:** поле «Комментарий» (📝) в карточке пользователя — `textarea` с авто-сохранением (debounce 1.2с + blur), метка времени изменения (`notes_updated_at`), стили `.adm-drawer-notes-*`. В `server/main.py`: колонка `notes VARCHAR` + `notes_updated_at DATETIME` в таблице `users`, автомиграция, GET и PATCH `/api/admin/users/` обновлены. |
 | 50 | 17 июня 2026 | **Author platform:** author layer вынесен в `src/access/author-layer.js`; авторские черновики/ингредиенты/полуфабрикаты сохраняются на backend; добавлен Mixology auto-author по whitelist `visited`; профиль автора получил ФИО, аватар, условия, вкладки публикаций и ОС; карточка рецепта получила обязательные поля для публикации и оборудование; admin-модерация получила full drawer, review flags/comment, versions/events; admin layout выровнен под `mbs-design-system` (`#adm-root` full-width, `#adm-panel` 1100px centered). |
 | 51 | 17 июня 2026 | **Mixology championship profile:** добавлена таблица `author_championship_participations`; `GET /api/author/profile` отдаёт очищенные `championship_participations`; авторский профиль показывает блок `Участие в чемпионатах` и CTA на рецепт Mixology Cup; production backend/frontend выкатаны, whitelist обновлён из свежего yClients-отчёта. |
-| 52 | 18 июня 2026 | **Author Telegram notifications:** добавлена привязка авторов к `@Join_MBS_bot`, отдельные env `JOIN_MBS_*`, webhook `/api/telegram/join-mbs/webhook`, API `/api/author/telegram/*` и best-effort уведомления команде/автору по событиям проверки рецептов. Production env настроен из `schedule-online/events-schedule-sync`, webhook установлен, привязка из кабинета автора проверена вручную. |
+| 52 | 18 июня 2026 | **Author Telegram notifications:** добавлена привязка авторов к Telegram-боту, отдельные env `JOIN_MBS_*`, webhook `/api/telegram/join-mbs/webhook`, API `/api/author/telegram/*` и best-effort уведомления команде/автору по событиям проверки рецептов. 19 июня 2026 production переключён с `@Join_MBS_bot` на `@MBS_work_bot`, потому что `@Join_MBS_bot` используется BotHelp и не должен занимать webhook платформы. |
 | 53 | 18 июня 2026 | **Production HTTP/2 / доступность из РФ:** после жалоб “сайт открывается только через VPN” включён HTTP/2 на nginx для `barista-school.online` и `www.barista-school.online` (`/etc/nginx/sites-enabled/coffee-menu`, `listen 443 ssl http2;`). Проверка: `curl -Iv --http2 https://barista-school.online/` → `ALPN: server accepted h2`, `HTTP/2 200`; `/api/health` → `HTTP/2 200`. Backup nginx-конфига перенесён из `sites-enabled` в `/root/nginx-backups/`, потому что wildcard include создавал warning `conflicting server name`. Соседний VPS `159.194.202.120` / `159-194-202-120.sslip.io` тоже отвечал только HTTP/1.1, но текущий SSH-ключ туда не пускал; при доступе включить HTTP/2 аналогично. |
 
 ---

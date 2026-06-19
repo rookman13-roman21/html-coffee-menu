@@ -35,7 +35,7 @@
 - скрытые поставщики: `Hiwater`, `Baristaline`, `МайТаймКап`;
 - author profile: `Фамилия`, `Имя`, `Отчество`, телефон, описание автора, аватар;
 - Telegram не показывается в frontend-форме и не отправляется при сохранении;
-- Telegram-уведомления автора подключаются отдельно через `@Join_MBS_bot`; frontend показывает только статус привязки, `telegram_chat_id` остаётся приватным backend-полем.
+- Telegram-уведомления автора подключаются отдельно через `@MBS_work_bot`; frontend показывает только статус привязки, `telegram_chat_id` остаётся приватным backend-полем. `@Join_MBS_bot` принадлежит BotHelp, его webhook платформой не занимать.
 - условия сотрудничества показываются в popup, без сохранения юридического акцепта.
 - публикации в `Мой профиль` сгруппированы по статусам: требуют внимания, на проверке, опубликованы, сняты, все;
 - заготовки `Данные для договора` и `Финансы` пока информационные, без backend-учёта выплат.
@@ -294,23 +294,24 @@ Webhook `/api/telegram/webhook` проверяет `X-Telegram-Bot-Api-Secret-To
 
 **Важно:** не хранить токен и chat_id в коде или репозитории — только в `.env` на сервере.
 
-### Telegram-уведомления авторов через `@Join_MBS_bot`
+### Telegram-уведомления авторов через `@MBS_work_bot`
 
 Для авторских рецептов используется отдельная конфигурация, чтобы не ломать старый бот регистраций:
 
-- env: `JOIN_MBS_BOT_TOKEN`, `JOIN_MBS_BOT_USERNAME=Join_MBS_bot`, опционально `JOIN_MBS_AUTHOR_REVIEW_CHAT_ID`, `JOIN_MBS_WEBHOOK_SECRET`;
+- env: `JOIN_MBS_BOT_TOKEN`, `JOIN_MBS_BOT_USERNAME=MBS_work_bot`, опционально `JOIN_MBS_AUTHOR_REVIEW_CHAT_ID`, `JOIN_MBS_WEBHOOK_SECRET`;
 - author API: `/api/author/telegram/status`, `/api/author/telegram/link`, `/api/author/telegram/settings`;
 - webhook: `/api/telegram/join-mbs/webhook`, регистрация через `/api/admin/register-join-mbs-webhook`;
 - автор привязывает Telegram по одноразовой ссылке `/start author_<token>`;
 - команда получает уведомления об отправке/повторной отправке рецепта на проверку;
 - автор получает уведомления о доработке, публикации, снятии и комментариях проверки.
 
-Production на 18 июня 2026:
+Production на 19 июня 2026:
 
-- `JOIN_MBS_BOT_TOKEN`, `JOIN_MBS_BOT_USERNAME=Join_MBS_bot`, `JOIN_MBS_AUTHOR_REVIEW_CHAT_ID` добавлены в `/var/www/coffee-menu/server/.env`;
-- исходный токен `@Join_MBS_bot` хранится в локальном проекте `schedule-online/events-schedule-sync`, в документации значение не указывать;
-- webhook установлен на `/api/telegram/join-mbs/webhook`;
-- привязка Telegram из кабинета автора проверена вручную, работает.
+- `JOIN_MBS_BOT_TOKEN`, `JOIN_MBS_BOT_USERNAME=MBS_work_bot`, `JOIN_MBS_AUTHOR_REVIEW_CHAT_ID` заданы в `/var/www/coffee-menu/server/.env`;
+- токен `@MBS_work_bot` хранится в локальном проекте `schedule-online/events-schedule-sync` как `MBS_WORK_BOT_TOKEN`, в документации значение не указывать;
+- webhook `@MBS_work_bot` установлен на `/api/telegram/join-mbs/webhook`;
+- webhook `@Join_MBS_bot` снят с платформы, чтобы BotHelp снова управлял основным ботом школы;
+- после смены бота старые Telegram-привязки авторов технически остаются chat_id, но авторам нужно переподключить Telegram через кабинет, чтобы они стартовали новый бот.
 
 ---
 

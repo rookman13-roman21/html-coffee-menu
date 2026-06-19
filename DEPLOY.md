@@ -150,9 +150,10 @@ ssh -i "$HOME/.ssh/id_ed25519" root@159.194.233.13 \
 
 - реальные `JOIN_MBS_BOT_TOKEN`, `JOIN_MBS_BOT_USERNAME`, `JOIN_MBS_AUTHOR_REVIEW_CHAT_ID`, опционально `JOIN_MBS_WEBHOOK_SECRET` задаются только в production `.env`;
 - для старого регистрационного бота используется `TELEGRAM_WEBHOOK_SECRET`; если env не задан, production формирует secret из `JWT_SECRET`, после backend-деплоя перерегистрировать `/api/admin/register-webhook`;
-- токен `@Join_MBS_bot` можно сверить с локальным проектом `schedule-online/events-schedule-sync`, но не выводить его в терминал/чат;
-- после backend-деплоя зарегистрировать webhook `@Join_MBS_bot` через admin endpoint `/api/admin/register-join-mbs-webhook` или прямым `setWebhook` с сервера; если задан `JOIN_MBS_WEBHOOK_SECRET`, регистрация передаст secret_token;
-- на 18 июня 2026 production webhook уже установлен на `/api/telegram/join-mbs/webhook`, после смены домена/бота/токена регистрировать заново;
+- для авторских уведомлений используется `@MBS_work_bot`: `JOIN_MBS_BOT_USERNAME=MBS_work_bot`, токен можно сверить с `MBS_WORK_BOT_TOKEN` в локальном проекте `schedule-online/events-schedule-sync`, но не выводить его в терминал/чат;
+- `@Join_MBS_bot` используется BotHelp; не ставить на него webhook платформы, иначе BotHelp перестанет получать входящие сообщения;
+- после backend-деплоя зарегистрировать webhook `@MBS_work_bot` через admin endpoint `/api/admin/register-join-mbs-webhook` или прямым `setWebhook` с сервера; если задан `JOIN_MBS_WEBHOOK_SECRET`, регистрация передаст secret_token;
+- на 19 июня 2026 production webhook `@MBS_work_bot` установлен на `/api/telegram/join-mbs/webhook`, webhook `@Join_MBS_bot` очищен для BotHelp; после смены домена/бота/токена регистрировать заново;
 - не выводить токены и chat_id авторов в логи, документацию и ответы.
 
 Для Mixology auto-author:
