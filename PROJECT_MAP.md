@@ -48,6 +48,7 @@ Frontend-правила режима `Автор` вынесены в `src/acces
 - карточка авторского рецепта поддерживает обязательные поля для публикации, оборудование, фото, процесс, подачу/срок и органолептику;
 - Telegram в author frontend-форме не показывается и не отправляется при сохранении профиля.
 - Telegram-уведомления авторов подключаются через `@MBS_work_bot` отдельной привязкой: одноразовая ссылка в кабинете автора, приватный `telegram_chat_id` на backend, уведомления о проверке рецептов. `@Join_MBS_bot` не использовать для webhook платформы, он остаётся за BotHelp.
+- Общий confirm-helper `src/ui/modals.js::showConfirm()` возвращает `Promise<boolean>` и также поддерживает старый callback-формат; это нужно для сценария отключения Telegram в кабинете автора.
 
 Backend-хранилище author-слоя:
 
@@ -655,6 +656,7 @@ Public-витрина:
 | 51 | 17 июня 2026 | **Mixology championship profile:** добавлена таблица `author_championship_participations`; `GET /api/author/profile` отдаёт очищенные `championship_participations`; авторский профиль показывает блок `Участие в чемпионатах` и CTA на рецепт Mixology Cup; production backend/frontend выкатаны, whitelist обновлён из свежего yClients-отчёта. |
 | 52 | 18 июня 2026 | **Author Telegram notifications:** добавлена привязка авторов к Telegram-боту, отдельные env `JOIN_MBS_*`, webhook `/api/telegram/join-mbs/webhook`, API `/api/author/telegram/*` и best-effort уведомления команде/автору по событиям проверки рецептов. 19 июня 2026 production переключён с `@Join_MBS_bot` на `@MBS_work_bot`, потому что `@Join_MBS_bot` используется BotHelp и не должен занимать webhook платформы. |
 | 53 | 18 июня 2026 | **Production HTTP/2 / доступность из РФ:** после жалоб “сайт открывается только через VPN” включён HTTP/2 на nginx для `barista-school.online` и `www.barista-school.online` (`/etc/nginx/sites-enabled/coffee-menu`, `listen 443 ssl http2;`). Проверка: `curl -Iv --http2 https://barista-school.online/` → `ALPN: server accepted h2`, `HTTP/2 200`; `/api/health` → `HTTP/2 200`. Backup nginx-конфига перенесён из `sites-enabled` в `/root/nginx-backups/`, потому что wildcard include создавал warning `conflicting server name`. Соседний VPS `159.194.202.120` / `159-194-202-120.sslip.io` тоже отвечал только HTTP/1.1, но текущий SSH-ключ туда не пускал; при доступе включить HTTP/2 аналогично. |
+| 54 | 19 июня 2026 | **Telegram disconnect confirm:** исправлено отключение Telegram в кабинете автора. `showConfirm()` раньше работал только через callback, а `disconnectAuthorTelegram()` ожидал `await showConfirm(...)`; теперь helper возвращает `Promise<boolean>` и сохраняет callback-совместимость. Frontend задеплоен, `npm run check` и `git diff --check` пройдены. |
 
 ---
 

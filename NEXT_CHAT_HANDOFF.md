@@ -164,6 +164,7 @@ Mixology auto-author:
 - `GET /api/author/profile` lazy-синхронизирует участия из whitelist в SQLite и отдаёт их только самому автору;
 - `PUT /api/author/profile` не принимает и не перезаписывает участия;
 - Telegram-уведомления авторов идут через `@MBS_work_bot`: `/api/author/telegram/*` создаёт одноразовую ссылку привязки, `/api/telegram/join-mbs/webhook` сохраняет приватный `telegram_chat_id`, команда и автор получают best-effort уведомления по проверке рецептов. `@Join_MBS_bot` оставлен BotHelp, webhook платформы на него не ставить.
+- Отключение Telegram в кабинете автора зависит от `showConfirm()` как `Promise<boolean>`: 19 июня 2026 helper исправлен и теперь также поддерживает старый callback-формат; frontend задеплоен.
 - frontend показывает блок `Участие в чемпионатах` только при непустом `championship_participations`;
 - при совпадении телефона `POST /api/auth/register` создаёт активного пользователя с `access_author=true`, `access_drinks=false`, `access_finance=false`, создаёт/обновляет `author_profiles`, запускает author Bitrix sync и возвращает `token`, `user`, `auto_author:true`;
 - whitelist содержит телефоны и не должен попадать в Git или публичные документы.
@@ -203,6 +204,7 @@ Production-настройки:
 - `JOIN_MBS_BOT_TOKEN`, `JOIN_MBS_BOT_USERNAME=MBS_work_bot`, `JOIN_MBS_AUTHOR_REVIEW_CHAT_ID` заданы в `/var/www/coffee-menu/server/.env`; токен `@MBS_work_bot` взят из локального проекта `schedule-online/events-schedule-sync` (`MBS_WORK_BOT_TOKEN`), значение не фиксировать в документации.
 - Webhook `@MBS_work_bot` установлен на `/api/telegram/join-mbs/webhook`.
 - Webhook `@Join_MBS_bot` очищен 19 июня 2026, чтобы BotHelp снова управлял основным ботом школы.
+- 19 июня 2026 исправлено отключение Telegram из кабинета автора: `showConfirm()` теперь возвращает `Promise<boolean>`, поэтому кнопка `Отключить` после подтверждения вызывает `DELETE /api/author/telegram/link`.
 - `BITRIX_AUTHOR_MARK_LABEL=Автор рецептов`.
 - Enum `Автор рецептов` добавлен в поле Битрикс.
 
