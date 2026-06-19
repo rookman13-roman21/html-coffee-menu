@@ -100,7 +100,7 @@ export function showAlert(msg, icon = '⚠️') {
 }
 
 export function showConfirm(msg, onConfirm, opts = {}) {
-  if (document.getElementById('_dialog-overlay')) return;
+  if (document.getElementById('_dialog-overlay')) return Promise.resolve(false);
   const icon    = opts.icon    || '❓';
   const okText  = opts.okText  || 'Подтвердить';
   const danger  = opts.danger !== false;
@@ -117,10 +117,21 @@ export function showConfirm(msg, onConfirm, opts = {}) {
     </div>
   `;
   document.body.appendChild(overlay);
-  document.getElementById('_dialog-cancel-btn').addEventListener('click', () => overlay.remove());
-  document.getElementById('_dialog-confirm-btn').addEventListener('click', () => {
-    overlay.remove();
-    onConfirm();
+  return new Promise((resolve) => {
+    document.getElementById('_dialog-cancel-btn').addEventListener('click', () => {
+      overlay.remove();
+      resolve(false);
+    });
+    document.getElementById('_dialog-confirm-btn').addEventListener('click', async () => {
+      overlay.remove();
+      try {
+        if (typeof onConfirm === 'function') await onConfirm();
+        resolve(true);
+      } catch (e) {
+        console.error('[showConfirm] onConfirm failed:', e);
+        resolve(false);
+      }
+    });
   });
 }
 
