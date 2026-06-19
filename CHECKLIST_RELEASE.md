@@ -159,13 +159,11 @@ ssh -i "$HOME/.ssh/id_ed25519" root@159.194.233.13 \
 - `author_user_id`, себестоимость, review-комментарии и полный `recipe` snapshot;
 - внутренние ID, которые не нужны покупателю.
 
-Для динамического каталога авторских рецептов проверить:
+Для простой public-витрины проверить:
 
-- `/recipes` показывает каталог с поиском, фильтрами и сортировкой;
-- `/recipes/{slug}` показывает продающее превью без полной технологии приготовления;
-- `POST /api/public/author-recipes/cart-order` создаёт заявку на несколько рецептов;
-- Tilda-блок `public/tilda-blocks/author-recipes-widget.html` грузит данные с `barista-school.online` с домена `baristaschool.ru`;
-- CORS разрешает `baristaschool.ru`, но не требует авторизации покупателя.
+- `/recipes` показывает список опубликованных рецептов;
+- `/recipes/{slug}` показывает страницу рецепта без полной технологии приготовления;
+- `POST /api/public/author-recipes/{recipe_id}/order` создаёт заявку на один рецепт.
 
 ## 5.1. Безопасность публичных endpoint'ов
 

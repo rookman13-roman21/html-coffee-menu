@@ -137,18 +137,6 @@ ssh -i "$HOME/.ssh/id_ed25519" root@159.194.233.13 \
   'sqlite3 /var/www/coffee-menu/server/data/app.db ".tables" | tr " " "\n" | grep -E "author_(recipe_drafts|ingredients|semis)|recipe_publication_(versions|events)"'
 ```
 
-Для public Tilda-витрины после backend-деплоя проверить CORS:
-
-```bash
-curl -i -H 'Origin: https://baristaschool.ru' \
-  https://barista-school.online/api/public/author-recipes
-curl -i -H 'Origin: https://baristaschool.ru' \
-  -H 'Access-Control-Request-Method: GET' \
-  -X OPTIONS https://barista-school.online/api/public/author-recipes
-```
-
-Ожидаемо: `access-control-allow-origin: https://baristaschool.ru`, HTTP 200 и опубликованные рецепты в JSON.
-
 Если `scripts/deploy_backend.sh` останавливается из-за локального `server/data/mixology_author_access.json`, не загружать whitelist вместе с обычным backend-деплоем. Для правок только `server/main.py` можно вручную загрузить файл и перезапустить API, не трогая приватный whitelist:
 
 ```bash

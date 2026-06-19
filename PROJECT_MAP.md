@@ -386,7 +386,7 @@ BITRIX_AUTHOR_MARK_LABEL=Автор рецептов
 | `updaters.js` | `switchTab`, `renderAll`, `flashCells` |
 | `auth.js` | Авторизация (login/register/forgot-password/OAuth) |
 | `author.js` | Кабинет автора: профиль, аватар, условия, вкладки публикаций, статусы/ОС, отправка рецепта на модерацию |
-| `public-recipes.js` | Public-витрина опубликованных рецептов: каталог, фильтры, detail-превью, корзина-заявка |
+| `public-recipes.js` | Простая public-витрина опубликованных рецептов: список, страница рецепта, заявка |
 | `misc.js` | `exportFullPDF/XLSX`, `_printViaIframe`, `generateInsights` |
 | `suppliers.js` | CRUD поставщиков |
 | `payroll.js` | Калькулятор ФОТ |
@@ -596,12 +596,10 @@ bash server/admin/build.sh
 
 Public-витрина:
 
-- `GET /api/public/author-recipes` отдаёт только опубликованные рецепты без приватных полей автора и без полного `recipe`;
-- `GET /api/public/author-recipes/meta` отдаёт метаданные фильтров: авторы, категории, диапазон цен, Mixology Cup;
-- `GET /api/public/author-recipes/{slug}` отдаёт продающее превью рецепта и блок `related` с другими рецептами автора;
-- `POST /api/public/author-recipes/cart-order` создаёт корзину-заявку на несколько рецептов; старый `POST /api/public/author-recipes/{recipe_id}/order` сохранён для обратной совместимости;
-- HTML-блок для Tilda: `public/tilda-blocks/author-recipes-widget.html`.
-- Production CORS должен разрешать `https://baristaschool.ru` и `https://www.baristaschool.ru`; иначе Tilda-блок показывает ошибку загрузки при рабочем public API.
+- `GET /api/public/author-recipes` отдаёт опубликованные рецепты для простой витрины;
+- `GET /api/public/author-recipes/{slug}` отдаёт страницу опубликованного рецепта;
+- `POST /api/public/author-recipes/{recipe_id}/order` создаёт заявку на один рецепт;
+- предыдущий план динамического Tilda-каталога с фильтрами и корзиной отменён, Tilda-блок удалён.
 
 Статусы:
 

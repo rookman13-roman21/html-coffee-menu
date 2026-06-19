@@ -25,8 +25,7 @@
 - `src/ui/author.js` — кабинет автора, профиль, условия, загрузка аватара, server sync авторских данных.
 - `server/main.py` — таблицы `author_profiles`, `author_recipe_drafts`, `author_ingredients`, `author_semis`, `recipe_publications`, `recipe_publication_versions`, `recipe_publication_events`, `recipe_orders`.
 - `server/admin/src/_authors.js` — admin-раздел `Авторы`: список авторов, публикации, статусы, retry синхронизации с Битрикс.
-- `src/ui/public-recipes.js` — public-витрина опубликованных рецептов: каталог, фильтры, detail-превью, корзина-заявка.
-- `public/tilda-blocks/author-recipes-widget.html` — самодостаточный HTML-блок для Tilda-страниц `baristaschool.ru` (`/drinks`, `/summer_drinks` и другие посадочные страницы с рецептурным каталогом).
+- `src/ui/public-recipes.js` — простая public-витрина опубликованных рецептов: список, страница рецепта, заявка на один рецепт.
 
 В режиме `Автор`:
 
@@ -155,22 +154,14 @@ Admin panel:
 
 ### Поток запуска `main.js`
 ```js
-// 1. Public route /recipes рендерит public-витрину без кабинета: каталог, фильтры, detail и корзину-заявку.
+// 1. Public route /recipes рендерит простую public-витрину без кабинета.
 // 2. Для кабинета при сохранённом JWT сначала refreshCurrentUser().
 // 3. Затем fetchState() и _initApp(serverState).
 // 4. _initApp сбрасывает runtime, восстанавливает serverState, грузит user-scoped localStorage.
 // 5. Потом применяет доступы и открывает первую разрешённую вкладку.
 ```
 
-Public API витрины не должен раскрывать приватные данные автора и полный recipe snapshot. До покупки покупатель видит только продающее превью рецепта, цену, объём, автора и описание для витрины.
-
-Если Tilda-блок показывает `Не удалось загрузить каталог`, а `https://barista-school.online/api/public/author-recipes` отдаёт опубликованные рецепты, первым делом проверять CORS:
-
-```bash
-curl -i -H 'Origin: https://baristaschool.ru' https://barista-school.online/api/public/author-recipes
-```
-
-Ожидаемо в ответе должен быть `access-control-allow-origin: https://baristaschool.ru`.
+Public API витрины не должен раскрывать приватные данные автора и полный recipe snapshot. До покупки покупатель видит только продающее превью рецепта, цену, объём, автора и описание для витрины. План динамического Tilda-каталога с фильтрами и корзиной отменён 19 июня 2026; не возобновлять его без нового отдельного согласования.
 
 ### Ключевые исправления (bcrypt)
 ```python
