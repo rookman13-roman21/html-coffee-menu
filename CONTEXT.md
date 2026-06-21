@@ -302,6 +302,7 @@ Webhook `/api/telegram/webhook` проверяет `X-Telegram-Bot-Api-Secret-To
 - env: `JOIN_MBS_BOT_TOKEN`, `JOIN_MBS_BOT_USERNAME=MBS_work_bot`, опционально `JOIN_MBS_AUTHOR_REVIEW_CHAT_ID`, `JOIN_MBS_WEBHOOK_SECRET`;
 - author API: `/api/author/telegram/status`, `/api/author/telegram/link`, `/api/author/telegram/settings`;
 - webhook: `/api/telegram/join-mbs/webhook`, регистрация через `/api/admin/register-join-mbs-webhook`;
+- с 22 июня 2026 `@MBS_work_bot` также отвечает клиентским меню, скопированным с BotHelp-бота `@Join_MBS_bot`: главное меню, подбор курсов по цели, карточки курсов, события, сертификаты, контакты и мягкий сбор заявки. Реализация находится в соседнем backend-файле `../server/main.py`; авторская привязка `/start author_<token>` сохранена первой и не должна ломаться.
 - автор привязывает Telegram по одноразовой ссылке `/start author_<token>`;
 - команда получает уведомления об отправке/повторной отправке рецепта на проверку;
 - автор получает уведомления о доработке, публикации, снятии и комментариях проверки.
@@ -310,7 +311,7 @@ Production на 19 июня 2026:
 
 - `JOIN_MBS_BOT_TOKEN`, `JOIN_MBS_BOT_USERNAME=MBS_work_bot`, `JOIN_MBS_AUTHOR_REVIEW_CHAT_ID` заданы в `/var/www/coffee-menu/server/.env`;
 - токен `@MBS_work_bot` хранится в локальном проекте `schedule-online/events-schedule-sync` как `MBS_WORK_BOT_TOKEN`, в документации значение не указывать;
-- webhook `@MBS_work_bot` установлен на `/api/telegram/join-mbs/webhook`;
+- webhook `@MBS_work_bot` установлен на `/api/telegram/join-mbs/webhook` с `allowed_updates=["message","callback_query"]`;
 - webhook `@Join_MBS_bot` снят с платформы, чтобы BotHelp снова управлял основным ботом школы;
 - после смены бота старые Telegram-привязки авторов технически остаются chat_id, но авторам нужно переподключить Telegram через кабинет, чтобы они стартовали новый бот.
 - 19 июня 2026 исправлено отключение Telegram из кабинета автора: `showConfirm()` теперь возвращает `Promise<boolean>`, поэтому после подтверждения реально вызывается `DELETE /api/author/telegram/link`; frontend задеплоен.
