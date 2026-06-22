@@ -3,6 +3,7 @@
 
 import { hasAccess } from './auth.js';
 import { ensureExcelJS } from '../utils/vendor.js';
+import { GROUP_LABEL } from '../data/drinks.js';
 
 export function openTemplatesModal() {
   const MENU_TEMPLATES = window.MENU_TEMPLATES;
