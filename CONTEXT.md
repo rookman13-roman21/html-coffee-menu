@@ -1,7 +1,7 @@
 # CONTEXT — MBS* Coffee Menu
 
 > Платформа `barista-school.online`: кабинет кофейни, кабинет автора рецептов и витрина авторских рецептов. SPA на Vite + ES-модули.
-> Последнее обновление: 22 июня 2026 — закрыты основные риски утечки данных: frontend env снят с Git, public order API не отдаёт CRM ID, OAuth использует одноразовый exchange-code, forgot-password работает через reset-link, OpenAI key хранится только в памяти вкладки, `/api/suppliers` требует авторизацию.
+> Последнее обновление: 22 июня 2026 — закрыты основные риски утечки данных: frontend env снят с Git, public order API не отдаёт CRM ID, OAuth использует одноразовый exchange-code, forgot-password работает через reset-link, OpenAI key хранится только в памяти вкладки, `/api/suppliers` требует авторизацию. Production-проверка: anonymous получает `403 Not authenticated`, авторизованный клиент видит телефоны поставщиков.
 
 ---
 
@@ -107,7 +107,7 @@ Security hardening на 22 июня 2026:
 - Yandex OAuth callback возвращает в URL только одноразовый `oauth_code`; JWT выдаётся через `POST /api/auth/oauth-exchange`.
 - forgot-password создаёт reset-token и отправляет ссылку; текущий пароль не меняется до `POST /api/auth/reset-password`.
 - OpenAI key для AI-заполнения оборудования хранится только в памяти текущей вкладки, не в `localStorage`.
-- `/api/suppliers` требует JWT активного пользователя. Телефоны поставщиков считаются публичными для клиентов платформы, но anonymous public API их не отдаёт.
+- `/api/suppliers` требует JWT активного пользователя. Телефоны поставщиков считаются публичными для клиентов платформы, но anonymous public API их не отдаёт. Проверено на production 22 июня 2026: anonymous получает `403 Not authenticated`, авторизованный клиент видит телефоны.
 
 ### Ускорение разработки
 
