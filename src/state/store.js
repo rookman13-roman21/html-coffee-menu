@@ -136,7 +136,7 @@ export const S = {
   customCategories: {},
   semiCustomCategories: {},
   openingCosts: [],
-  openingMeta: { format: 'full', currency: 'RUB', usdRate: 90, eurRate: 98, categorySort: 'manual' },
+  openingMeta: { format: 'full', currency: 'RUB', usdRate: 90, eurRate: 98, categorySort: 'manual', categorySearch: '' },
 };
 
 // ─── Сброс глобального стейта к базовым значениям ───────────────────
@@ -175,7 +175,7 @@ export function resetGlobalsToBase() {
   S.customCategories  = {};
   S.semiCustomCategories = {};
   S.openingCosts = [];
-  S.openingMeta  = { format: 'full', currency: 'RUB', usdRate: 90, eurRate: 98, categorySort: 'manual' };
+  S.openingMeta  = { format: 'full', currency: 'RUB', usdRate: 90, eurRate: 98, categorySort: 'manual', categorySearch: '' };
 
   // Сбрасываем счётчики (через window — они ещё в app.js)
   window.nextDrinkId = DRINKS.reduce((max, d) => Math.max(max, Number(d.id) || 0), 0) + 1;

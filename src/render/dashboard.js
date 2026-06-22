@@ -448,6 +448,37 @@ export function ocSetCategorySort(sort) {
   renderDashboard();
 }
 
+export function ocToggleCategorySort(kind) {
+  const meta = S.openingMeta || {};
+  let next = 'manual';
+  if (kind === 'cost') next = meta.categorySort === 'cost_desc' ? 'cost_asc' : 'cost_desc';
+  else if (kind === 'count') next = meta.categorySort === 'count_desc' ? 'count_asc' : 'count_desc';
+  S.openingMeta = { ...meta, categorySort: next };
+  saveState();
+  renderDashboard();
+}
+
+export function ocSetCategorySearch(value) {
+  const search = String(value || '');
+  S.openingMeta = { ...(S.openingMeta || {}), categorySearch: search };
+  saveState();
+  renderDashboard();
+  setTimeout(() => {
+    const input = document.getElementById('oc-search-input');
+    if (!input) return;
+    input.focus();
+    input.setSelectionRange(search.length, search.length);
+  }, 0);
+}
+
+export function ocSetCategoryCollapseAll(collapsed) {
+  const next = {};
+  Object.keys(OC_CATS).forEach(cat => { next[cat] = !!collapsed; });
+  S.openingMeta = { ...(S.openingMeta || {}), collapsed: next };
+  saveState();
+  renderDashboard();
+}
+
 export function ocUpdateRate(cur, val) {
   const rate = parseFloat(val) || (cur === 'USD' ? 90 : 98);
   const key  = cur === 'USD' ? 'usdRate' : 'eurRate';
@@ -1302,25 +1333,60 @@ function _renderRow(item) {
     </div>`;
 }
 
+function _ocMatchSearch(item, query) {
+  if (!query) return true;
+  const text = [
+    item.name,
+    item.note,
+    item.url,
+    item.subcategory,
+    OC_CATS[item.category]?.label,
+  ].filter(Boolean).join(' ').toLowerCase();
+  return text.includes(query);
+}
+
+function _ocEscAttr(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function _ocSortLabel(sortMode) {
+  if (sortMode === 'cost_desc') return '₽↓';
+  if (sortMode === 'cost_asc') return '₽↑';
+  if (sortMode === 'count_desc') return 'Поз.↓';
+  if (sortMode === 'count_asc') return 'Поз.↑';
+  return 'Порядок';
+}
+
 // ─── Рендер секции категории ─────────────────────────────────────────
-function _renderCatSection(cat, items) {
-  const info      = OC_CATS[cat];
-  const catTotal  = items.reduce((s, r) => s + r.price * r.qty, 0);
-  const collapsed = !!(S.openingMeta?.collapsed?.[cat]);
+function _renderCatSection(cat, allItems, visibleItems, totalBudget, searchActive) {
+  const info       = OC_CATS[cat];
+  const catTotal   = allItems.reduce((s, r) => s + r.price * r.qty, 0);
+  const noPriceCnt = allItems.filter(r => !(Number(r.price) > 0)).length;
+  const share      = totalBudget > 0 ? Math.round((catTotal / totalBudget) * 100) : 0;
+  const countText  = searchActive ? `${visibleItems.length}/${allItems.length} поз.` : `${allItems.length} поз.`;
+  const collapsed  = !!(S.openingMeta?.collapsed?.[cat]);
+  const progressWidth = Math.max(0, Math.min(100, share));
   return `
     <div class="oc-cat-section${collapsed ? ' collapsed' : ''}" data-cat="${cat}">
       <div class="oc-cat-header" onclick="ocToggleCat('${cat}')" style="cursor:pointer">
         <span class="oc-cat-icon">${info.icon}</span>
         <span class="oc-cat-label">${info.label}</span>
-        <span class="oc-cat-count">${items.length} поз.</span>
+        <span class="oc-cat-share">${share}%</span>
+        <span class="oc-cat-count">${countText}</span>
+        ${noPriceCnt ? `<span class="oc-cat-missing">${noPriceCnt} без цены</span>` : ''}
         <span class="oc-cat-total${catTotal > 0 ? ' has-value' : ''}" id="oc-cat-total-${cat}">${catTotal > 0 ? _ocFmtAmt(catTotal) : ''}</span>
         <button class="oc-add-in-cat btn btn-sm btn-outline" onclick="event.stopPropagation();ocAddRow('${cat}')">
           <i data-lucide="plus" class="icon"></i> Добавить
         </button>
         <i data-lucide="chevron-down" class="icon oc-cat-chevron" style="${collapsed ? 'transform:rotate(-90deg)' : ''}"></i>
       </div>
+      <div class="oc-cat-progress"><span style="width:${progressWidth}%"></span></div>
       <div class="oc-cat-rows">
-        ${items.map(_renderRow).join('')}
+        ${visibleItems.map(_renderRow).join('')}
       </div>
     </div>`;
 }
@@ -1359,6 +1425,8 @@ export function renderDashboard() {
   const usdRate  = meta.usdRate  || 90;
   const eurRate  = meta.eurRate  || 98;
   const categorySort = meta.categorySort || 'manual';
+  const categorySearch = String(meta.categorySearch || '').trim();
+  const searchQuery = categorySearch.toLowerCase();
   const total    = _ocCalcTotal(costs);
 
   // Группируем по категориям
@@ -1414,9 +1482,16 @@ export function renderDashboard() {
 
   // Секции категорий (только непустые)
   const hasCosts = costs.length > 0;
+  const visibleByCat = {};
+  Object.entries(byCat).forEach(([cat, items]) => {
+    visibleByCat[cat] = items.filter(item => _ocMatchSearch(item, searchQuery));
+  });
+  const hasVisibleCosts = !hasCosts || Object.values(visibleByCat).some(items => items.length > 0);
+  const sortText = _ocSortLabel(categorySort);
   const sections = hasCosts
     ? _ocSortedCategoryEntries(byCat, categorySort)
-        .map(({ cat, items }) => _renderCatSection(cat, items)).join('')
+        .filter(({ cat }) => visibleByCat[cat]?.length > 0)
+        .map(({ cat, items }) => _renderCatSection(cat, items, visibleByCat[cat], total, !!searchQuery)).join('')
     : `<div class="oc-onboard">
         <div class="oc-onboard-icon">🏗️</div>
         <div class="oc-onboard-title">Начните планирование вложений</div>
@@ -1501,22 +1576,25 @@ export function renderDashboard() {
       </div>
 
       ${hasCosts ? `<div class="oc-list-tools">
-        <label class="oc-sort-control">
-          <i data-lucide="arrow-up-down" class="icon"></i>
-          <span>Сортировка категорий</span>
-          <select class="oc-sort-select" onchange="ocSetCategorySort(this.value)">
-            <option value="manual"${categorySort === 'manual' ? ' selected' : ''}>По порядку</option>
-            <option value="cost_desc"${categorySort === 'cost_desc' ? ' selected' : ''}>Стоимость: сначала больше</option>
-            <option value="cost_asc"${categorySort === 'cost_asc' ? ' selected' : ''}>Стоимость: сначала меньше</option>
-            <option value="count_desc"${categorySort === 'count_desc' ? ' selected' : ''}>Позиций: сначала больше</option>
-            <option value="count_asc"${categorySort === 'count_asc' ? ' selected' : ''}>Позиций: сначала меньше</option>
-            <option value="name_asc"${categorySort === 'name_asc' ? ' selected' : ''}>По названию</option>
-          </select>
-        </label>
+        <div class="oc-search-box">
+          <i data-lucide="search" class="icon"></i>
+          <input id="oc-search-input" class="oc-search-input" value="${_ocEscAttr(categorySearch)}" placeholder="Поиск по позициям" oninput="ocSetCategorySearch(this.value)">
+          ${categorySearch ? `<button class="oc-search-clear" onclick="ocSetCategorySearch('')" title="Очистить поиск"><i data-lucide="x" class="icon"></i></button>` : ''}
+        </div>
+        <div class="oc-sort-control" aria-label="Сортировка категорий">
+          <span class="oc-sort-label">Сортировка</span>
+          <button class="oc-sort-chip${categorySort === 'manual' ? ' active' : ''}" onclick="ocSetCategorySort('manual')" title="Исходный порядок категорий">Порядок</button>
+          <button class="oc-sort-chip${categorySort.startsWith('cost_') ? ' active' : ''}" onclick="ocToggleCategorySort('cost')" title="Сортировать по стоимости категории">₽ ${categorySort.startsWith('cost_') ? sortText.replace('₽', '') : '↓'}</button>
+          <button class="oc-sort-chip${categorySort.startsWith('count_') ? ' active' : ''}" onclick="ocToggleCategorySort('count')" title="Сортировать по количеству позиций">Поз. ${categorySort.startsWith('count_') ? sortText.replace('Поз.', '') : '↓'}</button>
+        </div>
+        <div class="oc-collapse-actions">
+          <button class="oc-tool-btn" onclick="ocSetCategoryCollapseAll(false)"><i data-lucide="list-tree" class="icon"></i> Развернуть всё</button>
+          <button class="oc-tool-btn" onclick="ocSetCategoryCollapseAll(true)"><i data-lucide="chevrons-up" class="icon"></i> Свернуть всё</button>
+        </div>
       </div>` : ''}
 
       <!-- Секции категорий -->
-      <div class="oc-sections">${sections}</div>
+      <div class="oc-sections">${hasVisibleCosts ? sections : `<div class="oc-empty"><div class="oc-empty-title">Ничего не найдено</div><div class="oc-empty-hint">Попробуйте изменить запрос или очистить поиск.</div></div>`}</div>
 
       <!-- Добавить статью по категории -->
       <div class="oc-addcat-bar">

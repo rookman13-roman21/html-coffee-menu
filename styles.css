@@ -3114,25 +3114,66 @@
 .oc-tpl-note { font-size: 12px; color: var(--muted); }
 .oc-list-tools {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
   margin: -4px 0 10px;
 }
+.oc-search-box {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 240px;
+  flex: 1 1 260px;
+  max-width: 420px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  background: var(--white);
+}
+.oc-search-box .icon {
+  width: 15px;
+  height: 15px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.oc-search-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--navy);
+  font: 700 12px var(--font);
+}
+.oc-search-input::placeholder { color: var(--muted); font-weight: 600; }
+.oc-search-clear {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.oc-search-clear:hover { background: var(--gray); color: var(--navy); }
 .oc-sort-control {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   color: var(--muted);
   font-size: 12px;
   font-weight: 700;
 }
-.oc-sort-control .icon {
-  width: 15px;
-  height: 15px;
-  color: var(--navy);
-}
-.oc-sort-select {
+.oc-sort-label { white-space: nowrap; }
+.oc-sort-chip,
+.oc-tool-btn {
   height: 34px;
-  min-width: 220px;
   border: 1.5px solid var(--border);
   border-radius: 8px;
   background: var(--white);
@@ -3140,14 +3181,23 @@
   font-family: var(--font);
   font-size: 12px;
   font-weight: 700;
-  padding: 0 34px 0 10px;
+  padding: 0 10px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
-.oc-sort-select:hover,
-.oc-sort-select:focus {
-  outline: none;
+.oc-sort-chip:hover,
+.oc-tool-btn:hover {
   border-color: var(--navy);
 }
+.oc-sort-chip.active {
+  border-color: var(--navy);
+  background: #eef4ea;
+  color: var(--navy);
+}
+.oc-collapse-actions { display: flex; align-items: center; gap: 6px; }
+.oc-tool-btn .icon { width: 14px; height: 14px; }
 
 /* Секции категорий */
 .oc-sections { display: flex; flex-direction: column; gap: 12px; }
@@ -3160,13 +3210,43 @@
 .oc-cat-icon { display: flex; align-items: center; flex-shrink: 0; }
 .oc-cat-icon svg { width: 18px; height: 18px; stroke: var(--navy); }
 .oc-cat-label { font-weight: 700; font-size: 13px; flex: 1; color: var(--navy); }
+.oc-cat-share {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--navy);
+  background: #eef4ea;
+  border: 1px solid #d4e8cc;
+  border-radius: 999px;
+  padding: 1px 7px;
+  min-width: 42px;
+  text-align: center;
+}
 .oc-cat-total { font-weight: 700; color: var(--navy); font-size: 13px; white-space: nowrap; min-width: 96px; text-align: right; display: inline-block; }
+.oc-cat-missing {
+  font-size: 11px;
+  font-weight: 800;
+  color: #b42318;
+  background: #fff0f0;
+  border: 1px solid #ffd1d1;
+  border-radius: 999px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
 .oc-add-in-cat {
   padding: 4px 10px; border-radius: 7px; font-size: 12px; font-weight: 700;
   border: 1.5px dashed var(--border); background: transparent;
   color: var(--muted); cursor: pointer; font-family: var(--font); transition: all .15s;
 }
 .oc-add-in-cat:hover { border-color: var(--navy); color: var(--navy); }
+.oc-cat-progress {
+  height: 3px;
+  background: rgba(65,112,51,.12);
+}
+.oc-cat-progress span {
+  display: block;
+  height: 100%;
+  background: #4f883e;
+}
 .oc-cat-rows { display: flex; flex-direction: column; background: var(--white); }
 
 /* Строка позиции */
@@ -3273,10 +3353,18 @@ body.dark .oc-addcat-btn { background: #252526; border-color: #454545; color: #8
 body.dark .oc-addcat-btn:hover { border-color: #89d185; color: #89d185; background: #1e3a28; }
 body.dark .oc-tpl-main { background: #3e6b3a; }
 body.dark .oc-rate-inp { background: #2a2a2a; border-color: #454545; color: #d4d4d4; }
-body.dark .oc-sort-select { background: #252526; border-color: #454545; color: #d4d4d4; }
-body.dark .oc-sort-select:hover,
-body.dark .oc-sort-select:focus { border-color: #89d185; }
-body.dark .oc-sort-control .icon { color: #89d185; }
+body.dark .oc-search-box,
+body.dark .oc-sort-chip,
+body.dark .oc-tool-btn { background: #252526; border-color: #454545; color: #d4d4d4; }
+body.dark .oc-search-input { color: #d4d4d4; }
+body.dark .oc-search-clear:hover { background: #383838; color: #d4d4d4; }
+body.dark .oc-sort-chip:hover,
+body.dark .oc-tool-btn:hover { border-color: #89d185; }
+body.dark .oc-sort-chip.active { background: #1e3a28; border-color: #3e6b3a; color: #c5e1a5; }
+body.dark .oc-cat-share { background: #1e3a28; border-color: #3e6b3a; color: #c5e1a5; }
+body.dark .oc-cat-missing { background: #3a1f1f; border-color: #713636; color: #ffb4a8; }
+body.dark .oc-cat-progress { background: rgba(137,209,133,.12); }
+body.dark .oc-cat-progress span { background: #89d185; }
 
 /* Drag handle */
 .oc-drag-handle {
@@ -3320,16 +3408,15 @@ body.dark .oc-cat-count { background: #383838; color: #888; }
 /* Mobile: 2-row category header */
 @media (max-width: 520px) {
   .oc-list-tools {
-    justify-content: stretch;
+    align-items: stretch;
   }
+  .oc-search-box { max-width: none; min-width: 0; flex-basis: 100%; }
   .oc-sort-control {
     width: 100%;
     flex-wrap: wrap;
   }
-  .oc-sort-select {
-    width: 100%;
-    min-width: 0;
-  }
+  .oc-collapse-actions { width: 100%; }
+  .oc-tool-btn { flex: 1; justify-content: center; padding: 0 8px; }
   .oc-cat-header {
     flex-wrap: wrap;
     gap: 4px 8px;
@@ -3342,9 +3429,11 @@ body.dark .oc-cat-count { background: #383838; color: #888; }
   .oc-cat-icon  { order: 1; }
   .oc-cat-label { order: 2; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .oc-cat-chevron { order: 3; margin-left: auto; }
-  .oc-cat-count   { order: 5; margin-right: 0; }
-  .oc-cat-total   { order: 6; flex: 1; text-align: left; min-width: 0; }
-  .oc-add-in-cat  { order: 7; margin-left: auto; }
+  .oc-cat-share   { order: 5; }
+  .oc-cat-count   { order: 6; margin-right: 0; }
+  .oc-cat-missing { order: 7; }
+  .oc-cat-total   { order: 8; flex: 1; text-align: left; min-width: 0; }
+  .oc-add-in-cat  { order: 9; margin-left: auto; }
 }
 
 /* Green total when has value */
