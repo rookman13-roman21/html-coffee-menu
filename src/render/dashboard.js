@@ -988,7 +988,11 @@ export function oclibShowCats() {
   const backBtn = document.getElementById('oclib-back-btn');
   const title   = document.getElementById('oclib-title');
   if (backBtn) backBtn.style.display = 'none';
-  if (title)   title.textContent = '📚 Библиотека оборудования';
+  if (title) {
+    const catInfo = OC_CATS[_oclibFilterCat || 'equipment'];
+    title.innerHTML = catInfo ? catInfo.icon + ' ' + catInfo.label + ' — библиотека' : '📚 Библиотека';
+    if (window.lucide) lucide.createIcons({ nodes: title.querySelectorAll('[data-lucide]') });
+  }
   if (_oclibData) _oclibRenderCats();
 }
 
@@ -1065,7 +1069,11 @@ export function oclibSearch(val) {
   if (q) {
     _oclibCurCat = null;
     if (backBtn) backBtn.style.display = 'none';
-    if (title)   title.textContent = '📚 Библиотека оборудования';
+    if (title) {
+      const catInfo = OC_CATS[_oclibFilterCat || 'equipment'];
+      title.innerHTML = catInfo ? catInfo.icon + ' ' + catInfo.label + ' — библиотека' : '📚 Библиотека';
+      if (window.lucide) lucide.createIcons({ nodes: title.querySelectorAll('[data-lucide]') });
+    }
     _oclibRenderCats(q);
   } else {
     oclibShowCats();
