@@ -609,7 +609,7 @@ export function ocOpenItem(id) {
 
   // Показывать кнопку AI только если задан API-ключ
   const aiBtnEl = document.getElementById('oci-ai-btn');
-  if (aiBtnEl) aiBtnEl.style.display = localStorage.getItem('oc_openai_key') ? '' : 'none';
+  if (aiBtnEl) aiBtnEl.style.display = _ocOpenAiKey ? '' : 'none';
 
   // Промо-блок партнёра
   const _libPromo = () => {
@@ -721,6 +721,8 @@ export function ocPhotoFileChange(input) {
 }
 
 // ─── AI-заполнение карточки ─────────────────────────────────────────
+let _ocOpenAiKey = '';
+
 function _updateApiKeyUi(hasKey) {
   // Кнопка в открытом модале
   const aiBtnEl = document.getElementById('oci-ai-btn');
@@ -731,22 +733,21 @@ function _updateApiKeyUi(hasKey) {
 }
 
 export function ocSetApiKey() {
-  const current = localStorage.getItem('oc_openai_key') || '';
-  const key = prompt('Введите ваш OpenAI API ключ (sk-...):\n\nКлюч сохраняется только в вашем браузере (localStorage).', current);
+  const key = prompt('Введите ваш OpenAI API ключ (sk-...):\n\nКлюч хранится только в памяти текущей вкладки и сбрасывается после перезагрузки.', _ocOpenAiKey);
   if (key === null) return; // отмена
   if (key.trim()) {
-    localStorage.setItem('oc_openai_key', key.trim());
+    _ocOpenAiKey = key.trim();
     _updateApiKeyUi(true);
-    alert('✅ API ключ сохранён');
+    alert('✅ API ключ добавлен для текущей вкладки');
   } else {
-    localStorage.removeItem('oc_openai_key');
+    _ocOpenAiKey = '';
     _updateApiKeyUi(false);
     alert('Ключ удалён');
   }
 }
 
 export async function ocAiFill() {
-  const apiKey = localStorage.getItem('oc_openai_key');
+  const apiKey = _ocOpenAiKey;
   if (!apiKey) {
     const go = confirm('Для AI-заполнения нужен OpenAI API ключ.\n\nОткрыть настройку ключа?');
     if (go) ocSetApiKey();

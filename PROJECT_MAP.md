@@ -222,6 +222,7 @@ Author routes:
 | Авторы | `/api/author/*` | Профиль автора, черновики, ингредиенты, полуфабрикаты, фото и отправка рецептов на публикацию |
 | Авторы (admin) | `/api/admin/authors`, `/api/admin/author-recipes` | Модерация авторов и публикаций |
 | Public рецепты | `/api/public/author-recipes` | Витрина опубликованных рецептов |
+| Поставщики (client) | `/api/suppliers` | Список публичных поставщиков только для активных авторизованных пользователей; телефоны не отдаются anonymous public API |
 | Оборудование (OC) | `/api/oc-library` | CRUD библиотеки оборудования/мебели |
 | Парсинг ссылок | `/api/proxy-meta`, `/api/admin/parse-url` | Извлечение цены/фото товара по URL с SSRF-фильтром public/private host |
 | Данные пользователя | `/api/state` | GET/PUT сохранение стейта SPA |

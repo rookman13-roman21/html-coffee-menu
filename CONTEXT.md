@@ -1,7 +1,7 @@
 # CONTEXT — MBS* Coffee Menu
 
 > Платформа `barista-school.online`: кабинет кофейни, кабинет автора рецептов и витрина авторских рецептов. SPA на Vite + ES-модули.
-> Последнее обновление: 19 июня 2026 — author layer выделен отдельно, рецепты/ингредиенты/полуфабрикаты автора сохраняются на backend, профиль автора поддерживает ФИО, аватар, блок участий в чемпионатах и Telegram-уведомления через `@MBS_work_bot`. Production nginx переведён на HTTP/2 для стабильной загрузки из РФ без VPN.
+> Последнее обновление: 22 июня 2026 — закрыты основные риски утечки данных: frontend env снят с Git, public order API не отдаёт CRM ID, OAuth использует одноразовый exchange-code, forgot-password работает через reset-link, OpenAI key хранится только в памяти вкладки, `/api/suppliers` требует авторизацию.
 
 ---
 
@@ -99,6 +99,16 @@ Production-важно: 16 июня 2026 `BITRIX_WEBHOOK`, `BITRIX_AUTHOR_MARK_FI
 
 Smoke-проверка `npm run smoke:api:apply` пройдена на тестовом пользователе `suslin21@ya.ru`, телефон `+7 903 156-65-66`, Битрикс contact id `10828`: доступ автора включается, `author_profiles` существует, `bitrix_sync_status=synced`, public API не отдаёт приватные поля.
 
+Security hardening на 22 июня 2026:
+
+- `.env.production` снят с Git-отслеживания; в Git оставлять только `.env.example`.
+- `/api/public/author-recipes/*/order` и cart-order не возвращают `bitrix_deal_id` и внутренние order IDs.
+- новые author upload URL используют непрямой owner-token вместо `user.id`; legacy-пути остаются валидными для старых файлов.
+- Yandex OAuth callback возвращает в URL только одноразовый `oauth_code`; JWT выдаётся через `POST /api/auth/oauth-exchange`.
+- forgot-password создаёт reset-token и отправляет ссылку; текущий пароль не меняется до `POST /api/auth/reset-password`.
+- OpenAI key для AI-заполнения оборудования хранится только в памяти текущей вкладки, не в `localStorage`.
+- `/api/suppliers` требует JWT активного пользователя. Телефоны поставщиков считаются публичными для клиентов платформы, но anonymous public API их не отдаёт.
+
 ### Ускорение разработки
 
 - `npm run check` — единая проверка перед правками/деплоем.
@@ -164,6 +174,8 @@ Admin panel:
 
 Public API витрины не должен раскрывать приватные данные автора и полный recipe snapshot. До покупки покупатель видит только продающее превью рецепта, цену, объём, автора и описание для витрины. План динамического Tilda-каталога с фильтрами и корзиной отменён 19 июня 2026; не возобновлять его без нового отдельного согласования.
 
+Anonymous public API не должен отдавать телефоны, email, Telegram, yClients ID, `bitrix_contact_id`, `bitrix_deal_id`, order IDs, `author_user_id` и другие внутренние CRM/platform ID. Исключение: `/api/suppliers` не является anonymous endpoint; он требует JWT активного пользователя и может отдавать публичные телефоны поставщиков авторизованным клиентам.
+
 ### Ключевые исправления (bcrypt)
 ```python
 # server/main.py — bcrypt напрямую, без passlib:
@@ -205,19 +217,20 @@ SMTP_PASS=*** хранится только в server/.env ***
 **Ключевые детали:**
 - Используется `smtplib.SMTP_SSL` (не `SMTP` + `starttls`) — Яндекс принимает только SSL на 465
 - `load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))` — явный путь, иначе `.env` не найден
-- Тема письма: `Временный пароль — Moscow Barista School`
-- Письмо содержит Telegram-кнопку (`https://t.me/baristaschool`), **без** кнопки «Войти»
+- Тема письма: `Сброс пароля — Moscow Barista School`
+- Письмо содержит кнопку сброса пароля и Telegram-кнопку (`https://t.me/Moscow_barista_school`).
 
 **Forgot Password flow:**
 - `POST /api/auth/forgot-password` принимает `{ email, source }` (`source: 'admin' | 'user'`)
-- Генерирует 8-символьный temp_pass, хэширует, сохраняет в БД, отправляет email
-- Всегда возвращает одинаковый безопасный ответ `{ ok, email_sent }`; временный пароль не возвращается в API и не показывается в UI
-- `login_url` в письме зависит от `source`: admin → `https://baristaschool.online`, user → `https://barista-school.online`
+- Генерирует reset-token на 24 часа, сохраняет его в БД и отправляет ссылку на email.
+- Текущий пароль не меняется до успешного `POST /api/auth/reset-password`.
+- Всегда возвращает одинаковый безопасный ответ `{ ok, email_sent }`; reset-link не возвращается в public API и не показывается в UI.
+- `login_url` в письме зависит от `source`: admin → `https://baristaschool.online/#adm`, user → `https://barista-school.online`.
 
 **Admin-panel (tilda-admin.html + admin-panel.js):**
 - Inline forgot-form прямо в карточке логина (не отдельный модал)
 - `body: JSON.stringify({ email: fEmail, source: 'admin' })` — всегда source='admin'
-- UI показывает только статус отправки письма; временный пароль через API не раскрывается
+- UI показывает только статус отправки письма; reset-link через public API не раскрывается
 
 ---
 
@@ -248,7 +261,7 @@ TELEGRAM_WEBHOOK_SECRET=***  # optional; если не задан, production б
 **Backend endpoints (server/main.py):**
 - `GET /api/auth/yandex` — редирект на `oauth.yandex.ru/authorize`
 - `GET /api/auth/yandex/callback` — обменивает `code` → токен, получает профиль через `login.yandex.ru/info`, извлекает телефон из `profile.get("default_phone")`, создаёт пользователя с `is_active=False`, отправляет TG-уведомление
-- Редирект на `APP_URL/?oauth_token=...&oauth_user=...` (если `is_active=True`) или на `/` с ошибкой
+- Редирект на `APP_URL/?oauth_code=...` (если `is_active=True`) или на `/` с ошибкой; JWT и user-профиль выдаются только через `POST /api/auth/oauth-exchange`
 
 > ⚠️ **Yandex OAuth callback (server/main.py):** использовать `create_token(user.id)`, не `create_access_token(...)` —
 > функция `create_access_token` не существует, NameError — OAuth всегда падал без видимой ошибки (фикс сессия 45)
@@ -257,7 +270,7 @@ TELEGRAM_WEBHOOK_SECRET=***  # optional; если не задан, production б
 - Кнопка «Войти через Яндекс ID» под разделителем «или»
 - Иконка — inline SVG (красный круг с Я), **не** `<img src>` с внешнего домена
 - Клик → `window.location.href = API + '/api/auth/yandex'`
-- После редиректа читает `?oauth_token=` + `?oauth_user=` из URL → `saveAuth()` → `fetchState()` → вход
+- После редиректа читает `?oauth_code=` из URL → `POST /api/auth/oauth-exchange` → `saveAuth()` → `fetchState()` → вход
 - Читает `?auth_error=` → показывает сообщение об ошибке
 
 **Паттерны OAuth (что нельзя делать):**

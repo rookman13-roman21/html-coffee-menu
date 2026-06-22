@@ -20,6 +20,8 @@
 
 На 19 июня 2026 динамический Tilda-каталог авторских рецептов отменён как неактуальный. `/recipes` оставлен в простом режиме витрины: список опубликованных рецептов, страница рецепта и заявка на один рецепт. Tilda-блок `public/tilda-blocks/author-recipes-widget.html` удалён из frontend-репозитория.
 
+На 22 июня 2026 закрыт блок утечек данных: `.env.production` снят с Git-отслеживания, public order API больше не возвращает `bitrix_deal_id`, новые upload URL автора не раскрывают `user.id`, Yandex OAuth передаёт JWT через одноразовый `oauth_code`, forgot-password отправляет reset-link без смены пароля до действия пользователя, OpenAI key хранится только в памяти вкладки. `/api/suppliers` теперь требует JWT активного пользователя: телефоны поставщиков можно показывать авторизованным клиентам, но anonymous public API их не отдаёт.
+
 ## 2. Связанные проекты
 
 Основные проекты:
@@ -358,13 +360,17 @@ Production:
 - Не коммитить `.env`, `.env.production` с приватными значениями.
 - Перед production backend-деплоем делать backup SQLite.
 - Если создаётся временный admin JWT для smoke-теста, пользователь должен явно разрешить это; токен не выводить, config удалить после проверки.
-- Public API не должен отдавать:
+- Anonymous public API не должен отдавать:
   - phone;
   - email;
   - Telegram;
   - yClients ID;
   - `bitrix_contact_id`;
   - внутренние приватные поля автора.
+- `/api/suppliers` требует JWT активного пользователя; публичные телефоны поставщиков доступны только авторизованным клиентам.
+- Public order API не должен возвращать `bitrix_deal_id`, внутренние order IDs и другие CRM ID.
+- Yandex OAuth не должен возвращать JWT через query string; использовать одноразовый `oauth_code` и `/api/auth/oauth-exchange`.
+- Forgot-password отправляет reset-link и не меняет текущий пароль до явного POST `/api/auth/reset-password`.
 
 ## 15. Admin panel
 

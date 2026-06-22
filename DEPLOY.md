@@ -56,6 +56,8 @@ npm run smoke:api:apply
 
 Скрипт не создаёт сделки и не публикует рецепты. Он проверяет health, admin auth, `access`, тестового автора, `author_profiles`, `bitrix_contact_id` и приватность public API.
 
+После security-изменений вручную проверить, что anonymous `GET /api/suppliers` не отдаёт данные без JWT, а авторизованный клиент получает список публичных поставщиков с телефонами.
+
 ## Деплой по слоям
 
 ### Frontend SPA

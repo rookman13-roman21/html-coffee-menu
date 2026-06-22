@@ -159,6 +159,12 @@ ssh -i "$HOME/.ssh/id_ed25519" root@159.194.233.13 \
 - `author_user_id`, себестоимость, review-комментарии и полный `recipe` snapshot;
 - внутренние ID, которые не нужны покупателю.
 
+Для поставщиков:
+
+- anonymous `GET /api/suppliers` должен требовать авторизацию;
+- авторизованный клиент может получать публичные телефоны поставщиков;
+- `GET /api/admin/suppliers` остаётся только для admin.
+
 Для простой public-витрины проверить:
 
 - `/recipes` показывает список опубликованных рецептов;
@@ -171,6 +177,7 @@ ssh -i "$HOME/.ssh/id_ed25519" root@159.194.233.13 \
 - после backend-деплоя перерегистрировать `/api/admin/register-webhook`, чтобы старый Telegram webhook получил `secret_token`;
 - проверить, что `/api/proxy-meta` отклоняет `localhost`, private IP, `.local`, URL с логином/паролем и нестандартные порты;
 - проверить, что forgot-password не возвращает `temp_password` в API и UI.
+- проверить, что public order API не возвращает `bitrix_deal_id` и внутренние order IDs.
 
 ## 6. После деплоя
 

@@ -796,9 +796,7 @@ async function _initApp(serverState) {
   // Обновить метку API ключа в loc-menu
   try {
     const _labelEl = document.getElementById('loc-menu-api-key-label');
-    if (_labelEl) _labelEl.textContent = localStorage.getItem('oc_openai_key')
-      ? '✅ OpenAI API ключ настроен'
-      : 'Добавить OpenAI API ключ';
+    if (_labelEl) _labelEl.textContent = 'Добавить OpenAI API ключ';
   } catch(e) {}
   try {
     if (localStorage.getItem('mbs_theme') === 'dark') {

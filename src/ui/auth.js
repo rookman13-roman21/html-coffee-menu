@@ -538,18 +538,27 @@ export function showAuthScreen() {
       window.location.href = `${API}/api/auth/yandex`;
     });
 
-    // Обработка редиректа после OAuth (oauth_token в URL)
-    const _oauthToken = new URLSearchParams(window.location.search).get('oauth_token');
-    const _oauthUser  = new URLSearchParams(window.location.search).get('oauth_user');
-    if (_oauthToken && _oauthUser) {
-      try {
-        const _user = JSON.parse(decodeURIComponent(_oauthUser));
-        saveAuth(_oauthToken, _user);
-        // Убираем параметры из URL
-        window.history.replaceState({}, '', window.location.pathname);
-        fetchState().then(state => { overlay.remove(); resolve(state); });
-        return;
-      } catch { /* ignore, show form */ }
+    // Обработка редиректа после OAuth: в URL приходит только одноразовый code.
+    const _oauthCode = new URLSearchParams(window.location.search).get('oauth_code');
+    if (_oauthCode) {
+      window.history.replaceState({}, '', window.location.pathname);
+      fetch(`${API}/api/auth/oauth-exchange`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: _oauthCode })
+      })
+        .then(r => r.json().then(d => ({ ok: r.ok, data: d })))
+        .then(({ ok, data }) => {
+          if (!ok || !data.token || !data.user) throw new Error(data.detail || 'Ошибка входа через Яндекс');
+          saveAuth(data.token, data.user);
+          return fetchState();
+        })
+        .then(state => { overlay.remove(); resolve(state); })
+        .catch(e => {
+          errorEl.textContent = e.message || 'Ошибка входа через Яндекс';
+          errorEl.classList.add('visible');
+        });
+      return;
     }
     const _authError = new URLSearchParams(window.location.search).get('auth_error');
     if (_authError) {
@@ -646,8 +655,8 @@ export function showAuthScreen() {
       const p2 = resetPass2.value;
       resetError.classList.remove('visible');
       resetSuccess.classList.remove('visible');
-      if (!p1 || p1.length < 6) {
-        resetError.textContent = 'Пароль минимум 6 символов';
+      if (!p1 || p1.length < 8) {
+        resetError.textContent = 'Пароль минимум 8 символов';
         resetError.classList.add('visible');
         return;
       }
