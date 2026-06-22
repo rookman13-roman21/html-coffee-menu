@@ -1,6 +1,6 @@
 # PROJECT_MAP.md — Coffee Menu SPA
 
-> Последнее обновление: 18 июня 2026
+> Последнее обновление: 23 июня 2026
 > Стек: **Vite 5.4 + Vanilla JS (ES-модули) + FastAPI + SQLite**
 > Продакшн: `https://barista-school.online`
 
@@ -16,6 +16,14 @@
 - **Admin backend**: управление пользователями, пакетами доступа, авторами, публикациями, поставщиками, пресетами и библиотекой оборудования.
 
 Для передачи контекста в новый чат использовать `HTML_coffee_menu/NEXT_CHAT_HANDOFF.md`.
+
+Актуальные изменения 22-23 июня 2026:
+
+- `Бюджет` / стартовые вложения: сортировки категорий по порядку, сумме и количеству позиций; поиск по позициям; проценты/прогресс; развернуть/свернуть все категории.
+- `server/admin/src/_equipment.js`: категории admin-библиотеки синхронизированы с клиентским бюджетом, пустые разделы не скрываются, `+ Добавить` наследует выбранную категорию, добавлены empty state, `Где используется` и полнота заполнения библиотеки.
+- `server/admin/src/_presets.js`: текущий пресет группируется по категориям бюджета; библиотека справа умеет `Скрыть уже добавленные`; уже выбранные позиции показывают бейдж `В пресете`.
+- `server/admin/src/_styles.js`: в `Пресеты` убран sticky у заголовков библиотеки, потому что Safari перекрывал первую строку списка.
+- `src/ui/misc.js`: общий `Excel (xlsx)` из верхнего меню исправлен для ExcelJS/Safari: импорт `GROUP_LABEL`, правильный `mergeCells` по `titleRow.number`, общий `try/catch`, ссылка добавляется в DOM перед `a.click()`.
 
 ### Пакеты доступа
 
@@ -658,6 +666,7 @@ Public-витрина:
 | 52 | 18 июня 2026 | **Author Telegram notifications:** добавлена привязка авторов к Telegram-боту, отдельные env `JOIN_MBS_*`, webhook `/api/telegram/join-mbs/webhook`, API `/api/author/telegram/*` и best-effort уведомления команде/автору по событиям проверки рецептов. 19 июня 2026 production переключён с `@Join_MBS_bot` на `@MBS_work_bot`, потому что `@Join_MBS_bot` используется BotHelp и не должен занимать webhook платформы. |
 | 53 | 18 июня 2026 | **Production HTTP/2 / доступность из РФ:** после жалоб “сайт открывается только через VPN” включён HTTP/2 на nginx для `barista-school.online` и `www.barista-school.online` (`/etc/nginx/sites-enabled/coffee-menu`, `listen 443 ssl http2;`). Проверка: `curl -Iv --http2 https://barista-school.online/` → `ALPN: server accepted h2`, `HTTP/2 200`; `/api/health` → `HTTP/2 200`. Backup nginx-конфига перенесён из `sites-enabled` в `/root/nginx-backups/`, потому что wildcard include создавал warning `conflicting server name`. Соседний VPS `159.194.202.120` / `159-194-202-120.sslip.io` тоже отвечал только HTTP/1.1, но текущий SSH-ключ туда не пускал; при доступе включить HTTP/2 аналогично. |
 | 54 | 19 июня 2026 | **Telegram disconnect confirm:** исправлено отключение Telegram в кабинете автора. `showConfirm()` раньше работал только через callback, а `disconnectAuthorTelegram()` ожидал `await showConfirm(...)`; теперь helper возвращает `Promise<boolean>` и сохраняет callback-совместимость. Frontend задеплоен, `npm run check` и `git diff --check` пройдены. |
+| 55 | 22-23 июня 2026 | **Бюджет, admin-библиотека, пресеты, Excel:** категории стартовых вложений получили сортировки/поиск/прогресс; admin-библиотека показывает все категории клиентского бюджета и пустые разделы; `Пресеты` получили `Скрыть уже добавленные`, `В пресете`, группировку по категориям; общий `Excel (xlsx)` исправлен для ExcelJS/Safari. |
 
 ---
 
