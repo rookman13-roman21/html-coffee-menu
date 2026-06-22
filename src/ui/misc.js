@@ -347,6 +347,15 @@ ${investment > 0 ? `
 }
 
 export async function exportFullXLSX() {
+  try {
+    await _exportFullXLSXUnsafe();
+  } catch (e) {
+    console.error('exportFullXLSX error:', e);
+    window.showAlert?.('Не удалось скачать Excel: ' + (e?.message || 'ошибка формирования файла'));
+  }
+}
+
+async function _exportFullXLSXUnsafe() {
   document.getElementById('export-menu')?.classList.remove('open');
   try { await ensureExcelJS(); } catch (e) { window.showAlert(e.message || 'Библиотека ExcelJS не загрузилась.'); return; }
 
@@ -446,7 +455,7 @@ export async function exportFullXLSX() {
 
   // Заголовок листа
   const titleRow = wsDash.addRow(['MBS Coffee Menu — финансовый отчёт', '', locName, today]);
-  wsDash.mergeCells(1, 1, 1, 2);
+  wsDash.mergeCells(titleRow.number, 1, titleRow.number, 2);
   titleRow.getCell(1).fill = fill(C.green);
   titleRow.getCell(1).font = font(true, 14, C.white);
   titleRow.getCell(1).alignment = align('left', 'middle');
@@ -639,7 +648,9 @@ export async function exportFullXLSX() {
   const url  = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = `mbs-${locName.replace(/\s+/g,'_')}-${todayISO}.xlsx`;
+  document.body.appendChild(a);
   a.click();
+  a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 3000);
 }
 export function exportSuppliersPDF() {
