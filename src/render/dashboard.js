@@ -441,6 +441,13 @@ export function ocSetCurrency(cur) {
   renderDashboard();
 }
 
+export function ocSetCategorySort(sort) {
+  const allowed = ['manual', 'cost_desc', 'cost_asc', 'count_desc', 'count_asc', 'name_asc'];
+  S.openingMeta = { ...(S.openingMeta || {}), categorySort: allowed.includes(sort) ? sort : 'manual' };
+  saveState();
+  renderDashboard();
+}
+
 export function ocUpdateRate(cur, val) {
   const rate = parseFloat(val) || (cur === 'USD' ? 90 : 98);
   const key  = cur === 'USD' ? 'usdRate' : 'eurRate';
@@ -1318,6 +1325,28 @@ function _renderCatSection(cat, items) {
     </div>`;
 }
 
+function _ocSortedCategoryEntries(byCat, sortMode) {
+  const rows = Object.entries(byCat)
+    .map(([cat, items], index) => ({
+      cat,
+      items,
+      index,
+      total: items.reduce((s, r) => s + r.price * r.qty, 0),
+      count: items.length,
+      label: OC_CATS[cat]?.label || cat,
+    }))
+    .filter(row => row.count > 0);
+
+  const byOriginalOrder = (a, b) => a.index - b.index;
+  const sorted = [...rows];
+  if (sortMode === 'cost_desc') sorted.sort((a, b) => (b.total - a.total) || byOriginalOrder(a, b));
+  else if (sortMode === 'cost_asc') sorted.sort((a, b) => (a.total - b.total) || byOriginalOrder(a, b));
+  else if (sortMode === 'count_desc') sorted.sort((a, b) => (b.count - a.count) || byOriginalOrder(a, b));
+  else if (sortMode === 'count_asc') sorted.sort((a, b) => (a.count - b.count) || byOriginalOrder(a, b));
+  else if (sortMode === 'name_asc') sorted.sort((a, b) => a.label.localeCompare(b.label, 'ru') || byOriginalOrder(a, b));
+  return sorted;
+}
+
 // ─── Главный рендер ───────────────────────────────────────────────────
 export function renderDashboard() {
   const el = document.getElementById('tab-dashboard');
@@ -1329,6 +1358,7 @@ export function renderDashboard() {
   const currency = meta.currency || 'RUB';
   const usdRate  = meta.usdRate  || 90;
   const eurRate  = meta.eurRate  || 98;
+  const categorySort = meta.categorySort || 'manual';
   const total    = _ocCalcTotal(costs);
 
   // Группируем по категориям
@@ -1385,8 +1415,8 @@ export function renderDashboard() {
   // Секции категорий (только непустые)
   const hasCosts = costs.length > 0;
   const sections = hasCosts
-    ? Object.entries(byCat).filter(([, items]) => items.length > 0)
-        .map(([c, items]) => _renderCatSection(c, items)).join('')
+    ? _ocSortedCategoryEntries(byCat, categorySort)
+        .map(({ cat, items }) => _renderCatSection(cat, items)).join('')
     : `<div class="oc-onboard">
         <div class="oc-onboard-icon">🏗️</div>
         <div class="oc-onboard-title">Начните планирование вложений</div>
@@ -1469,6 +1499,21 @@ export function renderDashboard() {
         </button>
         <span class="oc-tpl-note" id="oc-tpl-note">${OC_FORMATS[format].desc}</span>
       </div>
+
+      ${hasCosts ? `<div class="oc-list-tools">
+        <label class="oc-sort-control">
+          <i data-lucide="arrow-up-down" class="icon"></i>
+          <span>Сортировка категорий</span>
+          <select class="oc-sort-select" onchange="ocSetCategorySort(this.value)">
+            <option value="manual"${categorySort === 'manual' ? ' selected' : ''}>По порядку</option>
+            <option value="cost_desc"${categorySort === 'cost_desc' ? ' selected' : ''}>Стоимость: сначала больше</option>
+            <option value="cost_asc"${categorySort === 'cost_asc' ? ' selected' : ''}>Стоимость: сначала меньше</option>
+            <option value="count_desc"${categorySort === 'count_desc' ? ' selected' : ''}>Позиций: сначала больше</option>
+            <option value="count_asc"${categorySort === 'count_asc' ? ' selected' : ''}>Позиций: сначала меньше</option>
+            <option value="name_asc"${categorySort === 'name_asc' ? ' selected' : ''}>По названию</option>
+          </select>
+        </label>
+      </div>` : ''}
 
       <!-- Секции категорий -->
       <div class="oc-sections">${sections}</div>
