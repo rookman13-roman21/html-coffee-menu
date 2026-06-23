@@ -224,6 +224,7 @@ import {
   addFixedCost, addFixedCostInCat, delFixedCost,
   onTaxMode, onInvestment, toggleFcCat,
   openCostEditor, closeCostEditor, saveCostEditor, deleteCostFromEditor,
+  _fceTypeChange, _fceShareToggle, _fceShareUpdate, _fcePctHint,
   initFcOpenCatsKeeper,
 } from './ui/cost-table.js';
 
@@ -424,6 +425,7 @@ const _srcExports = {
   addFixedCost, addFixedCostInCat, delFixedCost,
   onTaxMode, onInvestment, toggleFcCat,
   openCostEditor, closeCostEditor, saveCostEditor, deleteCostFromEditor,
+  _fceTypeChange, _fceShareToggle, _fceShareUpdate, _fcePctHint,
   // ui/ingredients
   matOptions, _ingPlaceholder, _ingStep,
   _onIngMatChange, _calcIngRowCost, _updateIngRowCost, addIngRow, _autoCalcDrinkIngYield,

@@ -228,7 +228,7 @@ export function openCostEditor(idx) {
             <label class="fce-radio"><input type="checkbox" id="fce-variable"> Переменная — масштабируется в сценариях с объёмом продаж</label>
           </div>
           <div id="fce-pct-fields" style="display:none;margin-top:12px">
-            <label class="fc-editor-label">% от выручки</label>
+            <label class="fc-editor-label">Процент от выручки, %/мес</label>
             <input id="fce-pct" class="inp" type="number" min="0" max="100" step="0.1" inputmode="decimal" style="width:100%;margin-bottom:10px" oninput="_fcePctHint()">
             <div style="margin-bottom:8px">
               <button type="button" id="fce-share-toggle" onclick="_fceShareToggle()" style="background:none;border:none;padding:0;cursor:pointer;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px">
@@ -367,4 +367,3 @@ export function deleteCostFromEditor() {
     if (window.lucide) lucide.createIcons();
   }, { icon: '🗑️', okText: 'Удалить' });
 }
-
