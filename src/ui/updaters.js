@@ -130,6 +130,129 @@ export function scaleSalesPortions(factor) {
   if (window.lucide) window.lucide.createIcons();
 }
 
+const ADDON_SALE_PRESETS = {
+  bakery:  { name: 'Выпечка', category: 'bakery', type: 'resale', mode: 'attach', price: 190, cost: 95, attachPct: 18 },
+  dessert: { name: 'Десерт', category: 'dessert', type: 'resale', mode: 'attach', price: 260, cost: 120, attachPct: 8 },
+  food:    { name: 'Сэндвич', category: 'food', type: 'resale', mode: 'attach', price: 390, cost: 210, attachPct: 6 },
+  impulse: { name: 'Импульс', category: 'impulse', type: 'resale', mode: 'units', price: 120, cost: 55, unitsPerDay: 5 },
+};
+
+const ADDON_SALES_PACKS = {
+  none: [],
+  bakery: [
+    { ...ADDON_SALE_PRESETS.bakery },
+  ],
+  showcase: [
+    { ...ADDON_SALE_PRESETS.bakery },
+    { ...ADDON_SALE_PRESETS.dessert },
+    { ...ADDON_SALE_PRESETS.impulse },
+  ],
+  kitchen: [
+    { ...ADDON_SALE_PRESETS.bakery, attachPct: 20 },
+    { ...ADDON_SALE_PRESETS.dessert, attachPct: 10 },
+    { ...ADDON_SALE_PRESETS.food, attachPct: 12 },
+  ],
+  kiosk: [
+    { ...ADDON_SALE_PRESETS.bakery, attachPct: 12 },
+    { ...ADDON_SALE_PRESETS.impulse, unitsPerDay: 8 },
+  ],
+};
+
+function _nextAddonSaleId() {
+  const rows = Array.isArray(window.S.addonSales) ? window.S.addonSales : [];
+  return rows.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1;
+}
+
+export function addAddonSale(kind = 'bakery') {
+  if (!Array.isArray(window.S.addonSales)) window.S.addonSales = [];
+  const preset = ADDON_SALE_PRESETS[kind] || ADDON_SALE_PRESETS.bakery;
+  window.S.addonSales.push({
+    id: _nextAddonSaleId(),
+    name: preset.name,
+    category: preset.category,
+    type: preset.type,
+    mode: preset.mode,
+    price: preset.price,
+    cost: preset.cost,
+    unitsPerDay: preset.unitsPerDay || 0,
+    attachPct: preset.attachPct || 0,
+    qtyPerCheck: 1,
+  });
+  if (window.dirty) window.dirty.finmodel = true;
+  window.renderSales();
+  window.saveState();
+  if (window.lucide) window.lucide.createIcons();
+}
+
+export function applyAddonSalesPreset(key) {
+  const pack = ADDON_SALES_PACKS[key];
+  if (!pack) return;
+  let nextId = 1;
+  window.S.addonSales = pack.map(item => ({
+    id: nextId++,
+    name: item.name,
+    category: item.category,
+    type: item.type,
+    mode: item.mode,
+    price: item.price,
+    cost: item.cost,
+    unitsPerDay: item.unitsPerDay || 0,
+    attachPct: item.attachPct || 0,
+    qtyPerCheck: 1,
+  }));
+  if (!window.S.salesMeta) window.S.salesMeta = { checksPerDay: 0, addonFilter: 'all' };
+  window.S.salesMeta.addonFilter = 'all';
+  if (window.dirty) window.dirty.finmodel = true;
+  window.renderSales();
+  window.saveState();
+  if (window.lucide) window.lucide.createIcons();
+}
+
+export function setAddonFilter(cat) {
+  if (!window.S.salesMeta) window.S.salesMeta = { checksPerDay: 0, addonFilter: 'all' };
+  window.S.salesMeta.addonFilter = cat || 'all';
+  window.renderSales();
+  window.saveState();
+  if (window.lucide) window.lucide.createIcons();
+}
+
+export function scrollToAddonSales() {
+  const el = document.getElementById('sales-addon-block');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+export function onSalesChecksPerDay(v) {
+  const n = Number(v);
+  if (!window.S.salesMeta) window.S.salesMeta = { checksPerDay: 0, addonFilter: 'all' };
+  window.S.salesMeta.checksPerDay = Number.isFinite(n) ? Math.max(0, Math.round(n)) : 0;
+  if (window.dirty) window.dirty.finmodel = true;
+  markDirtyDebounce();
+  window.saveState();
+}
+
+export function onAddonSale(id, field, value) {
+  const row = (window.S.addonSales || []).find(item => Number(item.id) === Number(id));
+  if (!row) return;
+  if (['name', 'category', 'type', 'mode'].includes(field)) {
+    row[field] = String(value || '').trim() || (field === 'mode' ? 'attach' : field === 'type' ? 'resale' : 'other');
+    if (field === 'mode' && row.mode !== 'units') row.mode = 'attach';
+  } else {
+    const n = Number(value);
+    row[field] = Number.isFinite(n) ? Math.max(0, n) : 0;
+  }
+  if (window.dirty) window.dirty.finmodel = true;
+  markDirtyDebounce();
+  window.saveState();
+}
+
+export function deleteAddonSale(id) {
+  window.S.addonSales = (window.S.addonSales || []).filter(item => Number(item.id) !== Number(id));
+  if (window.dirty) window.dirty.finmodel = true;
+  window.renderSales();
+  window.saveState();
+  if (window.lucide) window.lucide.createIcons();
+}
+
 export function onFixedCost(i, v) {
   const n = parseFloat(v);
   if (n >= 0) { window.S.fixedCosts[i].value = n; markDirtyDebounce(); }
@@ -175,6 +298,8 @@ export function resetAll() {
     S.fixedHintOpen = false;
     S.seasonality = [1,1,1,1,1,1,1,1,1,1,1,1];
     S.seasonalityOpen = false;
+    S.salesMeta = { checksPerDay: 0, addonFilter: 'all' };
+    S.addonSales = [];
     S.suppliers = {};
     S.priceLog  = [];
     for (let i = DRINKS.length - 1; i >= 0; i--) {

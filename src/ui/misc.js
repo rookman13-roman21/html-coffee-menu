@@ -133,7 +133,8 @@ export function exportFullPDF() {
   document.getElementById('export-menu')?.classList.remove('open');
   const loc = window.activeLoc();
   const drinks = window.withABC(window.enrich());
-  const { avgPrice, avgProfit, avgFC } = window.avgMetrics(drinks);
+  const baseAvg = window.avgMetrics(drinks);
+  const { avgProfit } = baseAvg;
   const sales = window.salesMetrics(drinks);
   const bep = window.bepCalc(drinks);
   const today = new Date().toLocaleDateString('ru');
@@ -150,13 +151,19 @@ export function exportFullPDF() {
   const totalFixed  = fixedOnly + fotAmt + varExtra;
 
   // P&L
-  const varCostsMon = drinks.reduce((s,d)=>s+(d.cost*(window.S.portions[d.id]||0)*window.S.days),0);
+  const varCostsMon = sales.totCostMon != null ? sales.totCostMon : drinks.reduce((s,d)=>s+(d.cost*(window.S.portions[d.id]||0)*window.S.days),0);
   const ebit        = totRevMon - varCostsMon - totalFixed;
   const _taxMode1  = window.S.taxMode || 'none';
   const taxAmt      = _taxMode1 === 'usn6' ? totRevMon * 0.06 : _taxMode1 === 'usn15' ? Math.max(0, (totRevMon - varCostsMon - varExtra - fixedOnly - fotAmt) * 0.15) : 0;
   const netProfit   = ebit - taxAmt;
   const investment  = window.S.investment || 0;
   const paybackMon  = investment > 0 && netProfit > 0 ? (investment / netProfit) : null;
+  const drinkRevMon = sales.drinkRevMon || 0;
+  const drinkCostMon = sales.drinkCostMon || 0;
+  const addonRevMon = sales.addonRevMon || 0;
+  const addonCostMon = sales.addonCostMon || 0;
+  const addonPrfMon = sales.addonPrfMon || 0;
+  const hasAddonSales = addonRevMon > 0;
 
   const n = v => Math.round(v).toLocaleString('ru');
   const TAX_LABELS = { none: 'Нет', usn6: 'УСН 6%', usn15: 'УСН 15%' };
@@ -164,18 +171,32 @@ export function exportFullPDF() {
   const fcBgPdf  = fc => fc <= 0.25 ? '#e6f4e6' : fc <= 0.30 ? '#fff8e1' : '#fdecea';
   const netClr   = netProfit >= 0 ? '#1a7a1a' : '#c0392b';
   const netBg    = netProfit >= 0 ? '#e6f4e6' : '#fdecea';
+  const avgPrice = sales.avgCheckTotal || baseAvg.avgPrice;
+  const avgDrinkCheck = sales.avgDrinkCheck || baseAvg.avgPrice;
+  const avgAddonCheck = sales.avgAddonCheck || 0;
+  const avgProfitTotal = sales.avgProfitTotal || avgProfit;
+  const avgFC = totRevMon > 0 ? varCostsMon / totRevMon : baseAvg.avgFC;
+  const addonSharePct = totRevMon > 0 ? addonRevMon / totRevMon * 100 : 0;
+  const fcTarget = 0.28;
+  const fcDeltaPp = (avgFC - fcTarget) * 100;
+  const safetyAbs = totRevMon - bep.revBEP;
+  const safetyPct = totRevMon > 0 ? safetyAbs / totRevMon * 100 : 0;
+  const bepCoverRatio = bep.revBEP > 0 ? totRevMon / bep.revBEP : 0;
 
   // ── KPI-карточки ─────────────────────────────────────────────────
   const kpiCards = [
     { label: 'Напитков в меню',      value: drinks.length,                     sub: '' },
-    { label: 'Средний чек',          value: n(avgPrice) + ' ₽',                sub: '' },
-    { label: 'Прибыль / чашка',      value: n(avgProfit) + ' ₽',               sub: '' },
-    { label: 'Средний FC%',          value: (avgFC*100).toFixed(1) + '%',       sub: '', color: fcClrPdf(avgFC), bg: fcBgPdf(avgFC) },
+    { label: 'Чеков / день',         value: n(sales.totalChecks || sales.totalPort || 0), sub: 'база для среднего чека' },
+    { label: 'Средний чек',          value: n(avgPrice) + ' ₽',                sub: hasAddonSales ? `${n(avgDrinkCheck)} ₽ напитки + ${n(avgAddonCheck)} ₽ доп.` : '' },
+    { label: 'Доп. продажи / мес',   value: n(addonRevMon) + ' ₽',             sub: hasAddonSales ? `${addonSharePct.toFixed(1)}% выручки · ${n(addonPrfMon)} ₽ прибыли` : '' },
+    { label: 'Прибыль / чек',        value: n(avgProfitTotal) + ' ₽',          sub: 'валовая, до расходов' },
+    { label: 'Средний FC%',          value: (avgFC*100).toFixed(1) + '%',       sub: fcDeltaPp > 0 ? `выше ориентира на ${fcDeltaPp.toFixed(1)} п.п.` : `ниже ориентира на ${Math.abs(fcDeltaPp).toFixed(1)} п.п.`, color: fcClrPdf(avgFC), bg: fcBgPdf(avgFC) },
     { label: 'Выручка / день',       value: n(sales.totRevDay) + ' ₽',         sub: '' },
     { label: 'Прибыль / день',       value: n(sales.totPrfDay) + ' ₽',         sub: 'до налогов' },
     { label: 'Выручка / месяц',      value: n(totRevMon) + ' ₽',               sub: '' },
     { label: 'Чистая прибыль / мес', value: n(netProfit) + ' ₽',               sub: '', color: netClr, bg: netBg },
-    { label: 'ТБУ (чашек / день)',   value: bep.cupsDay + ' шт.',               sub: '' },
+    { label: 'Покрытие ТБУ',         value: bepCoverRatio > 0 ? bepCoverRatio.toFixed(1) + '×' : '—', sub: safetyAbs >= 0 ? `выше ТБУ на ${n(safetyAbs)} ₽` : `до ТБУ не хватает ${n(-safetyAbs)} ₽`, color: safetyAbs >= 0 ? '#1a7a1a' : '#c0392b' },
+    { label: 'Запас прочности',      value: (safetyAbs >= 0 ? '+' : '') + safetyPct.toFixed(1) + '%', sub: safetyAbs >= 0 ? 'допустимое падение выручки' : 'план ниже безубыточности', color: safetyAbs >= 0 ? '#1a7a1a' : '#c0392b' },
     { label: 'ТБУ (выручка / мес)',  value: n(bep.revBEP) + ' ₽',              sub: 'минимум для покрытия расходов' },
     ...(investment > 0 ? [
       { label: 'Стартовые вложения', value: n(investment) + ' ₽',              sub: '' },
@@ -187,24 +208,6 @@ export function exportFullPDF() {
     ${k.sub ? `<div class="kpi-sub">${k.sub}</div>` : ''}
   </div>`).join('');
 
-  // ── Таблица напитков ─────────────────────────────────────────────
-  let lastGroup = null;
-  const drinkRows = window.sortDrinks(drinks).map(d => {
-    const gc = fcClrPdf(d.fc); const gb = fcBgPdf(d.fc);
-    const abcColors = { A: { c:'#1a7a1a', b:'#e6f4e6' }, B: { c:'#b87e00', b:'#fff8e1' }, C: { c:'#c0392b', b:'#fdecea' } };
-    const ac = abcColors[d.abc] || { c:'#555', b:'#f5f5f5' };
-    const grp = d.group !== lastGroup ? (lastGroup = d.group, `<tr class="group-sep"><td colspan="7"><span>${GROUP_LABEL[d.group]||d.group}</span></td></tr>`) : '';
-    return grp + `<tr>
-      <td class="drink-name">${d.name}</td>
-      <td class="r">${Math.round(d.price)}</td>
-      <td class="r">${Math.round(d.cost)}</td>
-      <td class="r fw">${Math.round(d.profit)}</td>
-      <td class="c" style="color:${gc};background:${gb};font-weight:700">${(d.fc*100).toFixed(1)}%</td>
-      <td class="c" style="color:${ac.c};background:${ac.b};font-weight:800">${d.abc||'—'}</td>
-      <td class="r muted">${window.S.portions[d.id]||0}</td>
-    </tr>`;
-  }).join('');
-
   // ── План продаж ───────────────────────────────────────────────────
   const targetFC = window.S.targetFC || 0;
   const planRows = window.sortDrinks(drinks).filter(d => (window.S.portions[d.id]||0) > 0).map(d => {
@@ -214,11 +217,23 @@ export function exportFullPDF() {
     const fcBg  = overFC ? '#fdecea' : fcBgPdf(d.fc);
     return `<tr><td class="drink-name">${d.name}</td><td class="r muted">${Math.round(d.price)}</td><td class="c" style="color:${fcClr};background:${fcBg};font-weight:700">${(d.fc*100).toFixed(1)}%</td><td class="c">${p}</td><td class="r">${n(d.price*p)}</td><td class="r">${n(d.profit*p)}</td><td class="r fw">${n(d.price*p*window.S.days)}</td><td class="r fw">${n(d.profit*p*window.S.days)}</td></tr>`;
   }).join('');
+  const addonPlanRows = (sales.addonRows || []).map(row => {
+    const fc = row.price > 0 ? row.cost / row.price : 0;
+    return `<tr><td class="drink-name">${row.name}</td><td class="r muted">${Math.round(row.price)}</td><td class="c" style="color:${fcClrPdf(fc)};background:${fcBgPdf(fc)};font-weight:700">${(fc*100).toFixed(1)}%</td><td class="c">${row.unitsDay.toFixed(1)}</td><td class="r">${n(row.revDay)}</td><td class="r">${n(row.prfDay)}</td><td class="r fw">${n(row.revDay*window.S.days)}</td><td class="r fw">${n(row.prfDay*window.S.days)}</td></tr>`;
+  }).join('');
 
   // ── P&L ───────────────────────────────────────────────────────────
   const plItems = [
     { label: 'Выручка от продаж',       val: totRevMon,   bold: false, top: true },
+    ...(hasAddonSales ? [
+      { label: '· Напитки',             val: drinkRevMon, sub: true },
+      { label: '· Дополнительные продажи', val: addonRevMon, sub: true },
+    ] : []),
     { label: '− Себестоимость сырья',   val: -varCostsMon, bold: false },
+    ...(hasAddonSales ? [
+      { label: '· Себестоимость напитков', val: -drinkCostMon, sub: true },
+      { label: '· Себестоимость доп. продаж', val: -addonCostMon, sub: true },
+    ] : []),
     { label: 'Валовая прибыль',         val: totRevMon - varCostsMon, bold: true },
     ...window.getEffectiveCosts(totRevMon).map(c => ({ label: `− ${c.name}${c.isVariable?' (перем.)':''}`, val: -c.value })),
     ...(fotAmt > 0 ? [{ label: '− ФОТ (все сотрудники)', val: -fotAmt }] : []),
@@ -230,11 +245,12 @@ export function exportFullPDF() {
     const isAccent = r.accent;
     const isBold   = r.bold;
     const vClr     = isAccent ? (netProfit >= 0 ? '#1a7a1a' : '#c0392b') : (r.val < 0 ? '#c0392b' : '#222');
-    const bg       = isAccent ? (netProfit >= 0 ? '#e6f4e6' : '#fdecea') : (isBold ? '#eef5eb' : (i%2===0?'#fff':'#fafcf9'));
+    const bg       = isAccent ? (netProfit >= 0 ? '#e6f4e6' : '#fdecea') : (isBold ? '#eef5eb' : (r.sub ? '#f7fbf5' : (i%2===0?'#fff':'#fafcf9')));
     const fw       = isBold ? '700' : '400';
     const bTop     = r.top ? 'border-top:2px solid #b5d4a8;' : '';
+    const padLeft  = r.sub ? '26px' : (isBold ? '8px' : '20px');
     return `<tr style="background:${bg};${bTop}">
-      <td style="padding:5px 8px;font-size:9pt;font-weight:${fw};padding-left:${isBold?'8px':'20px'}">${r.label}</td>
+      <td style="padding:5px 8px;font-size:9pt;font-weight:${fw};padding-left:${padLeft};color:${r.sub ? '#555' : '#222'}">${r.label}</td>
       <td style="padding:5px 8px;text-align:right;font-size:9pt;font-weight:${fw};color:${vClr}">${n(Math.abs(r.val))} ₽</td>
       <td style="padding:5px 8px;text-align:right;font-size:9pt;color:#555">${totRevMon > 0 ? (r.val/totRevMon*100).toFixed(1) + '%' : ''}</td>
     </tr>`;
@@ -308,19 +324,12 @@ tfoot tr td { font-weight:700; background:#e7f2e3 !important; border-top:1.5px s
 <div class="section-title"><span>📊</span> Ключевые показатели</div>
 <div class="kpi-grid">${kpiCards}</div>
 
-<!-- РЕЙТИНГ НАПИТКОВ -->
-<div class="section-title"><span>☕</span> Рейтинг напитков</div>
-<table>
-  <thead><tr><th>Напиток</th><th class="r">Цена, ₽</th><th class="r">Себест., ₽</th><th class="r">Прибыль, ₽</th><th class="c">FC%</th><th class="c">Рейтинг</th><th class="r">Порций/д</th></tr></thead>
-  <tbody>${drinkRows}</tbody>
-</table>
-
 <!-- ПЛАН ПРОДАЖ -->
-<div class="section-title pb"><span>📈</span> План продаж <span style="font-size:9pt;font-weight:400;color:#6b7280">(только активные позиции)</span></div>
-<p class="hint">${window.S.days} дней в месяце &nbsp;·&nbsp; показаны только напитки с порциями &gt; 0${targetFC > 0 ? ' &nbsp;·&nbsp; Целевой FC%: ' + Math.round(targetFC*100) + '% (красный = превышение)' : ''}</p>
+<div class="section-title"><span>📈</span> План продаж <span style="font-size:9pt;font-weight:400;color:#6b7280">(только активные позиции)</span></div>
+<p class="hint">${window.S.days} дней в месяце &nbsp;·&nbsp; напитки с порциями &gt; 0 и дополнительные продажи${targetFC > 0 ? ' &nbsp;·&nbsp; Целевой FC%: ' + Math.round(targetFC*100) + '% (красный = превышение)' : ''}</p>
 <table>
-  <thead><tr><th>Напиток</th><th class="r">Цена</th><th class="c">FC%</th><th class="c">Порц./д</th><th class="r">Выр./день</th><th class="r">Приб./день</th><th class="r">Выр./мес</th><th class="r">Приб./мес</th></tr></thead>
-  <tbody>${planRows}</tbody>
+  <thead><tr><th>Позиция</th><th class="r">Цена</th><th class="c">FC%</th><th class="c">Объём/д</th><th class="r">Выр./день</th><th class="r">Приб./день</th><th class="r">Выр./мес</th><th class="r">Приб./мес</th></tr></thead>
+  <tbody>${planRows}${addonPlanRows ? `<tr class="group-sep"><td colspan="8"><span>Дополнительные продажи</span></td></tr>${addonPlanRows}` : ''}</tbody>
   <tfoot><tr><td colspan="4">ИТОГО</td><td class="r">${n(sales.totRevDay)} ₽</td><td class="r">${n(sales.totPrfDay)} ₽</td><td class="r">${n(totRevMon)} ₽</td><td class="r">${n(sales.totPrfMon)} ₽</td></tr></tfoot>
 </table>
 
@@ -362,7 +371,9 @@ async function _exportFullXLSXUnsafe() {
   const loc    = window.activeLoc();
   const drinks = window.withABC(window.enrich());
   const sales  = window.salesMetrics(drinks);
-  const { avgPrice, avgProfit, avgFC } = window.avgMetrics(drinks);
+  const baseAvg = window.avgMetrics(drinks);
+  const avgPrice = sales.avgCheckTotal || baseAvg.avgPrice;
+  const avgProfit = sales.avgProfitTotal || baseAvg.avgProfit;
   const bep    = window.bepCalc(drinks);
   const today  = new Date().toLocaleDateString('ru');
   const todayISO = new Date().toISOString().slice(0, 10);
@@ -376,7 +387,8 @@ async function _exportFullXLSXUnsafe() {
   const varExtra    = _eff2.filter(c => c.isVariable).reduce((s, c) => s + c.value, 0);
   const fixedOnly   = _eff2.filter(c => !c.isVariable).reduce((s, c) => s + c.value, 0);
   const totalFixed  = fixedOnly + fotAmt + varExtra;
-  const varCostsMon = drinks.reduce((s, d) => s + d.cost * (window.S.portions[d.id] || 0) * window.S.days, 0);
+  const varCostsMon = sales.totCostMon != null ? sales.totCostMon : drinks.reduce((s, d) => s + d.cost * (window.S.portions[d.id] || 0) * window.S.days, 0);
+  const avgFC = totRevMon > 0 ? varCostsMon / totRevMon : baseAvg.avgFC;
   const ebit        = totRevMon - varCostsMon - totalFixed;
   const _taxMode2   = window.S.taxMode || 'none';
   const taxAmt      = _taxMode2 === 'usn6' ? totRevMon * 0.06 : _taxMode2 === 'usn15' ? Math.max(0, (totRevMon - varCostsMon - varExtra - fixedOnly - fotAmt) * 0.15) : 0;
@@ -384,6 +396,20 @@ async function _exportFullXLSXUnsafe() {
   const investment  = window.S.investment || 0;
   const paybackMon  = investment > 0 && netProfit > 0 ? investment / netProfit : null;
   const TAX_LABELS  = { none: 'Нет', usn6: 'УСН 6%', usn15: 'УСН 15%' };
+  const drinkRevMon = sales.drinkRevMon || 0;
+  const drinkCostMon = sales.drinkCostMon || 0;
+  const addonRevMon = sales.addonRevMon || 0;
+  const addonCostMon = sales.addonCostMon || 0;
+  const addonPrfMon = sales.addonPrfMon || 0;
+  const hasAddonSales = addonRevMon > 0;
+  const avgDrinkCheck = sales.avgDrinkCheck || baseAvg.avgPrice;
+  const avgAddonCheck = sales.avgAddonCheck || 0;
+  const addonSharePct = totRevMon > 0 ? addonRevMon / totRevMon * 100 : 0;
+  const fcTarget = 0.28;
+  const fcDeltaPp = (avgFC - fcTarget) * 100;
+  const safetyAbs = totRevMon - bep.revBEP;
+  const safetyPct = totRevMon > 0 ? safetyAbs / totRevMon * 100 : 0;
+  const bepCoverRatio = bep.revBEP > 0 ? totRevMon / bep.revBEP : 0;
 
   const wb = new ExcelJS.Workbook();
   wb.creator = 'MBS Coffee Menu';
@@ -473,11 +499,15 @@ async function _exportFullXLSXUnsafe() {
   addSectionTitle(wsDash, '  Ключевые показатели', 4);
   const kpiData = [
     ['Напитков в меню', drinks.length,                'Выручка / мес',       Math.round(totRevMon)],
-    ['Средний чек, ₽',  Math.round(avgPrice),         'Прибыль / мес, ₽',   Math.round(sales.totPrfMon)],
-    ['Прибыль/чашка, ₽',Math.round(avgProfit),        'Чистая прибыль, ₽',  Math.round(netProfit)],
-    ['Средний FC%',      +(avgFC*100).toFixed(1)+'%', 'EBIT, ₽',            Math.round(ebit)],
-    ['Выручка / день, ₽',Math.round(sales.totRevDay), 'ТБУ (чашек/день)',   bep.cupsDay],
-    ['Прибыль / день, ₽',Math.round(sales.totPrfDay), 'ТБУ (выручка/мес)', Math.round(bep.revBEP)],
+    ['Чеков / день', Math.round(sales.totalChecks || sales.totalPort || 0), 'Средний чек, ₽',  Math.round(avgPrice)],
+    ...(hasAddonSales ? [['Средний чек напитков, ₽', Math.round(avgDrinkCheck), 'Средний чек доп. продаж, ₽', Math.round(avgAddonCheck)]] : []),
+    ['Доп. продажи / мес, ₽', Math.round(addonRevMon), 'Доля доп. продаж', +(addonSharePct).toFixed(1) + '%'],
+    ['Доп. прибыль / мес, ₽', Math.round(addonPrfMon), 'Прибыль / мес, ₽', Math.round(sales.totPrfMon)],
+    ['Прибыль/чек, ₽', Math.round(avgProfit),        'Чистая прибыль, ₽',  Math.round(netProfit)],
+    ['Средний FC%', +(avgFC*100).toFixed(1)+'%', 'Отклонение от 28%', (fcDeltaPp > 0 ? '+' : '') + fcDeltaPp.toFixed(1) + ' п.п.'],
+    ['Выручка / день, ₽',Math.round(sales.totRevDay), 'Покрытие ТБУ',      bepCoverRatio > 0 ? +bepCoverRatio.toFixed(1) : '—'],
+    ['Запас прочности', (safetyAbs >= 0 ? '+' : '') + safetyPct.toFixed(1) + '%', 'ТБУ (выручка/мес)', Math.round(bep.revBEP)],
+    ['Прибыль / день, ₽',Math.round(sales.totPrfDay), 'ТБУ (чеков/день)', bep.cupsDay],
     ...(investment > 0 ? [['Инвестиции, ₽', investment, 'Окупаемость', paybackMon ? +paybackMon.toFixed(1) : 'убыток']] : []),
   ];
   kpiData.forEach((r, i) => {
@@ -536,7 +566,7 @@ async function _exportFullXLSXUnsafe() {
   wsSales.columns = [
     {width:32},{width:11},{width:11},{width:13},{width:13},{width:13},{width:14},{width:15},{width:15},
   ];
-  const salesHdr = wsSales.addRow(['Напиток','Цена, ₽','Себест., ₽','Прибыль, ₽','FC%','Порц./день','Выр./день, ₽','Приб./день, ₽','Выр./мес, ₽']);
+  const salesHdr = wsSales.addRow(['Позиция','Цена, ₽','Себест., ₽','Прибыль, ₽','FC%','Объём/день','Выр./день, ₽','Приб./день, ₽','Выр./мес, ₽']);
   applyHeader(salesHdr);
   window.sortDrinks(drinks).forEach((d, i) => {
     const p = window.S.portions[d.id] || 0;
@@ -549,6 +579,28 @@ async function _exportFullXLSXUnsafe() {
     else if (d.fc <= 0.30) { fcCell.fill = fill(C.yellow); fcCell.font = font(false, 9, C.warnText); }
     else                   { fcCell.fill = fill(C.red);    fcCell.font = font(false, 9, C.redText);  }
   });
+  if ((sales.addonRows || []).length) {
+    const section = wsSales.addRow(['Дополнительные продажи']);
+    wsSales.mergeCells(section.number, 1, section.number, 9);
+    section.getCell(1).fill = fill(C.greenLight);
+    section.getCell(1).font = font(true, 10, C.greenDark);
+    (sales.addonRows || []).forEach((item, i) => {
+      const row = wsSales.addRow([
+        item.name,
+        Math.round(item.price),
+        Math.round(item.cost),
+        Math.round(item.price - item.cost),
+        item.price > 0 ? +(item.cost / item.price * 100).toFixed(1) : 0,
+        +(item.unitsDay || 0).toFixed(1),
+        Math.round(item.revDay),
+        Math.round(item.prfDay),
+        Math.round(item.revDay * window.S.days),
+      ]);
+      applyDataRow(row, i%2===1, [4]);
+      [2,3,4,5,6,7,8,9].forEach(c => { row.getCell(c).alignment = align('right'); row.getCell(c).numFmt = '#,##0'; });
+      row.getCell(5).numFmt = '0.0';
+    });
+  }
   const salesTotRow = wsSales.addRow(['ИТОГО','','','','', drinks.reduce((s,d)=>s+(window.S.portions[d.id]||0),0), Math.round(sales.totRevDay), Math.round(sales.totPrfDay), Math.round(totRevMon)]);
   applyTotal(salesTotRow);
   [6,7,8,9].forEach(c => { salesTotRow.getCell(c).alignment = align('right'); salesTotRow.getCell(c).numFmt = '#,##0'; });
@@ -565,7 +617,15 @@ async function _exportFullXLSXUnsafe() {
 
   const plItems = [
     { label: 'Выручка от продаж',          val: totRevMon,           bold: true },
+    ...(hasAddonSales ? [
+      { label: '  · Напитки',              val: drinkRevMon,          sub: true },
+      { label: '  · Дополнительные продажи', val: addonRevMon,        sub: true },
+    ] : []),
     { label: '  − Себестоимость сырья',     val: -varCostsMon,        bold: false },
+    ...(hasAddonSales ? [
+      { label: '    · Себестоимость напитков', val: -drinkCostMon,     sub: true },
+      { label: '    · Себестоимость доп. продаж', val: -addonCostMon,  sub: true },
+    ] : []),
     { label: 'Валовая прибыль',             val: totRevMon-varCostsMon, bold: true, sep: true },
     ...window.getEffectiveCosts(totRevMon).map(c => ({ label: `  − ${c.name}${c.isVariable?' (перем.)':''}`, val: -c.value })),
     ...(fotAmt > 0 ? [{ label: '  − ФОТ', val: -fotAmt }] : []),
@@ -585,6 +645,8 @@ async function _exportFullXLSXUnsafe() {
       row.eachCell(cell => { cell.fill = fill(bg); cell.font = font(true, 11, tc); cell.border = { top:{style:'medium'}, bottom:{style:'double'} }; });
     } else if (item.bold) {
       row.eachCell(cell => { cell.fill = fill(C.greenLight); cell.font = font(true, 10); if (item.sep) cell.border = { top:{style:'thin', color:{argb:C.greenMid}} }; });
+    } else if (item.sub) {
+      row.eachCell((cell, c) => { cell.fill = fill(C.gray); cell.font = font(false, 9, c === 1 ? '555555' : '222222'); });
     } else {
       row.eachCell((cell, c) => { cell.fill = fill(i%2===0 ? C.white : C.gray); cell.font = font(false, 9); });
     }
@@ -601,6 +663,10 @@ async function _exportFullXLSXUnsafe() {
   const params = [
     ['Дней в месяце', window.S.days, ''],
     ['Целевой FC%', +(window.S.targetFC*100).toFixed(1), '%'],
+    ['FC% общий', +(avgFC*100).toFixed(1), '%'],
+    ['Чеков / день', Math.round(sales.totalChecks || sales.totalPort || 0), ''],
+    ['Средний чек, ₽', Math.round(avgPrice), ''],
+    ...(hasAddonSales ? [['Доп. продажи / мес, ₽', Math.round(addonRevMon), '']] : []),
     ['Налоговый режим', TAX_LABELS[window.S.taxMode] || window.S.taxMode, ''],
     ...(investment > 0 ? [['Инвестиции, ₽', investment, ''], ['Срок окупаемости, мес', paybackMon ? +paybackMon.toFixed(1) : '—', '']] : []),
   ];
@@ -1355,7 +1421,8 @@ export function recalcWhatIf3() {
   const taxMode = window.S.taxMode || 'none';
 
   // Те же компоненты что и в P&L
-  const { totRevMon: _wifRev } = window.salesMetrics(drinks);
+  const sales = window.salesMetrics(drinks);
+  const { totRevMon: _wifRev } = sales;
   const _wifEff = window.getEffectiveCosts(_wifRev);
   const fotInFixed  = _wifEff.some(c => /фот|зарплат|зп|оплата.?труда/i.test(c.name));
   const fotAmount   = fotInFixed ? 0 : window.payrollTotal();
@@ -1369,13 +1436,13 @@ export function recalcWhatIf3() {
   const mCost    = 1 + _wif.cost/100;
   const mTraffic = 1 + _wif.traffic/100;
 
-  // Базовые (идентично P&L)
-  const baseRev  = drinks.reduce((s,d)=>s + d.price * window.S.portions[d.id], 0) * window.S.days;
-  const baseVar  = drinks.reduce((s,d)=>s + d.cost  * window.S.portions[d.id], 0) * window.S.days;
+  // Базовые показатели из общего плана продаж: напитки + дополнительные позиции.
+  const baseRev  = sales.totRevMon;
+  const baseVar  = sales.totCostMon;
   const baseVarE = varExtra; // переменные операц. расходы при базовом трафике
   const baseTot  = baseVar + baseVarE + pureFixed;
   const baseNet  = baseRev - baseVar - baseVarE - pureFixed - calcTax(baseRev, baseVar + baseVarE, pureFixed);
-  const basePort = Object.values(window.S.portions).reduce((s,v)=>s+v,0);
+  const basePort = sales.totalPort;
 
   // С учётом коэффициентов
   const rev2   = baseRev * mPrice * mTraffic;

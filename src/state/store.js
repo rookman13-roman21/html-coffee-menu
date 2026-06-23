@@ -130,6 +130,8 @@ export const S = {
   payrollSettingsOpen: false,
   seasonality: [1,1,1,1,1,1,1,1,1,1,1,1],
   seasonalityOpen: false,
+  salesMeta: { checksPerDay: 0, addonFilter: 'all' },
+  addonSales: [],
   suppliers:   JSON.parse(JSON.stringify(_DEF_SUPPLIERS)),
   supplierBook: _DEF_SUPPLIER_BOOK.map(s=>({...s})),
   priceLog:    [],
@@ -169,6 +171,8 @@ export function resetGlobalsToBase() {
   S.payrollSettingsOpen = false;
   S.seasonality       = [1,1,1,1,1,1,1,1,1,1,1,1];
   S.seasonalityOpen   = false;
+  S.salesMeta         = { checksPerDay: 0, addonFilter: 'all' };
+  S.addonSales        = [];
   S.suppliers         = JSON.parse(JSON.stringify(_DEF_SUPPLIERS));
   S.supplierBook      = _DEF_SUPPLIER_BOOK.map(s=>({...s}));
   S.priceLog          = [];
@@ -224,6 +228,8 @@ export function saveState() {
       payrollSettings: S.payrollSettings, payrollSettingsOpen: S.payrollSettingsOpen,
       fixedHintOpen: S.fixedHintOpen,
       seasonality: S.seasonality, seasonalityOpen: S.seasonalityOpen,
+      salesMeta: S.salesMeta,
+      addonSales: S.addonSales,
       wif: { price: _wif.price, cost: _wif.cost, traffic: _wif.traffic },
       suppliers: S.suppliers, supplierBook: S.supplierBook, priceLog: S.priceLog,
       customDrinks: authorMode ? [] : DRINKS.filter(d => d.custom && !d._authorDraft),
@@ -289,6 +295,26 @@ export function loadState() {
     if (sv.fixedHintOpen != null)       S.fixedHintOpen = sv.fixedHintOpen;
     if (sv.seasonality)            S.seasonality = sv.seasonality;
     if (sv.seasonalityOpen != null) S.seasonalityOpen = sv.seasonalityOpen;
+    if (sv.salesMeta) {
+      S.salesMeta = {
+        checksPerDay: Number(sv.salesMeta.checksPerDay) || 0,
+        addonFilter: sv.salesMeta.addonFilter || 'all',
+      };
+    }
+    if (Array.isArray(sv.addonSales)) {
+      S.addonSales = sv.addonSales.map((item, i) => ({
+        id: item.id || (i + 1),
+        name: item.name || '',
+        category: item.category || 'other',
+        type: item.type || 'resale',
+        mode: item.mode === 'units' ? 'units' : 'attach',
+        price: Number(item.price) || 0,
+        cost: Number(item.cost) || 0,
+        unitsPerDay: Number(item.unitsPerDay) || 0,
+        attachPct: Number(item.attachPct) || 0,
+        qtyPerCheck: Number(item.qtyPerCheck) || 1,
+      }));
+    }
 
     if (sv.wif) {
       _wif.price   = sv.wif.price   || 0;

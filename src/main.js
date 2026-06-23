@@ -53,6 +53,7 @@ import {
   calcSemiCostPerUnit, calcCost, calcIngCost, calcNutrition,
   enrich, withABC,
   avgMetrics, weightedMetrics, salesMetrics, bepCalc,
+  addonSalesMetrics, addonSaleUnits, normalizeAddonSale,
   getEffectiveCosts,
 } from './utils/calc.js';
 
@@ -189,6 +190,8 @@ import {
   onMatPriceFocus, onMatPriceInput, onMatPriceCommit, onMatPrice,
   onSalePrice, onTargetFCSilent, onTargetFC, onPortions, onDays,
   applySalesPreset, scaleSalesPortions,
+  addAddonSale, applyAddonSalesPreset, setAddonFilter, scrollToAddonSales,
+  onSalesChecksPerDay, onAddonSale, deleteAddonSale,
   onFixedCost, onFixedCostName,
   flashCells, resetAll, switchTab,
 } from './ui/updaters.js';
@@ -284,6 +287,7 @@ const _calcExports = {
   calcSemiCostPerUnit, calcCost, calcIngCost, calcNutrition,
   enrich, withABC,
   avgMetrics, weightedMetrics, salesMetrics, bepCalc,
+  addonSalesMetrics, addonSaleUnits, normalizeAddonSale,
   getEffectiveCosts,
 };
 Object.assign(window, _calcExports);
@@ -379,6 +383,8 @@ const _srcExports = {
   onMatPriceFocus, onMatPriceInput, onMatPriceCommit, onMatPrice,
   onSalePrice, onTargetFCSilent, onTargetFC, onPortions, onDays,
   applySalesPreset, scaleSalesPortions,
+  addAddonSale, applyAddonSalesPreset, setAddonFilter, scrollToAddonSales,
+  onSalesChecksPerDay, onAddonSale, deleteAddonSale,
   onFixedCost, onFixedCostName,
   flashCells, resetAll, switchTab,
   getUser,

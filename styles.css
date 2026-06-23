@@ -568,7 +568,7 @@
 
     /* ── Fixed-cost table ───────────────────────────────────────── */
     .fc-table-wrap { overflow-x: auto; margin-bottom: 4px; }
-    .fm-content { max-width: 880px; margin: 0 auto; }
+    .fm-content { max-width: 1080px; margin: 0 auto; }
     .fc-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
     .fc-table thead th {
       padding: 7px 8px; text-align: left; font-weight: 700;
@@ -2168,7 +2168,7 @@
     /* ── Продажи: KPI-карточки ── */
     .sales-kpi-row {
       display: flex; gap: 10px; margin-bottom: 14px;
-      flex-wrap: nowrap; align-items: stretch;
+      flex-wrap: wrap; align-items: stretch;
     }
     .sales-kpi-card {
       background: var(--light); border: 1.5px solid var(--border);
@@ -2183,6 +2183,16 @@
       text-transform: uppercase; letter-spacing: .04em; margin-bottom: 3px;
     }
     .sales-kpi-val    { font-size: 20px; font-weight: 800; color: var(--navy); }
+    .sales-kpi-sub    { font-size: 10px; color: var(--muted); font-weight: 600; margin-top: 3px; line-height: 1.25; }
+    .sales-kpi-click { cursor: pointer; transition: border-color .15s, transform .15s; }
+    .sales-kpi-click:hover { border-color: var(--green); transform: translateY(-1px); }
+    .sales-warning {
+      display: flex; align-items: center; gap: 8px;
+      margin: -4px 0 14px; padding: 9px 12px;
+      border: 1px solid #f4b8c4; border-radius: 10px;
+      background: rgba(204,40,65,.12); color: #ff9a8f;
+      font-size: 12px; font-weight: 700;
+    }
 
     /* ── Продажи: строка «Дней + масштаб» ── */
     .sales-days-scale {
@@ -2215,6 +2225,186 @@
     .sales-scale-btn    { font-size: 12px; padding: 5px 12px; white-space: nowrap; }
     .sales-scale-btn.red   { color: var(--red); }
     .sales-scale-btn.green { color: var(--green); }
+
+    .sales-addon-block {
+      margin-top: 18px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      background: var(--light);
+      overflow: hidden;
+    }
+    .sales-addon-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sales-addon-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--navy);
+    }
+    .sales-addon-sub {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.35;
+    }
+    .sales-addon-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .addon-preset-select {
+      width: 190px;
+      height: 36px;
+    }
+    .sales-check-breakdown {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(65,112,51,.12);
+    }
+    .sales-check-main { display: flex; flex-direction: column; gap: 2px; }
+    .sales-check-main span {
+      font-size: 11px; color: var(--muted);
+      font-weight: 800; text-transform: uppercase; letter-spacing: .03em;
+    }
+    .sales-check-main strong {
+      font-size: 18px;
+      color: var(--green);
+      line-height: 1.15;
+    }
+    .sales-check-meta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+    .sales-check-meta span {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: var(--card);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .addon-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .addon-tab {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .addon-tab span {
+      opacity: .75;
+      margin-left: 3px;
+      font-size: 11px;
+    }
+    .addon-tab.active {
+      background: var(--green);
+      color: #fff;
+      border-color: var(--green);
+    }
+    .sales-addon-wrap {
+      margin: 0;
+      border: 0;
+      border-radius: 0;
+      overflow-x: auto;
+    }
+    .sales-addon-table {
+      width: 100%;
+      min-width: 980px;
+      table-layout: fixed;
+      border-collapse: collapse;
+      background: var(--card);
+    }
+    .sales-addon-table th:nth-child(1), .sales-addon-table td:nth-child(1) { width: 150px; }
+    .sales-addon-table th:nth-child(2), .sales-addon-table td:nth-child(2) { width: 135px; }
+    .sales-addon-table th:nth-child(3), .sales-addon-table td:nth-child(3) { width: 120px; }
+    .sales-addon-table th:nth-child(4), .sales-addon-table td:nth-child(4) { width: 95px; }
+    .sales-addon-table th:nth-child(5), .sales-addon-table td:nth-child(5) { width: 95px; }
+    .sales-addon-table th:nth-child(6), .sales-addon-table td:nth-child(6) { width: 120px; }
+    .sales-addon-table th:nth-child(7), .sales-addon-table td:nth-child(7) { width: 115px; }
+    .sales-addon-table th:nth-child(8), .sales-addon-table td:nth-child(8) { width: 80px; }
+    .sales-addon-table th:nth-child(9), .sales-addon-table td:nth-child(9) { width: 130px; }
+    .sales-addon-table th:nth-child(10), .sales-addon-table td:nth-child(10) { width: 130px; }
+    .sales-addon-table th:nth-child(11), .sales-addon-table td:nth-child(11) { width: 58px; }
+    .sales-addon-table th,
+    .sales-addon-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sales-addon-table th {
+      background: var(--gray);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+    .sales-addon-table tfoot td {
+      background: var(--light);
+      font-weight: 800;
+      color: var(--navy);
+      border-top: 1.5px solid var(--border);
+    }
+    .addon-name-inp { width: 100%; min-width: 0; }
+    .addon-select { width: 100%; min-width: 0; height: 34px; }
+    .addon-num { width: 74px; text-align: right; }
+    .addon-volume-field {
+      display: inline-grid;
+      grid-template-columns: 74px 28px;
+      align-items: center;
+      gap: 6px;
+      justify-content: center;
+      width: 112px;
+    }
+    .addon-volume-field .addon-num { width: 74px; }
+    .addon-unit {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      min-width: 28px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .addon-empty {
+      text-align: center;
+      color: var(--muted);
+      font-weight: 600;
+      padding: 18px 10px !important;
+    }
+    .addon-del-btn { padding: 5px 7px; color: var(--red); border-color: #f4b8c4; }
     .dash-hdr-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .dash-chart-name { width: 170px; flex-shrink: 0; } /* legacy — не используется в новом чарте */
 
@@ -2259,6 +2449,7 @@
       /* Продажи: KPI и контролы на мобильном */
       .sales-kpi-val    { font-size: 16px; }
       .sales-kpi-label  { font-size: 10px; }
+      .sales-kpi-sub    { font-size: 9px; }
       .sales-preset-select { font-size: 12px; }
       .sales-scale-btn  { font-size: 11px; padding: 5px 9px; }
       .sales-days-label { font-size: 11px; }
@@ -2286,6 +2477,176 @@
         .sales-preset-wrap { grid-column: 1; grid-row: 1; }
         .sales-controls-row > .sales-scale-btn { grid-row: 1; align-self: end; height: 38px; padding: 0 14px; font-size: 13px; }
         .sales-controls-row .search-wrap { grid-column: 1 / -1; grid-row: 2; min-width: unset !important; max-width: unset !important; }
+        #sales-table-wrap {
+          overflow-x: auto;
+          overflow-y: auto;
+        }
+        #sales-table-wrap table.sales-merged-table {
+          min-width: 720px;
+          table-layout: fixed;
+        }
+        #sales-table-wrap table.sales-merged-table col:nth-child(1) { width: 180px !important; }
+        #sales-table-wrap table.sales-merged-table col:nth-child(3) { width: 70px !important; }
+        #sales-table-wrap table.sales-merged-table col:nth-child(4) { width: 90px !important; }
+        #sales-table-wrap table.sales-merged-table col:nth-child(8) { width: 110px !important; }
+        #sales-table-wrap table.sales-merged-table col:nth-child(10) { width: 120px !important; }
+        #sales-table-wrap table.sales-merged-table th,
+        #sales-table-wrap table.sales-merged-table td {
+          padding: 8px 8px;
+        }
+        #sales-table-wrap table.sales-merged-table tfoot {
+          position: sticky;
+          bottom: 0;
+          z-index: 3;
+          display: table-footer-group;
+        }
+        #sales-table-wrap table.sales-merged-table tfoot td {
+          padding: 9px 8px;
+          min-width: 0;
+          max-width: none;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        #sales-table-wrap table.sales-merged-table tfoot td:first-child {
+          min-width: 180px;
+        }
+        .sales-addon-head { flex-direction: column; }
+        .sales-addon-actions { justify-content: flex-start; }
+        .sales-check-breakdown { flex-direction: column; align-items: flex-start; }
+        .sales-check-meta { justify-content: flex-start; }
+        .sales-addon-block { margin-top: 12px; border-radius: 10px; }
+        .sales-addon-head { gap: 10px; padding: 10px 12px; }
+        .sales-addon-title { font-size: 14px; }
+        .sales-addon-sub { font-size: 10px; line-height: 1.25; }
+        .sales-addon-actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 7px;
+          width: 100%;
+        }
+        .addon-preset-select {
+          grid-column: 1 / -1;
+          width: 100%;
+          height: 34px;
+          font-size: 11px;
+        }
+        .sales-addon-actions .btn {
+          min-width: 0;
+          height: 32px;
+          padding: 0 8px;
+          font-size: 11px;
+        }
+        .sales-check-breakdown { padding: 9px 12px; gap: 8px; }
+        .sales-check-main span { font-size: 10px; }
+        .sales-check-main strong { font-size: 16px; }
+        .sales-check-meta { gap: 5px; }
+        .sales-check-meta span {
+          padding: 3px 7px;
+          font-size: 9px;
+        }
+        .addon-tabs {
+          padding: 8px 12px;
+          gap: 5px;
+        }
+        .addon-tab {
+          padding: 4px 8px;
+          font-size: 10px;
+        }
+        .addon-tab span { font-size: 9px; }
+        .sales-addon-wrap {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior-x: contain;
+        }
+        .sales-addon-table {
+          min-width: 960px;
+          width: 960px;
+          table-layout: fixed;
+          font-size: 10px;
+        }
+        .sales-addon-table .mob-hide { display: table-cell !important; }
+        .sales-addon-table thead th:nth-child(1),
+        .sales-addon-table tbody td:nth-child(1) { width: 132px; }
+        .sales-addon-table thead th:nth-child(2),
+        .sales-addon-table tbody td:nth-child(2) { width: 110px; }
+        .sales-addon-table thead th:nth-child(3),
+        .sales-addon-table tbody td:nth-child(3) { width: 92px; }
+        .sales-addon-table thead th:nth-child(4),
+        .sales-addon-table tbody td:nth-child(4) { width: 74px; }
+        .sales-addon-table thead th:nth-child(5),
+        .sales-addon-table tbody td:nth-child(5) { width: 74px; }
+        .sales-addon-table thead th:nth-child(6),
+        .sales-addon-table tbody td:nth-child(6) { width: 94px; }
+        .sales-addon-table thead th:nth-child(7),
+        .sales-addon-table tbody td:nth-child(7) { width: 86px; }
+        .sales-addon-table thead th:nth-child(8),
+        .sales-addon-table tbody td:nth-child(8) { width: 56px; }
+        .sales-addon-table thead th:nth-child(9),
+        .sales-addon-table tbody td:nth-child(9) { width: 98px; }
+        .sales-addon-table thead th:nth-child(10),
+        .sales-addon-table tbody td:nth-child(10) { width: 98px; }
+        .sales-addon-table thead th:nth-child(11),
+        .sales-addon-table tbody td:nth-child(11) { width: 46px; }
+        .sales-addon-table th,
+        .sales-addon-table td {
+          padding: 7px 5px;
+          font-size: 10px;
+          letter-spacing: 0;
+        }
+        .sales-addon-table th {
+          font-size: 9px;
+        }
+        .addon-name-inp {
+          height: 30px;
+          padding: 5px 6px;
+          font-size: 11px;
+        }
+        .addon-select {
+          height: 30px;
+          padding: 4px 7px;
+          font-size: 10px;
+        }
+        .addon-num {
+          width: 56px;
+          height: 30px;
+          padding: 4px 5px;
+          font-size: 11px;
+        }
+        .addon-volume-field {
+          grid-template-columns: 50px 18px;
+          width: 72px;
+          gap: 3px;
+        }
+        .addon-volume-field .addon-num {
+          width: 50px;
+          height: 30px;
+          padding: 4px 5px;
+          font-size: 11px;
+        }
+        .addon-unit {
+          min-width: 18px;
+          font-size: 10px;
+        }
+        .addon-del-btn {
+          min-width: 0;
+          width: 28px;
+          height: 28px;
+          padding: 0;
+        }
+        .addon-del-btn .icon {
+          width: 13px;
+          height: 13px;
+        }
+        .sales-addon-table tfoot td {
+          padding: 7px 4px;
+          font-size: 10px;
+        }
+        .sales-addon-table tfoot td:first-child {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
       }
 
       /* Заголовок: только иконки */
@@ -2790,13 +3151,14 @@
     /* ── FM DASHBOARD ─────────────────────────────────── */
     .fm-dashboard { margin-bottom: 24px; display: flex; flex-direction: column; gap: 0; }
     .fm-dash-row {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;
       margin-bottom: 10px;
     }
     .fm-kpi-card {
       display: flex; align-items: center; gap: 10px;
       background: var(--white); border: 1.5px solid var(--border);
       border-radius: 10px; padding: 12px 14px;
+      min-width: 0;
       transition: box-shadow .15s;
     }
     .fm-kpi-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,.08); }
@@ -2807,9 +3169,10 @@
     .fm-kpi-icon .icon { width: 18px; height: 18px; }
     .fm-kpi-pos .fm-kpi-icon { color: var(--green); }
     .fm-kpi-neg .fm-kpi-icon { color: var(--red); }
-    .fm-kpi-body { min-width: 0; }
+    .fm-kpi-body { min-width: 0; flex: 1; }
     .fm-kpi-label { font-size: 11px; color: var(--muted); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .fm-kpi-value { font-size: 16px; font-weight: 800; color: var(--navy); white-space: nowrap; line-height: 1.2; }
+    .fm-kpi-sub { margin-top: 2px; font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .fm-kpi-pos .fm-kpi-value { color: var(--green); }
     .fm-kpi-neg .fm-kpi-value { color: var(--red); }
     .fm-kpi-badge { font-size: 10px; font-weight: 600; background: var(--gray); border-radius: 4px; padding: 1px 5px; color: var(--muted); vertical-align: middle; }
@@ -2841,19 +3204,101 @@
     body.dark .fm-kpi-pos { background: #1b2f1e; border-color: #4caf50; }
     body.dark .fm-kpi-neg { background: #2d1a1a; border-color: #e57373; }
     body.dark .fm-kpi-value { color: #e0e0e0; }
+    body.dark .fm-kpi-sub { color: #a0a0a0; }
     body.dark .fm-kpi-pos .fm-kpi-value { color: #81c784; }
     body.dark .fm-kpi-neg .fm-kpi-value { color: #e57373; }
     body.dark .fm-kpi-badge { background: #3c3c3c; color: #a0a0a0; }
     body.dark .fm-dash-bep,
     body.dark .fm-dash-payback { background: #252526; border-color: #3c3c3c; }
     /* Responsive */
+    @media (max-width: 900px) {
+      .fm-content { max-width: 100%; }
+      .fm-dash-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
     @media (max-width: 700px) {
-      .fm-dash-row { grid-template-columns: repeat(2, 1fr); }
-      .fm-kpi-value { font-size: 14px; }
+      .fm-dashboard { gap: 7px; }
+      .fm-dash-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin-bottom: 0; }
+      .fm-kpi-card {
+        align-items: flex-start;
+        gap: 6px;
+        min-height: 70px;
+        padding: 9px 9px;
+        border-radius: 8px;
+      }
+      .fm-kpi-card--accent { border-width: 1.5px; }
+      .fm-kpi-icon { margin-top: 1px; }
+      .fm-kpi-icon .icon { width: 14px; height: 14px; }
+      .fm-kpi-label {
+        font-size: 9px;
+        line-height: 1.15;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .fm-kpi-value {
+        font-size: 14px;
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .fm-kpi-badge {
+        display: inline-block;
+        max-width: 58px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 8px;
+        padding: 1px 4px;
+      }
+      .fm-kpi-sub {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        white-space: normal;
+        overflow: hidden;
+        text-overflow: clip;
+        font-size: 8.5px;
+        line-height: 1.15;
+      }
+      .fm-dash-bep { padding: 11px 12px; margin-bottom: 0; }
+      .fm-dash-bep-labels,
+      .fm-dash-bep-sub {
+        gap: 6px;
+      }
+      .fm-dash-bep-sub span:nth-child(2) {
+        text-align: center;
+        line-height: 1.25;
+      }
     }
     @media (max-width: 420px) {
-      .fm-dash-row { grid-template-columns: 1fr 1fr; gap: 7px; }
-      .fm-kpi-card { padding: 10px 10px; gap: 7px; }
+      .fm-dash-row { gap: 6px; }
+      .fm-kpi-card { min-height: 66px; padding: 8px 8px; gap: 5px; }
+      .fm-kpi-icon .icon { width: 13px; height: 13px; }
+      .fm-kpi-label { font-size: 8.5px; }
+      .fm-kpi-value { font-size: 13px; }
+      .fm-kpi-sub { font-size: 8px; }
+      .fm-dash-bep-labels { font-size: 11px; }
+      .fm-dash-bep-sub {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: start;
+      }
+      .fin-invest-top {
+        align-items: stretch;
+        gap: 8px;
+      }
+      .fin-invest-top-row {
+        width: 100%;
+      }
+    }
+    @media (max-width: 340px) {
+      .fm-dash-row { grid-template-columns: 1fr; }
+      .fm-kpi-card { min-height: unset; }
+      .fm-kpi-label,
+      .fm-kpi-value { white-space: normal; }
+      .fm-kpi-badge { max-width: none; }
     }
 
     /* ── FIN QUICKNAV ─────────────────────────────────── */

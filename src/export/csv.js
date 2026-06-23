@@ -24,12 +24,29 @@ export function exportDashboard() {
 
 export function exportSales() {
   const drinks = window.enrich();
+  const sales = window.salesMetrics ? window.salesMetrics(drinks) : { addonRows: [] };
+  const rows = drinks.map(d => {
+    const p = window.S.portions[d.id], rD = d.price * p, pD = d.profit * p;
+    return ['Напиток', d.name, '', Math.round(d.price), Math.round(d.cost), Math.round(d.profit),
+      p, Math.round(rD), Math.round(pD), Math.round(rD * window.S.days), Math.round(pD * window.S.days)];
+  });
+  (sales.addonRows || []).forEach(row => {
+    rows.push([
+      'Доп. позиция',
+      row.name,
+      row.mode === 'units' ? 'шт/день' : '% чеков',
+      Math.round(row.price),
+      Math.round(row.cost),
+      Math.round(row.price - row.cost),
+      +(row.unitsDay || 0).toFixed(1),
+      Math.round(row.revDay),
+      Math.round(row.prfDay),
+      Math.round(row.revDay * window.S.days),
+      Math.round(row.prfDay * window.S.days),
+    ]);
+  });
   exportCSV('mbs-sales.csv',
-    ['Напиток', 'Цена', 'Себест.', 'Прибыль/шт', 'Порций/день', 'Выручка/день', 'Прибыль/день', 'Выручка/мес', 'Прибыль/мес'],
-    drinks.map(d => {
-      const p = window.S.portions[d.id], rD = d.price * p, pD = d.profit * p;
-      return [d.name, Math.round(d.price), Math.round(d.cost), Math.round(d.profit),
-        p, Math.round(rD), Math.round(pD), Math.round(rD * window.S.days), Math.round(pD * window.S.days)];
-    })
+    ['Тип', 'Позиция', 'Модель', 'Цена', 'Себест.', 'Прибыль/шт', 'Шт/день', 'Выручка/день', 'Прибыль/день', 'Выручка/мес', 'Прибыль/мес'],
+    rows
   );
 }

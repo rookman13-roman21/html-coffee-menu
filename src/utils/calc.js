@@ -214,21 +214,108 @@ export function weightedMetrics(drinks) {
   return { avgCost, avgPrice, avgProfit, avgFC };
 }
 
+function _num(v, fallback = 0) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+export function normalizeAddonSale(item = {}) {
+  return {
+    id: item.id,
+    name: String(item.name || '').trim(),
+    category: item.category || 'other',
+    type: item.type || 'resale',
+    mode: item.mode === 'units' ? 'units' : 'attach',
+    price: Math.max(0, _num(item.price)),
+    cost: Math.max(0, _num(item.cost)),
+    unitsPerDay: Math.max(0, _num(item.unitsPerDay)),
+    attachPct: Math.max(0, _num(item.attachPct)),
+    qtyPerCheck: Math.max(0, _num(item.qtyPerCheck, 1) || 1),
+  };
+}
+
+export function addonSaleUnits(item, totalChecks) {
+  const row = normalizeAddonSale(item);
+  if (row.mode === 'units') return row.unitsPerDay;
+  return Math.max(0, totalChecks || 0) * row.attachPct / 100 * row.qtyPerCheck;
+}
+
+export function addonSalesMetrics(totalChecks = 0) {
+  const S = window.S || {};
+  const rows = (Array.isArray(S.addonSales) ? S.addonSales : [])
+    .map(item => {
+      const row = normalizeAddonSale(item);
+      const unitsDay = addonSaleUnits(row, totalChecks);
+      const revDay = row.price * unitsDay;
+      const costDay = row.cost * unitsDay;
+      const prfDay = revDay - costDay;
+      const fc = row.price > 0 ? row.cost / row.price : 0;
+      return { ...row, unitsDay, revDay, costDay, prfDay, fc };
+    })
+    .filter(row => row.name || row.price > 0 || row.cost > 0 || row.unitsDay > 0 || row.attachPct > 0);
+
+  const revDay = rows.reduce((s, row) => s + row.revDay, 0);
+  const costDay = rows.reduce((s, row) => s + row.costDay, 0);
+  const prfDay = rows.reduce((s, row) => s + row.prfDay, 0);
+  const days = Math.max(1, _num(S.days, 30));
+  return {
+    rows,
+    unitsDay: rows.reduce((s, row) => s + row.unitsDay, 0),
+    revDay,
+    costDay,
+    prfDay,
+    revMon: revDay * days,
+    costMon: costDay * days,
+    prfMon: prfDay * days,
+  };
+}
+
 /**
  * Итоговые метрики плана продаж.
  * @returns {{ totalPort, totRevDay, totPrfDay, totRevMon, totPrfMon }}
  */
 export function salesMetrics(drinks) {
   const S = window.S;
-  const totalPort = Object.values(S.portions).reduce((s, v) => s + v, 0);
-  const totRevDay = drinks.reduce((s, d) => s + d.price  * S.portions[d.id], 0);
-  const totPrfDay = drinks.reduce((s, d) => s + d.profit * S.portions[d.id], 0);
+  const totalPort = drinks.reduce((s, d) => s + (S.portions[d.id] || 0), 0);
+  const totalChecks = totalPort;
+  const checksAuto = true;
+  const drinkRevDay = drinks.reduce((s, d) => s + d.price  * (S.portions[d.id] || 0), 0);
+  const drinkCostDay = drinks.reduce((s, d) => s + d.cost * (S.portions[d.id] || 0), 0);
+  const drinkPrfDay = drinks.reduce((s, d) => s + d.profit * (S.portions[d.id] || 0), 0);
+  const addon = addonSalesMetrics(totalChecks);
+  const totRevDay = drinkRevDay + addon.revDay;
+  const totCostDay = drinkCostDay + addon.costDay;
+  const totPrfDay = drinkPrfDay + addon.prfDay;
+  const days = Math.max(1, _num(S.days, 30));
   return {
     totalPort,
+    totalChecks,
+    checksAuto,
+    drinkRevDay,
+    drinkCostDay,
+    drinkPrfDay,
+    drinkRevMon: drinkRevDay * days,
+    drinkCostMon: drinkCostDay * days,
+    drinkPrfMon: drinkPrfDay * days,
+    addonRows: addon.rows,
+    addonUnitsDay: addon.unitsDay,
+    addonRevDay: addon.revDay,
+    addonCostDay: addon.costDay,
+    addonPrfDay: addon.prfDay,
+    addonRevMon: addon.revMon,
+    addonCostMon: addon.costMon,
+    addonPrfMon: addon.prfMon,
+    addonShare: totRevDay > 0 ? addon.revDay / totRevDay : 0,
+    avgDrinkCheck: totalChecks > 0 ? drinkRevDay / totalChecks : 0,
+    avgAddonCheck: totalChecks > 0 ? addon.revDay / totalChecks : 0,
+    avgCheckTotal: totalChecks > 0 ? totRevDay / totalChecks : 0,
+    avgProfitTotal: totalChecks > 0 ? totPrfDay / totalChecks : 0,
+    totCostDay,
     totRevDay,
     totPrfDay,
-    totRevMon: totRevDay * S.days,
-    totPrfMon: totPrfDay * S.days,
+    totCostMon: totCostDay * days,
+    totRevMon: totRevDay * days,
+    totPrfMon: totPrfDay * days,
   };
 }
 
@@ -265,13 +352,16 @@ export function bepCalc(drinks) {
   const S            = window.S;
   const getEffective = window.getEffectiveCosts;
   const payrollTot   = window.payrollTotal;
-  const { totRevMon: _bepRev } = salesMetrics(drinks);
+  const sales         = salesMetrics(drinks);
+  const { totRevMon: _bepRev } = sales;
   const _bepEff = getEffective(_bepRev);
   const fixedFromCosts = _bepEff.reduce((s, c) => s + c.value, 0);
   const fotInFixed = _bepEff.some(c => /фот|зарплат|зп|оплата.?труда/i.test(c.name));
   const payroll = fotInFixed ? 0 : (typeof payrollTot === 'function' ? payrollTot() : 0);
   const totalFixed = fixedFromCosts + payroll;
-  const { avgProfit, avgPrice } = weightedMetrics(drinks);
+  const weighted = weightedMetrics(drinks);
+  const avgProfit = sales.totalChecks > 0 ? sales.avgProfitTotal : weighted.avgProfit;
+  const avgPrice = sales.totalChecks > 0 ? sales.avgCheckTotal : weighted.avgPrice;
   const cupsMonth = avgProfit > 0 ? Math.ceil(totalFixed / avgProfit) : 0;
   const cupsDay   = Math.ceil(cupsMonth / (S.days || 30));
   return { totalFixed, fixedFromCosts, payroll, cupsMonth, cupsDay, revBEP: cupsMonth * avgPrice };

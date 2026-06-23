@@ -38,9 +38,22 @@ export function renderFinModel() {
   const drinks = enrich();
   const bep = bepCalc(drinks);
   const { avgCost, avgPrice, avgProfit, avgFC } = weightedMetrics(drinks);
-  const { totalPort, totRevMon, totPrfMon } = salesMetrics(drinks);
+  const sales = salesMetrics(drinks);
+  const { totalPort, totRevMon, totPrfMon } = sales;
+  const drinkRevMon = sales.drinkRevMon || 0;
+  const drinkCostMon = sales.drinkCostMon || 0;
+  const addonRevMon = sales.addonRevMon || 0;
+  const addonCostMon = sales.addonCostMon || 0;
+  const addonPrfMon = sales.addonPrfMon || 0;
+  const hasAddonSales = addonRevMon > 0;
+  const avgCheckTotal = sales.avgCheckTotal || avgPrice;
+  const avgAddonCheck = sales.avgAddonCheck || 0;
+  const addonSharePct = totRevMon > 0 ? addonRevMon / totRevMon * 100 : 0;
   const totalFixed = bep.totalFixed;
-  const varCostsMon = drinks.reduce((s, d) => s + d.cost * S.portions[d.id], 0) * S.days;
+  const varCostsMon = sales.totCostMon != null
+    ? sales.totCostMon
+    : drinks.reduce((s, d) => s + d.cost * S.portions[d.id], 0) * S.days;
+  const combinedFC = totRevMon > 0 ? varCostsMon / totRevMon : avgFC;
   const taxMode = S.taxMode || 'none';
 
   function calcTax(rev, varC, fixed) {
@@ -53,9 +66,12 @@ export function renderFinModel() {
   // Запас прочности
   const safetyAbs   = totRevMon - bep.revBEP;
   const safetyPct   = totRevMon > 0 ? safetyAbs / totRevMon * 100 : 0;
-  const bepProgress = bep.revBEP > 0 ? Math.min(totRevMon / bep.revBEP * 100, 100) : 100;
+  const bepCoverRatio = bep.revBEP > 0 ? totRevMon / bep.revBEP : 0;
+  const bepProgress = bep.revBEP > 0 ? Math.min(bepCoverRatio * 100, 100) : 100;
   const bepPClr     = bepProgress >= 100 ? 'var(--green)' : bepProgress >= 70 ? '#b38600' : 'var(--red)';
   const safetyCls   = safetyAbs >= 0 ? 'num-pos' : 'num-neg';
+  const fcTarget = 0.28;
+  const fcDeltaPp = (combinedFC - fcTarget) * 100;
 
   // Normalize fixedCosts
   S.fixedCosts.forEach((c, _i) => { if (!c.id) c.id = 1000 + _i; if (!c.category) c.category = 'other'; });
@@ -127,9 +143,9 @@ export function renderFinModel() {
       <div class="scenario-card sc-${sc.cls}${sc.cls === 'base' ? ' sc-base-active' : ''}">
         ${sc.cls === 'base' ? '<div class="sc-your-plan-badge">✦ Ваш план</div>' : ''}
         <div class="sc-title"><i data-lucide="${sc.icon}" class="icon"></i> ${sc.name} <span style="font-size:11px;opacity:.6">×${sc.mult}</span></div>
-        <div class="sc-row"><span data-tip="Количество чашек в день&#10;из плана умноженное на ${sc.mult}">Чашек/день</span><span class="sv">${int(cups)}</span></div>
-        <div class="sc-row"><span data-tip="Общая выручка за месяц&#10;= чашек/день × средний чек × дни">Выручка/мес</span><span class="sv">${rub(revMon)}</span></div>
-        <div class="sc-row"><span data-tip="Стоимость сырья за месяц&#10;(ингредиенты + потери при приготовке)">Себест. сырья</span><span class="sv">${rub(varMon)}</span></div>
+        <div class="sc-row"><span data-tip="Количество чеков в день&#10;из плана продаж × ${sc.mult}">Чеков/день</span><span class="sv">${int(cups)}</span></div>
+        <div class="sc-row"><span data-tip="Общая выручка за месяц: напитки и дополнительные продажи масштабируются вместе со сценарием">Выручка/мес</span><span class="sv">${rub(revMon)}</span></div>
+        <div class="sc-row"><span data-tip="Себестоимость напитков и дополнительных позиций за месяц">Себест. сырья</span><span class="sv">${rub(varMon)}</span></div>
         <div class="sc-row"><span data-tip="Food Cost % — доля себестоимости сырья в выручке&#10;Норма для HoReCa: 20–28%">FC%</span><span class="sv">${pct(fcW)}</span></div>
         <div class="sc-row"><span data-tip="Выручка минус себестоимость сырья.&#10;Из этого покрываются пост. расходы и формируется прибыль.">Маржа</span><span class="sv">${rub(margin)}</span></div>
         <div class="sc-row"><span data-tip="Постоянные расходы не зависят от объёма продаж.&#10;Аренда, ФОТ, амортизация..">Пост. расходы</span><span class="sv">${rub(fixed)}${fixedNote}</span></div>
@@ -141,9 +157,9 @@ export function renderFinModel() {
   }).join('');
 
   // Бенчмарк FC%
-  const fcBench = avgFC <= 0.20 ? { lbl: 'отлично', clr: 'var(--green)' }
-                : avgFC <= 0.28 ? { lbl: 'норма HoReCa', clr: 'var(--green)' }
-                : avgFC <= 0.33 ? { lbl: 'выше нормы', clr: '#b38600' }
+  const fcBench = combinedFC <= 0.20 ? { lbl: 'отлично', clr: 'var(--green)' }
+                : combinedFC <= 0.28 ? { lbl: 'норма HoReCa', clr: 'var(--green)' }
+                : combinedFC <= 0.33 ? { lbl: 'выше нормы', clr: '#b38600' }
                 :                 { lbl: 'критически высоко', clr: 'var(--red)' };
 
   // P&L строки
@@ -193,20 +209,32 @@ export function renderFinModel() {
     tip: 'Переменная статья (отмечена как «перем.»)',
   }));
 
+  const salesRevenueDetailRows = hasAddonSales ? [
+    mkRow({ lbl: '· Напитки', val: drinkRevMon, pct: totRevMon > 0 ? drinkRevMon / totRevMon : 0, sub: true, tip: 'Выручка только по напиткам из плана продаж' }),
+    mkRow({ lbl: '· Дополнительные продажи', val: addonRevMon, pct: totRevMon > 0 ? addonRevMon / totRevMon : 0, sub: true, tip: 'Выпечка, еда, десерты и импульсные позиции из плана продаж' }),
+  ] : [];
+
+  const rawCostDetailRows = hasAddonSales ? [
+    mkRow({ lbl: '· Себестоимость напитков', val: -drinkCostMon, pct: totRevMon > 0 ? drinkCostMon / totRevMon : 0, sub: true }),
+    mkRow({ lbl: '· Себестоимость доп. продаж', val: -addonCostMon, pct: totRevMon > 0 ? addonCostMon / totRevMon : 0, sub: true }),
+  ] : [];
+
   const plRows = [
-    mkRow({ lbl: 'Выручка от продаж',          val: totRevMon,                    pct100: true, tip: 'Цена × порции × дни' }),
-    mkRow({ lbl: '− Себестоимость сырья',       val: -varCostsMon,                 pct: varCostsMon / totRevMon, tip: 'FC% — доля себестоимости напитков в выручке' }),
-    mkRow({ lbl: 'Валовая прибыль',             val: gross,                        pct: gross / totRevMon, bold: true, tip: 'Выручка − себестоимость сырья' }),
+    mkRow({ lbl: 'Выручка от продаж',          val: totRevMon,                    pct100: true, tip: 'Напитки и дополнительные продажи × дни' }),
+    ...salesRevenueDetailRows,
+    mkRow({ lbl: '− Себестоимость сырья',       val: -varCostsMon,                 pct: totRevMon > 0 ? varCostsMon / totRevMon : 0, tip: 'FC% — доля себестоимости напитков и дополнительных позиций в выручке' }),
+    ...rawCostDetailRows,
+    mkRow({ lbl: 'Валовая прибыль',             val: gross,                        pct: totRevMon > 0 ? gross / totRevMon : 0, bold: true, tip: 'Выручка − себестоимость сырья' }),
     ...(variableExtraCosts.length > 0 ? [
       mkRow({ lbl: '− Переменные операц. расходы', val: -variableExtraTotal, pct: variableExtraTotal / totRevMon, tip: 'Статьи, отмеченные как «перем.» — растут вместе с трафиком' }),
       ...varExtraDetailRows,
     ] : []),
-    mkRow({ lbl: '− Постоянные расходы',        val: -(fixedOnlyTotal + fotAmount), pct: (fixedOnlyTotal + fotAmount) / totRevMon, tip: 'Статьи без галочки «перем.»' }),
+    mkRow({ lbl: '− Постоянные расходы',        val: -(fixedOnlyTotal + fotAmount), pct: totRevMon > 0 ? (fixedOnlyTotal + fotAmount) / totRevMon : 0, tip: 'Статьи без галочки «перем.»' }),
     ...fixedDetailRows,
     ...payrollDetailRow,
-    mkRow({ lbl: 'EBIT (операц. прибыль)',      val: ebit,                         pct: ebit / totRevMon, bold: true, tip: 'Прибыль до уплаты налогов' }),
-    ...(taxBase > 0 ? [mkRow({ lbl: `− Налог (${TAX_LABELS[taxMode]})`, val: -taxBase, pct: taxBase / totRevMon, tip: 'Налоговый режим: ' + TAX_LABELS[taxMode] })] : []),
-    mkRow({ lbl: 'Чистая прибыль',              val: baseNet,                      pct: baseNet / totRevMon, bold: true, accent: true, tip: 'EBIT − налог' }),
+    mkRow({ lbl: 'EBIT (операц. прибыль)',      val: ebit,                         pct: totRevMon > 0 ? ebit / totRevMon : 0, bold: true, tip: 'Прибыль до уплаты налогов' }),
+    ...(taxBase > 0 ? [mkRow({ lbl: `− Налог (${TAX_LABELS[taxMode]})`, val: -taxBase, pct: totRevMon > 0 ? taxBase / totRevMon : 0, tip: 'Налоговый режим: ' + TAX_LABELS[taxMode] })] : []),
+    mkRow({ lbl: 'Чистая прибыль',              val: baseNet,                      pct: totRevMon > 0 ? baseNet / totRevMon : 0, bold: true, accent: true, tip: 'EBIT − налог' }),
   ].join('');
 
   // Предупреждения
@@ -253,14 +281,15 @@ export function renderFinModel() {
         <div class="fm-kpi-card">
           <div class="fm-kpi-icon"><i data-lucide="banknote" class="icon"></i></div>
           <div class="fm-kpi-body">
-            <div class="fm-kpi-label" data-tip="Выручка = цена × порции × дней в месяце">Выручка / мес</div>
+            <div class="fm-kpi-label" data-tip="Выручка за месяц: напитки + дополнительные продажи">Выручка / мес</div>
             <div class="fm-kpi-value">${rub(totRevMon)}</div>
+            ${hasAddonSales ? `<div class="fm-kpi-sub">${rub(drinkRevMon)} напитки + ${rub(addonRevMon)} доп.</div>` : ''}
           </div>
         </div>
         <div class="fm-kpi-card">
           <div class="fm-kpi-icon"><i data-lucide="receipt" class="icon"></i></div>
           <div class="fm-kpi-body">
-            <div class="fm-kpi-label" data-tip="Все расходы: сырьё + постоянные + ФОТ + налог">Расходы / мес</div>
+            <div class="fm-kpi-label" data-tip="Все расходы: себестоимость напитков и доп. позиций + постоянные расходы + ФОТ + налог">Расходы / мес</div>
             <div class="fm-kpi-value">${rub(varCostsMon + fixedOnlyTotal + fotAmount + taxBase)}</div>
           </div>
         </div>
@@ -269,6 +298,14 @@ export function renderFinModel() {
           <div class="fm-kpi-body">
             <div class="fm-kpi-label">Чистая прибыль</div>
             <div class="fm-kpi-value">${rub(baseNet)}</div>
+          </div>
+        </div>
+        <div class="fm-kpi-card fm-kpi-card--accent ${paybackMon !== null ? 'fm-kpi-pos' : investment > 0 ? 'fm-kpi-neg' : ''}">
+          <div class="fm-kpi-icon"><i data-lucide="timer" class="icon"></i></div>
+          <div class="fm-kpi-body">
+            <div class="fm-kpi-label" data-tip="Стартовые вложения ÷ чистая прибыль в месяц">Окупаемость</div>
+            <div class="fm-kpi-value">${paybackMon !== null ? `${paybackMon.toFixed(1)} мес.` : investment > 0 ? 'нет' : '—'}</div>
+            <div class="fm-kpi-sub">${investment > 0 ? `${rub(investment)} вложений` : 'введите вложения ниже'}</div>
           </div>
         </div>
         <div class="fm-kpi-card">
@@ -283,17 +320,35 @@ export function renderFinModel() {
       <!-- Ряд 2: Операционные метрики -->
       <div class="fm-dash-row">
         <div class="fm-kpi-card">
-          <div class="fm-kpi-icon"><i data-lucide="coffee" class="icon"></i></div>
+          <div class="fm-kpi-icon"><i data-lucide="receipt" class="icon"></i></div>
           <div class="fm-kpi-body">
-            <div class="fm-kpi-label" data-tip="Суммарное количество порций всех напитков в день по плану продаж">Порций / день</div>
+            <div class="fm-kpi-label" data-tip="Количество чеков в день. Сейчас берётся из количества напитков в плане продаж">Чеков / день</div>
             <div class="fm-kpi-value">${int(totalPort)}</div>
+            <div class="fm-kpi-sub">база для среднего чека</div>
+          </div>
+        </div>
+        <div class="fm-kpi-card">
+          <div class="fm-kpi-icon"><i data-lucide="shopping-bag" class="icon"></i></div>
+          <div class="fm-kpi-body">
+            <div class="fm-kpi-label" data-tip="Средний чек = выручка напитков и дополнительных продаж ÷ количество чеков">Средний чек</div>
+            <div class="fm-kpi-value">${rub(avgCheckTotal)}</div>
+            ${hasAddonSales ? `<div class="fm-kpi-sub">${rub(sales.avgDrinkCheck || avgPrice)} напитки + ${rub(avgAddonCheck)} доп.</div>` : ''}
+          </div>
+        </div>
+        <div class="fm-kpi-card">
+          <div class="fm-kpi-icon"><i data-lucide="plus-circle" class="icon"></i></div>
+          <div class="fm-kpi-body">
+            <div class="fm-kpi-label" data-tip="Выручка от выпечки, еды, десертов и импульсных позиций">Доп. продажи / мес</div>
+            <div class="fm-kpi-value">${rub(addonRevMon)}</div>
+            <div class="fm-kpi-sub">${addonSharePct.toFixed(1)}% выручки${addonPrfMon ? ` · ${rub(addonPrfMon)} прибыли` : ''}</div>
           </div>
         </div>
         <div class="fm-kpi-card">
           <div class="fm-kpi-icon"><i data-lucide="package" class="icon"></i></div>
           <div class="fm-kpi-body">
-            <div class="fm-kpi-label" data-tip="Food Cost % — доля себестоимости сырья в выручке&#10;Отлично: <20% · Норма HoReCa: 20–28% · Высоко: >28%">FC% (себест./выручка)</div>
-            <div class="fm-kpi-value" style="color:${fcBench.clr}">${pct(avgFC)} <span class="fm-kpi-badge">${fcBench.lbl}</span></div>
+            <div class="fm-kpi-label" data-tip="Food Cost % — доля себестоимости напитков и доп. позиций в общей выручке&#10;Отлично: <20% · Норма HoReCa: 20–28% · Высоко: >28%">FC% (себест./выручка)</div>
+            <div class="fm-kpi-value" style="color:${fcBench.clr}">${pct(combinedFC)} <span class="fm-kpi-badge">${fcBench.lbl}</span></div>
+            <div class="fm-kpi-sub">${fcDeltaPp > 0 ? `выше ориентира на ${fcDeltaPp.toFixed(1)} п.п.` : `ниже ориентира на ${Math.abs(fcDeltaPp).toFixed(1)} п.п.`}</div>
           </div>
         </div>
         <div class="fm-kpi-card">
@@ -308,6 +363,7 @@ export function renderFinModel() {
           <div class="fm-kpi-body">
             <div class="fm-kpi-label" data-tip="Запас прочности = (выручка − ТБУ) ÷ выручка&#10;Показывает, насколько можно упасть до убытка">Запас прочности</div>
             <div class="fm-kpi-value" style="color:${safetyAbs >= 0 ? 'var(--green)' : 'var(--red)'}">${safetyAbs >= 0 ? '+' : ''}${safetyPct.toFixed(1)}%</div>
+            <div class="fm-kpi-sub">${safetyAbs >= 0 ? `выручка может упасть на ${safetyPct.toFixed(1)}%` : `до ТБУ не хватает ${rub(-safetyAbs)}`}</div>
           </div>
         </div>
       </div>
@@ -315,36 +371,18 @@ export function renderFinModel() {
       <!-- Прогресс-бар ТБУ -->
       <div class="fm-dash-bep">
         <div class="fm-dash-bep-labels">
-          <span>Покрытие ТБУ</span>
-          <span style="font-weight:700;color:${bepPClr}">${Math.min(bepProgress, 100).toFixed(0)}% ${bepProgress >= 100 ? '✓' : ''}</span>
+          <span>${safetyAbs >= 0 ? 'ТБУ покрыта' : 'ТБУ не покрыта'}</span>
+          <span style="font-weight:700;color:${bepPClr}">${bepCoverRatio > 0 ? `${bepCoverRatio.toFixed(1)}× ТБУ` : '—'}</span>
         </div>
         <div class="fm-dash-bep-track">
           <div class="fm-dash-bep-fill" style="width:${Math.min(bepProgress, 100)}%;background:${bepPClr}"></div>
         </div>
         <div class="fm-dash-bep-sub">
           <span>0</span>
-          <span style="color:var(--muted);font-size:11px">${safetyAbs >= 0 ? `▲ выше ТБУ на ${rub(safetyAbs)}` : `▼ до ТБУ не хватает ${rub(-safetyAbs)}`}</span>
+          <span style="color:var(--muted);font-size:11px">${safetyAbs >= 0 ? `выше точки безубыточности на ${rub(safetyAbs)}` : `до точки безубыточности не хватает ${rub(-safetyAbs)}`}</span>
           <span>${rub(bep.revBEP)}</span>
         </div>
       </div>
-
-      <!-- Окупаемость (если введены инвестиции) -->
-      ${investment > 0 ? `
-      <div class="fm-dash-payback">
-        <i data-lucide="clock" class="icon"></i>
-        <span>Стартовые вложения: <strong>${rub(investment)}</strong></span>
-        <span class="fm-dash-payback-sep">→</span>
-        ${paybackMon !== null
-          ? `<span>Окупаемость: <strong style="color:var(--navy)">${paybackMon.toFixed(1)} мес.</strong></span>`
-          : `<span style="color:var(--red)">Убыток — окупаемости нет</span>`
-        }
-        <button class="fm-dash-payback-edit" onclick="document.getElementById('fin-invest-input').focus();document.getElementById('finblock-1').scrollIntoView({behavior:'smooth'})" title="Изменить вложения"><i data-lucide="pencil" class="icon" style="width:12px;height:12px"></i></button>
-      </div>` : `
-      <div class="fm-dash-payback fm-dash-payback--hint" onclick="document.getElementById('fin-invest-input').focus();document.getElementById('finblock-1').scrollIntoView({behavior:'smooth'})">
-        <i data-lucide="landmark" class="icon"></i>
-        <span>Введите стартовые вложения в Блоке 1 — появится срок окупаемости</span>
-        <i data-lucide="chevron-right" class="icon" style="margin-left:auto"></i>
-      </div>`}
 
     </div>
     <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
@@ -363,12 +401,7 @@ export function renderFinModel() {
         <input class="inp" id="fin-invest-input" type="number" min="0" step="50000" inputmode="numeric" style="width:160px;text-align:right"
           value="${investment}" onchange="onInvestment(this.value)" placeholder="0">
         <span style="font-size:12px;color:var(--muted)">₽</span>
-        ${paybackMon !== null
-          ? `<span class="fin-invest-top-payback"><i data-lucide="clock" class="icon"></i> Окупаемость: <strong style="color:var(--navy)">${paybackMon.toFixed(1)} мес.</strong></span>`
-          : investment > 0 && baseNet <= 0
-            ? `<span class="fin-invest-top-payback" style="color:var(--red)"><i data-lucide="alert-circle" class="icon"></i> Убыток — окупаемости нет</span>`
-            : `<span class="fin-invest-top-payback" style="color:var(--muted)">Введите сумму — увидите срок окупаемости</span>`
-        }
+        <span class="fin-invest-top-payback" style="color:var(--muted)">Срок окупаемости показан в верхней карточке</span>
       </div>
     </div>
 
@@ -605,7 +638,7 @@ export function renderFinModel() {
       <div class="wif-sliders">
         <div class="wif-slider-card">
           <div class="wif-slider-top">
-            <span class="wif-slider-label"><i data-lucide="tag" class="icon" style="color:var(--green)"></i> Цены продажи</span>
+            <span class="wif-slider-label" data-tip="Меняет цены напитков и дополнительных продаж в сценарии"><i data-lucide="tag" class="icon" style="color:var(--green)"></i> Цены продажи</span>
             <span class="wif-slider-val" id="wif-price-val">${(_wif.price >= 0 ? '+' : '') + _wif.price}%</span>
           </div>
           <input type="range" id="wif-price" min="-50" max="50" step="1" value="${_wif.price}" oninput="onWhatIf3('price',this.value)">
@@ -613,7 +646,7 @@ export function renderFinModel() {
         </div>
         <div class="wif-slider-card">
           <div class="wif-slider-top">
-            <span class="wif-slider-label"><i data-lucide="package" class="icon" style="color:#b38600"></i> Цены сырья</span>
+            <span class="wif-slider-label" data-tip="Меняет себестоимость напитков и дополнительных продаж в сценарии"><i data-lucide="package" class="icon" style="color:#b38600"></i> Цены сырья</span>
             <span class="wif-slider-val" id="wif-cost-val">${(_wif.cost >= 0 ? '+' : '') + _wif.cost}%</span>
           </div>
           <input type="range" id="wif-cost" min="-50" max="50" step="1" value="${_wif.cost}" oninput="onWhatIf3('cost',this.value)">
@@ -621,7 +654,7 @@ export function renderFinModel() {
         </div>
         <div class="wif-slider-card">
           <div class="wif-slider-top">
-            <span class="wif-slider-label"><i data-lucide="users" class="icon" style="color:var(--red)"></i> Трафик / порции</span>
+            <span class="wif-slider-label" data-tip="Масштабирует напитки, дополнительные продажи и переменные расходы"><i data-lucide="users" class="icon" style="color:var(--red)"></i> Трафик / продажи</span>
             <span class="wif-slider-val" id="wif-traffic-val">${(_wif.traffic >= 0 ? '+' : '') + _wif.traffic}%</span>
           </div>
           <input type="range" id="wif-traffic" min="-50" max="50" step="5" value="${_wif.traffic}" oninput="onWhatIf3('traffic',this.value)">
