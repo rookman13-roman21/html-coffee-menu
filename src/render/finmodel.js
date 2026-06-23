@@ -87,8 +87,25 @@ export function renderFinModel() {
   const paybackMon = investment > 0 && baseNet > 0 ? (investment / baseNet) : null;
 
   // Build grouped cost table
+  const payrollRowsTotal = effCosts
+    .filter(c => c._fromPayroll)
+    .reduce((s, c) => s + (c.value || 0), 0);
+  const hasPayrollRow = payrollRowsTotal > 0;
+  const payrollMetric = hasPayrollRow ? payrollRowsTotal : (typeof payrollTotal === 'function' ? payrollTotal() : 0);
+  const variableCostsMetric = effCosts
+    .filter(c => c.isVariable && !c._fromPayroll)
+    .reduce((s, c) => s + (c.value || 0), 0);
+  const manualCostsMetric = Math.max(0, totalFixed - payrollMetric - variableCostsMetric);
+  const fixedCostSummaryHtml = `
+    <div class="fc-summary-pills">
+      <span class="fc-summary-pill"><b>ручные</b> ${rub(manualCostsMetric)}</span>
+      <span class="fc-summary-pill fc-summary-payroll"><b>ФОТ</b> ${rub(payrollMetric)}</span>
+      <span class="fc-summary-pill fc-summary-variable"><b>масштаб.</b> ${rub(variableCostsMetric)}</span>
+    </div>`;
+
   const costTableHtml = (() => {
     let rows = '';
+    const esc = (v) => String(v || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     FIXED_COSTS_CATS.forEach(cat => {
       const items = S.fixedCosts.map((c, idx) => ({ c, idx, ev: effCosts[idx] })).filter(({ c }) => (c.category || 'other') === cat.id);
       if (!items.length) return;
@@ -97,7 +114,7 @@ export function renderFinModel() {
       items.forEach(({ c, idx, ev }) => {
         const isFot = !!(ev && ev._fromPayroll);
         const badge = isFot
-          ? `<span class="fc-badge fc-fot">авто-ФОТ</span>`
+          ? `<span class="fc-badge fc-fot">Авто</span>`
           : c.isPercent
             ? `<span class="fc-badge fc-pct">${c.pct}% · ${c.pctShare ?? 100}% выр.</span>`
             : c.isVariable ? `<span class="fc-badge fc-var">перем.</span>` : `<span class="fc-badge fc-fix">фикс.</span>`;
@@ -108,8 +125,10 @@ export function renderFinModel() {
           ? `<button class="fc-edit-btn" onclick="event.stopPropagation();scrollToPayroll()" title="Перейти к калькулятору ФОТ"><i data-lucide="arrow-down" class="icon" style="width:13px;height:13px"></i></button>`
           : `<button class="fc-edit-btn" onclick="event.stopPropagation();openCostEditor(${idx})" title="Изменить"><i data-lucide="pencil" class="icon" style="width:13px;height:13px"></i></button>`;
         const clickHandler = isFot ? `onclick="scrollToPayroll()"` : `onclick="openCostEditor(${idx})"`;
-        const fotHint = isFot ? ` <span style="font-size:11px;color:var(--muted)"> ← из калькулятора ФОТ</span>` : '';
-        rows += `<tr class="fc-item${isFot ? ' fc-item-fot' : ''}" data-fc-cat="${cat.id}" style="display:none" ${clickHandler}><td class="fc-item-name">${c.name.replace(/</g, '&lt;').replace(/>/g, '&gt;')}${fotHint}</td><td>${badge}</td><td style="text-align:right">${valTxt}</td><td style="text-align:right">${actionBtn}</td></tr>`;
+        const nameHtml = isFot
+          ? `<span class="fc-item-main">${esc(c.name)}</span><span class="fc-item-sub">из калькулятора ФОТ</span>`
+          : `<span class="fc-item-main">${esc(c.name)}</span>`;
+        rows += `<tr class="fc-item${isFot ? ' fc-item-fot' : ''}" data-fc-cat="${cat.id}" style="display:none" ${clickHandler}><td class="fc-item-name">${nameHtml}</td><td>${badge}</td><td style="text-align:right">${valTxt}</td><td style="text-align:right">${actionBtn}</td></tr>`;
       });
     });
     return `<table class="fc-table"><colgroup><col style="width:44%"><col style="width:18%"><col style="width:26%"><col style="width:12%"></colgroup><thead><tr><th>Название</th><th>Тип</th><th style="text-align:right">₽ / мес</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
@@ -411,15 +430,18 @@ export function renderFinModel() {
       <i data-lucide="database" class="icon"></i> Исходные данные
     </div>
 
-    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+    <div class="section-title fc-section-title">
       <span><i data-lucide="pin" class="icon"></i> Постоянные расходы (₽/мес)</span>
-      <button class="fin-hint-toggle" onclick="toggleFixedHint()"><i data-lucide="${S.fixedHintOpen ? 'chevron-up' : 'info'}" class="icon"></i> ${S.fixedHintOpen ? 'Скрыть' : 'Что вводить?'}</button>
+      <div class="fc-section-actions">
+        ${fixedCostSummaryHtml}
+        <button class="fin-hint-toggle" onclick="toggleFixedHint()"><i data-lucide="${S.fixedHintOpen ? 'chevron-up' : 'info'}" class="icon"></i> ${S.fixedHintOpen ? 'Скрыть' : 'Что вводить?'}</button>
+      </div>
     </div>
     ${S.fixedHintOpen ? `<div class="hint" style="margin-bottom:12px">
       <i data-lucide="info" class="icon"></i>
       Введите расходы, которые платите каждый месяц независимо от объёма продаж: аренда, коммуналка, интернет, амортизация.
       <br><br>
-      <strong>Галочка «перем.»</strong> — отмечайте расходы, которые <em>растут вместе с трафиком</em>: расходники, комиссия агрегаторов и т.п.
+      <strong>Масштабировать в сценариях</strong> — отмечайте расходы, которые <em>растут вместе с трафиком</em>: расходники, комиссия агрегаторов и т.п.
       Такие статьи будут масштабироваться в <strong>сценариях</strong> (×0.5 / ×2.0) и на <strong>графике сезонности</strong> —
       в слабые месяцы они уменьшатся, в сильные вырастут. На базовый план и ТБУ галочка не влияет.
     </div>` : ''}
