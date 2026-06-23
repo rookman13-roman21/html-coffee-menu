@@ -98,9 +98,9 @@ export function renderFinModel() {
   const manualCostsMetric = Math.max(0, totalFixed - payrollMetric - variableCostsMetric);
   const fixedCostSummaryHtml = `
     <div class="fc-summary-pills">
-      <span class="fc-summary-pill"><b>ручные</b> ${rub(manualCostsMetric)}</span>
-      <span class="fc-summary-pill fc-summary-payroll"><b>ФОТ</b> ${rub(payrollMetric)}</span>
-      <span class="fc-summary-pill fc-summary-variable"><b>масштаб.</b> ${rub(variableCostsMetric)}</span>
+      <span class="fc-summary-pill" data-tip="Ручные расходы: статьи, которые вы ввели в таблицу сами.&#10;Не включает ФОТ из калькулятора и расходы, отмеченные как масштабируемые."><b>ручные</b> ${rub(manualCostsMetric)}</span>
+      <span class="fc-summary-pill fc-summary-payroll" data-tip="ФОТ: фонд оплаты труда из калькулятора ФОТ.&#10;Если строка ФОТ есть в таблице, она подставляется автоматически."><b>ФОТ</b> ${rub(payrollMetric)}</span>
+      <span class="fc-summary-pill fc-summary-variable" data-tip="Масштабируемые расходы: суммы, которые растут или снижаются в сценариях вместе с продажами.&#10;Например расходники, комиссии агрегаторов или эквайринг."><b>масштаб.</b> ${rub(variableCostsMetric)}</span>
     </div>`;
 
   const costTableHtml = (() => {
