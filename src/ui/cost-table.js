@@ -219,13 +219,14 @@ export function openCostEditor(idx) {
           </select>
           <label class="fc-editor-label">Способ расчёта</label>
           <div class="fce-type-row">
-            <label class="fce-radio"><input type="radio" name="fce-valtype" value="fixed" id="fce-type-fixed" onchange="_fceTypeChange()"> Фиксированная сумма ₽</label>
+            <label class="fce-radio"><input type="radio" name="fce-valtype" value="fixed" id="fce-type-fixed" onchange="_fceTypeChange()"> Сумма ₽/мес</label>
             <label class="fce-radio"><input type="radio" name="fce-valtype" value="pct" id="fce-type-pct" onchange="_fceTypeChange()"> % от выручки</label>
           </div>
           <div id="fce-fixed-fields" style="margin-top:12px">
             <label class="fc-editor-label">Сумма, ₽/мес</label>
             <input id="fce-value" class="inp" type="number" min="0" step="500" inputmode="numeric" style="width:100%;margin-bottom:10px">
-            <label class="fce-radio"><input type="checkbox" id="fce-variable"> Переменная — масштабируется в сценариях с объёмом продаж</label>
+            <label class="fce-radio"><input type="checkbox" id="fce-variable"> Масштабировать в сценариях</label>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">Использовать, если расход растёт вместе с продажами.</div>
           </div>
           <div id="fce-pct-fields" style="display:none;margin-top:12px">
             <label class="fc-editor-label">Процент от выручки, %/мес</label>
