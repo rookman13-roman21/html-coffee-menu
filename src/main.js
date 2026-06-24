@@ -62,8 +62,8 @@ import {
 } from './utils/image.js';
 
 import {
-  saveState, loadState,
-  loadLocIndex, saveLocIndex, migrateOldState,
+  saveState, loadState, flushServerSync,
+  loadLocIndex, saveLocIndex, migrateOldState, clearLocStorage,
   activeLoc, getOrgInfo,
   S, Loc, DEFAULTS, resetGlobalsToBase, locDataKey, _wif,
   LOC_INDEX_KEY, LOC_ACTIVE_KEY, LOC_DATA_PREFIX, OLD_STATE_KEY,
@@ -74,6 +74,11 @@ import {
   isLoggedIn, showAuthScreen, logout, fetchState, getUser,
   refreshCurrentUser, getAllowedTabs, firstAllowedTab,
   hasAccess, hasAnyProductAccess, canAccessTab,
+  getActiveWorkspaceId, setActiveWorkspaceId, getCurrentWorkspace, getWorkspaces,
+  fetchWorkspaces, createWorkspace, fetchWorkspaceMembers, createWorkspaceInvite,
+  acceptWorkspaceInvite, fetchWorkspaceActivity, logWorkspaceActivity,
+  fetchWorkspaceSnapshots, createWorkspaceSnapshot, restoreWorkspaceSnapshot,
+  removeWorkspaceMember, revokeWorkspaceInvite,
 } from './ui/auth.js';
 import {
   isAuthorMode, filterAuthorServerSuppliers,
@@ -207,6 +212,12 @@ import {
   renderLocSwitcherUI, renderLocList, toggleLocMenu, toggleExportMenu,
   switchLocation, openAddLocation, renameActiveLocation, deleteActiveLocation,
   saveLocation, authorOpenTechcardSettings, authorOpenTermsFromMenu,
+  switchWorkspace, createWorkspaceFromMenu, openWorkspaceTeamModal,
+  sendWorkspaceInviteFromModal, inviteAnotherFromModal, copyWorkspaceInviteLink,
+  removeWorkspaceMemberFromModal, revokeWorkspaceInviteFromModal,
+  openWorkspaceActivityModal, openWorkspaceSnapshotsModal,
+  createWorkspaceSnapshotFromModal, restoreWorkspaceSnapshotFromModal,
+  closeWorkspaceModal,
 } from './ui/locations.js';
 
 import {
@@ -314,10 +325,10 @@ Object.assign(window, {
 
 // ─── state/store — удалены из app.js — назначаем безусловно ─────────────────
 const _storeExports = {
-  loadLocIndex, saveLocIndex, migrateOldState,
+  loadLocIndex, saveLocIndex, migrateOldState, clearLocStorage,
   activeLoc, getOrgInfo,
-  saveState, loadState,
-  S, Loc, DEFAULTS, resetGlobalsToBase, locDataKey, _wif,
+  saveState, loadState, flushServerSync,
+  S, Loc, DEFAULTS, resetGlobalsToBase, locDataKey, restoreFromServer, _wif,
   LOC_INDEX_KEY, LOC_ACTIVE_KEY, LOC_DATA_PREFIX, OLD_STATE_KEY,
 };
 Object.assign(window, _storeExports);
@@ -389,6 +400,11 @@ const _srcExports = {
   onFixedCost, onFixedCostName,
   flashCells, resetAll, switchTab,
   getUser,
+  getActiveWorkspaceId, setActiveWorkspaceId, getCurrentWorkspace, getWorkspaces,
+  fetchWorkspaces, createWorkspace, fetchWorkspaceMembers, createWorkspaceInvite,
+  acceptWorkspaceInvite, fetchWorkspaceActivity, logWorkspaceActivity,
+  fetchWorkspaceSnapshots, createWorkspaceSnapshot, restoreWorkspaceSnapshot,
+  removeWorkspaceMember, revokeWorkspaceInvite,
   authorCanPublish, renderAuthorWorkspace, renderAuthorProfile, loadAuthorWorkspace,
   saveAuthorProfile, uploadAuthorAvatar, submitRecipeForPublication, authorPublicationForDrink,
   authorRecipeProgress, authorHasMixologyParticipation,
@@ -412,6 +428,12 @@ const _srcExports = {
   renderLocSwitcherUI, renderLocList, toggleLocMenu, toggleExportMenu,
   switchLocation, openAddLocation, renameActiveLocation, deleteActiveLocation,
   saveLocation, authorOpenTechcardSettings, authorOpenTermsFromMenu,
+  switchWorkspace, createWorkspaceFromMenu, openWorkspaceTeamModal,
+  sendWorkspaceInviteFromModal, inviteAnotherFromModal, copyWorkspaceInviteLink,
+  removeWorkspaceMemberFromModal, revokeWorkspaceInviteFromModal,
+  openWorkspaceActivityModal, openWorkspaceSnapshotsModal,
+  createWorkspaceSnapshotFromModal, restoreWorkspaceSnapshotFromModal,
+  closeWorkspaceModal,
   // ui/modals
   openModal, closeModal, safeCloseModal,
   _markModalDirty, _clearModalDirty, _isModalDirty,
@@ -527,14 +549,24 @@ function _firstAllowedTabForMode() {
 
 function _showNoAccessScreen() {
   _applyAccessUI();
+  try {
+    clearLocStorage();
+    const nameEl = document.getElementById('loc-name');
+    const iconEl = document.getElementById('loc-icon');
+    if (nameEl) nameEl.textContent = 'Нет проекта';
+    if (iconEl) iconEl.textContent = '🔒';
+    renderLocSwitcherUI();
+  } catch(e) {}
   const main = document.querySelector('.main');
   if (!main) return;
+  const user = getUser();
+  const isGuest = user && user.account_role === 'guest' && !user.can_create_workspaces;
   main.innerHTML = `
     <section class="access-empty-screen">
       <div class="access-empty-card">
         <div class="access-empty-icon">🧩</div>
-        <h1>Доступ к разделам ещё не выдан</h1>
-        <p>Аккаунт активен. Администратор Московской школы бариста скоро включит нужные разделы платформы.</p>
+        <h1>${isGuest ? 'Нет доступных проектов' : 'Доступ к разделам ещё не выдан'}</h1>
+        <p>${isGuest ? 'Попросите владельца проекта отправить новое приглашение или используйте аккаунт с платным тарифом.' : 'Аккаунт активен. Администратор Московской школы бариста скоро включит нужные разделы платформы.'}</p>
         <button class="btn-primary" onclick="window._authLogout()">Выйти</button>
       </div>
     </section>
@@ -542,6 +574,14 @@ function _showNoAccessScreen() {
   const mobileTabbar = document.getElementById('mobile-tabbar');
   if (mobileTabbar) mobileTabbar.style.display = 'none';
 }
+
+window.addEventListener('workspace:access-lost', () => {
+  if (!isLoggedIn()) {
+    showAuthScreen().then(serverState => _initApp(serverState));
+    return;
+  }
+  fetchState().then(serverState => _initApp(serverState));
+});
 
 function _renderOnboardingForAccess() {
   const root = document.getElementById('onboarding');
@@ -638,6 +678,13 @@ async function _initApp(serverState) {
     restoreFromServer(serverState);
   }
 
+  _applyAccessUI();
+  if (!hasAnyProductAccess()) {
+    _showNoAccessScreen();
+    if (window.lucide) window.lucide.createIcons();
+    return;
+  }
+
   loadLocIndex();
   if (!Loc.list.length) {
     try { migrateOldState(); } catch(e) {}
@@ -650,11 +697,6 @@ async function _initApp(serverState) {
   if (!Loc.activeId) { Loc.activeId = Loc.list[0].id; saveLocIndex(); }
   loadState();
   _applyAccessUI();
-  if (!hasAnyProductAccess()) {
-    _showNoAccessScreen();
-    if (window.lucide) window.lucide.createIcons();
-    return;
-  }
 
   // ── Подгружаем публичных поставщиков с сервера (не блокирует старт) ──
   try {

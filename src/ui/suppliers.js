@@ -164,6 +164,7 @@ export function saveSupplier() {
     window.S.suppliers[_supplierEditKey] = { name, phone, note, site };
   }
   saveState();
+  window.logWorkspaceActivity?.('supplier_changed', 'supplier', _supplierEditKey, `Изменён поставщик для «${window.MAT[_supplierEditKey]?.name || _supplierEditKey}»`);
   const fromList = _supplierFromList;
   _supplierFromList = false;
   _clearModalDirty('modal-supplier');
@@ -372,6 +373,7 @@ export function saveSupplierBook() {
     window.S.supplierBook.push({ id: maxId + 1, name, phone, note, site });
   }
   saveState();
+  window.logWorkspaceActivity?.('supplier_changed', 'supplier_book', _supBookEditId || '', `Сохранён поставщик «${name}»`);
   const fromList = _supBookFromList;
   _supBookFromList = false;
   _clearModalDirty('modal-supplier-book');
@@ -384,6 +386,7 @@ export function deleteSupplierBook() {
   window.showConfirm('Удалить поставщика из справочника?', () => {
     window.S.supplierBook = window.S.supplierBook.filter(b => String(b.id) !== String(_supBookEditId));
     saveState();
+    window.logWorkspaceActivity?.('supplier_changed', 'supplier_book', _supBookEditId, 'Удалён поставщик из списка');
     const fromList = _supBookFromList;
     _supBookFromList = false;
     _clearModalDirty('modal-supplier-book');

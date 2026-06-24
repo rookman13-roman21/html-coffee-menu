@@ -172,13 +172,14 @@ export function openMatUsage(type, key) {
 }
 
 export function addFixedCost() { addFixedCostInCat('other'); }
-export function delFixedCost(i) { if(window.S.fixedCosts.length > 1) { window.S.fixedCosts.splice(i,1); _rerenderFinModelKeepFC(); saveState(); if(window.lucide) lucide.createIcons(); } }
-export function onTaxMode(v) { S.taxMode = v; _rerenderFinModelKeepFC(); saveState(); if(window.lucide) lucide.createIcons(); }
-export function onInvestment(v) { const n=parseFloat(v); if(n>=0){ S.investment=n; _rerenderFinModelKeepFC(); saveState(); if(window.lucide) lucide.createIcons(); } }
+export function delFixedCost(i) { if(window.S.fixedCosts.length > 1) { const c = window.S.fixedCosts[i]; window.S.fixedCosts.splice(i,1); _rerenderFinModelKeepFC(); saveState(); window.logWorkspaceActivity?.('finmodel_changed', 'fixed_cost', i, `Удалён расход${c?.name ? ` «${c.name}»` : ''}`); if(window.lucide) lucide.createIcons(); } }
+export function onTaxMode(v) { S.taxMode = v; _rerenderFinModelKeepFC(); saveState(); window.logWorkspaceActivity?.('finmodel_changed', 'tax', v, 'Изменён налоговый режим'); if(window.lucide) lucide.createIcons(); }
+export function onInvestment(v) { const n=parseFloat(v); if(n>=0){ S.investment=n; _rerenderFinModelKeepFC(); saveState(); window.logWorkspaceActivity?.('finmodel_changed', 'investment', '', 'Изменены инвестиции'); if(window.lucide) lucide.createIcons(); } }
 
 
 export function addFixedCostInCat(cat) {
   window.S.fixedCosts.push({ id: ++_nextCostId, name:'', value:0, category: cat || 'other', isVariable:false });
+  window.logWorkspaceActivity?.('finmodel_changed', 'fixed_cost', _nextCostId, 'Добавлен постоянный расход');
   const idx = window.S.fixedCosts.length - 1;
   _fceIsNew = true;
   _rerenderFinModelKeepFC();

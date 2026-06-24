@@ -1,11 +1,15 @@
 // src/ui/misc.js
 // Разное: шаблоны, инсайты, сезонность, кандидаты на удаление, PDF-отчёты, onWhatIf
 
-import { hasAccess } from './auth.js';
+import { hasAccess, hasWorkspaceMembership } from './auth.js';
 import { ensureExcelJS } from '../utils/vendor.js';
 import { GROUP_LABEL } from '../data/drinks.js';
 
 export function openTemplatesModal() {
+  if (!hasWorkspaceMembership()) {
+    window.showAlert?.('Нет доступного проекта. Попросите владельца отправить новое приглашение.', '🔒');
+    return;
+  }
   const MENU_TEMPLATES = window.MENU_TEMPLATES;
   const grid = document.getElementById('templates-grid');
   grid.innerHTML = Object.entries(MENU_TEMPLATES).map(([id,t]) =>
@@ -22,6 +26,10 @@ export function openTemplatesModal() {
 }
 
 export function chooseTemplate(id) {
+  if (!hasWorkspaceMembership()) {
+    window.showAlert?.('Нет доступного проекта. Попросите владельца отправить новое приглашение.', '🔒');
+    return;
+  }
   const tpl = window.MENU_TEMPLATES[id]; if (!tpl) return;
   window.closeModal('modal-templates');
   window._locModalMode = 'template'; window._locTemplateId = id;
@@ -130,6 +138,7 @@ export function generateInsights(drinks) {
 
 
 export function exportFullPDF() {
+  window.logWorkspaceActivity?.('export_created', 'report', 'full_pdf', 'Сформирован PDF — полный отчёт');
   document.getElementById('export-menu')?.classList.remove('open');
   const loc = window.activeLoc();
   const drinks = window.withABC(window.enrich());
@@ -356,6 +365,7 @@ ${investment > 0 ? `
 }
 
 export async function exportFullXLSX() {
+  window.logWorkspaceActivity?.('export_created', 'report', 'full_xlsx', 'Сформирован Excel-отчёт');
   try {
     await _exportFullXLSXUnsafe();
   } catch (e) {
@@ -1684,6 +1694,7 @@ export function onFixedCostVariable(i, checked) {
 import { OC_CATS, OC_FORMATS, _ocCalcTotal, _ocFmtAmt } from '../render/dashboard.js';
 
 export function exportOpeningCostsPDF() {
+  window.logWorkspaceActivity?.('export_created', 'report', 'opening_costs_pdf', 'Сформирован PDF бюджета открытия');
   const S       = window.S;
   const costs   = S.openingCosts || [];
   const meta    = S.openingMeta  || {};
@@ -1791,6 +1802,7 @@ tr.cat-row svg{width:12px;height:12px;vertical-align:middle;fill:none;stroke:#ff
 }
 
 export async function exportOpeningCostsXLSX() {
+  window.logWorkspaceActivity?.('export_created', 'report', 'opening_costs_xlsx', 'Сформирован Excel бюджета открытия');
   try { await ensureExcelJS(); } catch (e) { window.showAlert(e.message || 'Библиотека ExcelJS не загрузилась.'); return; }
   const S        = window.S;
   const costs    = S.openingCosts || [];

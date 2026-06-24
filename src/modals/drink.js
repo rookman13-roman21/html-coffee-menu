@@ -465,6 +465,7 @@ export async function saveDrink() {
   closeModal('modal-drink');
   markDirtyDebounce();
   saveState();
+  window.logWorkspaceActivity?.('recipe_changed', 'drink', savedDrink?.id || '', `Сохранён рецепт «${savedDrink?.name || ''}»`);
   if (window.renderRecipes) window.renderRecipes();
 }
 
@@ -487,6 +488,7 @@ export function deleteDrink(id) {
     delete S.portions[id];
     markDirtyDebounce();
     saveState();
+    window.logWorkspaceActivity?.('recipe_changed', 'drink', id, `Удалён рецепт «${drink?.name || ''}»`);
     if (window.renderRecipes) window.renderRecipes();
   }, { icon: '🗑️', okText: 'Удалить' });
 }

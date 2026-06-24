@@ -263,13 +263,16 @@ export function ocAddRow(category) {
   const id = _ocNextId();
   S.openingCosts.push({ id, category, name: '', price: 0, qty: 1, url: '', note: '' });
   _ocSyncInvestment();
+  window.logWorkspaceActivity?.('opening_costs_changed', 'opening_cost', id, 'Добавлена позиция бюджета открытия');
   renderDashboard();
   setTimeout(() => ocOpenItem(id), 40);
 }
 
 export function ocDeleteRow(id) {
+  const item = (S.openingCosts || []).find(r => r.id === id);
   S.openingCosts = (S.openingCosts || []).filter(r => r.id !== id);
   _ocSyncInvestment();
+  window.logWorkspaceActivity?.('opening_costs_changed', 'opening_cost', id, `Удалена позиция бюджета${item?.name ? ` «${item.name}»` : ''}`);
   renderDashboard();
 }
 
@@ -291,6 +294,10 @@ export function ocUpdateField(id, field, rawVal) {
     item[field] = rawVal;
   }
   _ocSyncInvestment();
+  window.clearTimeout(window._workspaceOcLogTimer);
+  window._workspaceOcLogTimer = window.setTimeout(() => {
+    window.logWorkspaceActivity?.('opening_costs_changed', 'opening_cost', id, `Изменена позиция бюджета «${item.name || 'без названия'}»`);
+  }, 1200);
   // Обновляем только ячейку итога и KPI без полного ре-рендера
   const rowEl = document.querySelector(`[data-oc-id="${id}"]`);
   if (rowEl) {

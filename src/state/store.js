@@ -3,7 +3,7 @@
 // ════════════════════════════════════════════════════════════════════
 
 import { MAT, MAT_ORIG, BASE_MAT_KEYS }            from '../data/mat.js';
-import { pushState as _pushToServer, isLoggedIn, getUser }  from '../ui/auth.js';
+import { pushState as _pushToServer, isLoggedIn, getUser, getActiveWorkspaceId }  from '../ui/auth.js';
 import { DRINKS, DRINKS_ORIG, BASE_DRINK_IDS }      from '../data/drinks.js';
 import { FIXED_COSTS_DEF }                          from '../data/constants.js';
 
@@ -66,6 +66,18 @@ export function saveLocIndex() {
     localStorage.setItem(_userStorageKey(LOC_INDEX_KEY), JSON.stringify(Loc.list));
     if (Loc.activeId) localStorage.setItem(_userStorageKey(LOC_ACTIVE_KEY), Loc.activeId);
   } catch(e) {}
+}
+
+export function clearLocStorage() {
+  try {
+    for (const loc of Loc.list || []) {
+      if (loc?.id) localStorage.removeItem(locDataKey(loc.id));
+    }
+    localStorage.removeItem(_userStorageKey(LOC_INDEX_KEY));
+    localStorage.removeItem(_userStorageKey(LOC_ACTIVE_KEY));
+  } catch(e) {}
+  Loc.list = [];
+  Loc.activeId = null;
 }
 
 export function migrateOldState() {
@@ -195,22 +207,40 @@ function nextFreeDrinkId() {
 
 // ─── Дебаунс-синхронизация с сервером ─────────────────────────────
 let _syncTimer = null;
+function _collectCloudState() {
+  const allLocs = {};
+  for (const loc of Loc.list) {
+    const raw = localStorage.getItem(locDataKey(loc.id));
+    if (!raw) continue;
+    try {
+      allLocs[loc.id] = JSON.parse(raw);
+    } catch {}
+  }
+  return {
+    locIndex:  Loc.list,
+    activeId:  Loc.activeId,
+    locations: allLocs,
+  };
+}
+
 export function scheduleServerSync() {
   if (!isLoggedIn()) return;
+  const workspaceId = getActiveWorkspaceId();
   clearTimeout(_syncTimer);
   _syncTimer = setTimeout(() => {
-    // Собираем весь state всех локаций + индекс для облачного бэкапа
-    const allLocs = {};
-    for (const loc of Loc.list) {
-      const raw = localStorage.getItem(locDataKey(loc.id));
-      if (raw) allLocs[loc.id] = JSON.parse(raw);
-    }
-    _pushToServer({
-      locIndex:  Loc.list,
-      activeId:  Loc.activeId,
-      locations: allLocs,
-    });
+    _pushToServer(_collectCloudState(), workspaceId);
   }, 2000);
+}
+
+export function flushServerSync(workspaceId = getActiveWorkspaceId()) {
+  if (!isLoggedIn()) return Promise.resolve(false);
+  clearTimeout(_syncTimer);
+  _syncTimer = null;
+  try {
+    return _pushToServer(_collectCloudState(), workspaceId);
+  } catch {
+    return Promise.resolve(false);
+  }
 }
 
 // ─── State persistence ───────────────────────────────────────────────

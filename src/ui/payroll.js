@@ -72,6 +72,7 @@ export function onPayrollPos(id, field, v) {
     pos[field] = v;
     if (field === 'empType') { renderFinModel(); saveState(); if(window.lucide) lucide.createIcons(); }
     else saveState();
+    window.logWorkspaceActivity?.('payroll_changed', 'payroll_position', id, `Изменена должность ФОТ «${pos.name || ''}»`);
     return;
   }
   const n = parseFloat(v);
@@ -79,6 +80,8 @@ export function onPayrollPos(id, field, v) {
   pos[field] = n;
   _refreshPayrollRow(id);
   saveState();
+  window.clearTimeout(window._workspacePayrollLogTimer);
+  window._workspacePayrollLogTimer = window.setTimeout(() => window.logWorkspaceActivity?.('payroll_changed', 'payroll_position', id, `Изменён ФОТ «${pos.name || ''}»`), 1200);
 }
 export function _refreshPayrollRow(id) {
   const pos = (window.S.payrollPositions||[]).find(p => p.id === id);
@@ -102,6 +105,7 @@ export function addPayrollPosition() {
   window.S.payrollPositions.push({ id: maxId+1, name:'Новая должность', rate:250, hours:12, shifts:26, count:1, empType:'black' });
   renderFinModel();
   saveState();
+  window.logWorkspaceActivity?.('payroll_changed', 'payroll_position', maxId + 1, 'Добавлена должность ФОТ');
   if (window.lucide) lucide.createIcons();
   const last = window.S.payrollPositions[window.S.payrollPositions.length-1];
   const el = document.getElementById(`pr-name-${last.id}`);
@@ -112,6 +116,7 @@ export function deletePayrollPosition(id) {
   window.S.payrollPositions = window.S.payrollPositions.filter(p => p.id !== id);
   renderFinModel();
   saveState();
+  window.logWorkspaceActivity?.('payroll_changed', 'payroll_position', id, 'Удалена должность ФОТ');
   if (window.lucide) lucide.createIcons();
 }
 

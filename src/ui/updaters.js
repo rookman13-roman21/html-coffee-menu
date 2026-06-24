@@ -117,6 +117,7 @@ export function applySalesPreset(key) {
   if (window.dirty) window.dirty.finmodel = true;
   window.renderSales();
   window.saveState();
+  window.logWorkspaceActivity?.('sales_changed', 'sales_preset', key, `Применён пресет продаж «${key}»`);
   if (window.lucide) window.lucide.createIcons();
 }
 
@@ -181,6 +182,7 @@ export function addAddonSale(kind = 'bakery') {
   if (window.dirty) window.dirty.finmodel = true;
   window.renderSales();
   window.saveState();
+  window.logWorkspaceActivity?.('sales_changed', 'addon_sale', kind, 'Добавлена дополнительная продажа');
   if (window.lucide) window.lucide.createIcons();
 }
 
@@ -205,6 +207,7 @@ export function applyAddonSalesPreset(key) {
   if (window.dirty) window.dirty.finmodel = true;
   window.renderSales();
   window.saveState();
+  window.logWorkspaceActivity?.('sales_changed', 'addon_sales_preset', key, `Применён пресет доп. продаж «${key}»`);
   if (window.lucide) window.lucide.createIcons();
 }
 
@@ -248,6 +251,8 @@ export function onAddonSale(id, field, value, keepFocus = false) {
     markDirtyDebounce();
   }
   window.saveState();
+  window.clearTimeout(window._workspaceAddonLogTimer);
+  window._workspaceAddonLogTimer = window.setTimeout(() => window.logWorkspaceActivity?.('sales_changed', 'addon_sale', id, `Изменена дополнительная продажа «${row.name || ''}»`), 1200);
 }
 
 export function deleteAddonSale(id) {
@@ -255,12 +260,18 @@ export function deleteAddonSale(id) {
   if (window.dirty) window.dirty.finmodel = true;
   window.renderSales();
   window.saveState();
+  window.logWorkspaceActivity?.('sales_changed', 'addon_sale', id, 'Удалена дополнительная продажа');
   if (window.lucide) window.lucide.createIcons();
 }
 
 export function onFixedCost(i, v) {
   const n = parseFloat(v);
-  if (n >= 0) { window.S.fixedCosts[i].value = n; markDirtyDebounce(); }
+  if (n >= 0) {
+    window.S.fixedCosts[i].value = n;
+    window.clearTimeout(window._workspaceFinLogTimer);
+    window._workspaceFinLogTimer = window.setTimeout(() => window.logWorkspaceActivity?.('finmodel_changed', 'fixed_cost', i, 'Изменены постоянные расходы'), 1200);
+    markDirtyDebounce();
+  }
 }
 
 export function onFixedCostName(i, v) {

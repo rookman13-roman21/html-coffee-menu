@@ -2,6 +2,7 @@
 // CSV-экспорт: общая утилита + дашборд + продажи
 
 export function exportCSV(filename, headers, rows) {
+  window.logWorkspaceActivity?.('export_created', 'csv', filename, `Сформирован CSV «${filename}»`);
   const csv = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
   const a = Object.assign(document.createElement('a'), {
     href: URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })),

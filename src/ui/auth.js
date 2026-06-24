@@ -4,10 +4,45 @@ const API = import.meta.env.VITE_API_URL || '';
 
 const TOKEN_KEY = 'cm_token';
 const USER_KEY  = 'cm_user';
+const WORKSPACE_KEY = 'cm_workspace_id';
+
+let _workspaces = [];
+let _currentWorkspace = null;
+let _canCreateWorkspaces = false;
 
 export function getToken()  { return localStorage.getItem(TOKEN_KEY); }
 export function getUser()   { try { return JSON.parse(localStorage.getItem(USER_KEY) || 'null'); } catch { return null; } }
 export function isLoggedIn(){ return !!getToken(); }
+export function getActiveWorkspaceId() { return localStorage.getItem(WORKSPACE_KEY) || ''; }
+export function setActiveWorkspaceId(id) {
+  if (id) localStorage.setItem(WORKSPACE_KEY, String(id));
+  else localStorage.removeItem(WORKSPACE_KEY);
+}
+export function getCurrentWorkspace() { return _currentWorkspace; }
+export function getWorkspaces() { return _workspaces.slice(); }
+export function canCreateWorkspaces() {
+  const user = getUser();
+  if (user && typeof user.can_create_workspaces !== 'undefined') return !!user.can_create_workspaces;
+  return !!_canCreateWorkspaces;
+}
+export function hasWorkspaceMembership() { return !!(_currentWorkspace && _currentWorkspace.id); }
+
+function rememberWorkspacePayload(data = {}) {
+  if (typeof data.can_create_workspaces !== 'undefined') _canCreateWorkspaces = !!data.can_create_workspaces;
+  if (Array.isArray(data.workspaces)) _workspaces = data.workspaces;
+  if (data.workspace) {
+    _currentWorkspace = data.workspace;
+    if (typeof data.workspace.can_create_workspaces !== 'undefined') _canCreateWorkspaces = !!data.workspace.can_create_workspaces;
+    setActiveWorkspaceId(data.workspace.id);
+  } else if (Object.prototype.hasOwnProperty.call(data, 'workspace') && !data.workspace) {
+    _currentWorkspace = null;
+    setActiveWorkspaceId('');
+  } else if (!_currentWorkspace && _workspaces.length) {
+    _currentWorkspace = _workspaces[0];
+    setActiveWorkspaceId(_currentWorkspace.id);
+  }
+  if (!_workspaces.length && !_currentWorkspace) setActiveWorkspaceId('');
+}
 
 function saveAuth(token, user) {
   localStorage.setItem(TOKEN_KEY, token);
@@ -39,6 +74,7 @@ export const ACCESS_TABS = {
 export function hasAccess(key) {
   const user = getUser();
   if (!user || user.is_admin) return true;
+  if ((key === 'drinks' || key === 'finance') && hasWorkspaceMembership()) return true;
   if (user.access && typeof user.access[key] !== 'undefined') return !!user.access[key];
   const legacyKey = key === 'drinks' ? 'access_drinks' : 'access_finance';
   if (typeof user[legacyKey] !== 'undefined') return !!user[legacyKey];
@@ -64,12 +100,57 @@ export function firstAllowedTab() {
 }
 
 export function hasAnyProductAccess() {
-  return hasAccess('drinks') || hasAccess('finance') || hasAccess('author');
+  return hasWorkspaceMembership() || hasAccess('drinks') || hasAccess('finance') || hasAccess('author');
 }
 
 export function clearAuth() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
+  localStorage.removeItem(WORKSPACE_KEY);
+  _workspaces = [];
+  _currentWorkspace = null;
+  _canCreateWorkspaces = false;
+}
+
+function pendingInviteToken() {
+  try {
+    const url = new URL(location.href);
+    const direct = url.searchParams.get('invite') || url.searchParams.get('workspace_invite');
+    if (direct) return direct;
+    const m = location.pathname.match(/\/invite\/([^/]+)/);
+    return m ? decodeURIComponent(m[1]) : '';
+  } catch { return ''; }
+}
+
+function clearInviteTokenFromUrl() {
+  try {
+    const url = new URL(location.href);
+    url.searchParams.delete('invite');
+    url.searchParams.delete('workspace_invite');
+    const next = url.pathname.startsWith('/invite/') ? '/app/budget' : `${url.pathname}${url.search}${url.hash}`;
+    history.replaceState({}, '', next || '/app/budget');
+  } catch {}
+}
+
+export async function acceptWorkspaceInvite(token) {
+  const authToken = getToken();
+  if (!authToken || !token) return null;
+  const r = await fetch(`${API}/api/workspace-invites/${encodeURIComponent(token)}/accept`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${authToken}` }
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.detail || d.message || 'Не удалось принять приглашение');
+  rememberWorkspacePayload(d);
+  return d.workspace || null;
+}
+
+export async function acceptPendingInviteFromUrl() {
+  const token = pendingInviteToken();
+  if (!token || !getToken()) return null;
+  const workspace = await acceptWorkspaceInvite(token);
+  clearInviteTokenFromUrl();
+  return workspace;
 }
 
 /** Загрузить стейт с сервера. Возвращает объект state или null */
@@ -77,38 +158,168 @@ export async function fetchState() {
   const token = getToken();
   if (!token) return null;
   try {
-    const r = await fetch(`${API}/api/state`, {
+    try { await acceptPendingInviteFromUrl(); } catch (e) { console.warn('[workspace invite]', e); }
+    const workspaceId = getActiveWorkspaceId();
+    const qs = workspaceId ? `?workspace_id=${encodeURIComponent(workspaceId)}` : '';
+    let r = await fetch(`${API}/api/state${qs}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
+    if ((r.status === 403 || r.status === 404) && workspaceId) {
+      setActiveWorkspaceId('');
+      r = await fetch(`${API}/api/state`, { headers: { Authorization: `Bearer ${token}` } });
+    }
     if (r.status === 401) { clearAuth(); return null; }
     if (!r.ok) return null;
     const d = await r.json();
+    rememberWorkspacePayload(d);
     return d.state || null;
   } catch { return null; }
 }
 
 /** Сохранить стейт на сервер. Тихо при ошибке. */
-export async function pushState(state) {
-  const token = getToken();
-  if (!token) return;
+function notifyWorkspaceAccessLost() {
   try {
-    await fetch(`${API}/api/state`, {
+    window.dispatchEvent(new CustomEvent('workspace:access-lost'));
+  } catch {}
+}
+
+export async function pushState(state, workspaceIdOverride = undefined) {
+  const token = getToken();
+  if (!token) return false;
+  const workspaceId = workspaceIdOverride !== undefined ? workspaceIdOverride : getActiveWorkspaceId();
+  try {
+    const r = await fetch(`${API}/api/state`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify({ state })
+      body: JSON.stringify({ state, workspace_id: workspaceId || undefined })
     });
-  } catch { /* silent — state already in localStorage */ }
+    if (r.status === 401) {
+      clearAuth();
+      notifyWorkspaceAccessLost();
+      return false;
+    }
+    if (r.status === 403 || r.status === 404) {
+      if (workspaceId && String(workspaceId) === String(getActiveWorkspaceId())) {
+        setActiveWorkspaceId('');
+        rememberWorkspacePayload({ workspace: null, workspaces: [], can_create_workspaces: _canCreateWorkspaces });
+        notifyWorkspaceAccessLost();
+      }
+      return false;
+    }
+    return r.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function apiJson(path, options = {}) {
+  const token = getToken();
+  const r = await fetch(`${API}${path}`, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    }
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.detail || d.message || 'Ошибка запроса');
+  return d;
+}
+
+export async function fetchWorkspaces() {
+  const d = await apiJson('/api/workspaces');
+  rememberWorkspacePayload(d);
+  return _workspaces.slice();
+}
+
+export async function createWorkspace(name) {
+  const d = await apiJson('/api/workspaces', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name })
+  });
+  rememberWorkspacePayload(d);
+  return d.workspace;
+}
+
+export async function fetchWorkspaceMembers(workspaceId = getActiveWorkspaceId()) {
+  if (!workspaceId) return { members: [], invites: [] };
+  return apiJson(`/api/workspaces/${encodeURIComponent(workspaceId)}/members`);
+}
+
+export async function createWorkspaceInvite(email, workspaceId = getActiveWorkspaceId()) {
+  if (!workspaceId) throw new Error('Проект не выбран');
+  return apiJson(`/api/workspaces/${encodeURIComponent(workspaceId)}/invites`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
+}
+
+export async function removeWorkspaceMember(userId, workspaceId = getActiveWorkspaceId()) {
+  if (!workspaceId) throw new Error('Проект не выбран');
+  return apiJson(`/api/workspaces/${encodeURIComponent(workspaceId)}/members/${encodeURIComponent(userId)}`, { method: 'DELETE' });
+}
+
+export async function revokeWorkspaceInvite(inviteId, workspaceId = getActiveWorkspaceId()) {
+  if (!workspaceId) throw new Error('Проект не выбран');
+  return apiJson(`/api/workspaces/${encodeURIComponent(workspaceId)}/invites/${encodeURIComponent(inviteId)}`, { method: 'DELETE' });
+}
+
+export async function fetchWorkspaceActivity(workspaceId = getActiveWorkspaceId()) {
+  if (!workspaceId) return [];
+  const d = await apiJson(`/api/workspaces/${encodeURIComponent(workspaceId)}/activity`);
+  return d.activity || [];
+}
+
+export async function fetchWorkspaceSnapshots(workspaceId = getActiveWorkspaceId()) {
+  if (!workspaceId) return [];
+  const d = await apiJson(`/api/workspaces/${encodeURIComponent(workspaceId)}/snapshots`);
+  return d.snapshots || [];
+}
+
+export async function createWorkspaceSnapshot(reason = 'manual', workspaceId = getActiveWorkspaceId()) {
+  if (!workspaceId) throw new Error('Проект не выбран');
+  const d = await apiJson(`/api/workspaces/${encodeURIComponent(workspaceId)}/snapshots`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reason })
+  });
+  return d.snapshot || null;
+}
+
+export async function restoreWorkspaceSnapshot(snapshotId, workspaceId = getActiveWorkspaceId()) {
+  if (!workspaceId) throw new Error('Проект не выбран');
+  if (!snapshotId) throw new Error('Точка восстановления не выбрана');
+  const d = await apiJson(`/api/workspaces/${encodeURIComponent(workspaceId)}/snapshots/${encodeURIComponent(snapshotId)}/restore`, {
+    method: 'POST'
+  });
+  rememberWorkspacePayload(d);
+  return d.state || null;
+}
+
+export async function logWorkspaceActivity(action, targetType = '', targetId = '', summary = '', metadata = {}) {
+  const workspaceId = getActiveWorkspaceId();
+  if (!workspaceId || !action) return;
+  try {
+    await apiJson(`/api/workspaces/${encodeURIComponent(workspaceId)}/activity`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, target_type: targetType, target_id: String(targetId || ''), summary, metadata })
+    });
+  } catch { /* журнал не должен ломать рабочий сценарий */ }
 }
 
 /** Выполнить login/register. mode = 'login' | 'register' */
-async function authRequest(mode, email, password, name, consent = false, phone = '') {
+async function authRequest(mode, email, password, name, consent = false, phone = '', inviteToken = '') {
   const body = { email, password };
   if (mode === 'register' && name) body.name = name;
   if (mode === 'register') body.consent = consent;
   if (mode === 'register' && phone) body.phone = phone;
+  if (mode === 'register' && inviteToken) body.invite_token = inviteToken;
   const r = await fetch(`${API}/api/auth/${mode}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -191,6 +402,11 @@ function injectStyles() {
     }
     .auth-sub {
       font-size: 13px; color: #888; margin: 0 0 28px;
+    }
+    .auth-invite-note {
+      margin: -12px 0 18px; padding: 10px 12px;
+      border-radius: 10px; background: #eef8ea; border: 1px solid #cfe8c7;
+      color: #2f5a25; font-size: 13px; line-height: 1.4; font-weight: 600;
     }
     .auth-tabs {
       display: flex; gap: 0;
@@ -301,13 +517,15 @@ function injectStyles() {
 export function showAuthScreen() {
   return new Promise(resolve => {
     injectStyles();
+    const inviteToken = pendingInviteToken();
 
     const overlay = document.createElement('div');
     overlay.id = 'auth-overlay';
     overlay.innerHTML = `
       <div class="auth-card">
         <p class="auth-logo"><img src="/images/moscow%20barista%20school%20logo.svg" alt="Moscow Barista School"></p>
-        <p class="auth-sub">Управление кофейней — вход в аккаунт</p>
+        <p class="auth-sub">${inviteToken ? 'Вход по приглашению в проект кофейни' : 'Управление кофейней — вход в аккаунт'}</p>
+        ${inviteToken ? '<div class="auth-invite-note">Вас пригласили в общий проект кофейни. Войдите или зарегистрируйтесь с этим email, чтобы принять приглашение.</div>' : ''}
         <div class="auth-tabs">
           <button class="auth-tab active" data-tab="login">Войти</button>
           <button class="auth-tab" data-tab="register">Регистрация</button>
@@ -465,6 +683,7 @@ export function showAuthScreen() {
     overlay.querySelectorAll('.auth-tab').forEach(tab => {
       tab.addEventListener('click', () => setMode(tab.dataset.tab));
     });
+    if (inviteToken) setMode('register');
 
     // Enter key
     [emailEl, passEl].forEach(el => {
@@ -500,9 +719,11 @@ export function showAuthScreen() {
             submitBtn.textContent = 'Зарегистрироваться';
             return;
           }
-          const d = await authRequest('register', email, password, name, true, phone);
+          const d = await authRequest('register', email, password, name, true, phone, inviteToken);
           if (d && d.token && d.user) {
             saveAuth(d.token, d.user);
+            rememberWorkspacePayload(d);
+            if (inviteToken) clearInviteTokenFromUrl();
             const state = await fetchState();
             overlay.remove();
             window._initApp(state);
