@@ -207,7 +207,19 @@ export async function pushState(state, workspaceIdOverride = undefined) {
       notifyWorkspaceAccessLost();
       return false;
     }
-    if (r.status === 403 || r.status === 404) {
+    if (r.status === 403) {
+      const d = await r.json().catch(() => ({}));
+      const detail = String(d.detail || d.message || 'Действие недоступно.');
+      if (detail.includes('Нет доступа к проекту') && workspaceId && String(workspaceId) === String(getActiveWorkspaceId())) {
+        setActiveWorkspaceId('');
+        rememberWorkspacePayload({ workspace: null, workspaces: [], can_create_workspaces: _canCreateWorkspaces });
+        notifyWorkspaceAccessLost();
+      } else {
+        window.showAlert?.(detail, '🔒');
+      }
+      return false;
+    }
+    if (r.status === 404) {
       if (workspaceId && String(workspaceId) === String(getActiveWorkspaceId())) {
         setActiveWorkspaceId('');
         rememberWorkspacePayload({ workspace: null, workspaces: [], can_create_workspaces: _canCreateWorkspaces });

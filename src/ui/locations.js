@@ -401,12 +401,13 @@ export async function revokeWorkspaceInviteFromModal(inviteId) {
 
 function _activityLabel(action) {
   const labels = {
-    project_opened: 'Вход в проект', workspace_created: 'Создан проект', workspace_switched: 'Смена проекта',
+    project_opened: 'Вход в проект', workspace_created: 'Создан проект', workspace_switched: 'Смена проекта', workspace_reset: 'Сброс проекта',
     snapshot_created: 'Точка восстановления', snapshot_restored: 'Восстановление',
     invite_created: 'Приглашение', invite_accepted: 'Принято приглашение', invite_revoked: 'Отозвано приглашение', member_removed: 'Участник удалён',
     location_created: 'Точка добавлена', location_renamed: 'Точка изменена', location_deleted: 'Точка удалена',
     opening_costs_changed: 'Бюджет открытия', finmodel_changed: 'Финмодель', payroll_changed: 'ФОТ', sales_changed: 'План продаж',
-    recipe_changed: 'Рецепт', supplier_changed: 'Поставщик', export_created: 'Экспорт'
+    recipe_changed: 'Рецепт', supplier_changed: 'Поставщик', export_created: 'Экспорт',
+    state_update_blocked: 'Действие заблокировано'
   };
   return labels[action] || action;
 }
@@ -433,12 +434,12 @@ function _activityGroup(action) {
   if (action === 'recipe_changed') return 'recipes';
   if (action === 'supplier_changed') return 'suppliers';
   if (action === 'export_created') return 'exports';
-  if (['snapshot_created', 'snapshot_restored'].includes(action)) return 'security';
+  if (['snapshot_created', 'snapshot_restored', 'workspace_reset', 'state_update_blocked'].includes(action)) return 'security';
   return 'system';
 }
 
 function _activitySeverity(action) {
-  if (['location_deleted', 'member_removed', 'snapshot_restored', 'invite_revoked'].includes(action)) return 'danger';
+  if (['location_deleted', 'member_removed', 'snapshot_restored', 'invite_revoked', 'workspace_reset', 'state_update_blocked'].includes(action)) return 'danger';
   if (['opening_costs_changed', 'finmodel_changed', 'payroll_changed', 'sales_changed', 'location_created', 'location_renamed', 'recipe_changed', 'supplier_changed'].includes(action)) return 'work';
   if (['snapshot_created', 'export_created', 'invite_created', 'invite_accepted'].includes(action)) return 'notice';
   return 'system';

@@ -3,7 +3,7 @@
 
 import { _matPriceBeforeEdit } from '../state/ui-state.js';
 import { SALES_PRESETS } from '../data/constants.js';
-import { canAccessTab, firstAllowedTab } from './auth.js';
+import { canAccessTab, firstAllowedTab, requireWorkspaceOwner } from './auth.js';
 import { isAuthorMode } from '../access/author-layer.js';
 import { syncUrlForTab } from '../access/app-routes.js';
 
@@ -289,6 +289,7 @@ export function flashCells() {
 }
 
 export function resetAll() {
+  if (!requireWorkspaceOwner('Сброс всех цен и финансовых полей доступен только владельцу проекта.')) return;
   window.showConfirm('Сбросить все цены и количества к исходным значениям этой точки?', () => {
     const S = window.S;
     const DEFAULTS = window.DEFAULTS;
@@ -329,6 +330,7 @@ export function resetAll() {
     window.saveState();
     window.searchQuery = '';
     Object.keys(window.dirty).forEach(k=>window.dirty[k]=true);
+    window.logWorkspaceActivity?.('workspace_reset', 'workspace', window.getActiveWorkspaceId?.() || '', 'Владелец выполнил полный сброс параметров точки', { action: 'reset_all' });
     window.renderActive();
   }, { icon: '🔄', okText: 'Сбросить', danger: false });
 }

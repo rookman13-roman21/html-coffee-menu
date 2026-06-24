@@ -534,7 +534,7 @@ function _applyAccessUI() {
   const exportWrap = document.getElementById('export-wrap');
   if (exportWrap) exportWrap.style.display = (!isAuthorMode() && hasAccess('drinks') && hasAccess('finance')) ? '' : 'none';
   const resetBtn = document.querySelector('.btn-reset');
-  if (resetBtn) resetBtn.style.display = (!isAuthorMode() && hasAccess('drinks') && hasAccess('finance')) ? '' : 'none';
+  if (resetBtn) resetBtn.style.display = (!isAuthorMode() && hasAccess('drinks') && hasAccess('finance') && isWorkspaceOwner()) ? '' : 'none';
 }
 
 function _getAllowedTabsForMode() {
