@@ -1,7 +1,7 @@
 // src/ui/misc.js
 // Разное: шаблоны, инсайты, сезонность, кандидаты на удаление, PDF-отчёты, onWhatIf
 
-import { hasAccess, hasWorkspaceMembership } from './auth.js';
+import { hasAccess, hasWorkspaceMembership, requireWorkspaceOwner } from './auth.js';
 import { ensureExcelJS } from '../utils/vendor.js';
 import { GROUP_LABEL } from '../data/drinks.js';
 
@@ -10,6 +10,7 @@ export function openTemplatesModal() {
     window.showAlert?.('Нет доступного проекта. Попросите владельца отправить новое приглашение.', '🔒');
     return;
   }
+  if (!requireWorkspaceOwner('Создавать заведения из шаблона может только владелец проекта.')) return;
   const MENU_TEMPLATES = window.MENU_TEMPLATES;
   const grid = document.getElementById('templates-grid');
   grid.innerHTML = Object.entries(MENU_TEMPLATES).map(([id,t]) =>
@@ -30,6 +31,7 @@ export function chooseTemplate(id) {
     window.showAlert?.('Нет доступного проекта. Попросите владельца отправить новое приглашение.', '🔒');
     return;
   }
+  if (!requireWorkspaceOwner('Создавать заведения из шаблона может только владелец проекта.')) return;
   const tpl = window.MENU_TEMPLATES[id]; if (!tpl) return;
   window.closeModal('modal-templates');
   window._locModalMode = 'template'; window._locTemplateId = id;

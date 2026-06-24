@@ -114,9 +114,9 @@ function _ensureClientLocMenuShell() {
     <div class="loc-menu-header">Заведения</div>
     <div class="loc-list" id="loc-list"></div>
     <div class="loc-menu-divider"></div>
-    <button class="loc-menu-item" data-location-action onclick="openAddLocation()"><i data-lucide="plus" class="icon"></i> Добавить точку</button>
-    <button class="loc-menu-item" data-location-action onclick="openTemplatesModal()"><i data-lucide="sparkles" class="icon"></i> Создать из шаблона</button>
-    <button class="loc-menu-item" data-location-action onclick="renameActiveLocation()"><i data-lucide="pencil" class="icon"></i> Переименовать текущую</button>
+    <button class="loc-menu-item" data-location-action data-owner-action onclick="openAddLocation()"><i data-lucide="plus" class="icon"></i> Добавить точку</button>
+    <button class="loc-menu-item" data-location-action data-owner-action onclick="openTemplatesModal()"><i data-lucide="sparkles" class="icon"></i> Создать из шаблона</button>
+    <button class="loc-menu-item" data-location-action data-owner-action onclick="renameActiveLocation()"><i data-lucide="pencil" class="icon"></i> Переименовать текущую</button>
     <button class="loc-menu-item danger" data-location-action data-owner-action onclick="deleteActiveLocation()"><i data-lucide="trash-2" class="icon"></i> Удалить текущую</button>
     <div class="loc-menu-divider"></div>
     <button class="loc-menu-item" id="loc-menu-api-key-btn" onclick="ocSetApiKey()" title="OpenAI API ключ нужен для функции AI-заполнения карточек оборудования"><i data-lucide="key-round" class="icon"></i> <span id="loc-menu-api-key-label">Добавить OpenAI API ключ</span></button>
@@ -598,6 +598,7 @@ export function switchLocation(id) {
 
 export function openAddLocation() {
   if (!_canUseClientLocations()) { _showWorkspaceRequired(); return; }
+  if (!requireWorkspaceOwner('Добавлять заведения может только владелец проекта.')) return;
   const Loc = window.Loc;
   window._locModalMode = 'add'; window._locTemplateId = null;
   document.getElementById('modal-loc-title').innerHTML = '<i data-lucide="plus" class="icon"></i> Новая точка';
@@ -620,6 +621,7 @@ export function openAddLocation() {
 
 export function renameActiveLocation() {
   if (!_canUseClientLocations()) { _showWorkspaceRequired(); return; }
+  if (!requireWorkspaceOwner('Переименовывать заведения может только владелец проекта.')) return;
   const loc = window.activeLoc(); if (!loc) return;
   window._locModalMode = 'rename'; window._locTemplateId = null;
   document.getElementById('modal-loc-title').innerHTML = '<i data-lucide="pencil" class="icon"></i> Переименовать точку';
@@ -700,6 +702,7 @@ export function deleteActiveLocation() {
 
 export function saveLocation() {
   if (!isAuthorMode() && !_canUseClientLocations()) { _showWorkspaceRequired(); return; }
+  if (!isAuthorMode() && !requireWorkspaceOwner('Менять структуру заведений может только владелец проекта.')) return;
   const Loc = window.Loc;
   const name = document.getElementById('ml-name').value.trim();
   const icon = document.getElementById('ml-icon').value.trim() || '☕';
