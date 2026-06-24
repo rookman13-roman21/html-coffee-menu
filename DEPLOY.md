@@ -141,13 +141,24 @@ ssh -i "$HOME/.ssh/id_ed25519" root@159.194.233.13 \
   'sqlite3 /var/www/coffee-menu/server/data/app.db ".tables" | tr " " "\n" | grep -E "author_(recipe_drafts|ingredients|semis)|recipe_publication_(versions|events)"'
 ```
 
-Если `scripts/deploy_backend.sh` останавливается из-за локального `server/data/mixology_author_access.json`, не загружать whitelist вместе с обычным backend-деплоем. Для правок только `server/main.py` можно вручную загрузить файл и перезапустить API, не трогая приватный whitelist:
+Если `scripts/deploy_backend.sh` останавливается из-за локального `server/data/mixology_author_access.json`, не загружать whitelist вместе с обычным backend-деплоем. Для правок только `server/main.py` можно вручную загрузить файл и перезапустить API, не трогая приватный whitelist. После ручного hotfix обязательно проверить production API и наличие ключевых строк исправления на сервере, потому что backend-файл лежит вне Git-репозитория `HTML_coffee_menu`:
 
 ```bash
 scp -i "$HOME/.ssh/id_ed25519" server/main.py \
   root@159.194.233.13:/var/www/coffee-menu/server/main.py
 ssh -i "$HOME/.ssh/id_ed25519" root@159.194.233.13 \
   'systemctl restart coffee-menu-api.service && sleep 3 && curl -fsS http://127.0.0.1:8000/api/health'
+```
+
+Пример точечной проверки после backend hotfix без вывода секретов:
+
+```bash
+ssh -i "$HOME/.ssh/id_ed25519" root@159.194.233.13   'python3 - <<'"'"'PY'"'"'
+from pathlib import Path
+s=Path("/var/www/coffee-menu/server/main.py").read_text()
+for t in ["_dedupe_pending_workspace_invites", "already_pending"]:
+    print(f"{t}: {t in s}")
+PY'
 ```
 
 Для Telegram-уведомлений авторов:

@@ -1,6 +1,6 @@
 # NEXT_CHAT_HANDOFF — Coffee_menu / barista-school.online
 
-Дата актуализации: 24 июня 2026.
+Дата актуализации: 25 июня 2026.
 
 Этот файл нужен, чтобы новый чат быстро понял контекст проекта и мог продолжить работу без повторной раскачки.
 
@@ -69,6 +69,8 @@ Safety baseline командной работы после production-теста
 - Массовые destructive-действия owner-only: верхний `Сброс`, `Очистить всё` в бюджете открытия и прямой API-save, похожий на массовую очистку/сброс `prices`, `salePrices`, `portions`, `fixedCosts`, `payroll`, `addonSales`, `openingCosts`, `suppliers` или `priceLog`, запрещены для `editor` / `guest-editor`. Backend пишет событие `state_update_blocked` в журнал.
 - Backend дополнительно проверяет `PUT /api/state`: для `editor` / `guest-editor` сравнивает старый и новый workspace state и возвращает `403`, если из JSON исчезают заведений, кастомные рецепты, сырьё, полуфабрикаты, привязки поставщиков или поставщики из справочника. Это не полноценный diff всех полей, а минимальный semantic guard от destructive overwrite.
 - Структура заведений owner-only: `editor` / `guest-editor` не может добавлять точку, создавать точку из шаблона или переименовывать текущую. Backend также блокирует появление новых `locIndex` / `locations` и изменение метаданных `locIndex` от не-владельца.
+- Invite-flow защищён от дублей: повторный invite на тот же email в том же workspace не создаёт новую запись, а возвращает существующую pending-ссылку; приглашение email, который уже состоит в проекте, возвращает `409`. При загрузке команды backend отзывает старые дубли pending-invite, а UI показывает понятное состояние `Приглашение уже ожидает принятия`.
+- UI `Команда проекта`: системные confirm/prompt заменены на фирменные модалки; `.btn-green` теперь имеет базовую геометрию кнопки (`inline-flex`, padding, radius, min-width в team-flow), чтобы действия `Пригласить`, `Готово`, `Копировать` не выглядели квадратными или случайными.
 
 ## 2. Связанные проекты
 
@@ -357,7 +359,7 @@ cp scripts/smoke_api.example.json scripts/smoke_api.local.json
 На момент handoff 17 июня 2026:
 
 - `Coffee_menu/HTML_coffee_menu`: `main...origin/main`, рабочая папка dirty после серии изменений author-слоя.
-- Backend `Coffee_menu/server` не является отдельным git repo; изменения backend лежат в соседнем `server/main.py`.
+- Backend `Coffee_menu/server` не является отдельным git repo; изменения backend лежат в соседнем `server/main.py`. Если менялся только backend и обычный `deploy:backend` останавливается на приватном Mixology whitelist, допустим ручной upload только `server/main.py` + restart API, без загрузки whitelist.
 - Последний известный коммит до серии author-правок: `5f06321 docs: add next chat handoff`.
 - `bitrix-tools`: ранее был dirty, не чистили глубоко, есть backup patch в `/private/tmp/mbs-risk-backups/`.
 
@@ -370,6 +372,7 @@ a15122a test: allow smoke checks with admin token
 bb3cbaf chore: add release and deploy workflow
 416e7c1 docs: mark Bitrix author sync configured
 9b1ab5d feat: add access layers and author workspace
+5e77109 fix: prevent duplicate workspace invites
 ```
 
 ## 13. Production

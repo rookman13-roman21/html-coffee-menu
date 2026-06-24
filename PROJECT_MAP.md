@@ -1,6 +1,6 @@
 # PROJECT_MAP.md — Coffee Menu SPA
 
-> Последнее обновление: 24 июня 2026
+> Последнее обновление: 25 июня 2026
 > Стек: **Vite 5.4 + Vanilla JS (ES-модули) + FastAPI + SQLite**
 > Продакшн: `https://barista-school.online`
 
@@ -30,6 +30,7 @@
 - `server/admin/src/_styles.js`: в `Пресеты` убран sticky у заголовков библиотеки, потому что Safari перекрывал первую строку списка.
 - `src/ui/misc.js`: общий `Excel (xlsx)` из верхнего меню исправлен для ExcelJS/Safari: импорт `GROUP_LABEL`, правильный `mergeCells` по `titleRow.number`, общий `try/catch`, ссылка добавляется в DOM перед `a.click()`.
 - `Команда проекта`: добавлен workspace-слой для клиентов, которые запускают кофейню вместе с партнёрами/подрядчиками. В меню проекта доступны переключение workspace, invite-link, участники, append-only журнал ключевых действий и `Восстановление`. Пользователи с `access_drinks` / `access_finance` могут создавать свои проекты; приглашённые без оплаты работают как `guest-editor` только в чужом проекте. Структура заведений, удаление ключевых сущностей и массовый сброс/очистка проекта в v1 доступны только владельцу; backend дополнительно блокирует structural/destructive overwrite через `PUT /api/state` для editor/guest и пишет заблокированные попытки в журнал.
+- `Команда проекта` / invite UX: повторный invite на тот же email больше не создаёт дубль; существующая pending-ссылка возвращается повторно, email текущего участника блокируется как уже добавленный. Старые дубли pending-invite автоматически отзываются при загрузке команды. Team-модалки используют фирменный popup/confirm и исправленную геометрию `.btn-green`.
 
 ### Пакеты доступа
 
@@ -708,6 +709,7 @@ constants.js                          image.js          sales.js          auth.j
 - `GET /api/state` / `PUT /api/state` работают с активным `workspace_id`; frontend хранит активный workspace в `cm_workspace_id`.
 - В меню проекта добавлены `Команда проекта`, `Журнал действий`, переключение workspace и создание нового проекта.
 - Владелец создаёт invite-link по email; участник получает роль `editor` и редактирует общий проект. Backend запрещает editor управлять командой.
+- Повторный invite на тот же email/workspace не создаёт новую pending-запись: backend возвращает существующий token/link с `already_pending=true`; invite для email уже состоящего в проекте возвращает `409`.
 - Добавлен guest-invite слой: регистрация по invite-link активирует гостя, принимает приглашение и не выдаёт право создавать свои проекты; это право остаётся за admin и клиентами с `access_drinks` / `access_finance`.
 - `workspace_activity` фиксирует ключевые события без шума autosave: проект, приглашения, локации, бюджет открытия, финмодель/ФОТ, план продаж, рецепты, поставщики, экспорты, полный сброс проекта владельцем и заблокированные критические попытки не-владельца. `project_opened` throttled до одного события на пользователя/проект за 30 минут; UI журнала показывает фильтры, роль участника и визуальную важность события.
 - Добавлены точки восстановления workspace: backend хранит последние 40 снимков, autosnapshot создаётся перед перезаписью state не чаще одного раза в 15 минут, ручной snapshot и restore доступны владельцу в меню `Восстановление`.
@@ -715,3 +717,12 @@ constants.js                          image.js          sales.js          auth.j
 - Структура заведений owner-only: `editor` / `guest-editor` не может добавлять точку, создавать точку из шаблона или переименовывать текущую. Обычное редактирование содержимого существующей точки остаётся доступным.
 - Массовые destructive-действия owner-only: верхний `Сброс`, `Очистить всё` в бюджете открытия и похожий прямой API-save блокируются для `editor` / `guest-editor`.
 - Backend state-guard в `PUT /api/state`: для не-владельца сравнивается старый и новый workspace JSON; появление/исчезновение локаций, изменение metadata `locIndex`, исчезновение `customDrinks`, `customMats`, `semiItems`, `suppliers` или `supplierBook`, очистка важных списков и массовое изменение reset-sensitive полей считается structural/destructive overwrite и возвращает `403`. Заблокированная попытка пишется в `workspace_activity` как `state_update_blocked`.
+
+### Сессия 59 (25 июня 2026) — invite-flow без дублей и UI команды
+
+- Исправлена причина дублей в `workspace_invites`: `POST /api/workspaces/{id}/invites` теперь сначала нормализует email, отзывает старые pending-дубли, проверяет membership и только потом создаёт invite.
+- Если pending invite на email уже существует, новый invite не создаётся; API возвращает существующую ссылку и `already_pending=true`, frontend показывает `Приглашение уже ожидает принятия`.
+- Если email уже состоит в проекте, API возвращает `409` с понятным текстом `Этот пользователь уже состоит в проекте`.
+- `GET /api/workspaces/{id}/members` скрывает pending-invite для email, который уже стал участником, и чистит старые дубли.
+- Team UI приведён к общему стилю: системные prompts/confirms заменены на фирменные модалки, `.btn-green` получил базовую геометрию кнопки и min-width в строках приглашения/действий.
+- Production-проверка после деплоя: `/api/health` отвечает `ok`, frontend bundle содержит `alreadyPending`, backend на сервере содержит `_dedupe_pending_workspace_invites`. GitHub-коммит frontend-документов/стилей: `5e77109 fix: prevent duplicate workspace invites`.
