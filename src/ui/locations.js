@@ -411,11 +411,104 @@ function _activityLabel(action) {
   return labels[action] || action;
 }
 
+let _workspaceActivityFilter = 'all';
+
+const ACTIVITY_FILTERS = [
+  ['all', 'Все'],
+  ['team', 'Команда'],
+  ['locations', 'Заведения'],
+  ['budget', 'Бюджет'],
+  ['finance', 'Финмодель'],
+  ['recipes', 'Рецепты'],
+  ['suppliers', 'Поставщики'],
+  ['exports', 'Экспорт'],
+  ['security', 'Безопасность'],
+];
+
+function _activityGroup(action) {
+  if (['invite_created', 'invite_accepted', 'invite_revoked', 'member_removed'].includes(action)) return 'team';
+  if (['location_created', 'location_renamed', 'location_deleted', 'workspace_created', 'workspace_switched'].includes(action)) return 'locations';
+  if (action === 'opening_costs_changed') return 'budget';
+  if (['finmodel_changed', 'payroll_changed', 'sales_changed'].includes(action)) return 'finance';
+  if (action === 'recipe_changed') return 'recipes';
+  if (action === 'supplier_changed') return 'suppliers';
+  if (action === 'export_created') return 'exports';
+  if (['snapshot_created', 'snapshot_restored'].includes(action)) return 'security';
+  return 'system';
+}
+
+function _activitySeverity(action) {
+  if (['location_deleted', 'member_removed', 'snapshot_restored', 'invite_revoked'].includes(action)) return 'danger';
+  if (['opening_costs_changed', 'finmodel_changed', 'payroll_changed', 'sales_changed', 'location_created', 'location_renamed', 'recipe_changed', 'supplier_changed'].includes(action)) return 'work';
+  if (['snapshot_created', 'export_created', 'invite_created', 'invite_accepted'].includes(action)) return 'notice';
+  return 'system';
+}
+
+function _activityRoleLabel(row) {
+  if (row.actor_role === 'owner' || row.actor_account_role === 'owner') return 'владелец';
+  if (row.actor_account_role === 'guest') return 'гость';
+  if (row.actor_account_role === 'paid') return 'платный';
+  return 'редактор';
+}
+
 function _fmtActivityDate(value) {
   if (!value) return '';
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
   return d.toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+
+function _renderActivityFilters(rows) {
+  const counts = rows.reduce((acc, row) => {
+    const group = _activityGroup(row.action);
+    acc[group] = (acc[group] || 0) + 1;
+    acc.all = (acc.all || 0) + 1;
+    return acc;
+  }, { all: rows.length });
+  return `<div class="workspace-activity-filters">
+    ${ACTIVITY_FILTERS.map(([key, label]) => `
+      <button type="button" class="${_workspaceActivityFilter === key ? 'active' : ''}" data-activity-filter="${key}">
+        ${label}${counts[key] ? ` <span>${counts[key]}</span>` : ''}
+      </button>
+    `).join('')}
+  </div>`;
+}
+
+function _bindActivityFilters(modal, rows) {
+  modal.querySelectorAll('[data-activity-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _workspaceActivityFilter = btn.dataset.activityFilter || 'all';
+      _renderWorkspaceActivityRows(modal, rows);
+    });
+  });
+}
+
+function _renderWorkspaceActivityRows(modal, rows) {
+  const filtered = _workspaceActivityFilter === 'all'
+    ? rows
+    : rows.filter(row => _activityGroup(row.action) === _workspaceActivityFilter);
+  const body = filtered.length ? filtered.map(r => {
+    const severity = _activitySeverity(r.action);
+    return `
+      <div class="workspace-activity-row workspace-activity-${severity}">
+        <div class="workspace-activity-date">${_esc(_fmtActivityDate(r.created_at))}</div>
+        <div class="workspace-activity-main">
+          <strong>${_esc(_activityLabel(r.action))}</strong>
+          <span>${_esc(r.summary || '')}</span>
+        </div>
+        <div class="workspace-activity-actor" title="${_esc(r.actor_name || 'Система')}">
+          <span>${_esc(r.actor_name || 'Система')}</span>
+          <small>${_esc(_activityRoleLabel(r))}</small>
+        </div>
+      </div>
+    `;
+  }).join('') : '<div class="workspace-empty">По этому фильтру событий пока нет.</div>';
+  const current = getCurrentWorkspace();
+  modal.innerHTML = _workspaceModalShell('Журнал действий', current?.name || '', `
+    ${_renderActivityFilters(rows)}
+    <div class="workspace-activity-list">${body}</div>
+  `);
+  _bindActivityFilters(modal, rows);
 }
 
 export async function openWorkspaceActivityModal() {
@@ -426,17 +519,7 @@ export async function openWorkspaceActivityModal() {
   modal.style.display = 'block';
   try {
     const rows = await fetchWorkspaceActivity(current?.id);
-    const body = rows.length ? rows.map(r => `
-      <div class="workspace-activity-row">
-        <div class="workspace-activity-date">${_esc(_fmtActivityDate(r.created_at))}</div>
-        <div class="workspace-activity-main">
-          <strong>${_esc(_activityLabel(r.action))}</strong>
-          <span>${_esc(r.summary || '')}</span>
-        </div>
-        <div class="workspace-activity-actor">${_esc(r.actor_name || 'Система')}</div>
-      </div>
-    `).join('') : '<div class="workspace-empty">Пока нет событий.</div>';
-    modal.innerHTML = _workspaceModalShell('Журнал действий', current?.name || '', `<div class="workspace-activity-list">${body}</div>`);
+    _renderWorkspaceActivityRows(modal, rows);
   } catch (e) {
     modal.innerHTML = _workspaceModalShell('Журнал действий', current?.name || '', `<div class="workspace-empty">${_esc(e.message || 'Не удалось загрузить журнал')}</div>`);
   }
