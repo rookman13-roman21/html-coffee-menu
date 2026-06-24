@@ -91,8 +91,8 @@ function renderAddonSalesBlock(metrics, rub, pct, int) {
   const filteredCostMon = rows.reduce((s, row) => s + row.costDay * (window.S.days || 30), 0);
   const rowHtml = rows.length ? rows.map(row => {
     const modeValueHtml = row.mode === 'units'
-      ? `<span class="addon-volume-field"><input class="inp sm addon-num" type="number" min="0" step="1" inputmode="numeric" value="${Math.round(row.unitsPerDay || 0)}" oninput="onAddonSale(${row.id},'unitsPerDay',this.value)"><span class="addon-unit">шт</span></span>`
-      : `<span class="addon-volume-field"><input class="inp sm addon-num" type="number" min="0" max="100" step="1" inputmode="numeric" value="${Math.round(row.attachPct || 0)}" oninput="onAddonSale(${row.id},'attachPct',this.value)"><span class="addon-unit">%</span></span>`;
+      ? `<span class="addon-volume-field"><input class="inp sm addon-num" type="number" min="0" step="1" inputmode="numeric" value="${Math.round(row.unitsPerDay || 0)}" oninput="onAddonSale(${row.id},'unitsPerDay',this.value,true)" onchange="onAddonSale(${row.id},'unitsPerDay',this.value)"><span class="addon-unit">шт</span></span>`
+      : `<span class="addon-volume-field"><input class="inp sm addon-num" type="number" min="0" max="100" step="1" inputmode="numeric" value="${Math.round(row.attachPct || 0)}" oninput="onAddonSale(${row.id},'attachPct',this.value,true)" onchange="onAddonSale(${row.id},'attachPct',this.value)"><span class="addon-unit">%</span></span>`;
     return `
       <tr>
         <td><input class="inp addon-name-inp" value="${escAttr(row.name)}" onchange="onAddonSale(${row.id},'name',this.value)"></td>
@@ -106,8 +106,8 @@ function renderAddonSalesBlock(metrics, rub, pct, int) {
             ${addonOptions(ADDON_TYPE_LABELS, row.type)}
           </select>
         </td>
-        <td class="ta-r"><input class="inp sm addon-num" type="number" min="0" inputmode="numeric" value="${Math.round(row.price)}" oninput="onAddonSale(${row.id},'price',this.value)"></td>
-        <td class="ta-r mob-hide"><input class="inp sm addon-num" type="number" min="0" inputmode="numeric" value="${Math.round(row.cost)}" oninput="onAddonSale(${row.id},'cost',this.value)"></td>
+        <td class="ta-r"><input class="inp sm addon-num" type="number" min="0" inputmode="numeric" value="${Math.round(row.price)}" oninput="onAddonSale(${row.id},'price',this.value,true)" onchange="onAddonSale(${row.id},'price',this.value)"></td>
+        <td class="ta-r mob-hide"><input class="inp sm addon-num" type="number" min="0" inputmode="numeric" value="${Math.round(row.cost)}" oninput="onAddonSale(${row.id},'cost',this.value,true)" onchange="onAddonSale(${row.id},'cost',this.value)"></td>
         <td>
           <select class="modal-select addon-select" onchange="onAddonSale(${row.id},'mode',this.value)">
             <option value="attach"${row.mode === 'attach' ? ' selected' : ''}>% чеков</option>

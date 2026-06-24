@@ -230,7 +230,7 @@ export function onSalesChecksPerDay(v) {
   window.saveState();
 }
 
-export function onAddonSale(id, field, value) {
+export function onAddonSale(id, field, value, keepFocus = false) {
   const row = (window.S.addonSales || []).find(item => Number(item.id) === Number(id));
   if (!row) return;
   if (['name', 'category', 'type', 'mode'].includes(field)) {
@@ -241,7 +241,12 @@ export function onAddonSale(id, field, value) {
     row[field] = Number.isFinite(n) ? Math.max(0, n) : 0;
   }
   if (window.dirty) window.dirty.finmodel = true;
-  markDirtyDebounce();
+  if (keepFocus) {
+    if (window.dirty) window.dirty.sales = true;
+    clearTimeout(window._renderTimer);
+  } else {
+    markDirtyDebounce();
+  }
   window.saveState();
 }
 
