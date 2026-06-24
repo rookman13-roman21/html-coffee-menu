@@ -294,8 +294,10 @@ async function _renderWorkspaceTeam(modal, inviteResult = null) {
       <div class="workspace-success workspace-success-hero">
         <div class="workspace-success-icon"><i data-lucide="check" class="icon"></i></div>
         <div>
-          <strong>Приглашение создано${result.emailSent ? ' и отправлено на email' : ''}</strong>
-          <span>${result.emailSent
+          <strong>${result.alreadyPending ? 'Приглашение уже ожидает принятия' : `Приглашение создано${result.emailSent ? ' и отправлено на email' : ''}`}</strong>
+          <span>${result.alreadyPending
+            ? 'Повторное приглашение не создано. Используйте актуальную ссылку ниже.'
+            : result.emailSent
             ? 'Участник получит письмо. Ссылку ниже можно дополнительно отправить в мессенджере.'
             : 'Письмо не отправлено автоматически. Скопируйте ссылку и отправьте участнику вручную.'}</span>
         </div>
@@ -361,6 +363,7 @@ export async function sendWorkspaceInviteFromModal() {
       email,
       inviteLink: data.invite_link || '',
       emailSent: !!data.email_sent,
+      alreadyPending: !!data.already_pending,
     });
   } catch (e) {
     if (result) result.innerHTML = `<div class="workspace-error">${_esc(e.message || 'Не удалось создать приглашение')}</div>`;

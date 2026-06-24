@@ -827,7 +827,12 @@
     .btn-outline:hover { background:var(--light); border-color:var(--green); }
     .btn-danger-outline { background:transparent; border:1.5px solid #e05252; color:#e05252; display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:8px; cursor:pointer; font-family:var(--font); font-size:13px; font-weight:700; transition:all .15s; }
     .btn-danger-outline:hover { background:#fff0f0; border-color:#c0392b; color:#c0392b; }
-    .btn-green { background:var(--green); color:#fff; border:none; }
+    .btn-green {
+      display:inline-flex; align-items:center; justify-content:center; gap:6px;
+      padding:8px 16px; border-radius:10px; border:1.5px solid var(--green);
+      background:var(--green); color:#fff; cursor:pointer; font-family:var(--font);
+      font-size:13px; font-weight:900; line-height:1; transition:filter .15s, transform .15s, opacity .15s;
+    }
     .btn-green:hover { opacity:.88; }
     .btn-reset { background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); color:white; padding:7px 13px; border-radius:8px; cursor:pointer; font-family:var(--font); font-size:12px; font-weight:700; transition:all .15s; white-space:nowrap; }
     .btn-reset:hover { background:rgba(255,255,255,.28); }
@@ -4314,6 +4319,7 @@ body.dark .oc-onboard-title { color: #c5e1a5; }
 }
 .workspace-invite-rowform input:focus, .workspace-copy-row input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(79,136,62,.16); }
 .workspace-invite-rowform .btn-green, .workspace-copy-row .btn, .workspace-action-row .btn, .workspace-action-row .btn-green { height: 42px; }
+.workspace-invite-rowform .btn-green, .workspace-action-row .btn, .workspace-action-row .btn-green { min-width: 118px; }
 .workspace-copy-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
 .workspace-invite-complete {
   display: grid; gap: 12px; margin-top: 2px; padding-top: 12px;
