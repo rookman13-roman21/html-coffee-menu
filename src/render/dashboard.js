@@ -266,14 +266,28 @@ function _ocActivitySummary(verb, item = {}) {
   return `${verb}: ${cat} · ${name}${amount}`;
 }
 
+function _ocActivitySnapshot(item = {}) {
+  return JSON.stringify({
+    category: item.category || '',
+    name: item.name || '',
+    price: Number(item.price) || 0,
+    qty: Number(item.qty) || 0,
+    url: item.url || '',
+    note: item.note || '',
+    subcategory: item.subcategory || '',
+  });
+}
+
+const _ocPendingCreateIds = new Set();
+
 // ─── Операции с записями (экспортируются в window через main.js) ─────
 export function ocAddRow(category) {
   if (!S.openingCosts) S.openingCosts = [];
   const id = _ocNextId();
   const item = { id, category, name: '', price: 0, qty: 1, url: '', note: '' };
   S.openingCosts.push(item);
+  _ocPendingCreateIds.add(String(id));
   _ocSyncInvestment();
-  window.logWorkspaceActivity?.('opening_costs_changed', 'opening_cost', id, _ocActivitySummary('Добавлена позиция', item));
   renderDashboard();
   setTimeout(() => ocOpenItem(id), 40);
 }
@@ -665,6 +679,10 @@ export function ocOpenItem(id) {
   // Enter = Сохранить (кроме textarea)
   const onKey = (e) => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') { e.preventDefault(); ocItemSave(); } };
   const modalEl = document.getElementById('modal-oc-item');
+  if (modalEl) {
+    modalEl.dataset.ocOriginal = _ocActivitySnapshot(item);
+    modalEl.dataset.ocWasNew = _ocPendingCreateIds.has(String(id)) ? '1' : '0';
+  }
   modalEl.removeEventListener('keydown', modalEl._ociKeyHandler || (() => {}));
   modalEl._ociKeyHandler = onKey;
   modalEl.addEventListener('keydown', onKey);
@@ -723,6 +741,7 @@ export function ocItemCancel() {
     // Если позиция новая и название не введено — удаляем без следа
     if (item && !item.name.trim()) {
       S.openingCosts = (S.openingCosts || []).filter(r => r.id !== id);
+      _ocPendingCreateIds.delete(String(id));
       _ocSyncInvestment();
     }
   }
@@ -757,6 +776,17 @@ export function ocItemSave() {
     : Math.round(rawPrice * (cur === 'USD' ? (meta.usdRate || 90) : (meta.eurRate || 98)));
 
   _ocSyncInvestment();
+  const wasNew = modal.dataset.ocWasNew === '1' || _ocPendingCreateIds.has(String(id));
+  const original = modal.dataset.ocOriginal || '';
+  const nextSnapshot = _ocActivitySnapshot(item);
+  if (wasNew) {
+    window.logWorkspaceActivity?.('opening_costs_changed', 'opening_cost', id, _ocActivitySummary('Добавлена позиция', item));
+    _ocPendingCreateIds.delete(String(id));
+  } else if (original && original !== nextSnapshot) {
+    window.logWorkspaceActivity?.('opening_costs_changed', 'opening_cost', id, _ocActivitySummary('Изменена позиция', item));
+  }
+  delete modal.dataset.ocWasNew;
+  delete modal.dataset.ocOriginal;
   if (window.closeModal) closeModal('modal-oc-item');
   renderDashboard();
 }
