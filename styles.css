@@ -2208,12 +2208,14 @@
     /* Выручка и Прибыль — фиксированная ширина, чтобы не прыгали при больших числах */
     .sales-kpi-wide   { flex: 0 0 220px; min-width: 0; }
     .sales-kpi-compact { flex: 0 0 120px; min-width: 0; }
+    .sales-kpi-addon  { flex: 0 0 150px; min-width: 0; }
     .sales-kpi-green  { border-color: var(--green); }
     .sales-kpi-label  {
       font-size: 11px; color: var(--muted); font-weight: 600;
       text-transform: uppercase; letter-spacing: .04em; margin-bottom: 3px;
     }
-    .sales-kpi-val    { font-size: 20px; font-weight: 800; color: var(--navy); }
+    .sales-kpi-val    { font-size: 20px; font-weight: 800; color: var(--navy); white-space: nowrap; line-height: 1.08; }
+    .sales-kpi-val-tight { font-size: 19px; letter-spacing: 0; }
     .sales-kpi-sub    { font-size: 10px; color: var(--muted); font-weight: 600; margin-top: 3px; line-height: 1.25; }
     .sales-kpi-click { cursor: pointer; transition: border-color .15s, transform .15s; }
     .sales-kpi-click:hover { border-color: var(--green); transform: translateY(-1px); }
@@ -2496,8 +2498,9 @@
           grid-template-columns: 1fr 1fr 1fr;
           gap: 8px;
         }
-        .sales-kpi-wide, .sales-kpi-compact { flex: unset; min-width: unset; }
+        .sales-kpi-wide, .sales-kpi-compact, .sales-kpi-addon { flex: unset; min-width: unset; }
         .sales-kpi-card { padding: 8px 10px; }
+        .sales-kpi-val-tight { font-size: 15px; }
         .sales-controls-row {
           display: grid;
           grid-template-columns: 1fr auto auto;

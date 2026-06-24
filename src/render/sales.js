@@ -249,9 +249,9 @@ export function renderSales() {
         <div class="sales-kpi-val">${rub(avgChk)}</div>
         <div class="sales-kpi-sub">Напитки ${rub(metrics.avgDrinkCheck || 0)} + доп. ${rub(metrics.avgAddonCheck || 0)}</div>
       </div>
-      <div class="sales-kpi-card sales-kpi-compact sales-kpi-click" onclick="scrollToAddonSales()" title="Перейти к дополнительным продажам">
+      <div class="sales-kpi-card sales-kpi-addon sales-kpi-click" onclick="scrollToAddonSales()" title="Перейти к дополнительным продажам">
         <div class="sales-kpi-label">Доп. продажи</div>
-        <div class="sales-kpi-val">${rub(metrics.addonRevMon || 0)}</div>
+        <div class="sales-kpi-val sales-kpi-val-tight">${rub(metrics.addonRevMon || 0)}</div>
         <div class="sales-kpi-sub">${pct(metrics.addonShare || 0)} выручки</div>
       </div>
       <div class="sales-kpi-card sales-kpi-compact kpi-card--editable" title="Целевой food-cost %">
