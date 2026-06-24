@@ -82,6 +82,16 @@ export function _forceCloseModal(id) {
   closeModal(id);
 }
 
+function _dialogEsc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[ch]));
+}
+
 export function showAlert(msg, icon = '⚠️') {
   if (document.getElementById('_dialog-overlay')) return;
   const overlay = document.createElement('div');
@@ -130,6 +140,47 @@ export function showConfirm(msg, onConfirm, opts = {}) {
       } catch (e) {
         console.error('[showConfirm] onConfirm failed:', e);
         resolve(false);
+      }
+    });
+  });
+}
+
+export function showPrompt(msg, defaultValue = '', opts = {}) {
+  if (document.getElementById('_dialog-overlay')) return Promise.resolve(null);
+  const icon = opts.icon || '';
+  const okText = opts.okText || 'Сохранить';
+  const placeholder = opts.placeholder || '';
+  const inputType = opts.type || 'text';
+  const overlay = document.createElement('div');
+  overlay.id = '_dialog-overlay';
+  overlay.innerHTML = `
+    <div class="_dialog-box _dialog-box-prompt">
+      ${icon ? `<div class="_dialog-icon">${_dialogEsc(icon)}</div>` : ''}
+      <label class="_dialog-msg" for="_dialog-prompt-input">${_dialogEsc(msg)}</label>
+      <input class="_dialog-input" id="_dialog-prompt-input" type="${_dialogEsc(inputType)}" value="${_dialogEsc(defaultValue)}" placeholder="${_dialogEsc(placeholder)}">
+      <div class="_dialog-btns">
+        <button class="_dialog-cancel" id="_dialog-cancel-btn">Отмена</button>
+        <button class="_dialog-ok" id="_dialog-confirm-btn">${_dialogEsc(okText)}</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  const input = document.getElementById('_dialog-prompt-input');
+  setTimeout(() => { input?.focus(); input?.select(); }, 30);
+  return new Promise((resolve) => {
+    const close = (value) => {
+      overlay.remove();
+      resolve(value);
+    };
+    document.getElementById('_dialog-cancel-btn').addEventListener('click', () => close(null));
+    document.getElementById('_dialog-confirm-btn').addEventListener('click', () => close(input?.value ?? ''));
+    input?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        close(input.value);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        close(null);
       }
     });
   });

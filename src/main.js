@@ -225,7 +225,7 @@ import {
   openModal, closeModal, safeCloseModal,
   _markModalDirty, _clearModalDirty, _isModalDirty,
   _showUnsavedWarning, _dismissUnsavedWarning, _forceCloseModal,
-  showAlert, showConfirm,
+  showAlert, showConfirm, showPrompt,
   closeOnboarding, toggleTheme, toggleBurger,
 } from './ui/modals.js';
 
@@ -440,7 +440,7 @@ const _srcExports = {
   openModal, closeModal, safeCloseModal,
   _markModalDirty, _clearModalDirty, _isModalDirty,
   _showUnsavedWarning, _dismissUnsavedWarning, _forceCloseModal,
-  showAlert, showConfirm,
+  showAlert, showConfirm, showPrompt,
   closeOnboarding, toggleTheme, toggleBurger,
   // ui/cost-table
   setMatCat, toggleMatCat, toggleSemiCat,

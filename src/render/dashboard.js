@@ -824,32 +824,36 @@ function _updateApiKeyUi(hasKey) {
   if (labelEl) labelEl.textContent = hasKey ? '✅ OpenAI API ключ настроен' : 'Добавить OpenAI API ключ';
 }
 
-export function ocSetApiKey() {
-  const key = prompt('Введите ваш OpenAI API ключ (sk-...):\n\nКлюч хранится только в памяти текущей вкладки и сбрасывается после перезагрузки.', _ocOpenAiKey);
+export async function ocSetApiKey() {
+  const key = await window.showPrompt?.(
+    'Введите ваш OpenAI API ключ. Ключ хранится только в памяти текущей вкладки и сбрасывается после перезагрузки.',
+    _ocOpenAiKey,
+    { okText: 'Сохранить', placeholder: 'sk-...' }
+  );
   if (key === null) return; // отмена
   if (key.trim()) {
     _ocOpenAiKey = key.trim();
     _updateApiKeyUi(true);
-    alert('✅ API ключ добавлен для текущей вкладки');
+    window.showAlert?.('API ключ добавлен для текущей вкладки', '✓');
   } else {
     _ocOpenAiKey = '';
     _updateApiKeyUi(false);
-    alert('Ключ удалён');
+    window.showAlert?.('Ключ удалён', 'ℹ️');
   }
 }
 
 export async function ocAiFill() {
   const apiKey = _ocOpenAiKey;
   if (!apiKey) {
-    const go = confirm('Для AI-заполнения нужен OpenAI API ключ.\n\nОткрыть настройку ключа?');
-    if (go) ocSetApiKey();
+    const go = await window.showConfirm?.('Для AI-заполнения нужен OpenAI API ключ. Открыть настройку ключа?', null, { icon: 'ℹ️', okText: 'Открыть', danger: false });
+    if (go) await ocSetApiKey();
     return;
   }
 
   const urlVal  = (document.getElementById('oci-url')?.value || '').trim();
   const nameVal = (document.getElementById('oci-name')?.value || '').trim();
   if (!urlVal && !nameVal) {
-    alert('Укажите ссылку на товар или название — AI нужна хоть какая-то информация.');
+    window.showAlert?.('Укажите ссылку на товар или название — AI нужна хоть какая-то информация.', 'ℹ️');
     return;
   }
 
@@ -956,7 +960,7 @@ ${pageContext ? `\nДанные со страницы товара:\n${pageConte
       }
     }
   } catch (e) {
-    alert('Ошибка AI: ' + e.message);
+    window.showAlert?.('Ошибка AI: ' + e.message);
   } finally {
     if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="sparkles" class="icon"></i> Заполнить через AI'; if (window.lucide) lucide.createIcons(); }
   }

@@ -1346,7 +1346,7 @@ export function openDropCandidates() {
               <td class="ta-r">${window.rub(d.profit)}</td>
               <td class="ta-c">${d.port}</td>
               <td>${d.custom && (window.isWorkspaceOwner?.() || window.authorCanPublish?.())
-                ? `<button class="btn btn-outline" style="padding:3px 10px;font-size:11px;color:var(--red);border-color:#f4b8c4" onclick="if(confirm('Удалить «${d.name.replace(/'/g,"\\\\'")}» из меню?')){window.deleteDrink(${d.id});openDropCandidates();}">Удалить</button>`
+                ? `<button class="btn btn-outline" style="padding:3px 10px;font-size:11px;color:var(--red);border-color:#f4b8c4" onclick='window._confirmDeleteDropDrink(${Number(d.id)}, ${JSON.stringify(d.name || '')})'>Удалить</button>`
                 : `<span style="font-size:11px;color:var(--muted)">${d.custom ? 'только владелец' : 'базовый'}</span>`}</td>
             </tr>`;
           }).join('')}</tbody>

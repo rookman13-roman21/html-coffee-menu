@@ -42,7 +42,7 @@ function _esc(s) {
 
 function _notify(msg) {
   if (window.showAlert) window.showAlert(msg);
-  else alert(msg);
+  else console.warn('[author]', msg);
 }
 
 function _statusLabel(status) {
@@ -1564,7 +1564,7 @@ export async function disconnectAuthorTelegram() {
   if (!authorCanPublish()) return;
   const ok = window.showConfirm
     ? await window.showConfirm('Отключить Telegram-уведомления для этого автора?')
-    : confirm('Отключить Telegram-уведомления для этого автора?');
+    : false;
   if (!ok) return;
   try {
     const r = await fetch(`${API}/api/author/telegram/link`, {

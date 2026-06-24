@@ -213,7 +213,7 @@ export async function createWorkspaceFromMenu() {
     window.showAlert('Свои проекты доступны на платном тарифе');
     return;
   }
-  const name = prompt('Название нового проекта кофейни', 'Новый проект кофейни');
+  const name = await window.showPrompt?.('Название нового проекта кофейни', 'Новый проект кофейни', { okText: 'Создать' });
   if (!name || !name.trim()) return;
   try {
     const ws = await createWorkspace(name.trim());
@@ -385,7 +385,8 @@ export function copyWorkspaceInviteLink(source) {
 }
 
 export async function removeWorkspaceMemberFromModal(userId) {
-  if (!confirm('Удалить участника из проекта?')) return;
+  const ok = await window.showConfirm('Удалить участника из проекта?', null, { icon: '🔒', okText: 'Убрать' });
+  if (!ok) return;
   try {
     await removeWorkspaceMember(userId);
     await _renderWorkspaceTeam(_ensureWorkspaceModal(), 'Участник удалён из проекта.');
