@@ -67,9 +67,10 @@ export function openSupplierInfo(name) {
     matsWrap.style.display = '';
   } else { matsWrap.style.display = 'none'; }
 
-  // Кнопка «Удалить» — показываем для любого найденного поставщика
+  // Кнопка «Удалить» — только для владельца проекта или author-режима
   const delBtn = document.getElementById('si-delete-btn');
-  delBtn.style.display = g.name ? '' : 'none';
+  const canDeleteSupplier = !!(window.isWorkspaceOwner?.() || window.authorCanPublish?.());
+  delBtn.style.display = g.name && canDeleteSupplier ? '' : 'none';
 
   // Кнопка «Редактировать» — показываем для любого найденного поставщика
   document.getElementById('si-edit-btn').style.display = g.name ? '' : 'none';
@@ -89,6 +90,8 @@ export function siCopyPhone() {
 }
 
 export function siDeleteSupplier() {
+  const isAuthor = !!(window.authorCanPublish && window.authorCanPublish());
+  if (!isAuthor && window.requireWorkspaceOwner && !window.requireWorkspaceOwner('Удалять поставщиков может только владелец проекта.')) return;
   const name = document.getElementById('modal-supplier-info').dataset.supName;
   const g = window._supGroups && window._supGroups[name];
   if (!g) return;
@@ -159,6 +162,9 @@ export function saveSupplier() {
   const note  = document.getElementById('sup-note').value.trim();
   const site  = document.getElementById('sup-site').value.trim();
   if (!name && !phone && !note && !site) {
+    const isAuthor = !!(window.authorCanPublish && window.authorCanPublish());
+    const hasExistingSupplier = !!(window.S.suppliers && window.S.suppliers[_supplierEditKey]);
+    if (hasExistingSupplier && !isAuthor && window.requireWorkspaceOwner && !window.requireWorkspaceOwner('Удалять поставщиков может только владелец проекта.')) return;
     delete window.S.suppliers[_supplierEditKey];
   } else {
     window.S.suppliers[_supplierEditKey] = { name, phone, note, site };
@@ -383,6 +389,8 @@ export function saveSupplierBook() {
 }
 export function deleteSupplierBook() {
   if (!_supBookEditId || !window.S.supplierBook) return;
+  const isAuthor = !!(window.authorCanPublish && window.authorCanPublish());
+  if (!isAuthor && window.requireWorkspaceOwner && !window.requireWorkspaceOwner('Удалять поставщиков может только владелец проекта.')) return;
   window.showConfirm('Удалить поставщика из справочника?', () => {
     window.S.supplierBook = window.S.supplierBook.filter(b => String(b.id) !== String(_supBookEditId));
     saveState();

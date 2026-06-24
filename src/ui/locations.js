@@ -7,6 +7,7 @@ import {
   createWorkspaceInvite, fetchWorkspaceActivity, removeWorkspaceMember,
   revokeWorkspaceInvite, fetchWorkspaceSnapshots, createWorkspaceSnapshot,
   restoreWorkspaceSnapshot, logWorkspaceActivity, canCreateWorkspaces, hasWorkspaceMembership,
+  isWorkspaceOwner, requireWorkspaceOwner,
 } from './auth.js';
 
 function _esc(s) {
@@ -116,7 +117,7 @@ function _ensureClientLocMenuShell() {
     <button class="loc-menu-item" data-location-action onclick="openAddLocation()"><i data-lucide="plus" class="icon"></i> Добавить точку</button>
     <button class="loc-menu-item" data-location-action onclick="openTemplatesModal()"><i data-lucide="sparkles" class="icon"></i> Создать из шаблона</button>
     <button class="loc-menu-item" data-location-action onclick="renameActiveLocation()"><i data-lucide="pencil" class="icon"></i> Переименовать текущую</button>
-    <button class="loc-menu-item danger" data-location-action onclick="deleteActiveLocation()"><i data-lucide="trash-2" class="icon"></i> Удалить текущую</button>
+    <button class="loc-menu-item danger" data-location-action data-owner-action onclick="deleteActiveLocation()"><i data-lucide="trash-2" class="icon"></i> Удалить текущую</button>
     <div class="loc-menu-divider"></div>
     <button class="loc-menu-item" id="loc-menu-api-key-btn" onclick="ocSetApiKey()" title="OpenAI API ключ нужен для функции AI-заполнения карточек оборудования"><i data-lucide="key-round" class="icon"></i> <span id="loc-menu-api-key-label">Добавить OpenAI API ключ</span></button>
   `;
@@ -536,6 +537,8 @@ export function renderLocList() {
   }
   const actionButtons = menu?.querySelectorAll('[data-location-action]') || [];
   actionButtons.forEach(btn => { btn.style.display = ''; });
+  const ownerActionButtons = menu?.querySelectorAll('[data-owner-action]') || [];
+  ownerActionButtons.forEach(btn => { btn.style.display = isWorkspaceOwner() ? '' : 'none'; });
   list.innerHTML = Loc.list.map(l =>
     `<button class="loc-menu-item ${l.id===Loc.activeId?'active':''}" onclick="switchLocation('${l.id}')">
       <span class="loc-emoji">${l.icon||'☕'}</span>
@@ -668,6 +671,7 @@ export function authorOpenTechcardSettings() {
 
 export function deleteActiveLocation() {
   if (!_canUseClientLocations()) { _showWorkspaceRequired(); return; }
+  if (!requireWorkspaceOwner('Удалять заведения может только владелец проекта.')) return;
   const Loc = window.Loc;
   if (Loc.list.length <= 1) { window.showAlert('Нельзя удалить единственную точку. Сначала добавьте ещё одну.', 'ℹ️'); return; }
   const loc = window.activeLoc(); if (!loc) return;

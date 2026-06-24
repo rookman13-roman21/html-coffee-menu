@@ -501,6 +501,8 @@ export async function saveSemi() {
 }
 
 export function deleteSemi(idRaw) {
+  const isAuthor = !!(window.authorCanPublish && window.authorCanPublish());
+  if (!isAuthor && window.requireWorkspaceOwner && !window.requireWorkspaceOwner('Удалять полуфабрикаты может только владелец проекта.')) return;
   const id = parseInt(idRaw);
   const usedInDrink = DRINKS.some(d => d.recipe.some(r => r.semi === id));
   if (usedInDrink) { window.showAlert('Полуфабрикат используется в рецептурах напитков — сначала удалите его из напитков'); return; }

@@ -470,6 +470,8 @@ export async function saveDrink() {
 }
 
 export function deleteDrink(id) {
+  const isAuthor = !!(window.authorCanPublish && window.authorCanPublish());
+  if (!isAuthor && window.requireWorkspaceOwner && !window.requireWorkspaceOwner('Удалять рецепты может только владелец проекта.')) return;
   window.showConfirm('Удалить напиток?', async () => {
     const idx = DRINKS.findIndex(d => d.id === id && d.custom) >= 0
       ? DRINKS.findIndex(d => d.id === id && d.custom)

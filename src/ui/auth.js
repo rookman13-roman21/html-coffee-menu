@@ -26,6 +26,12 @@ export function canCreateWorkspaces() {
   return !!_canCreateWorkspaces;
 }
 export function hasWorkspaceMembership() { return !!(_currentWorkspace && _currentWorkspace.id); }
+export function isWorkspaceOwner() { return _currentWorkspace?.role === 'owner'; }
+export function requireWorkspaceOwner(message = 'Это действие доступно только владельцу проекта.') {
+  if (isWorkspaceOwner()) return true;
+  window.showAlert?.(message, '🔒');
+  return false;
+}
 
 function rememberWorkspacePayload(data = {}) {
   if (typeof data.can_create_workspaces !== 'undefined') _canCreateWorkspaces = !!data.can_create_workspaces;

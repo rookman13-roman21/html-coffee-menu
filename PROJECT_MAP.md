@@ -29,7 +29,7 @@
 - `server/admin/src/_presets.js`: текущий пресет группируется по категориям бюджета; библиотека справа умеет `Скрыть уже добавленные`; уже выбранные позиции показывают бейдж `В пресете`.
 - `server/admin/src/_styles.js`: в `Пресеты` убран sticky у заголовков библиотеки, потому что Safari перекрывал первую строку списка.
 - `src/ui/misc.js`: общий `Excel (xlsx)` из верхнего меню исправлен для ExcelJS/Safari: импорт `GROUP_LABEL`, правильный `mergeCells` по `titleRow.number`, общий `try/catch`, ссылка добавляется в DOM перед `a.click()`.
-- `Команда проекта`: добавлен workspace-слой для клиентов, которые запускают кофейню вместе с партнёрами/подрядчиками. В меню проекта доступны переключение workspace, invite-link, участники, append-only журнал ключевых действий и `Восстановление`. Пользователи с `access_drinks` / `access_finance` могут создавать свои проекты; приглашённые без оплаты работают как `guest-editor` только в чужом проекте.
+- `Команда проекта`: добавлен workspace-слой для клиентов, которые запускают кофейню вместе с партнёрами/подрядчиками. В меню проекта доступны переключение workspace, invite-link, участники, append-only журнал ключевых действий и `Восстановление`. Пользователи с `access_drinks` / `access_finance` могут создавать свои проекты; приглашённые без оплаты работают как `guest-editor` только в чужом проекте. Удаление заведений, рецептов, поставщиков, сырья и полуфабрикатов в v1 доступно только владельцу.
 
 ### Пакеты доступа
 
@@ -433,7 +433,7 @@ BITRIX_AUTHOR_MARK_LABEL=Автор рецептов
 | `HTML_coffee_menu/scripts/deploy_frontend.sh` | Деплой SPA `dist/` без удаления `admin-panel.js` |
 | `HTML_coffee_menu/scripts/deploy_admin.sh` | Сборка и деплой `server/admin/admin-panel.js` |
 | `HTML_coffee_menu/scripts/deploy_backend.sh` | Backup SQLite, деплой `server/main.py`, restart API, health-check |
-| `HTML_coffee_menu/src/ui/locations.js` | Меню проекта: локации, workspace-переключатель, команда, invite-link и журнал |
+| `HTML_coffee_menu/src/ui/locations.js` | Меню проекта: локации, workspace-переключатель, команда, invite-link, журнал, восстановление и owner-only удаление заведений |
 | `HTML_coffee_menu/DEPLOY.md` | Короткая инструкция по деплою слоями |
 | `HTML_coffee_menu/CHECKLIST_RELEASE.md` | Release checklist перед production-изменениями |
 | `HTML_coffee_menu/NEXT_CHAT_HANDOFF.md` | Краткая передача контекста для нового чата |
@@ -711,3 +711,4 @@ constants.js                          image.js          sales.js          auth.j
 - Добавлен guest-invite слой: регистрация по invite-link активирует гостя, принимает приглашение и не выдаёт право создавать свои проекты; это право остаётся за admin и клиентами с `access_drinks` / `access_finance`.
 - `workspace_activity` фиксирует ключевые события без шума autosave: проект, приглашения, локации, бюджет открытия, финмодель/ФОТ, план продаж, рецепты, поставщики, экспорты.
 - Добавлены точки восстановления workspace: backend хранит последние 40 снимков, autosnapshot создаётся перед перезаписью state не чаще одного раза в 15 минут, ручной snapshot и restore доступны владельцу в меню `Восстановление`.
+- Destructive-действия общего проекта owner-only: `editor` / `guest-editor` не видит или получает блокировку на удаление заведений, рецептов, поставщиков, сырья и полуфабрикатов. Обычное редактирование общего проекта остаётся доступным.

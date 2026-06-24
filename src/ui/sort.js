@@ -1,7 +1,7 @@
 // src/ui/sort.js
 // Сортировка и фильтрация таблиц дашборда и продаж
 
-import { hasAccess } from './auth.js';
+import { hasAccess, isWorkspaceOwner } from './auth.js';
 
 const sortState      = { col: 'profit', dir: 'desc' };
 const salesSortState = { col: 'name',   dir: 'asc'  };
@@ -91,6 +91,7 @@ export function filterSales(val) {
   const _svgRotateCcw = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`;
   const _svgPencil    = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:5px;color:var(--muted)"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
   const canEditMenu = hasAccess('drinks');
+  const canDeleteMenuItems = canEditMenu && (isWorkspaceOwner() || !!(window.authorCanPublish && window.authorCanPublish()));
 
   let lastGroup = null;
   const rows = filtered.map(d => {
@@ -103,7 +104,7 @@ export function filterSales(val) {
       : 'style="color:var(--navy);font-weight:700"';
     const fcWarning  = d.fc > S.targetFC + 0.10
       ? ' <span title="FC% существенно выше целевого" style="font-size:12px">⚠️</span>' : '';
-    const actionBtn  = !canEditMenu ? '' : d.custom
+    const actionBtn  = !canEditMenu ? '' : d.custom && canDeleteMenuItems
       ? `<button class="btn btn-outline" style="padding:3px 8px;font-size:11px;color:var(--red);border-color:#f4b8c4" onclick="event.stopPropagation();deleteDrink(${d.id})" title="Удалить напиток">${_svgTrash}</button>`
       : d.modified
         ? `<button class="btn btn-outline" style="padding:3px 8px;font-size:11px;color:var(--muted)" onclick="event.stopPropagation();resetDrink(${d.id})" title="Вернуть к исходному">${_svgRotateCcw}</button>`

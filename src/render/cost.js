@@ -7,6 +7,7 @@
 // ═══════════════════════════════════════════════════════════════════
 
 import { filterAuthorSupplierGroups } from '../access/author-layer.js';
+import { isWorkspaceOwner } from '../ui/auth.js';
 
 let _supSearch  = '';
 let _ingSearch  = '';
@@ -210,6 +211,7 @@ export function renderCost() {
   // ── Базовая категория полуфабрикатов ─────────────────────────────
   const SEMI_BASE_CATS = { semi_default: { label: '📦 Полуфабрикаты', order: 1 } };
   const SEMI_ALL_CATS  = { ...SEMI_BASE_CATS, ...(S.semiCustomCategories || {}) };
+  const canDeleteRecipeAssets = isWorkspaceOwner() || !!(window.authorCanPublish && window.authorCanPublish());
 
   // ── Сырьё по категориям ──────────────────────────────────────────
   const matGroups = {};
@@ -348,7 +350,7 @@ export function renderCost() {
         <td class="mat-td-actions">
           <button class="mat-del" onclick="event.stopPropagation();openSupQuickDrop('${key}',this)" title="${supTitle}" style="color:${supClr}"><i data-lucide="truck" class="icon"></i></button>
           <button class="mat-del" onclick="event.stopPropagation();openPriceHistory('${key}')" title="История цен"><i data-lucide="history" class="icon"></i></button>
-          ${m.custom ? `<button class="mat-del" onclick="event.stopPropagation();deleteMat('${key}')" title="Удалить" style="color:var(--red)"><i data-lucide="trash-2" class="icon"></i></button>` : ''}
+          ${m.custom && canDeleteRecipeAssets ? `<button class="mat-del" onclick="event.stopPropagation();deleteMat('${key}')" title="Удалить" style="color:var(--red)"><i data-lucide="trash-2" class="icon"></i></button>` : ''}
         </td>
       </tr>`;
     }).join('');
@@ -437,7 +439,7 @@ export function renderCost() {
         <td class="mat-td-actions">
           <button class="mat-del" onclick="event.stopPropagation();exportSingleSemiPDF(${s.id})" title="Скачать техкарту PDF"><i data-lucide="file-text" class="icon"></i></button>
           <button class="mat-del" onclick="event.stopPropagation();exportSingleSemiXLSX(${s.id})" title="Скачать техкарту Excel"><i data-lucide="file-spreadsheet" class="icon"></i></button>
-          <button class="mat-del" onclick="event.stopPropagation();deleteSemi(${s.id})" title="Удалить" style="color:var(--red)"><i data-lucide="trash-2" class="icon"></i></button>
+          ${canDeleteRecipeAssets ? `<button class="mat-del" onclick="event.stopPropagation();deleteSemi(${s.id})" title="Удалить" style="color:var(--red)"><i data-lucide="trash-2" class="icon"></i></button>` : ''}
         </td>
       </tr>`;
     }).join('');

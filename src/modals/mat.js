@@ -286,6 +286,8 @@ export function onMatPurchaseUrlInput(inp) {
 }
 
 export function deleteMat(key) {
+  const isAuthor = !!(window.authorCanPublish && window.authorCanPublish());
+  if (!isAuthor && window.requireWorkspaceOwner && !window.requireWorkspaceOwner('Удалять сырьё может только владелец проекта.')) return;
   const used = DRINKS.some(d => d.recipe.some(r => r.mat === key));
   const usedInSemi = (window.SEMI || []).some(s => (s.recipe || []).some(r => r.mat === key));
   if (used || usedInSemi) { window.showAlert('Сырьё используется в рецептурах — сначала удалите его из напитков/полуфабрикатов'); return; }

@@ -79,6 +79,7 @@ import {
   acceptWorkspaceInvite, fetchWorkspaceActivity, logWorkspaceActivity,
   fetchWorkspaceSnapshots, createWorkspaceSnapshot, restoreWorkspaceSnapshot,
   removeWorkspaceMember, revokeWorkspaceInvite,
+  isWorkspaceOwner, requireWorkspaceOwner,
 } from './ui/auth.js';
 import {
   isAuthorMode, filterAuthorServerSuppliers,
@@ -405,6 +406,7 @@ const _srcExports = {
   acceptWorkspaceInvite, fetchWorkspaceActivity, logWorkspaceActivity,
   fetchWorkspaceSnapshots, createWorkspaceSnapshot, restoreWorkspaceSnapshot,
   removeWorkspaceMember, revokeWorkspaceInvite,
+  isWorkspaceOwner, requireWorkspaceOwner,
   authorCanPublish, renderAuthorWorkspace, renderAuthorProfile, loadAuthorWorkspace,
   saveAuthorProfile, uploadAuthorAvatar, submitRecipeForPublication, authorPublicationForDrink,
   authorRecipeProgress, authorHasMixologyParticipation,

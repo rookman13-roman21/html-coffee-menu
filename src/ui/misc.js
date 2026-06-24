@@ -1343,9 +1343,9 @@ export function openDropCandidates() {
               <td class="ta-r">${window.pct(d.fc)}</td>
               <td class="ta-r">${window.rub(d.profit)}</td>
               <td class="ta-c">${d.port}</td>
-              <td>${d.custom
+              <td>${d.custom && (window.isWorkspaceOwner?.() || window.authorCanPublish?.())
                 ? `<button class="btn btn-outline" style="padding:3px 10px;font-size:11px;color:var(--red);border-color:#f4b8c4" onclick="if(confirm('Удалить «${d.name.replace(/'/g,"\\\\'")}» из меню?')){window.deleteDrink(${d.id});openDropCandidates();}">Удалить</button>`
-                : `<span style="font-size:11px;color:var(--muted)">базовый</span>`}</td>
+                : `<span style="font-size:11px;color:var(--muted)">${d.custom ? 'только владелец' : 'базовый'}</span>`}</td>
             </tr>`;
           }).join('')}</tbody>
         </table>
@@ -1361,6 +1361,7 @@ export function _confirmDeleteDropDrink(id, name) {
     if (window.showAlert) window.showAlert('Этот инструмент доступен только в пакете «Напитки».');
     return;
   }
+  if (!window.authorCanPublish?.() && window.requireWorkspaceOwner && !window.requireWorkspaceOwner('Удалять рецепты может только владелец проекта.')) return;
   window.showConfirm(`Удалить «${name}» из меню?`, () => {
     window.deleteDrink(id);
     window.openDropCandidates();
