@@ -279,27 +279,35 @@ async function _renderWorkspaceTeam(modal, inviteResult = null) {
   `).join('');
   const invites = (data.invites || []).map(i => `
     <div class="workspace-invite-row">
-      <span>${_esc(i.email)}</span>
-      <small>ожидает принятия</small>
-      ${isOwner ? `
+      <div class="workspace-invite-main">
+        <strong>${_esc(i.email)}</strong>
+        <span>Ожидает принятия</span>
+      </div>
+      ${isOwner ? `<div class="workspace-row-actions">
         ${i.invite_link ? `<button class="btn btn-outline workspace-mini-btn" type="button" data-copy-link="${_esc(i.invite_link)}" onclick="copyWorkspaceInviteLink(this)">Копировать</button>` : ''}
         <button class="btn btn-outline workspace-mini-btn" type="button" onclick="revokeWorkspaceInviteFromModal(${Number(i.id)})">Отозвать</button>
-      ` : ''}
+      </div>` : ''}
     </div>
   `).join('');
   const resultBlock = result ? `
     <div class="workspace-invite-complete">
-      <div class="workspace-success">
-        <strong>Приглашение создано${result.emailSent ? ' и отправлено на email' : ''}</strong>
-        <span>${result.emailSent
-          ? 'Участник получит письмо. Ссылку ниже можно дополнительно отправить в мессенджере.'
-          : 'Письмо не отправлено автоматически. Скопируйте ссылку и отправьте участнику вручную.'}</span>
+      <div class="workspace-success workspace-success-hero">
+        <div class="workspace-success-icon"><i data-lucide="check" class="icon"></i></div>
+        <div>
+          <strong>Приглашение создано${result.emailSent ? ' и отправлено на email' : ''}</strong>
+          <span>${result.emailSent
+            ? 'Участник получит письмо. Ссылку ниже можно дополнительно отправить в мессенджере.'
+            : 'Письмо не отправлено автоматически. Скопируйте ссылку и отправьте участнику вручную.'}</span>
+        </div>
       </div>
-      <div class="workspace-copy-row">
-        <input readonly value="${_esc(result.inviteLink || '')}" aria-label="Ссылка приглашения">
-        <button class="btn btn-outline" type="button" onclick="copyWorkspaceInviteLink(this)">Копировать</button>
+      <div class="workspace-link-card">
+        <label>Ссылка приглашения</label>
+        <div class="workspace-copy-row">
+          <input readonly value="${_esc(result.inviteLink || '')}" aria-label="Ссылка приглашения">
+          <button class="btn btn-outline" type="button" onclick="copyWorkspaceInviteLink(this)">Копировать</button>
+        </div>
       </div>
-      <div class="workspace-action-row">
+      <div class="workspace-action-row workspace-action-row-footer">
         <button class="btn btn-outline" type="button" onclick="inviteAnotherFromModal()">Пригласить ещё</button>
         <button class="btn-green" type="button" onclick="closeWorkspaceModal()">Готово</button>
       </div>
@@ -313,7 +321,12 @@ async function _renderWorkspaceTeam(modal, inviteResult = null) {
     ${invites ? `<div class="workspace-section-title">Приглашения</div><div class="workspace-list-panel">${invites}</div>` : ''}
     ${isOwner ? `
       <div class="workspace-invite-form">
-        <label>Email участника</label>
+        <div class="workspace-form-head">
+          <div>
+            <label>Email участника</label>
+            <span>Пригласите партнёра, инвестора или подрядчика в общий проект.</span>
+          </div>
+        </div>
         <div class="workspace-invite-rowform">
           <input type="email" id="workspace-invite-email" placeholder="partner@example.com">
           <button class="btn-green" type="button" onclick="sendWorkspaceInviteFromModal()"><i data-lucide="send" class="icon"></i> Пригласить</button>
