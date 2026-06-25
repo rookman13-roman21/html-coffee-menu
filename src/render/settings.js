@@ -1,6 +1,6 @@
 import {
-  getActiveWorkspaceId, getCurrentWorkspace, getWorkspaces, setActiveWorkspaceId,
-  fetchState, createWorkspace, renameWorkspace, archiveWorkspace, deleteWorkspace, fetchWorkspaceMembers,
+  getActiveWorkspaceId, getCurrentWorkspace, getWorkspaces, getArchivedWorkspaces, setActiveWorkspaceId,
+  fetchState, createWorkspace, renameWorkspace, archiveWorkspace, restoreArchivedWorkspace, deleteWorkspace, fetchWorkspaceMembers,
   createWorkspaceInvite, removeWorkspaceMember, revokeWorkspaceInvite,
   fetchWorkspaceActivity, fetchWorkspaceSnapshots, createWorkspaceSnapshot,
   restoreWorkspaceSnapshot, canCreateWorkspaces, isWorkspaceOwner, getUser,
@@ -80,7 +80,7 @@ function activityLabel(action) {
   const labels = {
     project_opened: 'Вход в проект', workspace_created: 'Создан проект', workspace_renamed: 'Проект переименован',
     workspace_switched: 'Смена проекта', workspace_reset: 'Сброс проекта',
-    workspace_archived: 'Проект архивирован', workspace_deleted: 'Проект удалён',
+    workspace_archived: 'Проект архивирован', workspace_restored: 'Проект восстановлен', workspace_deleted: 'Проект удалён',
     snapshot_created: 'Точка восстановления', snapshot_restored: 'Восстановление',
     invite_created: 'Приглашение', invite_accepted: 'Принято приглашение', invite_revoked: 'Отозвано приглашение',
     member_removed: 'Участник удалён', location_created: 'Точка добавлена', location_renamed: 'Заведение изменено',
@@ -93,13 +93,13 @@ function activityLabel(action) {
 
 function activityGroup(action) {
   if (['invite_created', 'invite_accepted', 'invite_revoked', 'member_removed'].includes(action)) return 'team';
-  if (['location_created', 'location_renamed', 'location_deleted', 'workspace_created', 'workspace_renamed', 'workspace_switched', 'workspace_archived', 'workspace_deleted'].includes(action)) return 'locations';
+  if (['location_created', 'location_renamed', 'location_deleted', 'workspace_created', 'workspace_renamed', 'workspace_switched', 'workspace_archived', 'workspace_restored', 'workspace_deleted'].includes(action)) return 'locations';
   if (action === 'opening_costs_changed') return 'budget';
   if (['finmodel_changed', 'payroll_changed', 'sales_changed'].includes(action)) return 'finance';
   if (action === 'recipe_changed') return 'recipes';
   if (action === 'supplier_changed') return 'suppliers';
   if (action === 'export_created') return 'exports';
-  if (['snapshot_created', 'snapshot_restored', 'workspace_reset', 'workspace_archived', 'workspace_deleted', 'state_update_blocked'].includes(action)) return 'security';
+  if (['snapshot_created', 'snapshot_restored', 'workspace_reset', 'workspace_archived', 'workspace_restored', 'workspace_deleted', 'state_update_blocked'].includes(action)) return 'security';
   return 'work';
 }
 
@@ -295,6 +295,7 @@ function emptyProjectHtml() {
 function renderProjectSection() {
   const current = getCurrentWorkspace();
   const workspaces = getWorkspaces();
+  const archivedWorkspaces = getArchivedWorkspaces();
   const owner = isWorkspaceOwner();
   const meta = projectMeta();
   const summary = projectSummary(current);
@@ -425,6 +426,27 @@ function renderProjectSection() {
             </button>
           ` : '<div class="settings-hint">Свои проекты доступны на платном тарифе.</div>'}
         </div>
+        ${owner ? `
+          <div class="settings-card settings-archive-card">
+            <div class="settings-card-head">
+              <div>
+                <h2>Архивные проекты</h2>
+                <p>Здесь находятся проекты, которые вы скрыли из активной работы.</p>
+              </div>
+            </div>
+            <div class="settings-list">
+              ${archivedWorkspaces.map(w => `
+                <div class="settings-project-row settings-project-row-rich settings-archived-row">
+                  <span>
+                    <strong>${esc(w.name)}</strong>
+                    <em>архивирован ${esc(fmtProjectDate(w.archived_at || w.updated_at))}</em>
+                  </span>
+                  <button class="btn btn-outline workspace-mini-btn" type="button" onclick="settingsRestoreArchivedProject(${Number(w.id)})">Восстановить</button>
+                </div>
+              `).join('') || '<div class="settings-empty">В архиве пока нет проектов.</div>'}
+            </div>
+          </div>
+        ` : ''}
       </div>
     </div>
   `;
@@ -828,6 +850,21 @@ export async function settingsArchiveProject() {
     await openWorkspaceAfterDangerAction(data, 'Проект архивирован.');
   } catch (e) {
     window.showAlert?.(e.message || 'Не удалось архивировать проект');
+  }
+}
+
+export async function settingsRestoreArchivedProject(workspaceId) {
+  if (!workspaceId || !isWorkspaceOwner()) {
+    window.showAlert?.('Восстановить проект может только владелец.');
+    return;
+  }
+  const ok = await window.showConfirm?.('Восстановить проект из архива?', null, { icon: '↩️', okText: 'Восстановить', danger: false });
+  if (!ok) return;
+  try {
+    const data = await restoreArchivedWorkspace(workspaceId);
+    await openWorkspaceAfterDangerAction(data, 'Проект восстановлен из архива.');
+  } catch (e) {
+    window.showAlert?.(e.message || 'Не удалось восстановить проект');
   }
 }
 

@@ -74,7 +74,7 @@ import {
   isLoggedIn, showAuthScreen, logout, fetchState, getUser,
   refreshCurrentUser, getAllowedTabs, firstAllowedTab,
   hasAccess, hasAnyProductAccess, canAccessTab,
-  getActiveWorkspaceId, setActiveWorkspaceId, getCurrentWorkspace, getWorkspaces,
+  getActiveWorkspaceId, setActiveWorkspaceId, getCurrentWorkspace, getWorkspaces, getArchivedWorkspaces,
   fetchWorkspaces, createWorkspace, fetchWorkspaceMembers, createWorkspaceInvite,
   acceptWorkspaceInvite, fetchWorkspaceActivity, logWorkspaceActivity,
   fetchWorkspaceSnapshots, createWorkspaceSnapshot, restoreWorkspaceSnapshot,
@@ -108,7 +108,7 @@ import {
 
 import {
   renderSettings, settingsSetSection, settingsRenameProject, settingsCreateWorkspace,
-  settingsArchiveProject, settingsDeleteProject, settingsSwitchWorkspace, settingsSendInvite,
+  settingsArchiveProject, settingsRestoreArchivedProject, settingsDeleteProject, settingsSwitchWorkspace, settingsSendInvite,
   settingsRemoveMember, settingsRevokeInvite, settingsCopyValue, settingsSwitchLocation,
   settingsSetActivityFilter, settingsCreateSnapshot, settingsRestoreSnapshot,
   settingsSaveAccountProfile, settingsUploadAccountAvatar, settingsRequestPasswordReset,
@@ -410,7 +410,7 @@ const _srcExports = {
   onFixedCost, onFixedCostName,
   flashCells, resetAll, switchTab,
   getUser,
-  getActiveWorkspaceId, setActiveWorkspaceId, getCurrentWorkspace, getWorkspaces,
+  getActiveWorkspaceId, setActiveWorkspaceId, getCurrentWorkspace, getWorkspaces, getArchivedWorkspaces,
   fetchWorkspaces, createWorkspace, fetchWorkspaceMembers, createWorkspaceInvite,
   acceptWorkspaceInvite, fetchWorkspaceActivity, logWorkspaceActivity,
   fetchWorkspaceSnapshots, createWorkspaceSnapshot, restoreWorkspaceSnapshot,
@@ -432,7 +432,7 @@ const _srcExports = {
   submitPublicRecipeOrder,
   // render/settings
   renderSettings, settingsSetSection, settingsRenameProject, settingsCreateWorkspace,
-  settingsArchiveProject, settingsDeleteProject, settingsSwitchWorkspace, settingsSendInvite,
+  settingsArchiveProject, settingsRestoreArchivedProject, settingsDeleteProject, settingsSwitchWorkspace, settingsSendInvite,
   settingsRemoveMember, settingsRevokeInvite, settingsCopyValue, settingsSwitchLocation,
   settingsSetActivityFilter, settingsCreateSnapshot, settingsRestoreSnapshot,
   settingsSaveAccountProfile, settingsUploadAccountAvatar, settingsRequestPasswordReset,

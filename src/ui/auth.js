@@ -7,6 +7,7 @@ const USER_KEY  = 'cm_user';
 const WORKSPACE_KEY = 'cm_workspace_id';
 
 let _workspaces = [];
+let _archivedWorkspaces = [];
 let _currentWorkspace = null;
 let _canCreateWorkspaces = false;
 
@@ -20,6 +21,7 @@ export function setActiveWorkspaceId(id) {
 }
 export function getCurrentWorkspace() { return _currentWorkspace; }
 export function getWorkspaces() { return _workspaces.slice(); }
+export function getArchivedWorkspaces() { return _archivedWorkspaces.slice(); }
 export function canCreateWorkspaces() {
   const user = getUser();
   if (user && typeof user.can_create_workspaces !== 'undefined') return !!user.can_create_workspaces;
@@ -36,6 +38,7 @@ export function requireWorkspaceOwner(message = 'Это действие дос�
 function rememberWorkspacePayload(data = {}) {
   if (typeof data.can_create_workspaces !== 'undefined') _canCreateWorkspaces = !!data.can_create_workspaces;
   if (Array.isArray(data.workspaces)) _workspaces = data.workspaces;
+  if (Array.isArray(data.archived_workspaces)) _archivedWorkspaces = data.archived_workspaces;
   if (data.workspace) {
     _currentWorkspace = data.workspace;
     if (typeof data.workspace.can_create_workspaces !== 'undefined') _canCreateWorkspaces = !!data.workspace.can_create_workspaces;
@@ -163,6 +166,7 @@ export function clearAuth() {
   localStorage.removeItem(USER_KEY);
   localStorage.removeItem(WORKSPACE_KEY);
   _workspaces = [];
+  _archivedWorkspaces = [];
   _currentWorkspace = null;
   _canCreateWorkspaces = false;
 }
@@ -328,9 +332,17 @@ export async function archiveWorkspace(workspaceId) {
   const d = await apiJson(`/api/workspaces/${encodeURIComponent(workspaceId)}/archive`, { method: 'POST' });
   rememberWorkspacePayload({
     workspaces: d.workspaces || [],
+    archived_workspaces: d.archived_workspaces || [],
     workspace: (d.workspaces || [])[0] || null,
     can_create_workspaces: d.can_create_workspaces,
   });
+  return d;
+}
+
+export async function restoreArchivedWorkspace(workspaceId) {
+  if (!workspaceId) throw new Error('Проект не выбран');
+  const d = await apiJson(`/api/workspaces/${encodeURIComponent(workspaceId)}/restore`, { method: 'POST' });
+  rememberWorkspacePayload(d);
   return d;
 }
 
@@ -339,6 +351,7 @@ export async function deleteWorkspace(workspaceId) {
   const d = await apiJson(`/api/workspaces/${encodeURIComponent(workspaceId)}`, { method: 'DELETE' });
   rememberWorkspacePayload({
     workspaces: d.workspaces || [],
+    archived_workspaces: d.archived_workspaces || [],
     workspace: (d.workspaces || [])[0] || null,
     can_create_workspaces: d.can_create_workspaces,
   });
