@@ -47,8 +47,10 @@ function accessItems(user = getUser()) {
 
 function activityRoleLabel(row = {}) {
   if (row.actor_role === 'owner') return 'владелец';
+  if (row.actor_role === 'editor') return 'редактор';
   if (row.account_role === 'guest') return 'гость';
   if (row.account_role === 'paid') return 'платный';
+  if (row.account_role === 'owner') return 'владелец';
   return row.actor_role || '';
 }
 
@@ -379,7 +381,7 @@ async function loadActivitySection() {
         <div class="settings-card-head">
           <div>
             <h2>Журнал действий</h2>
-            <p>Ключевые события проекта без шума autosave.</p>
+            <p>Ключевые события проекта без лишних автосохранений.</p>
           </div>
         </div>
         <div class="workspace-activity-filters settings-filters">
