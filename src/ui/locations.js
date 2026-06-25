@@ -18,6 +18,10 @@ function _esc(s) {
     .replace(/"/g, '&quot;');
 }
 
+function _jsArgAttr(value) {
+  return _esc(JSON.stringify(String(value || '')));
+}
+
 export function renderLocSwitcherUI() {
   const loc = window.activeLoc();
   const nameEl = document.getElementById('loc-name');
@@ -684,9 +688,9 @@ export function renderLocList() {
   const ownerActionButtons = menu?.querySelectorAll('[data-owner-action]') || [];
   ownerActionButtons.forEach(btn => { btn.style.display = isWorkspaceOwner() ? '' : 'none'; });
   list.innerHTML = Loc.list.map(l =>
-    `<button class="loc-menu-item ${l.id===Loc.activeId?'active':''}" onclick="switchLocation('${l.id}')">
-      <span class="loc-emoji">${l.icon||'☕'}</span>
-      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.name}</span>
+    `<button class="loc-menu-item ${l.id===Loc.activeId?'active':''}" onclick="switchLocation(${_jsArgAttr(l.id)})">
+      <span class="loc-emoji">${_esc(l.icon || '☕')}</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(l.name)}</span>
       ${l.id===Loc.activeId?'<i data-lucide="check" class="icon" style="color:var(--green)"></i>':''}
     </button>`
   ).join('');

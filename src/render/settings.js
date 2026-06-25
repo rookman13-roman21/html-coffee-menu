@@ -31,6 +31,10 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
+function jsArgAttr(value) {
+  return esc(JSON.stringify(String(value || '')));
+}
+
 function roleLabel(role) {
   return role === 'owner' ? 'владелец' : 'редактор';
 }
@@ -546,7 +550,7 @@ function renderLocationsSection() {
       </div>
       <div class="settings-list">
         ${locs.map(l => `
-          <button class="settings-location-row ${l.id === activeId ? 'active' : ''}" type="button" onclick="settingsSwitchLocation('${esc(l.id)}')">
+          <button class="settings-location-row ${l.id === activeId ? 'active' : ''}" type="button" onclick="settingsSwitchLocation(${jsArgAttr(l.id)})">
             <span class="loc-emoji">${esc(l.icon || '☕')}</span>
             <span>${esc(l.name)}</span>
             ${l.id === activeId ? '<small>активно</small>' : ''}
