@@ -110,7 +110,8 @@ import {
   renderSettings, settingsSetSection, settingsRenameProject, settingsCreateWorkspace,
   settingsSwitchWorkspace, settingsSendInvite, settingsRemoveMember, settingsRevokeInvite,
   settingsCopyValue, settingsSwitchLocation, settingsSetActivityFilter,
-  settingsCreateSnapshot, settingsRestoreSnapshot,
+  settingsCreateSnapshot, settingsRestoreSnapshot, settingsSaveAccountProfile,
+  settingsUploadAccountAvatar, settingsRequestPasswordReset,
 } from './render/settings.js';
 
 import {
@@ -432,7 +433,8 @@ const _srcExports = {
   renderSettings, settingsSetSection, settingsRenameProject, settingsCreateWorkspace,
   settingsSwitchWorkspace, settingsSendInvite, settingsRemoveMember, settingsRevokeInvite,
   settingsCopyValue, settingsSwitchLocation, settingsSetActivityFilter,
-  settingsCreateSnapshot, settingsRestoreSnapshot,
+  settingsCreateSnapshot, settingsRestoreSnapshot, settingsSaveAccountProfile,
+  settingsUploadAccountAvatar, settingsRequestPasswordReset,
   // ui/payroll
   calcPositionCosts, payrollPositionTotal, payrollTotal, payrollTotals,
   empTypeTip, onPayrollPos, addPayrollPosition, deletePayrollPosition,

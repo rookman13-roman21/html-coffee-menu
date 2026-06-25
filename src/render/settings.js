@@ -3,10 +3,12 @@ import {
   fetchState, createWorkspace, renameWorkspace, fetchWorkspaceMembers,
   createWorkspaceInvite, removeWorkspaceMember, revokeWorkspaceInvite,
   fetchWorkspaceActivity, fetchWorkspaceSnapshots, createWorkspaceSnapshot,
-  restoreWorkspaceSnapshot, canCreateWorkspaces, isWorkspaceOwner,
+  restoreWorkspaceSnapshot, canCreateWorkspaces, isWorkspaceOwner, getUser,
+  refreshCurrentUser, updateAccountProfile, uploadAccountAvatar as uploadAccountAvatarApi,
+  requestOwnPasswordReset,
 } from '../ui/auth.js';
 
-let _settingsSection = 'project';
+let _settingsSection = 'account';
 let _activityFilter = 'all';
 let _settingsNotice = '';
 
@@ -20,6 +22,36 @@ function esc(s) {
 
 function roleLabel(role) {
   return role === 'owner' ? 'владелец' : 'редактор';
+}
+
+function accountRoleLabel(user = getUser(), current = getCurrentWorkspace()) {
+  if (current?.role === 'owner') return 'владелец проекта';
+  if (user?.account_role === 'guest') return 'гость';
+  if (user?.can_create_workspaces) return 'платный аккаунт';
+  return 'редактор';
+}
+
+function bitrixSyncLabel(status) {
+  const labels = {
+    pending: 'синхронизация с Битрикс ожидает выполнения',
+    synced: 'профиль синхронизирован с Битрикс',
+    error: 'не удалось синхронизировать с Битрикс',
+  };
+  return labels[status] || 'синхронизация с Битрикс ещё не выполнялась';
+}
+
+function userInitial(user = {}) {
+  return String(user.name || user.email || '?')[0].toUpperCase();
+}
+
+function accessItems(user = getUser()) {
+  const access = user?.access || {};
+  return [
+    ['Проекты', user?.can_create_workspaces ? 'доступно' : 'гость'],
+    ['Финмодель', access.finance || user?.is_admin ? 'доступно' : 'нет доступа'],
+    ['Рецепты', access.drinks || user?.is_admin ? 'доступно' : 'нет доступа'],
+    ['Author', access.author || user?.is_admin ? 'доступно' : 'нет доступа'],
+  ];
 }
 
 function activityRoleLabel(row = {}) {
@@ -81,6 +113,7 @@ function currentRoleHint() {
 function renderLayout(panelHtml) {
   const current = getCurrentWorkspace();
   const sections = [
+    ['account', 'user-round', 'Аккаунт'],
     ['project', 'folder-kanban', 'Проект'],
     ['team', 'users', 'Команда'],
     ['locations', 'store', 'Заведения'],
@@ -92,7 +125,7 @@ function renderLayout(panelHtml) {
     <section class="settings-page">
       <div class="settings-head">
         <div>
-          <h1>Кабинет и настройки проекта</h1>
+          <h1>Кабинет и настройки</h1>
           <p>${esc(current?.name || 'Проект не выбран')}</p>
         </div>
         <button class="btn btn-outline" type="button" onclick="toggleLocMenu(event)">
@@ -112,6 +145,68 @@ function renderLayout(panelHtml) {
         <div class="settings-panel" id="settings-panel">${panelHtml}</div>
       </div>
     </section>
+  `;
+}
+
+function renderAccountSection() {
+  const user = getUser() || {};
+  const avatar = user.avatar_url || '';
+  return `
+    <div class="settings-grid">
+      <div class="settings-card">
+        <div class="settings-card-head">
+          <div>
+            <h2>Личные данные</h2>
+            <p>Эти данные видны в команде проекта и используются для связи.</p>
+          </div>
+          <span class="settings-role">${esc(accountRoleLabel(user))}</span>
+        </div>
+        <div class="settings-account-profile">
+          <button class="settings-avatar" type="button" onclick="document.getElementById('settings-account-avatar-file')?.click()" title="Загрузить фото">
+            ${avatar ? `<img src="${esc(avatar)}" alt="">` : `<span>${esc(userInitial(user))}</span>`}
+          </button>
+          <div class="settings-account-main">
+            <input id="settings-account-avatar-file" type="file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="settingsUploadAccountAvatar(this)">
+            <label class="settings-label">Имя</label>
+            <div class="settings-inline-form">
+              <input id="settings-account-name" type="text" value="${esc(user.name || '')}" placeholder="Ваше имя">
+              <button class="btn-green" type="button" onclick="settingsSaveAccountProfile()">Сохранить</button>
+            </div>
+            <label class="settings-label">Телефон</label>
+            <div class="settings-inline-form">
+              <input id="settings-account-phone" type="tel" value="${esc(user.phone || '')}" placeholder="+7 999 999-28-36">
+              <button class="btn btn-outline" type="button" onclick="settingsSaveAccountProfile()">Обновить</button>
+            </div>
+          </div>
+        </div>
+        <label class="settings-label">Email</label>
+        <div class="settings-inline-form">
+          <input type="email" value="${esc(user.email || '')}" disabled>
+          <button class="btn btn-outline" type="button" disabled>Нельзя изменить</button>
+        </div>
+        <div class="settings-hint">Email используется для входа и доступа к проектам, изменить его пока нельзя.</div>
+      </div>
+      <div class="settings-card">
+        <div class="settings-card-head">
+          <div>
+            <h2>Доступ и безопасность</h2>
+            <p>Смена пароля выполняется через письмо на текущий email.</p>
+          </div>
+        </div>
+        <div class="settings-access-list">
+          ${accessItems(user).map(([label, value]) => `
+            <div class="settings-access-row">
+              <span>${esc(label)}</span>
+              <strong>${esc(value)}</strong>
+            </div>
+          `).join('')}
+        </div>
+        <button class="btn btn-outline settings-full-btn" type="button" onclick="settingsRequestPasswordReset()">
+          <i data-lucide="key-round" class="icon"></i> Сменить пароль
+        </button>
+        <div class="settings-hint">${esc(bitrixSyncLabel(user.bitrix_sync_status || ''))}</div>
+      </div>
+    </div>
   `;
 }
 
@@ -388,6 +483,7 @@ function renderIntegrationsSection() {
 }
 
 function renderSection() {
+  if (_settingsSection === 'account') return renderAccountSection();
   if (!getCurrentWorkspace()) return emptyProjectHtml();
   if (_settingsSection === 'team') return renderTeamLoading();
   if (_settingsSection === 'locations') return renderLocationsSection();
@@ -395,6 +491,12 @@ function renderSection() {
   if (_settingsSection === 'snapshots') return renderSnapshotsLoading();
   if (_settingsSection === 'integrations') return renderIntegrationsSection();
   return renderProjectSection();
+}
+
+function refreshUserMenu() {
+  const menu = document.getElementById('loc-menu');
+  if (menu) menu.innerHTML = '';
+  window.renderLocSwitcherUI?.();
 }
 
 function afterRender() {
@@ -416,6 +518,52 @@ export function settingsSetSection(section) {
   _settingsSection = section || 'project';
   _settingsNotice = '';
   renderSettings();
+}
+
+export async function settingsSaveAccountProfile() {
+  const name = (document.getElementById('settings-account-name')?.value || '').trim();
+  const phone = (document.getElementById('settings-account-phone')?.value || '').trim();
+  if (!name) {
+    window.showAlert?.('Введите имя');
+    return;
+  }
+  try {
+    await updateAccountProfile({ name, phone });
+    await refreshCurrentUser();
+    _settingsNotice = 'Личные данные сохранены.';
+    refreshUserMenu();
+    renderSettings('account');
+  } catch (e) {
+    window.showAlert?.(e.message || 'Не удалось сохранить профиль');
+  }
+}
+
+export async function settingsUploadAccountAvatar(input) {
+  const file = input?.files?.[0];
+  if (!file) return;
+  try {
+    await uploadAccountAvatarApi(file);
+    await refreshCurrentUser();
+    _settingsNotice = 'Фото профиля загружено.';
+    refreshUserMenu();
+    renderSettings('account');
+  } catch (e) {
+    window.showAlert?.(e.message || 'Не удалось загрузить фото');
+  } finally {
+    if (input) input.value = '';
+  }
+}
+
+export async function settingsRequestPasswordReset() {
+  try {
+    const data = await requestOwnPasswordReset();
+    _settingsNotice = data.email_sent
+      ? 'Письмо для смены пароля отправлено на ваш email.'
+      : 'Ссылка создана, но письмо не отправилось. Проверьте SMTP-настройки.';
+    renderSettings('account');
+  } catch (e) {
+    window.showAlert?.(e.message || 'Не удалось отправить письмо');
+  }
 }
 
 export async function settingsRenameProject() {

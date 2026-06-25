@@ -72,6 +72,55 @@ export async function refreshCurrentUser() {
   }
 }
 
+export async function updateAccountProfile(payload = {}) {
+  const token = getToken();
+  if (!token) throw new Error('Нужно войти в аккаунт');
+  const r = await fetch(`${API}/api/account/profile`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      name: payload.name || '',
+      phone: payload.phone || '',
+    })
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.detail || d.message || 'Не удалось сохранить профиль');
+  if (d.user) saveAuth(token, d.user);
+  return d;
+}
+
+export async function uploadAccountAvatar(file) {
+  const token = getToken();
+  if (!token) throw new Error('Нужно войти в аккаунт');
+  if (!file) throw new Error('Выберите файл');
+  const form = new FormData();
+  form.append('file', file);
+  const r = await fetch(`${API}/api/account/avatar`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: form
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.detail || d.message || 'Не удалось загрузить фото');
+  if (d.user) saveAuth(token, d.user);
+  return d;
+}
+
+export async function requestOwnPasswordReset() {
+  const token = getToken();
+  if (!token) throw new Error('Нужно войти в аккаунт');
+  const r = await fetch(`${API}/api/account/password-reset`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.detail || d.message || 'Не удалось отправить письмо');
+  return d;
+}
+
 export const ACCESS_TABS = {
   drinks: ['cost', 'recipes'],
   finance: ['dashboard', 'sales', 'finmodel'],

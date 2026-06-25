@@ -38,9 +38,12 @@ function _renderMenuUserCard() {
   const user = window.getUser ? window.getUser() : null;
   if (!user) return '';
   const initial = (user.name || user.email || '?')[0].toUpperCase();
+  const avatar = user.avatar_url
+    ? `<img src="${_esc(user.avatar_url)}" alt="">`
+    : _esc(initial);
   return `
     <div class="loc-user-card">
-      <div class="loc-user-avatar">${_esc(initial)}</div>
+      <div class="loc-user-avatar">${avatar}</div>
       <div class="loc-user-info">
         <div class="loc-user-name">${_esc(user.name || 'Автор')}</div>
         <div class="loc-user-email">${_esc(user.email || '')}</div>

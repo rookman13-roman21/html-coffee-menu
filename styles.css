@@ -2815,7 +2815,9 @@
       background: var(--navy); color: #fff;
       display: flex; align-items: center; justify-content: center;
       font-size: 15px; font-weight: 800; letter-spacing: 0;
+      overflow: hidden;
     }
+    .loc-user-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .loc-user-info { flex: 1; min-width: 0; }
     .loc-user-name {
       font-size: 13px; font-weight: 700; color: var(--text);
@@ -4429,6 +4431,25 @@ body.dark .workspace-invite-form label, body.dark .workspace-section-title, body
 }
 .settings-inline-form input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(79,136,62,.14); }
 .settings-inline-form input:disabled { opacity: .65; cursor: not-allowed; }
+.settings-account-profile {
+  display: grid; grid-template-columns: 108px minmax(0, 1fr); gap: 16px; align-items: start;
+}
+.settings-avatar {
+  width: 108px; height: 108px; border-radius: 50%; border: 2px solid rgba(79,136,62,.35);
+  background: var(--light); color: var(--green); cursor: pointer; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font: 900 36px var(--font);
+}
+.settings-avatar:hover { border-color: var(--green); box-shadow: 0 0 0 4px rgba(79,136,62,.12); }
+.settings-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.settings-account-main { display: grid; gap: 8px; min-width: 0; }
+.settings-access-list { display: grid; gap: 8px; }
+.settings-access-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px;
+  color: var(--text); font-size: 13px; font-weight: 900;
+}
+.settings-access-row strong { color: var(--green); font-size: 12px; white-space: nowrap; }
 .settings-hint, .settings-empty {
   color: var(--muted); font-size: 13px; line-height: 1.45;
   border: 1px dashed var(--border); border-radius: 9px; padding: 10px 12px; background: var(--gray);
@@ -4467,6 +4488,8 @@ body.dark .settings-location-row, body.dark .settings-member-row, body.dark .set
 body.dark .settings-side button { color: #ddd; }
 body.dark .settings-side button:hover, body.dark .settings-side button.active { background: #1f3320; color: #98dc8f; }
 body.dark .settings-inline-form input { background: #1f1f1f; border-color: #454545; color: #e5e5e5; }
+body.dark .settings-avatar { background: #1f3320; border-color: #456f3f; color: #98dc8f; }
+body.dark .settings-access-row { background: #252526; border-color: #454545; color: #ddd; }
 body.dark .settings-hint, body.dark .settings-empty { background: #1f1f1f; border-color: #454545; }
 body.dark .settings-notice { background: #1f3320; border-color: #456f3f; color: #98dc8f; }
 body.dark .settings-project-row.active, body.dark .settings-location-row.active { background: #1f3320; border-color: #456f3f; color: #98dc8f; }
@@ -4477,6 +4500,8 @@ body.dark .settings-project-row.active, body.dark .settings-location-row.active 
   .settings-side { position: static; display: flex; overflow-x: auto; }
   .settings-side button { flex: 0 0 auto; width: auto; }
   .settings-grid { grid-template-columns: 1fr; }
+  .settings-account-profile { grid-template-columns: 1fr; }
+  .settings-avatar { width: 88px; height: 88px; font-size: 30px; }
   .settings-inline-form, .settings-invite-form { grid-template-columns: 1fr; }
   .settings-inline-form .btn, .settings-inline-form .btn-green { width: 100%; justify-content: center; }
   .settings-member-row, .settings-integration-row { align-items: stretch; flex-direction: column; }
