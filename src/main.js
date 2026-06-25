@@ -107,6 +107,13 @@ import {
 } from './ui/public-recipes.js';
 
 import {
+  renderSettings, settingsSetSection, settingsRenameProject, settingsCreateWorkspace,
+  settingsSwitchWorkspace, settingsSendInvite, settingsRemoveMember, settingsRevokeInvite,
+  settingsCopyValue, settingsSwitchLocation, settingsSetActivityFilter,
+  settingsCreateSnapshot, settingsRestoreSnapshot,
+} from './render/settings.js';
+
+import {
   _editMatKey, _pendingMatSelectEl, _pendingSemiMatSelectEl,
   searchQuery, _renderTimer,
   dirty, sortState, salesSortState, salesSearch,
@@ -213,7 +220,7 @@ import {
   renderLocSwitcherUI, renderLocList, toggleLocMenu, toggleExportMenu,
   switchLocation, openAddLocation, renameActiveLocation, deleteActiveLocation,
   saveLocation, authorOpenTechcardSettings, authorOpenTermsFromMenu,
-  switchWorkspace, createWorkspaceFromMenu, renameCurrentWorkspaceFromMenu, openWorkspaceTeamModal,
+  switchWorkspace, createWorkspaceFromMenu, openProjectSettingsFromMenu, renameCurrentWorkspaceFromMenu, openWorkspaceTeamModal,
   sendWorkspaceInviteFromModal, inviteAnotherFromModal, copyWorkspaceInviteLink,
   removeWorkspaceMemberFromModal, revokeWorkspaceInviteFromModal,
   openWorkspaceActivityModal, openWorkspaceSnapshotsModal,
@@ -421,6 +428,11 @@ const _srcExports = {
   refreshAuthorTelegramStatus,
   openAuthorPublicationHistory, closeAuthorPublicationHistory, setAuthorPublicationFilter,
   submitPublicRecipeOrder,
+  // render/settings
+  renderSettings, settingsSetSection, settingsRenameProject, settingsCreateWorkspace,
+  settingsSwitchWorkspace, settingsSendInvite, settingsRemoveMember, settingsRevokeInvite,
+  settingsCopyValue, settingsSwitchLocation, settingsSetActivityFilter,
+  settingsCreateSnapshot, settingsRestoreSnapshot,
   // ui/payroll
   calcPositionCosts, payrollPositionTotal, payrollTotal, payrollTotals,
   empTypeTip, onPayrollPos, addPayrollPosition, deletePayrollPosition,
@@ -430,7 +442,7 @@ const _srcExports = {
   renderLocSwitcherUI, renderLocList, toggleLocMenu, toggleExportMenu,
   switchLocation, openAddLocation, renameActiveLocation, deleteActiveLocation,
   saveLocation, authorOpenTechcardSettings, authorOpenTermsFromMenu,
-  switchWorkspace, createWorkspaceFromMenu, renameCurrentWorkspaceFromMenu, openWorkspaceTeamModal,
+  switchWorkspace, createWorkspaceFromMenu, openProjectSettingsFromMenu, renameCurrentWorkspaceFromMenu, openWorkspaceTeamModal,
   sendWorkspaceInviteFromModal, inviteAnotherFromModal, copyWorkspaceInviteLink,
   removeWorkspaceMemberFromModal, revokeWorkspaceInviteFromModal,
   openWorkspaceActivityModal, openWorkspaceSnapshotsModal,
@@ -877,7 +889,7 @@ async function _initApp(serverState) {
 
   // Рендерим вкладки
   window.activeTab = _savedTab;
-  const _dirty = window.dirty || { dashboard:true, cost:true, sales:true, finmodel:true, recipes:true, authorProfile:true };
+  const _dirty = window.dirty || { dashboard:true, cost:true, sales:true, finmodel:true, recipes:true, authorProfile:true, settings:true };
   Object.keys(_dirty).forEach(k => _dirty[k] = true);
   syncUrlForTab(_savedTab, { replace: true });
   switchTab(_savedTab);

@@ -28,8 +28,9 @@ export function renderLocSwitcherUI() {
     renderAuthorCabinetMenu();
     return;
   }
-  if (loc && nameEl) nameEl.textContent = loc.name;
-  if (loc && iconEl) iconEl.textContent = loc.icon || '☕';
+  const workspace = getCurrentWorkspace();
+  if (nameEl) nameEl.textContent = workspace?.name || loc?.name || 'Нет проекта';
+  if (iconEl) iconEl.textContent = '📁';
   renderLocList();
 }
 
@@ -106,21 +107,11 @@ function _ensureClientLocMenuShell() {
     ${_renderMenuUserCard()}
     <div class="loc-menu-header">Проект кофейни</div>
     <div class="workspace-list" id="workspace-list"></div>
-    <button class="loc-menu-item" id="workspace-rename-btn" type="button" onclick="renameCurrentWorkspaceFromMenu()"><i data-lucide="pencil" class="icon"></i> Переименовать проект</button>
-    <button class="loc-menu-item" type="button" onclick="openWorkspaceTeamModal()"><i data-lucide="users" class="icon"></i> Команда проекта</button>
-    <button class="loc-menu-item" type="button" onclick="openWorkspaceActivityModal()"><i data-lucide="list-checks" class="icon"></i> Журнал действий</button>
-    <button class="loc-menu-item" type="button" onclick="openWorkspaceSnapshotsModal()"><i data-lucide="history" class="icon"></i> Восстановление</button>
+    <button class="loc-menu-item" type="button" onclick="openProjectSettingsFromMenu()"><i data-lucide="settings" class="icon"></i> Настройки проекта</button>
     <div id="workspace-create-slot"></div>
     <div class="loc-menu-divider"></div>
     <div class="loc-menu-header">Заведения</div>
     <div class="loc-list" id="loc-list"></div>
-    <div class="loc-menu-divider"></div>
-    <button class="loc-menu-item" data-location-action data-owner-action onclick="openAddLocation()"><i data-lucide="plus" class="icon"></i> Добавить точку</button>
-    <button class="loc-menu-item" data-location-action data-owner-action onclick="openTemplatesModal()"><i data-lucide="sparkles" class="icon"></i> Создать из шаблона</button>
-    <button class="loc-menu-item" data-location-action data-owner-action onclick="renameActiveLocation()"><i data-lucide="pencil" class="icon"></i> Переименовать текущую</button>
-    <button class="loc-menu-item danger" data-location-action data-owner-action onclick="deleteActiveLocation()"><i data-lucide="trash-2" class="icon"></i> Удалить текущую</button>
-    <div class="loc-menu-divider"></div>
-    <button class="loc-menu-item" id="loc-menu-api-key-btn" onclick="ocSetApiKey()" title="OpenAI API ключ нужен для функции AI-заполнения карточек оборудования"><i data-lucide="key-round" class="icon"></i> <span id="loc-menu-api-key-label">Добавить OpenAI API ключ</span></button>
   `;
 }
 
@@ -153,8 +144,6 @@ function renderWorkspaceList() {
   }
   const workspaces = getWorkspaces();
   const current = getCurrentWorkspace();
-  const renameBtn = document.getElementById('workspace-rename-btn');
-  if (renameBtn) renameBtn.style.display = current?.role === 'owner' ? '' : 'none';
   if (!workspaces.length) {
     list.innerHTML = `<div class="loc-menu-note">${canCreateWorkspaces() ? 'Проект будет создан автоматически при первом сохранении.' : 'У вас пока нет доступных проектов.'}</div>`;
     return;
@@ -227,6 +216,11 @@ export async function createWorkspaceFromMenu() {
   } catch (e) {
     window.showAlert(e.message || 'Не удалось создать проект');
   }
+}
+
+export function openProjectSettingsFromMenu() {
+  document.getElementById('loc-menu')?.classList.remove('open');
+  window.switchTab?.('settings');
 }
 
 export async function renameCurrentWorkspaceFromMenu() {
@@ -843,6 +837,7 @@ export function saveLocation() {
     window.saveState();
     logWorkspaceActivity('location_renamed', 'location', loc?.id || '', `Изменена точка «${name}»`);
     renderLocSwitcherUI();
+    if (window.activeTab === 'settings') window.renderActive?.();
     window._clearModalDirty('modal-loc');
     window.closeModal('modal-loc');
     return;

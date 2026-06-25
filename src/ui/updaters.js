@@ -6,6 +6,7 @@ import { SALES_PRESETS } from '../data/constants.js';
 import { canAccessTab, firstAllowedTab, requireWorkspaceOwner } from './auth.js';
 import { isAuthorMode } from '../access/author-layer.js';
 import { syncUrlForTab } from '../access/app-routes.js';
+import { renderSettings } from '../render/settings.js';
 
 export function renderTab(tab) {
   try {
@@ -15,6 +16,7 @@ export function renderTab(tab) {
     else if (tab === 'finmodel')  window.renderFinModel();
     else if (tab === 'recipes')   window.renderRecipes();
     else if (tab === 'authorProfile') window.renderAuthorProfile();
+    else if (tab === 'settings') window.renderSettings ? window.renderSettings() : renderSettings();
     if (window.lucide) window.lucide.createIcons();
   } catch(e) {
     console.error('[renderTab ' + tab + ']', e);

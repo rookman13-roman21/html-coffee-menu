@@ -6,6 +6,7 @@ const TAB_PATHS = {
   sales: '/app/sales',
   finmodel: '/app/finmodel',
   recipes: '/app/recipes',
+  settings: '/app/settings',
 };
 
 const AUTHOR_TAB_PATHS = {
@@ -23,6 +24,7 @@ const PATH_TABS = {
   '/app/finmodel': 'finmodel',
   '/app/finance': 'finmodel',
   '/app/recipes': 'recipes',
+  '/app/settings': 'settings',
   '/app/author/suppliers': 'cost',
   '/app/author/recipes': 'recipes',
   '/app/author/profile': 'authorProfile',
