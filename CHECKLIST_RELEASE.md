@@ -9,6 +9,8 @@
 
 ## 2. Проверка
 
+Если меняется домен, роли, API, source of truth или безопасность данных, сначала свериться с `ARCHITECTURE.md` и обновить его вместе с релизными проверками.
+
 ```bash
 bash scripts/check.sh
 ```
@@ -46,6 +48,17 @@ bash scripts/check.sh
 - если менялись structural/destructive-действия в workspace, проверить: owner может добавить/создать из шаблона/переименовать/удалить заведение; editor/guest не видит или получает блокировку на эти действия; owner может удалить рецепт/поставщика/сырьё/полуфабрикат; editor/guest не видит или получает блокировку на эти удаления; owner видит верхний `Сброс` и `Очистить всё` в бюджете, editor/guest не видит или получает блокировку; прямой `PUT /api/state` от editor/guest с появившимися/исчезнувшими `locIndex`/`locations`, изменённым metadata `locIndex`, исчезнувшими `customDrinks`/`customMats`/`semiItems`/`suppliers`/`supplierBook`, очищенными важными списками или массовым reset-sensitive diff возвращает `403` и пишет `state_update_blocked`; обычное редактирование содержимого существующей точки у editor/guest продолжает работать.
 - если менялись финансовые расчёты, проверить, что `Выручка`, `Прибыль`, `FC%`, `Средний чек`, `ТБУ`, `Окупаемость` и `Запас прочности` используют общий план продаж: напитки + дополнительные позиции.
 - если менялись отчёты, проверить `PDF — полный отчёт`, `Excel (xlsx)` и `Скачать CSV`; PDF не должен содержать блок `Рейтинг напитков`, Excel может сохранять рейтинг на dashboard.
+
+## 2.5. Workspace/settings data isolation
+
+Перед релизом, если менялись `/app/settings`, переключение проекта, заведения или старт приложения:
+
+- проверить два проекта с разными заведениями, командой и журналом: при переключении вкладки показывают только данные активного проекта;
+- убедиться, что localStorage keys заведений содержат `user + workspace_id`, а старые user-only данные не подмешиваются в авторизованный workspace;
+- быстро переключать проекты на вкладках `Команда`, `Журнал`, `Восстановление`: поздний ответ старого workspace не должен перерисовать текущую вкладку;
+- проверить меню заведений и settings rows на безопасное отображение `loc.id`, `loc.name`, `loc.icon`: эти поля нельзя вставлять в `innerHTML`/inline handlers без escaping;
+- если менялся startup-flow, проверить, что `/suppliers` и `/drinks/overrides` вызываются по одному разу, а no-access состояние не поднимает stale local state;
+- security smoke: anonymous `/api/suppliers` должен возвращать `403`, public recipes API не должен отдавать `phone`, `email`, `telegram`, `author_user_id`, `source_draft_id`, `recipe_local_id`, `cost`, `review_comment`, `bitrix_product_name`, `bitrix_deal_id`.
 
 ## 3. Production smoke
 

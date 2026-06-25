@@ -8,6 +8,8 @@
 
 ## 0. Текущее состояние проекта
 
+Быстрый архитектурный слой вынесен в `ARCHITECTURE.md`: домены продукта, источники правды, матрица ролей, API командной работы, data safety rules и smoke-сценарии.
+
 `Coffee_menu` сейчас является ядром платформы `barista-school.online`:
 
 - **Кабинет клиента кофейни**: напитки, поставщики, бюджет, план продаж, финмодель.
@@ -32,6 +34,7 @@
 - `Команда проекта`: добавлен workspace-слой для клиентов, которые запускают кофейню вместе с партнёрами/подрядчиками. Верхний dropdown теперь быстрый переключатель проекта/заведения, а управление вынесено в `/app/settings`: `Аккаунт`, `Проект`, `Команда`, `Заведения`, `Журнал`, `Восстановление`, `Интеграции`. Пользователи с `access_drinks` / `access_finance` могут создавать свои проекты; приглашённые без оплаты работают как `guest-editor` только в чужом проекте. Структура заведений, удаление ключевых сущностей и массовый сброс/очистка проекта в v1 доступны только владельцу; backend дополнительно блокирует structural/destructive overwrite через `PUT /api/state` для editor/guest и пишет заблокированные попытки в журнал.
 - `Аккаунт` и `Журнал`: пользовательский аватар доступен в профиле, верхнем меню, списке команды и строках журнала. В журнале справа используется порядок `имя → роль → аватар`; время событий форматируется как московское (`Europe/Moscow`).
 - `Команда проекта` / invite UX: повторный invite на тот же email больше не создаёт дубль; существующая pending-ссылка возвращается повторно, email текущего участника блокируется как уже добавленный. Старые дубли pending-invite автоматически отзываются при загрузке команды. Team-модалки используют фирменный popup/confirm и исправленную геометрию `.btn-green`.
+- `Безопасность workspace UI`: localStorage заведений изолирован по `user + workspace_id`; `/app/settings` грузит team/activity/snapshots только по active workspace со stale-response guard; меню заведений экранирует id/name/icon; duplicate startup fetches `/suppliers` and `/drinks/overrides` removed.
 
 ### Пакеты доступа
 
@@ -736,3 +739,17 @@ constants.js                          image.js          sales.js          auth.j
 - `workspace_members` и `workspace_activity` отдают `avatar_url`, чтобы команда и журнал показывали реальный аватар пользователя.
 - В строке журнала справа порядок автора события: `имя → роль → аватар`; время форматируется в московском часовом поясе `Europe/Moscow`, timestamps без timezone считаются UTC.
 - Проверено и задеплоено: `npm run check`, frontend deploy, `/api/health`. Последние коммиты: `389ec80 feat: add account settings panel`, `71624de feat: show avatars in activity log`, `882affc fix: align activity avatar to the right`.
+
+### Сессия 61 (25 июня 2026) — active workspace sync и security audit
+
+- `/app/settings` синхронизирован с активным `workspace`: `Команда`, `Журнал`, `Восстановление`, `Заведения` и project blocks читают данные текущего проекта, а асинхронные ответы старого workspace игнорируются.
+- LocalStorage заведений переведен на scope `user + workspace_id`; при переключении проекта очищаются старые `Loc.list`, `Loc.activeId` и runtime state перед восстановлением server state.
+- Исправлены XSS-risk spots в меню заведений и settings rows: `loc.id/name/icon` экранируются перед вставкой в `innerHTML` и inline handlers.
+- Убраны дубли стартовых API-запросов `/suppliers` и `/drinks/overrides` в `src/main.js`.
+- Security smoke: tracked `.env`/runtime DB/whitelist не найдены; anonymous `/api/suppliers` = 403; public recipes API проверен на отсутствие приватных keys.
+- Проверено и задеплоено: `npm run check`, `npm run deploy:frontend`, `/api/health`. Коммиты: `29c3ab5`, `5abe6b5`.
+
+### Сессия 62 (25 июня 2026) — architecture baseline
+
+- Добавлен `ARCHITECTURE.md` как короткий рабочий документ для роста проекта: домены, источники правды, матрица ролей, правила безопасности данных, API-карта workspace и smoke-сценарии.
+- Правило для новых функций: перед кодом определить домен, source of truth, роли, dangerous actions и release checks; после реализации обновлять релевантные базы знаний.
