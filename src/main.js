@@ -108,11 +108,11 @@ import {
 
 import {
   renderSettings, settingsSetSection, settingsRenameProject, settingsCreateWorkspace,
-  settingsSwitchWorkspace, settingsSendInvite, settingsRemoveMember, settingsRevokeInvite,
-  settingsCopyValue, settingsSwitchLocation, settingsSetActivityFilter,
-  settingsCreateSnapshot, settingsRestoreSnapshot, settingsSaveAccountProfile,
-  settingsUploadAccountAvatar, settingsRequestPasswordReset, settingsSaveProjectMeta,
-  settingsResetProjectContent,
+  settingsArchiveProject, settingsDeleteProject, settingsSwitchWorkspace, settingsSendInvite,
+  settingsRemoveMember, settingsRevokeInvite, settingsCopyValue, settingsSwitchLocation,
+  settingsSetActivityFilter, settingsCreateSnapshot, settingsRestoreSnapshot,
+  settingsSaveAccountProfile, settingsUploadAccountAvatar, settingsRequestPasswordReset,
+  settingsSaveProjectMeta, settingsResetProjectContent,
 } from './render/settings.js';
 
 import {
@@ -432,11 +432,11 @@ const _srcExports = {
   submitPublicRecipeOrder,
   // render/settings
   renderSettings, settingsSetSection, settingsRenameProject, settingsCreateWorkspace,
-  settingsSwitchWorkspace, settingsSendInvite, settingsRemoveMember, settingsRevokeInvite,
-  settingsCopyValue, settingsSwitchLocation, settingsSetActivityFilter,
-  settingsCreateSnapshot, settingsRestoreSnapshot, settingsSaveAccountProfile,
-  settingsUploadAccountAvatar, settingsRequestPasswordReset, settingsSaveProjectMeta,
-  settingsResetProjectContent,
+  settingsArchiveProject, settingsDeleteProject, settingsSwitchWorkspace, settingsSendInvite,
+  settingsRemoveMember, settingsRevokeInvite, settingsCopyValue, settingsSwitchLocation,
+  settingsSetActivityFilter, settingsCreateSnapshot, settingsRestoreSnapshot,
+  settingsSaveAccountProfile, settingsUploadAccountAvatar, settingsRequestPasswordReset,
+  settingsSaveProjectMeta, settingsResetProjectContent,
   // ui/payroll
   calcPositionCosts, payrollPositionTotal, payrollTotal, payrollTotals,
   empTypeTip, onPayrollPos, addPayrollPosition, deletePayrollPosition,

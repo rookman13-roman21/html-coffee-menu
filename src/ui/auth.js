@@ -323,6 +323,28 @@ export async function renameWorkspace(workspaceId, name) {
   return d.workspace;
 }
 
+export async function archiveWorkspace(workspaceId) {
+  if (!workspaceId) throw new Error('Проект не выбран');
+  const d = await apiJson(`/api/workspaces/${encodeURIComponent(workspaceId)}/archive`, { method: 'POST' });
+  rememberWorkspacePayload({
+    workspaces: d.workspaces || [],
+    workspace: (d.workspaces || [])[0] || null,
+    can_create_workspaces: d.can_create_workspaces,
+  });
+  return d;
+}
+
+export async function deleteWorkspace(workspaceId) {
+  if (!workspaceId) throw new Error('Проект не выбран');
+  const d = await apiJson(`/api/workspaces/${encodeURIComponent(workspaceId)}`, { method: 'DELETE' });
+  rememberWorkspacePayload({
+    workspaces: d.workspaces || [],
+    workspace: (d.workspaces || [])[0] || null,
+    can_create_workspaces: d.can_create_workspaces,
+  });
+  return d;
+}
+
 export async function fetchWorkspaceMembers(workspaceId = getActiveWorkspaceId()) {
   if (!workspaceId) return { members: [], invites: [] };
   return apiJson(`/api/workspaces/${encodeURIComponent(workspaceId)}/members`);

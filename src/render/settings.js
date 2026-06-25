@@ -1,6 +1,6 @@
 import {
   getActiveWorkspaceId, getCurrentWorkspace, getWorkspaces, setActiveWorkspaceId,
-  fetchState, createWorkspace, renameWorkspace, fetchWorkspaceMembers,
+  fetchState, createWorkspace, renameWorkspace, archiveWorkspace, deleteWorkspace, fetchWorkspaceMembers,
   createWorkspaceInvite, removeWorkspaceMember, revokeWorkspaceInvite,
   fetchWorkspaceActivity, fetchWorkspaceSnapshots, createWorkspaceSnapshot,
   restoreWorkspaceSnapshot, canCreateWorkspaces, isWorkspaceOwner, getUser,
@@ -80,6 +80,7 @@ function activityLabel(action) {
   const labels = {
     project_opened: 'Вход в проект', workspace_created: 'Создан проект', workspace_renamed: 'Проект переименован',
     workspace_switched: 'Смена проекта', workspace_reset: 'Сброс проекта',
+    workspace_archived: 'Проект архивирован', workspace_deleted: 'Проект удалён',
     snapshot_created: 'Точка восстановления', snapshot_restored: 'Восстановление',
     invite_created: 'Приглашение', invite_accepted: 'Принято приглашение', invite_revoked: 'Отозвано приглашение',
     member_removed: 'Участник удалён', location_created: 'Точка добавлена', location_renamed: 'Заведение изменено',
@@ -92,13 +93,13 @@ function activityLabel(action) {
 
 function activityGroup(action) {
   if (['invite_created', 'invite_accepted', 'invite_revoked', 'member_removed'].includes(action)) return 'team';
-  if (['location_created', 'location_renamed', 'location_deleted', 'workspace_created', 'workspace_renamed', 'workspace_switched'].includes(action)) return 'locations';
+  if (['location_created', 'location_renamed', 'location_deleted', 'workspace_created', 'workspace_renamed', 'workspace_switched', 'workspace_archived', 'workspace_deleted'].includes(action)) return 'locations';
   if (action === 'opening_costs_changed') return 'budget';
   if (['finmodel_changed', 'payroll_changed', 'sales_changed'].includes(action)) return 'finance';
   if (action === 'recipe_changed') return 'recipes';
   if (action === 'supplier_changed') return 'suppliers';
   if (action === 'export_created') return 'exports';
-  if (['snapshot_created', 'snapshot_restored', 'workspace_reset', 'state_update_blocked'].includes(action)) return 'security';
+  if (['snapshot_created', 'snapshot_restored', 'workspace_reset', 'workspace_archived', 'workspace_deleted', 'state_update_blocked'].includes(action)) return 'security';
   return 'work';
 }
 
@@ -108,6 +109,8 @@ function snapshotReasonLabel(reason) {
     autosave: 'Автоснимок',
     before_restore: 'Перед восстановлением',
     before_location_delete: 'Перед удалением точки',
+    before_workspace_archive: 'Перед архивированием проекта',
+    before_workspace_delete: 'Перед удалением проекта',
   };
   return labels[reason] || reason || 'Точка восстановления';
 }
@@ -385,8 +388,14 @@ function renderProjectSection() {
               <button class="btn-danger-outline" type="button" onclick="settingsResetProjectContent()">
                 <i data-lucide="rotate-ccw" class="icon"></i> Сбросить содержимое
               </button>
+              <button class="btn btn-outline" type="button" onclick="settingsArchiveProject()">
+                <i data-lucide="archive" class="icon"></i> Архивировать проект
+              </button>
+              <button class="btn-danger-outline" type="button" onclick="settingsDeleteProject()">
+                <i data-lucide="trash-2" class="icon"></i> Удалить проект
+              </button>
             </div>
-            <div class="settings-hint">Архивирование и полное удаление проекта появятся позже как отдельный безопасный сценарий с восстановлением и подтверждением.</div>
+            <div class="settings-hint">Перед архивированием или удалением создаётся точка восстановления. Действия доступны только владельцу.</div>
           </div>
         ` : ''}
       </div>
@@ -780,6 +789,69 @@ export function settingsResetProjectContent() {
     return;
   }
   window.resetAll?.();
+}
+
+async function openWorkspaceAfterDangerAction(data, notice) {
+  const next = (data?.workspaces || [])[0] || null;
+  if (next?.id) {
+    setActiveWorkspaceId(next.id);
+    const state = await fetchState();
+    window.Loc.list = [];
+    window.Loc.activeId = null;
+    window.resetGlobalsToBase?.();
+    if (state) window.restoreFromServer?.(state);
+    window.loadLocIndex?.();
+    window.loadState?.();
+  } else {
+    setActiveWorkspaceId('');
+    window.Loc.list = [];
+    window.Loc.activeId = null;
+    window.resetGlobalsToBase?.();
+  }
+  Object.keys(window.dirty || {}).forEach(k => window.dirty[k] = true);
+  _settingsNotice = notice;
+  window.renderLocSwitcherUI?.();
+  renderSettings('project');
+}
+
+export async function settingsArchiveProject() {
+  const current = getCurrentWorkspace();
+  if (!current?.id || !isWorkspaceOwner()) {
+    window.showAlert?.('Архивировать проект может только владелец.');
+    return;
+  }
+  const ok = await window.showConfirm?.(`Архивировать проект «${current.name}»? Он исчезнет из списка активных проектов.`, null, { icon: '📦', okText: 'Архивировать', danger: false });
+  if (!ok) return;
+  try {
+    await window.flushServerSync?.(getActiveWorkspaceId());
+    const data = await archiveWorkspace(current.id);
+    await openWorkspaceAfterDangerAction(data, 'Проект архивирован.');
+  } catch (e) {
+    window.showAlert?.(e.message || 'Не удалось архивировать проект');
+  }
+}
+
+export async function settingsDeleteProject() {
+  const current = getCurrentWorkspace();
+  if (!current?.id || !isWorkspaceOwner()) {
+    window.showAlert?.('Удалить проект может только владелец.');
+    return;
+  }
+  const typed = await window.showPrompt?.(`Чтобы удалить проект, введите его название: ${current.name}`, '', { okText: 'Продолжить', placeholder: current.name });
+  if (typed === null || typeof typed === 'undefined') return;
+  if (String(typed).trim() !== String(current.name || '').trim()) {
+    window.showAlert?.('Название не совпало. Проект не удалён.');
+    return;
+  }
+  const ok = await window.showConfirm?.(`Удалить проект «${current.name}»? Он будет скрыт из кабинета для всех участников.`, null, { icon: '🗑️', okText: 'Удалить', danger: true });
+  if (!ok) return;
+  try {
+    await window.flushServerSync?.(getActiveWorkspaceId());
+    const data = await deleteWorkspace(current.id);
+    await openWorkspaceAfterDangerAction(data, 'Проект удалён.');
+  } catch (e) {
+    window.showAlert?.(e.message || 'Не удалось удалить проект');
+  }
 }
 
 export async function settingsRenameProject() {
