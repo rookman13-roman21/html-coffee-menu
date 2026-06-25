@@ -115,6 +115,7 @@ Security hardening на 22 июня 2026:
 - `npm run check` — единая проверка перед правками/деплоем.
 - `npm run smoke:api` — read-only production smoke.
 - `npm run smoke:api:apply` — проверка тестового автора и Битрикс-синхронизации.
+- `npm run smoke:workspace` — проверка workspace-ролей через JWT owner/editor/guest: доступ к проекту, запрет owner-only событий журнала для editor/guest и optional outside workspace `403`.
 - `npm run deploy:frontend` — деплой SPA.
 - `npm run deploy:admin` — сборка и деплой admin bundle.
 - `npm run deploy:backend` — backup SQLite, деплой tracked backend из `HTML_coffee_menu/server`, restart API.
@@ -125,7 +126,7 @@ Admin panel:
 - `server/admin/admin-panel.js` — generated bundle, руками его не редактировать;
 - `server/admin/src/_styles.js`: `#adm-root` занимает всю ширину viewport для Tilda, `#adm-panel` центрирован и ограничен `max-width: 1100px` по `mbs-design-system`.
 
-Локальный `scripts/smoke_api.local.json` ignored и не должен попадать в Git.
+Локальные `scripts/smoke_api.local.json` и `scripts/smoke_workspace_security.local.json` ignored и не должны попадать в Git.
 
 ### Хранение состояния
 

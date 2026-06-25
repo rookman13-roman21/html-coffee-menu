@@ -432,10 +432,12 @@ BITRIX_AUTHOR_MARK_LABEL=Автор рецептов
 | Файл | Назначение |
 |---|---|
 | `HTML_coffee_menu/vite.config.js` | Vite: порт 3000, outDir `dist` |
-| `HTML_coffee_menu/package.json` | npm-скрипты: `dev`, `build`, `preview`, `check`, `smoke:api`, `deploy:*` |
+| `HTML_coffee_menu/package.json` | npm-скрипты: `dev`, `build`, `preview`, `check`, `smoke:api`, `smoke:workspace`, `deploy:*` |
 | `HTML_coffee_menu/scripts/check.sh` | Единая preflight-проверка: backend compile, admin build, frontend build, docs/secret scan |
 | `HTML_coffee_menu/scripts/smoke_api.py` | API smoke-тест: health, admin auth, access-флаги, автор, Битрикс sync, приватность public API |
 | `HTML_coffee_menu/scripts/smoke_api.example.json` | Пример локального конфига без реальных admin credentials |
+| `HTML_coffee_menu/scripts/smoke_workspace_security.py` | API smoke-тест workspace-ролей: owner/editor/guest, запрет owner-only событий журнала и optional outside workspace `403` |
+| `HTML_coffee_menu/scripts/smoke_workspace_security.example.json` | Пример локального workspace security конфига без JWT |
 | `HTML_coffee_menu/scripts/deploy_frontend.sh` | Деплой SPA `dist/` без удаления `admin-panel.js` |
 | `HTML_coffee_menu/scripts/deploy_admin.sh` | Сборка и деплой `server/admin/admin-panel.js` |
 | `HTML_coffee_menu/scripts/deploy_backend.sh` | Backup SQLite, деплой `server/main.py`, restart API, health-check |
@@ -778,3 +780,9 @@ constants.js                          image.js          sales.js          auth.j
 - На production проверено наличие `WORKSPACE_OWNER_ACTIVITY_ACTIONS`, `_require_workspace_owner_activity` и `state_update_blocked` в `/var/www/coffee-menu/server/main.py`.
 - `npm run deploy:frontend` выкатил bundle `assets/index-Dg3DFYDQ.js` / `assets/index-C0kcJg3F.css`; публичные проверки: `/api/health = {ok:true, version:1.0.0}`, главная `HTTP/2 200`, ALPN `h2`.
 - Smoke direct API без JWT: `POST /api/workspaces/1/activity` с `workspace_deleted` возвращает `403 Not authenticated`. Role-specific smoke editor/guest -> `403` требует авторизованный JWT тестового пользователя; локального `scripts/smoke_api.local.json` сейчас нет.
+
+### Сессия 67 (25 июня 2026) — workspace security smoke
+
+- Добавлен `scripts/smoke_workspace_security.py` и пример `scripts/smoke_workspace_security.example.json`. Скрипт читает локальный ignored config `scripts/smoke_workspace_security.local.json` или env-переменные `COFFEE_WS_SMOKE_*`.
+- Новый npm script `smoke:workspace` проверяет health, JWT owner/editor/guest, доступ участников к workspace, запрет owner-only событий журнала для editor/guest (`workspace_deleted`, `member_removed`, `location_deleted`, `snapshot_restored`) и optional `outside_workspace_id -> 403`.
+- JWT owner/editor/guest не хранить в docs и не коммитить; `.gitignore` теперь игнорирует `scripts/smoke_workspace_security.local.json`.

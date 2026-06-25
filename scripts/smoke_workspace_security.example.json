@@ -1,0 +1,14 @@
+{
+  "base_url": "https://barista-school.online",
+  "workspace_id": 0,
+  "owner_token": "",
+  "editor_token": "",
+  "guest_token": "",
+  "outside_workspace_id": 0,
+  "owner_only_actions": [
+    "workspace_deleted",
+    "member_removed",
+    "location_deleted",
+    "snapshot_restored"
+  ]
+}

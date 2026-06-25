@@ -56,6 +56,29 @@ npm run smoke:api:apply
 
 Скрипт не создаёт сделки и не публикует рецепты. Он проверяет health, admin auth, `access`, тестового автора, `author_profiles`, `bitrix_contact_id` и приватность public API.
 
+## Workspace security smoke
+
+Для проверки owner/editor/guest прав через прямой API создать локальный конфиг, который не попадает в Git:
+
+```bash
+cp scripts/smoke_workspace_security.example.json scripts/smoke_workspace_security.local.json
+```
+
+В `scripts/smoke_workspace_security.local.json` указать `workspace_id` общего проекта и временные JWT:
+
+- `owner_token` — владелец проекта;
+- `editor_token` — платный участник или editor;
+- `guest_token` — приглашённый guest-editor;
+- `outside_workspace_id` — опционально, чужой проект для проверки `403`.
+
+Запуск:
+
+```bash
+npm run smoke:workspace
+```
+
+Скрипт проверяет health, доступ всех указанных участников к workspace и запрет owner-only событий журнала (`workspace_deleted`, `member_removed`, `location_deleted`, `snapshot_restored`) для editor/guest. JWT не коммитить и не хранить в документации.
+
 После security-изменений вручную проверить, что anonymous `GET /api/suppliers` не отдаёт данные без JWT, а авторизованный клиент получает список публичных поставщиков с телефонами.
 
 Факт последней production-проверки 22 июня 2026: anonymous `GET /api/suppliers` вернул `403 Not authenticated`; Роман подтвердил, что авторизованный клиент видит телефоны поставщиков.

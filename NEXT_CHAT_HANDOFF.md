@@ -325,6 +325,7 @@ npm run deploy:backend
 - `npm run check` — preflight: `py_compile server/main.py`, сборка admin bundle, `node --check`, `npm run build`, sync docs, secret scan.
 - `npm run smoke:api` — production smoke через API.
 - `npm run smoke:api:apply` — smoke с включением автора тестовому пользователю и проверкой Битрикс-синхронизации.
+- `npm run smoke:workspace` — production smoke workspace-ролей через JWT owner/editor/guest; проверяет запрет owner-only событий журнала для editor/guest.
 - `npm run deploy:frontend` — build + upload `dist/`, не удаляет `admin-panel.js`.
 - `npm run deploy:admin` — `server/admin/build.sh`, `node --check`, upload `admin-panel.js`.
 - `npm run deploy:backend` — `py_compile`, SQLite backup, upload tracked `HTML_coffee_menu/server/main.py`, restart API, health check. Production deploy 25 июня 2026 подтвердил `WORKSPACE_OWNER_ACTIVITY_ACTIONS` на сервере.
@@ -362,6 +363,7 @@ cp scripts/smoke_api.example.json scripts/smoke_api.local.json
 ```
 
 В `scripts/smoke_api.local.json` нельзя коммитить реальные admin credentials или token.
+В `scripts/smoke_workspace_security.local.json` нельзя коммитить JWT owner/editor/guest.
 
 ## 12. Git-состояние
 
