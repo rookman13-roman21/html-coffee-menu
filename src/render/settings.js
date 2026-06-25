@@ -35,6 +35,12 @@ function userInitial(user = {}) {
   return String(user.name || user.email || '?')[0].toUpperCase();
 }
 
+function avatarHtml(url, label, className = 'workspace-member-avatar') {
+  const safeUrl = String(url || '').trim();
+  const initial = String(label || '?')[0].toUpperCase();
+  return `<div class="${className}">${safeUrl ? `<img src="${esc(safeUrl)}" alt="">` : esc(initial)}</div>`;
+}
+
 function accessItems(user = getUser()) {
   const access = user?.access || {};
   return [
@@ -57,7 +63,15 @@ function activityRoleLabel(row = {}) {
 function fmtDate(value) {
   if (!value) return '';
   try {
-    return new Date(value).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const raw = String(value);
+    const normalized = /([zZ]|[+-]\d{2}:?\d{2})$/.test(raw) ? raw : `${raw}Z`;
+    return new Intl.DateTimeFormat('ru-RU', {
+      timeZone: 'Europe/Moscow',
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(normalized));
   } catch { return String(value); }
 }
 
@@ -274,7 +288,7 @@ async function loadTeamSection() {
     const owner = isWorkspaceOwner();
     const members = (data.members || []).map(m => `
       <div class="settings-member-row">
-        <div class="workspace-member-avatar">${esc((m.name || m.email || '?')[0]).toUpperCase()}</div>
+        ${avatarHtml(m.avatar_url, m.name || m.email)}
         <div class="settings-row-main">
           <strong>${esc(m.name || m.email)}</strong>
           <span>${esc(m.email || '')}</span>
@@ -400,8 +414,11 @@ async function loadActivitySection() {
                 <span>${esc(r.summary || '')}</span>
               </div>
               <div class="workspace-activity-actor">
-                <span>${esc(r.actor_name || 'Система')}</span>
-                <small>${esc(activityRoleLabel(r))}</small>
+                ${avatarHtml(r.actor_avatar_url, r.actor_name || 'Система', 'workspace-activity-avatar')}
+                <div>
+                  <span>${esc(r.actor_name || 'Система')}</span>
+                  <small>${esc(activityRoleLabel(r))}</small>
+                </div>
               </div>
             </div>
           `).join('') || '<div class="settings-empty">По этому фильтру событий пока нет.</div>'}

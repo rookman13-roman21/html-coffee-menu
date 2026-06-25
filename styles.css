@@ -4293,8 +4293,9 @@ body.dark .oc-onboard-title { color: #c5e1a5; }
 }
 .workspace-member-avatar {
   width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
-  background: var(--navy); color: #fff; font-size: 13px; font-weight: 900; flex: 0 0 auto;
+  background: var(--navy); color: #fff; font-size: 13px; font-weight: 900; flex: 0 0 auto; overflow: hidden;
 }
+.workspace-member-avatar img, .workspace-activity-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .workspace-member-main { flex: 1; min-width: 0; display: grid; gap: 2px; }
 .workspace-member-main strong { color: var(--text); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .workspace-member-main span, .workspace-invite-row small, .workspace-hint { color: var(--muted); font-size: 12px; line-height: 1.4; }
@@ -4368,9 +4369,16 @@ body.dark .oc-onboard-title { color: #c5e1a5; }
 .workspace-activity-main { flex: 1; min-width: 0; display: grid; gap: 3px; }
 .workspace-activity-main strong { color: var(--navy); font-size: 13px; }
 .workspace-activity-main span { color: var(--text); font-size: 12px; line-height: 1.35; }
-.workspace-activity-actor { color: var(--muted); font-size: 11px; max-width: 150px; display: grid; gap: 2px; text-align: right; }
+.workspace-activity-actor {
+  color: var(--muted); font-size: 11px; max-width: 190px;
+  display: flex; align-items: center; justify-content: flex-end; gap: 8px; text-align: right;
+}
 .workspace-activity-actor span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .workspace-activity-actor small { color: var(--green); font-weight: 900; font-size: 10px; text-transform: lowercase; }
+.workspace-activity-avatar {
+  width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--navy); color: #fff; font-size: 12px; font-weight: 900; flex: 0 0 auto; overflow: hidden;
+}
 body.dark .workspace-dialog, body.dark .workspace-dialog-head, body.dark .workspace-member-row,
 body.dark .workspace-invite-row, body.dark .workspace-activity-row { background: #252526; border-color: #454545; }
 body.dark .workspace-invite-form, body.dark .workspace-empty { background: #1f1f1f; border-color: #454545; }
@@ -4516,5 +4524,5 @@ body.dark .settings-project-row.active, body.dark .settings-location-row.active 
   .workspace-action-row { flex-direction: column; }
   .workspace-action-row .btn, .workspace-action-row .btn-green { width: 100%; justify-content: center; }
   .workspace-activity-date { width: auto; }
-  .workspace-activity-actor { max-width: none; text-align: left; }
+  .workspace-activity-actor { max-width: none; justify-content: flex-start; text-align: left; }
 }

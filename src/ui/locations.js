@@ -128,6 +128,12 @@ function _workspaceMemberRoleLabel(member = {}) {
   return 'редактор';
 }
 
+function _workspaceAvatarHtml(url, label, className = 'workspace-member-avatar') {
+  const safeUrl = String(url || '').trim();
+  const initial = String(label || '?')[0].toUpperCase();
+  return `<div class="${className}">${safeUrl ? `<img src="${_esc(safeUrl)}" alt="">` : _esc(initial)}</div>`;
+}
+
 function _canUseClientLocations() {
   return hasWorkspaceMembership();
 }
@@ -286,7 +292,7 @@ async function _renderWorkspaceTeam(modal, inviteResult = null) {
   const hasGuest = (data.members || []).some(m => m.account_role === 'guest' && m.role !== 'owner');
   const members = (data.members || []).map(m => `
     <div class="workspace-member-row">
-      <div class="workspace-member-avatar">${_esc((m.name || m.email || '?')[0]).toUpperCase()}</div>
+      ${_workspaceAvatarHtml(m.avatar_url, m.name || m.email)}
       <div class="workspace-member-main">
         <strong>${_esc(m.name || m.email)}</strong>
         <span>${_esc(m.email || '')}</span>
@@ -489,9 +495,17 @@ function _activityRoleLabel(row) {
 
 function _fmtActivityDate(value) {
   if (!value) return '';
-  const d = new Date(value);
+  const raw = String(value);
+  const normalized = /([zZ]|[+-]\d{2}:?\d{2})$/.test(raw) ? raw : `${raw}Z`;
+  const d = new Date(normalized);
   if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+  return new Intl.DateTimeFormat('ru-RU', {
+    timeZone: 'Europe/Moscow',
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(d);
 }
 
 function _renderActivityFilters(rows) {
@@ -533,8 +547,11 @@ function _renderWorkspaceActivityRows(modal, rows) {
           <span>${_esc(r.summary || '')}</span>
         </div>
         <div class="workspace-activity-actor" title="${_esc(r.actor_name || 'Система')}">
-          <span>${_esc(r.actor_name || 'Система')}</span>
-          <small>${_esc(_activityRoleLabel(r))}</small>
+          ${_workspaceAvatarHtml(r.actor_avatar_url, r.actor_name || 'Система', 'workspace-activity-avatar')}
+          <div>
+            <span>${_esc(r.actor_name || 'Система')}</span>
+            <small>${_esc(_activityRoleLabel(r))}</small>
+          </div>
         </div>
       </div>
     `;
