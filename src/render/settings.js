@@ -385,10 +385,8 @@ function renderProjectSection() {
               <button class="btn-danger-outline" type="button" onclick="settingsResetProjectContent()">
                 <i data-lucide="rotate-ccw" class="icon"></i> Сбросить содержимое
               </button>
-              <button class="btn btn-outline" type="button" disabled>Архивировать проект</button>
-              <button class="btn btn-outline" type="button" disabled>Удалить проект</button>
             </div>
-            <div class="settings-hint">Архивирование и полное удаление добавим отдельным безопасным сценарием с восстановлением и подтверждением.</div>
+            <div class="settings-hint">Архивирование и полное удаление проекта появятся позже как отдельный безопасный сценарий с восстановлением и подтверждением.</div>
           </div>
         ` : ''}
       </div>
