@@ -165,7 +165,7 @@ export function canAccessTab(tab) {
 }
 
 export function getAllowedTabs() {
-  return ['dashboard', 'cost', 'sales', 'finmodel', 'recipes'].filter(canAccessTab);
+  return ['workspace', 'dashboard', 'cost', 'sales', 'finmodel', 'recipes'].filter(canAccessTab);
 }
 
 export function firstAllowedTab() {

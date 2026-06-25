@@ -786,3 +786,11 @@ constants.js                          image.js          sales.js          auth.j
 - Добавлен `scripts/smoke_workspace_security.py` и пример `scripts/smoke_workspace_security.example.json`. Скрипт читает локальный ignored config `scripts/smoke_workspace_security.local.json` или env-переменные `COFFEE_WS_SMOKE_*`.
 - Новый npm script `smoke:workspace` проверяет health, JWT owner/editor/guest, доступ участников к workspace, запрет owner-only событий журнала для editor/guest (`workspace_deleted`, `member_removed`, `location_deleted`, `snapshot_restored`) и optional `outside_workspace_id -> 403`.
 - JWT owner/editor/guest не хранить в docs и не коммитить; `.gitignore` теперь игнорирует `scripts/smoke_workspace_security.local.json`.
+
+### Сессия 68 (25 июня 2026) — рабочая зона проекта
+
+- Добавлена новая вкладка `Рабочая зона` в верхнюю навигацию перед `Бюджет`; URL: `/app/workspace`.
+- V1 рабочей зоны хранит `notes` и `links` в `workspace.state` как `S.workspaceArea`, без новых backend-таблиц. Это значит, что данные изолированы по активному workspace, синхронизируются через существующий `GET/PUT /api/state` и попадают в snapshots/restore проекта.
+- Новый модуль `src/render/workspace.js`: обзор, закреплённые ссылки, список заметок, список ссылок, простой rich-text редактор заметки через `contenteditable`.
+- Поддержаны совместные действия owner/editor/guest: участники могут добавлять и редактировать материалы рабочей зоны; события логируются как `workspace_note_changed` и `workspace_link_changed`.
+- Журнал настроек получил фильтр `Рабочая зона`, чтобы изменения заметок и ссылок не смешивались с системными событиями.

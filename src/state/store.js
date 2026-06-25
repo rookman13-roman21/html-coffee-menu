@@ -157,6 +157,7 @@ export const S = {
   openingCosts: [],
   openingMeta: { format: 'full', currency: 'RUB', usdRate: 90, eurRate: 98, categorySort: 'manual', categorySearch: '' },
   projectMeta: { city: '', stage: 'idea', openingDate: '' },
+  workspaceArea: { notes: [], links: [] },
 };
 
 // ─── Сброс глобального стейта к базовым значениям ───────────────────
@@ -199,6 +200,7 @@ export function resetGlobalsToBase() {
   S.openingCosts = [];
   S.openingMeta  = { format: 'full', currency: 'RUB', usdRate: 90, eurRate: 98, categorySort: 'manual', categorySearch: '' };
   S.projectMeta  = { city: '', stage: 'idea', openingDate: '' };
+  S.workspaceArea = { notes: [], links: [] };
 
   // Сбрасываем счётчики (через window — они ещё в app.js)
   window.nextDrinkId = DRINKS.reduce((max, d) => Math.max(max, Number(d.id) || 0), 0) + 1;
@@ -228,6 +230,7 @@ function _collectCloudState() {
     activeId:  Loc.activeId,
     locations: allLocs,
     projectMeta: S.projectMeta || { city: '', stage: 'idea', openingDate: '' },
+    workspaceArea: S.workspaceArea || { notes: [], links: [] },
   };
 }
 
@@ -288,6 +291,7 @@ export function saveState() {
       openingCosts: S.openingCosts,
       openingMeta: S.openingMeta,
       projectMeta: S.projectMeta,
+      workspaceArea: S.workspaceArea,
       semiItems: authorMode ? [] : SEMI,
     }));
     scheduleServerSync();
@@ -393,6 +397,12 @@ export function loadState() {
     if (sv.openingCosts) S.openingCosts = sv.openingCosts;
     if (sv.openingMeta)  Object.assign(S.openingMeta, sv.openingMeta);
     if (sv.projectMeta)  S.projectMeta = { city: '', stage: 'idea', openingDate: '', ...sv.projectMeta };
+    if (sv.workspaceArea && typeof sv.workspaceArea === 'object') {
+      S.workspaceArea = {
+        notes: Array.isArray(sv.workspaceArea.notes) ? sv.workspaceArea.notes : [],
+        links: Array.isArray(sv.workspaceArea.links) ? sv.workspaceArea.links : [],
+      };
+    }
 
     if (sv.customMats) {
       sv.customMats.forEach(m => {
@@ -457,6 +467,13 @@ export function restoreFromServer(serverData) {
   try {
     const projectMeta = serverData.projectMeta || null;
     if (projectMeta) S.projectMeta = { city: '', stage: 'idea', openingDate: '', ...projectMeta };
+    const workspaceArea = serverData.workspaceArea && typeof serverData.workspaceArea === 'object'
+      ? {
+          notes: Array.isArray(serverData.workspaceArea.notes) ? serverData.workspaceArea.notes : [],
+          links: Array.isArray(serverData.workspaceArea.links) ? serverData.workspaceArea.links : [],
+        }
+      : null;
+    if (workspaceArea) S.workspaceArea = workspaceArea;
 
     Loc.list = Array.isArray(serverData.locIndex) ? serverData.locIndex : [];
     Loc.activeId = serverData.activeId && Loc.list.some(l => l.id === serverData.activeId)
@@ -465,7 +482,9 @@ export function restoreFromServer(serverData) {
 
     const locations = serverData.locations && typeof serverData.locations === 'object' ? serverData.locations : {};
     for (const [id, data] of Object.entries(locations)) {
-      const nextData = projectMeta ? { ...data, projectMeta } : data;
+      const nextData = { ...data };
+      if (projectMeta) nextData.projectMeta = projectMeta;
+      if (workspaceArea) nextData.workspaceArea = workspaceArea;
       localStorage.setItem(locDataKey(id), JSON.stringify(nextData));
     }
 

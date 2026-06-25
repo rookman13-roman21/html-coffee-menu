@@ -461,6 +461,7 @@ function _activityLabel(action) {
     location_created: 'Точка добавлена', location_renamed: 'Точка изменена', location_deleted: 'Точка удалена',
     opening_costs_changed: 'Бюджет открытия', finmodel_changed: 'Финмодель', payroll_changed: 'ФОТ', sales_changed: 'План продаж',
     recipe_changed: 'Рецепт', supplier_changed: 'Поставщик', export_created: 'Экспорт',
+    workspace_note_changed: 'Заметка проекта', workspace_link_changed: 'Ссылка проекта',
     state_update_blocked: 'Действие заблокировано'
   };
   return labels[action] || action;
@@ -476,6 +477,7 @@ const ACTIVITY_FILTERS = [
   ['finance', 'Финмодель'],
   ['recipes', 'Рецепты'],
   ['suppliers', 'Поставщики'],
+  ['workspace', 'Рабочая зона'],
   ['exports', 'Экспорт'],
   ['security', 'Безопасность'],
 ];
@@ -487,6 +489,7 @@ function _activityGroup(action) {
   if (['finmodel_changed', 'payroll_changed', 'sales_changed'].includes(action)) return 'finance';
   if (action === 'recipe_changed') return 'recipes';
   if (action === 'supplier_changed') return 'suppliers';
+  if (['workspace_note_changed', 'workspace_link_changed'].includes(action)) return 'workspace';
   if (action === 'export_created') return 'exports';
   if (['snapshot_created', 'snapshot_restored', 'workspace_reset', 'state_update_blocked'].includes(action)) return 'security';
   return 'system';
@@ -494,7 +497,7 @@ function _activityGroup(action) {
 
 function _activitySeverity(action) {
   if (['location_deleted', 'member_removed', 'snapshot_restored', 'invite_revoked', 'workspace_reset', 'state_update_blocked'].includes(action)) return 'danger';
-  if (['opening_costs_changed', 'finmodel_changed', 'payroll_changed', 'sales_changed', 'location_created', 'location_renamed', 'recipe_changed', 'supplier_changed'].includes(action)) return 'work';
+  if (['opening_costs_changed', 'finmodel_changed', 'payroll_changed', 'sales_changed', 'location_created', 'location_renamed', 'recipe_changed', 'supplier_changed', 'workspace_note_changed', 'workspace_link_changed'].includes(action)) return 'work';
   if (['snapshot_created', 'export_created', 'invite_created', 'invite_accepted'].includes(action)) return 'notice';
   return 'system';
 }

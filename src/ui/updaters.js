@@ -7,10 +7,12 @@ import { canAccessTab, firstAllowedTab, requireWorkspaceOwner } from './auth.js'
 import { isAuthorMode } from '../access/author-layer.js';
 import { syncUrlForTab } from '../access/app-routes.js';
 import { renderSettings } from '../render/settings.js';
+import { renderWorkspace } from '../render/workspace.js';
 
 export function renderTab(tab) {
   try {
-    if      (tab === 'dashboard') { window.renderDashboard(); if (window.lucide) window.lucide.createIcons(); window.initTop10Collapse(); return; }
+    if      (tab === 'workspace') renderWorkspace();
+    else if (tab === 'dashboard') { window.renderDashboard(); if (window.lucide) window.lucide.createIcons(); window.initTop10Collapse(); return; }
     else if (tab === 'cost')      window.renderCost();
     else if (tab === 'sales')     window.renderSales();
     else if (tab === 'finmodel')  window.renderFinModel();

@@ -1,6 +1,7 @@
 import { isAuthorMode } from './author-layer.js';
 
 const TAB_PATHS = {
+  workspace: '/app/workspace',
   dashboard: '/app/budget',
   cost: '/app/suppliers',
   sales: '/app/sales',
@@ -16,6 +17,8 @@ const AUTHOR_TAB_PATHS = {
 };
 
 const PATH_TABS = {
+  '/app/workspace': 'workspace',
+  '/app/zone': 'workspace',
   '/app/budget': 'dashboard',
   '/app/dashboard': 'dashboard',
   '/app/suppliers': 'cost',

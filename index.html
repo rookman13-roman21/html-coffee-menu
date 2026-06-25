@@ -26,6 +26,7 @@
   <div class="header-actions" style="display:flex;align-items:center;gap:6px">
     <button class="burger-btn" id="burger-btn" onclick="toggleBurger()">☰</button>
     <nav class="nav" id="main-nav">
+      <button class="nav-btn" data-tab="workspace"><i data-lucide="folder-kanban" class="icon"></i> Рабочая зона</button>
       <button class="nav-btn active" data-tab="dashboard"><i data-lucide="layout-dashboard" class="icon"></i> Бюджет</button>
       <button class="nav-btn" data-tab="cost"><i data-lucide="truck" class="icon"></i> Поставщики</button>
       <button class="nav-btn" data-tab="sales"><i data-lucide="shopping-cart" class="icon"></i> План продаж</button>
@@ -66,6 +67,10 @@
 
 <!-- Нижний таббар (только mobile) -->
 <nav class="mobile-tabbar" id="mobile-tabbar">
+  <button class="mobile-tab" data-tab="workspace">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M8 13h8"/><path d="M8 16h5"/></svg>
+    <span>Зона</span>
+  </button>
   <button class="mobile-tab active" data-tab="dashboard">
     <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
     <span>Обзор</span>
@@ -864,6 +869,7 @@
 </div>
 
 <main class="main">
+  <div id="tab-workspace" class="tab"></div>
   <div id="tab-dashboard" class="tab active"></div>
   <div id="tab-cost"      class="tab"></div>
   <div id="tab-sales"     class="tab"></div>

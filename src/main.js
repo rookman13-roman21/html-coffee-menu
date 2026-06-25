@@ -117,6 +117,11 @@ import {
   settingsSaveAccountProfile, settingsUploadAccountAvatar, settingsRequestPasswordReset,
   settingsSaveProjectMeta, settingsResetProjectContent,
 } from './render/settings.js';
+import {
+  renderWorkspace, workspaceSetView, workspaceNewNote, workspaceOpenNote,
+  workspaceSaveNote, workspaceDeleteNote, workspaceFormat, workspaceInsertLink,
+  workspaceNewLink, workspaceEditLink, workspaceDeleteLink, workspaceTogglePinLink,
+} from './render/workspace.js';
 
 import {
   _editMatKey, _pendingMatSelectEl, _pendingSemiMatSelectEl,
@@ -443,6 +448,10 @@ const _srcExports = {
   settingsSetActivityFilter, settingsCreateSnapshot, settingsRestoreSnapshot,
   settingsSaveAccountProfile, settingsUploadAccountAvatar, settingsRequestPasswordReset,
   settingsSaveProjectMeta, settingsResetProjectContent,
+  // render/workspace
+  renderWorkspace, workspaceSetView, workspaceNewNote, workspaceOpenNote,
+  workspaceSaveNote, workspaceDeleteNote, workspaceFormat, workspaceInsertLink,
+  workspaceNewLink, workspaceEditLink, workspaceDeleteLink, workspaceTogglePinLink,
   // ui/payroll
   calcPositionCosts, payrollPositionTotal, payrollTotal, payrollTotals,
   empTypeTip, onPayrollPos, addPayrollPosition, deletePayrollPosition,

@@ -101,6 +101,7 @@ function activityLabel(action) {
     member_removed: 'Участник удалён', location_created: 'Точка добавлена', location_renamed: 'Заведение изменено',
     location_deleted: 'Точка удалена', opening_costs_changed: 'Бюджет открытия', finmodel_changed: 'Финмодель',
     payroll_changed: 'ФОТ', sales_changed: 'План продаж', recipe_changed: 'Рецепт', supplier_changed: 'Поставщик',
+    workspace_note_changed: 'Заметка проекта', workspace_link_changed: 'Ссылка проекта',
     export_created: 'Экспорт', state_update_blocked: 'Действие заблокировано'
   };
   return labels[action] || action;
@@ -113,6 +114,7 @@ function activityGroup(action) {
   if (['finmodel_changed', 'payroll_changed', 'sales_changed'].includes(action)) return 'finance';
   if (action === 'recipe_changed') return 'recipes';
   if (action === 'supplier_changed') return 'suppliers';
+  if (['workspace_note_changed', 'workspace_link_changed'].includes(action)) return 'workspace';
   if (action === 'export_created') return 'exports';
   if (['snapshot_created', 'snapshot_restored', 'workspace_reset', 'workspace_archived', 'workspace_restored', 'workspace_deleted', 'state_update_blocked'].includes(action)) return 'security';
   return 'work';
@@ -585,7 +587,7 @@ async function loadActivitySection(seq = _settingsRenderSeq) {
     const filters = [
       ['all', 'Все'], ['team', 'Команда'], ['locations', 'Заведения'], ['budget', 'Бюджет'],
       ['finance', 'Финмодель'], ['recipes', 'Рецепты'], ['suppliers', 'Поставщики'],
-      ['exports', 'Экспорт'], ['security', 'Безопасность'],
+      ['workspace', 'Рабочая зона'], ['exports', 'Экспорт'], ['security', 'Безопасность'],
     ];
     const filtered = _activityFilter === 'all' ? rows : rows.filter(r => activityGroup(r.action) === _activityFilter);
     panel.innerHTML = `

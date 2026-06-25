@@ -13,7 +13,7 @@ export let searchQuery  = '';
 export let _renderTimer = null;
 
 // ─── Флаги "нужен ре-рендер" (объект — мутируется по ссылке) ────
-export const dirty = { dashboard:true, cost:true, sales:true, finmodel:true, recipes:true, authorProfile:true, settings:true };
+export const dirty = { workspace:true, dashboard:true, cost:true, sales:true, finmodel:true, recipes:true, authorProfile:true, settings:true };
 
 // ─── Состояние сортировки таблицы напитков / продаж ─────────────
 export const sortState      = { col: 'profit', dir: 'desc' };
