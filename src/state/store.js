@@ -151,6 +151,7 @@ export const S = {
   semiCustomCategories: {},
   openingCosts: [],
   openingMeta: { format: 'full', currency: 'RUB', usdRate: 90, eurRate: 98, categorySort: 'manual', categorySearch: '' },
+  projectMeta: { city: '', stage: 'idea', openingDate: '' },
 };
 
 // ─── Сброс глобального стейта к базовым значениям ───────────────────
@@ -192,6 +193,7 @@ export function resetGlobalsToBase() {
   S.semiCustomCategories = {};
   S.openingCosts = [];
   S.openingMeta  = { format: 'full', currency: 'RUB', usdRate: 90, eurRate: 98, categorySort: 'manual', categorySearch: '' };
+  S.projectMeta  = { city: '', stage: 'idea', openingDate: '' };
 
   // Сбрасываем счётчики (через window — они ещё в app.js)
   window.nextDrinkId = DRINKS.reduce((max, d) => Math.max(max, Number(d.id) || 0), 0) + 1;
@@ -220,6 +222,7 @@ function _collectCloudState() {
     locIndex:  Loc.list,
     activeId:  Loc.activeId,
     locations: allLocs,
+    projectMeta: S.projectMeta || { city: '', stage: 'idea', openingDate: '' },
   };
 }
 
@@ -279,6 +282,7 @@ export function saveState() {
       semiCustomCategories: S.semiCustomCategories,
       openingCosts: S.openingCosts,
       openingMeta: S.openingMeta,
+      projectMeta: S.projectMeta,
       semiItems: authorMode ? [] : SEMI,
     }));
     scheduleServerSync();
@@ -383,6 +387,7 @@ export function loadState() {
     if (sv.semiCustomCategories) Object.assign(S.semiCustomCategories, sv.semiCustomCategories);
     if (sv.openingCosts) S.openingCosts = sv.openingCosts;
     if (sv.openingMeta)  Object.assign(S.openingMeta, sv.openingMeta);
+    if (sv.projectMeta)  S.projectMeta = { city: '', stage: 'idea', openingDate: '', ...sv.projectMeta };
 
     if (sv.customMats) {
       sv.customMats.forEach(m => {
@@ -445,9 +450,12 @@ export function loadState() {
 export function restoreFromServer(serverData) {
   if (!serverData || !serverData.locations) return false;
   try {
+    const projectMeta = serverData.projectMeta || null;
+    if (projectMeta) S.projectMeta = { city: '', stage: 'idea', openingDate: '', ...projectMeta };
     // Записываем все локации в localStorage
     for (const [id, data] of Object.entries(serverData.locations)) {
-      localStorage.setItem(locDataKey(id), JSON.stringify(data));
+      const nextData = projectMeta ? { ...data, projectMeta } : data;
+      localStorage.setItem(locDataKey(id), JSON.stringify(nextData));
     }
     if (serverData.locIndex && Array.isArray(serverData.locIndex)) {
       Loc.list = serverData.locIndex;

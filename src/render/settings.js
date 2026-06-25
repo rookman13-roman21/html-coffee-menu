@@ -11,6 +11,7 @@ import {
 let _settingsSection = 'account';
 let _activityFilter = 'all';
 let _settingsNotice = '';
+const _projectSummaryCache = new Map();
 
 function esc(s) {
   return String(s || '')
@@ -115,6 +116,67 @@ function currentRoleHint() {
   return isWorkspaceOwner()
     ? 'Вы владелец проекта и можете управлять командой, заведениями и восстановлением.'
     : 'Вы редактор проекта. Управление командой и структурой доступно владельцу проекта.';
+}
+
+
+const PROJECT_STAGES = [
+  ['idea', 'Идея'],
+  ['model', 'Расчёт'],
+  ['premises', 'Поиск помещения'],
+  ['renovation', 'Ремонт'],
+  ['purchase', 'Закупка'],
+  ['launch', 'Запуск'],
+];
+const PROJECT_FORMAT_LABELS = {
+  kiosk: 'Киоск',
+  island: 'Остров в ТЦ',
+  full: 'Кофейня',
+};
+const PROJECT_CURRENCY_LABELS = { RUB: '₽ RUB', USD: '$ USD', EUR: '€ EUR' };
+
+function fmtProjectDate(value) {
+  if (!value) return 'не указано';
+  try {
+    const raw = String(value);
+    const normalized = /([zZ]|[+-]\d{2}:?\d{2})$/.test(raw) ? raw : `${raw}Z`;
+    return new Intl.DateTimeFormat('ru-RU', {
+      timeZone: 'Europe/Moscow',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(new Date(normalized));
+  } catch { return String(value); }
+}
+
+function projectMeta() {
+  const meta = window.S?.projectMeta || {};
+  return { city: '', stage: 'idea', openingDate: '', ...meta };
+}
+
+function projectFormatLabel() {
+  const format = window.S?.openingMeta?.format || 'full';
+  return PROJECT_FORMAT_LABELS[format] || format;
+}
+
+function projectCurrencyLabel() {
+  const currency = window.S?.openingMeta?.currency || 'RUB';
+  return PROJECT_CURRENCY_LABELS[currency] || currency;
+}
+
+function projectStageOptions(selected) {
+  return PROJECT_STAGES.map(([value, label]) =>
+    `<option value="${esc(value)}" ${selected === value ? 'selected' : ''}>${esc(label)}</option>`
+  ).join('');
+}
+
+function projectSummary(current) {
+  const locs = window.Loc?.list || [];
+  const cached = current?.id ? _projectSummaryCache.get(String(current.id)) : null;
+  return {
+    ownerName: cached?.ownerName || (current?.role === 'owner' ? 'Вы' : 'Владелец проекта'),
+    memberCount: cached?.memberCount || 0,
+    locationCount: locs.length || 0,
+  };
 }
 
 function renderLayout(panelHtml) {
@@ -231,50 +293,133 @@ function renderProjectSection() {
   const current = getCurrentWorkspace();
   const workspaces = getWorkspaces();
   const owner = isWorkspaceOwner();
+  const meta = projectMeta();
+  const summary = projectSummary(current);
+  if (!current) return emptyProjectHtml();
   return `
-    <div class="settings-grid">
-      <div class="settings-card">
-        <div class="settings-card-head">
-          <div>
-            <h2>Проект</h2>
-            <p>Название проекта видно всем участникам.</p>
+    <div class="settings-project-layout">
+      <div class="settings-project-main">
+        <div class="settings-card">
+          <div class="settings-card-head">
+            <div>
+              <h2>Сводка проекта</h2>
+              <p>Основная информация о текущем проекте кофейни.</p>
+            </div>
+            <span class="settings-role">${roleLabel(current?.role)}</span>
           </div>
-          <span class="settings-role">${roleLabel(current?.role)}</span>
+          <div class="settings-summary-grid">
+            <div><span>Владелец</span><strong>${esc(summary.ownerName)}</strong></div>
+            <div><span>Ваша роль</span><strong>${esc(roleLabel(current?.role))}</strong></div>
+            <div><span>Участники</span><strong>${summary.memberCount ? `${summary.memberCount}` : '...'}</strong></div>
+            <div><span>Заведения</span><strong>${summary.locationCount}</strong></div>
+            <div><span>Создан</span><strong>${esc(fmtProjectDate(current.created_at))}</strong></div>
+            <div><span>Обновлён</span><strong>${esc(fmtProjectDate(current.updated_at))}</strong></div>
+          </div>
         </div>
-        <label class="settings-label">Название проекта</label>
-        <div class="settings-inline-form">
-          <input id="settings-project-name" type="text" value="${esc(current?.name || '')}" ${owner ? '' : 'disabled'}>
+
+        <div class="settings-card">
+          <div class="settings-card-head">
+            <div>
+              <h2>Параметры проекта</h2>
+              <p>Эти данные помогают команде понимать контекст запуска.</p>
+            </div>
+          </div>
+          <div class="settings-fields-grid">
+            <label class="settings-field">
+              <span>Город</span>
+              <input id="settings-project-city" type="text" value="${esc(meta.city)}" placeholder="Москва" ${owner ? '' : 'disabled'}>
+            </label>
+            <label class="settings-field">
+              <span>Планируемое открытие</span>
+              <input id="settings-project-opening-date" type="date" value="${esc(meta.openingDate)}" ${owner ? '' : 'disabled'}>
+            </label>
+            <label class="settings-field">
+              <span>Стадия</span>
+              <select id="settings-project-stage" ${owner ? '' : 'disabled'}>${projectStageOptions(meta.stage)}</select>
+            </label>
+            <div class="settings-field settings-field-readonly">
+              <span>Формат</span>
+              <strong>${esc(projectFormatLabel())}</strong>
+            </div>
+            <div class="settings-field settings-field-readonly">
+              <span>Валюта</span>
+              <strong>${esc(projectCurrencyLabel())}</strong>
+            </div>
+          </div>
           ${owner
-            ? '<button class="btn-green" type="button" onclick="settingsRenameProject()">Сохранить</button>'
-            : '<button class="btn btn-outline" type="button" disabled>Доступно владельцу</button>'}
+            ? '<button class="btn-green settings-save-meta" type="button" onclick="settingsSaveProjectMeta()">Сохранить параметры</button>'
+            : '<div class="settings-hint">Параметры проекта может менять только владелец.</div>'}
         </div>
-        <div class="settings-hint">${esc(currentRoleHint())}</div>
-      </div>
-      <div class="settings-card">
-        <div class="settings-card-head">
-          <div>
-            <h2>Доступные проекты</h2>
-            <p>Переключайтесь между своими и приглашёнными проектами.</p>
+
+        <div class="settings-card">
+          <div class="settings-card-head">
+            <div>
+              <h2>Управление проектом</h2>
+              <p>Название проекта видно всем участникам и используется в верхнем переключателе.</p>
+            </div>
           </div>
-        </div>
-        <div class="settings-list">
-          ${workspaces.map(w => `
-            <button class="settings-project-row ${current && String(w.id) === String(current.id) ? 'active' : ''}" type="button" onclick="settingsSwitchWorkspace(${Number(w.id)})">
-              <span>${esc(w.name)}</span>
-              <small>${roleLabel(w.role)}</small>
+          <label class="settings-label">Название проекта</label>
+          <div class="settings-inline-form">
+            <input id="settings-project-name" type="text" value="${esc(current?.name || '')}" ${owner ? '' : 'disabled'}>
+            ${owner
+              ? '<button class="btn-green" type="button" onclick="settingsRenameProject()">Сохранить</button>'
+              : '<button class="btn btn-outline" type="button" disabled>Доступно владельцу</button>'}
+          </div>
+          ${canCreateWorkspaces() ? `
+            <button class="btn btn-outline settings-full-btn" type="button" onclick="settingsCreateWorkspace()">
+              <i data-lucide="folder-plus" class="icon"></i> Новый проект
             </button>
-          `).join('') || '<div class="settings-empty">Проектов пока нет.</div>'}
+          ` : '<div class="settings-hint">Свои проекты доступны на платном тарифе.</div>'}
+          <div class="settings-hint">${esc(currentRoleHint())}</div>
         </div>
-        ${canCreateWorkspaces() ? `
-          <button class="btn btn-outline settings-full-btn" type="button" onclick="settingsCreateWorkspace()">
-            <i data-lucide="folder-plus" class="icon"></i> Новый проект
-          </button>
-        ` : '<div class="settings-hint">Свои проекты доступны на платном тарифе.</div>'}
+
+        <div class="settings-card settings-danger-card">
+          <div class="settings-card-head">
+            <div>
+              <h2>Опасная зона</h2>
+              <p>Действия ниже могут сильно повлиять на рабочий проект.</p>
+            </div>
+          </div>
+          <div class="settings-danger-actions">
+            <button class="btn-danger-outline" type="button" ${owner ? 'onclick="settingsResetProjectContent()"' : 'disabled'}>
+              <i data-lucide="rotate-ccw" class="icon"></i> Сбросить содержимое
+            </button>
+            <button class="btn btn-outline" type="button" disabled>Архивировать проект</button>
+            <button class="btn btn-outline" type="button" disabled>Удалить проект</button>
+          </div>
+          <div class="settings-hint">Сброс доступен владельцу. Архивирование и полное удаление добавим отдельным безопасным сценарием с восстановлением и подтверждением.</div>
+        </div>
+      </div>
+
+      <div class="settings-project-aside">
+        <div class="settings-card">
+          <div class="settings-card-head">
+            <div>
+              <h2>Доступные проекты</h2>
+              <p>Переключайтесь между своими и приглашёнными проектами.</p>
+            </div>
+          </div>
+          <div class="settings-list">
+            ${workspaces.map(w => `
+              <button class="settings-project-row settings-project-row-rich ${current && String(w.id) === String(current.id) ? 'active' : ''}" type="button" onclick="settingsSwitchWorkspace(${Number(w.id)})">
+                <span>
+                  <strong>${esc(w.name)}</strong>
+                  <em>${esc(roleLabel(w.role))} · обновлён ${esc(fmtProjectDate(w.updated_at))}</em>
+                </span>
+                ${current && String(w.id) === String(current.id) ? '<small>активен</small>' : '<small>открыть</small>'}
+              </button>
+            `).join('') || '<div class="settings-empty">Проектов пока нет.</div>'}
+          </div>
+          ${canCreateWorkspaces() ? `
+            <button class="btn btn-outline settings-full-btn" type="button" onclick="settingsCreateWorkspace()">
+              <i data-lucide="folder-plus" class="icon"></i> Новый проект
+            </button>
+          ` : '<div class="settings-hint">Свои проекты доступны на платном тарифе.</div>'}
+        </div>
       </div>
     </div>
   `;
 }
-
 function renderTeamLoading() {
   return '<div class="settings-card"><div class="settings-empty">Загружаем участников...</div></div>';
 }
@@ -510,6 +655,7 @@ function refreshUserMenu() {
 }
 
 function afterRender() {
+  if (_settingsSection === 'project') loadProjectSummary();
   if (_settingsSection === 'team') loadTeamSection();
   if (_settingsSection === 'activity') loadActivitySection();
   if (_settingsSection === 'snapshots') loadSnapshotsSection();
@@ -574,6 +720,66 @@ export async function settingsRequestPasswordReset() {
   } catch (e) {
     window.showAlert?.(e.message || 'Не удалось отправить письмо');
   }
+}
+
+
+async function loadProjectSummary() {
+  const current = getCurrentWorkspace();
+  if (!current?.id) return;
+  const key = String(current.id);
+  try {
+    const data = await fetchWorkspaceMembers(current.id);
+    const owner = (data.members || []).find(m => m.role === 'owner');
+    const next = {
+      memberCount: (data.members || []).length,
+      ownerName: owner?.name || owner?.email || (current.role === 'owner' ? 'Вы' : 'Владелец проекта'),
+    };
+    const prev = _projectSummaryCache.get(key) || {};
+    if (prev.memberCount !== next.memberCount || prev.ownerName !== next.ownerName) {
+      _projectSummaryCache.set(key, next);
+      if (_settingsSection === 'project') renderSettings('project');
+    }
+  } catch {}
+}
+
+function persistProjectMetaToLocations(meta) {
+  const locs = window.Loc?.list || [];
+  for (const loc of locs) {
+    try {
+      const key = window.locDataKey?.(loc.id);
+      if (!key) continue;
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const data = JSON.parse(raw);
+      localStorage.setItem(key, JSON.stringify({ ...data, projectMeta: meta }));
+    } catch {}
+  }
+}
+
+export function settingsSaveProjectMeta() {
+  if (!isWorkspaceOwner()) {
+    window.showAlert?.('Параметры проекта может менять только владелец.');
+    return;
+  }
+  const meta = {
+    city: (document.getElementById('settings-project-city')?.value || '').trim(),
+    openingDate: (document.getElementById('settings-project-opening-date')?.value || '').trim(),
+    stage: (document.getElementById('settings-project-stage')?.value || 'idea').trim() || 'idea',
+  };
+  if (!window.S) return;
+  window.S.projectMeta = meta;
+  persistProjectMetaToLocations(meta);
+  window.saveState?.();
+  _settingsNotice = 'Параметры проекта сохранены.';
+  renderSettings('project');
+}
+
+export function settingsResetProjectContent() {
+  if (!isWorkspaceOwner()) {
+    window.showAlert?.('Сброс проекта доступен только владельцу.');
+    return;
+  }
+  window.resetAll?.();
 }
 
 export async function settingsRenameProject() {
