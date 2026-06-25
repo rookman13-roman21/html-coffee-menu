@@ -771,3 +771,10 @@ constants.js                          image.js          sales.js          auth.j
 - Backend source перенесён в `HTML_coffee_menu/server`, чтобы `server/main.py`, `server/admin/src/*`, `requirements.txt`, `.env.example` и backend scripts попадали в GitHub вместе с frontend.
 - `scripts/check.sh`, `scripts/deploy_backend.sh` и `scripts/deploy_admin.sh` переключены на tracked `HTML_coffee_menu/server`. Соседний `Coffee_menu/server` теперь legacy/runtime-копия; новые правки делать в Git source.
 - В `.gitignore` добавлена защита от backend runtime-файлов: `server/.env`, `server/data/`, `__pycache__`, `*.pyc`, generated `server/admin/admin-panel.js`.
+
+### Сессия 66 (25 июня 2026) — production deploy workspace security
+
+- Production deploy выполнен после переноса backend source в Git: `npm run deploy:backend` загрузил tracked `HTML_coffee_menu/server/main.py`, сделал SQLite backup и перезапустил `coffee-menu-api`; первый health внутри deploy поймал ранний `curl: (7)`, повторная проверка через SSH подтвердила `active` и `/api/health = ok`.
+- На production проверено наличие `WORKSPACE_OWNER_ACTIVITY_ACTIONS`, `_require_workspace_owner_activity` и `state_update_blocked` в `/var/www/coffee-menu/server/main.py`.
+- `npm run deploy:frontend` выкатил bundle `assets/index-Dg3DFYDQ.js` / `assets/index-C0kcJg3F.css`; публичные проверки: `/api/health = {ok:true, version:1.0.0}`, главная `HTTP/2 200`, ALPN `h2`.
+- Smoke direct API без JWT: `POST /api/workspaces/1/activity` с `workspace_deleted` возвращает `403 Not authenticated`. Role-specific smoke editor/guest -> `403` требует авторизованный JWT тестового пользователя; локального `scripts/smoke_api.local.json` сейчас нет.

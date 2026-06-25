@@ -327,7 +327,7 @@ npm run deploy:backend
 - `npm run smoke:api:apply` — smoke с включением автора тестовому пользователю и проверкой Битрикс-синхронизации.
 - `npm run deploy:frontend` — build + upload `dist/`, не удаляет `admin-panel.js`.
 - `npm run deploy:admin` — `server/admin/build.sh`, `node --check`, upload `admin-panel.js`.
-- `npm run deploy:backend` — `py_compile`, SQLite backup, upload `server/main.py`, restart API, health check.
+- `npm run deploy:backend` — `py_compile`, SQLite backup, upload tracked `HTML_coffee_menu/server/main.py`, restart API, health check. Production deploy 25 июня 2026 подтвердил `WORKSPACE_OWNER_ACTIVITY_ACTIONS` на сервере.
 
 Документы:
 

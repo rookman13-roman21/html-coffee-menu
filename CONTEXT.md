@@ -117,7 +117,7 @@ Security hardening на 22 июня 2026:
 - `npm run smoke:api:apply` — проверка тестового автора и Битрикс-синхронизации.
 - `npm run deploy:frontend` — деплой SPA.
 - `npm run deploy:admin` — сборка и деплой admin bundle.
-- `npm run deploy:backend` — backup SQLite, деплой backend, restart API.
+- `npm run deploy:backend` — backup SQLite, деплой tracked backend из `HTML_coffee_menu/server`, restart API.
 
 Admin panel:
 
