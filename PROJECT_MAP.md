@@ -790,7 +790,9 @@ constants.js                          image.js          sales.js          auth.j
 ### Сессия 68 (25 июня 2026) — рабочая зона проекта
 
 - Добавлена новая вкладка `Рабочая зона` в верхнюю навигацию перед `Бюджет`; URL: `/app/workspace`.
-- V1 рабочей зоны хранит `notes` и `links` в `workspace.state` как `S.workspaceArea`, без новых backend-таблиц. Это значит, что данные изолированы по активному workspace, синхронизируются через существующий `GET/PUT /api/state` и попадают в snapshots/restore проекта.
-- Новый модуль `src/render/workspace.js`: обзор, закреплённые ссылки, список заметок, список ссылок, простой rich-text редактор заметки через `contenteditable`.
+- V1 рабочей зоны хранит `notes` и `links` в `workspace.state` как `S.workspaceArea`. Это значит, что данные изолированы по активному workspace, синхронизируются через существующий `GET/PUT /api/state` и попадают в snapshots/restore проекта.
+- Приватные файлы заметок вынесены в backend: таблица `workspace_files`, runtime-папка `server/data/workspace_uploads`, endpoints `POST/GET/DELETE /api/workspaces/{workspace_id}/files...`. Файлы доступны только участникам workspace; owner может удалить любой файл, участник только свой.
+- Разрешённые файлы заметок: PDF, DOCX, XLSX, CSV, TXT, PNG, JPG/JPEG, WebP до 10 MB. Для Safari/macOS uploads есть fallback по расширению, если MIME-type пришёл пустым или нестандартным.
+- Новый модуль `src/render/workspace.js`: компактный обзор, закреплённые ссылки, список заметок, список ссылок, rich-text редактор заметки через `contenteditable`, горячие клавиши, режим просмотра заметки перед редактированием, список файлов и предпросмотр изображений.
 - Поддержаны совместные действия owner/editor/guest: участники могут добавлять и редактировать материалы рабочей зоны; события логируются как `workspace_note_changed` и `workspace_link_changed`.
-- Журнал настроек получил фильтр `Рабочая зона`, чтобы изменения заметок и ссылок не смешивались с системными событиями.
+- Журнал настроек получил фильтр `Рабочая зона`, чтобы изменения заметок, ссылок и файлов не смешивались с системными событиями. Файлы логируются как `workspace_file_uploaded` и `workspace_file_deleted`.
