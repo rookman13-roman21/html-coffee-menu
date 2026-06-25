@@ -373,22 +373,24 @@ function renderProjectSection() {
           <div class="settings-hint">${esc(currentRoleHint())}</div>
         </div>
 
-        <div class="settings-card settings-danger-card">
-          <div class="settings-card-head">
-            <div>
-              <h2>Опасная зона</h2>
-              <p>Действия ниже могут сильно повлиять на рабочий проект.</p>
+        ${owner ? `
+          <div class="settings-card settings-danger-card">
+            <div class="settings-card-head">
+              <div>
+                <h2>Опасная зона</h2>
+                <p>Действия ниже могут сильно повлиять на рабочий проект.</p>
+              </div>
             </div>
+            <div class="settings-danger-actions">
+              <button class="btn-danger-outline" type="button" onclick="settingsResetProjectContent()">
+                <i data-lucide="rotate-ccw" class="icon"></i> Сбросить содержимое
+              </button>
+              <button class="btn btn-outline" type="button" disabled>Архивировать проект</button>
+              <button class="btn btn-outline" type="button" disabled>Удалить проект</button>
+            </div>
+            <div class="settings-hint">Архивирование и полное удаление добавим отдельным безопасным сценарием с восстановлением и подтверждением.</div>
           </div>
-          <div class="settings-danger-actions">
-            <button class="btn-danger-outline" type="button" ${owner ? 'onclick="settingsResetProjectContent()"' : 'disabled'}>
-              <i data-lucide="rotate-ccw" class="icon"></i> Сбросить содержимое
-            </button>
-            <button class="btn btn-outline" type="button" disabled>Архивировать проект</button>
-            <button class="btn btn-outline" type="button" disabled>Удалить проект</button>
-          </div>
-          <div class="settings-hint">Сброс доступен владельцу. Архивирование и полное удаление добавим отдельным безопасным сценарием с восстановлением и подтверждением.</div>
-        </div>
+        ` : ''}
       </div>
 
       <div class="settings-project-aside">
