@@ -3,7 +3,7 @@
 import { isAuthorMode } from '../access/author-layer.js';
 import {
   getActiveWorkspaceId, getCurrentWorkspace, getWorkspaces, setActiveWorkspaceId,
-  fetchState, createWorkspace, fetchWorkspaceMembers,
+  fetchState, createWorkspace, renameWorkspace, fetchWorkspaceMembers,
   createWorkspaceInvite, fetchWorkspaceActivity, removeWorkspaceMember,
   revokeWorkspaceInvite, fetchWorkspaceSnapshots, createWorkspaceSnapshot,
   restoreWorkspaceSnapshot, logWorkspaceActivity, canCreateWorkspaces, hasWorkspaceMembership,
@@ -106,6 +106,7 @@ function _ensureClientLocMenuShell() {
     ${_renderMenuUserCard()}
     <div class="loc-menu-header">Проект кофейни</div>
     <div class="workspace-list" id="workspace-list"></div>
+    <button class="loc-menu-item" id="workspace-rename-btn" type="button" onclick="renameCurrentWorkspaceFromMenu()"><i data-lucide="pencil" class="icon"></i> Переименовать проект</button>
     <button class="loc-menu-item" type="button" onclick="openWorkspaceTeamModal()"><i data-lucide="users" class="icon"></i> Команда проекта</button>
     <button class="loc-menu-item" type="button" onclick="openWorkspaceActivityModal()"><i data-lucide="list-checks" class="icon"></i> Журнал действий</button>
     <button class="loc-menu-item" type="button" onclick="openWorkspaceSnapshotsModal()"><i data-lucide="history" class="icon"></i> Восстановление</button>
@@ -152,6 +153,8 @@ function renderWorkspaceList() {
   }
   const workspaces = getWorkspaces();
   const current = getCurrentWorkspace();
+  const renameBtn = document.getElementById('workspace-rename-btn');
+  if (renameBtn) renameBtn.style.display = current?.role === 'owner' ? '' : 'none';
   if (!workspaces.length) {
     list.innerHTML = `<div class="loc-menu-note">${canCreateWorkspaces() ? 'Проект будет создан автоматически при первом сохранении.' : 'У вас пока нет доступных проектов.'}</div>`;
     return;
@@ -223,6 +226,24 @@ export async function createWorkspaceFromMenu() {
     document.getElementById('loc-menu')?.classList.remove('open');
   } catch (e) {
     window.showAlert(e.message || 'Не удалось создать проект');
+  }
+}
+
+export async function renameCurrentWorkspaceFromMenu() {
+  const current = getCurrentWorkspace();
+  if (!current?.id) {
+    window.showAlert('Проект не выбран');
+    return;
+  }
+  if (!requireWorkspaceOwner('Переименовывать проект может только владелец.')) return;
+  const name = await window.showPrompt?.('Название проекта кофейни', current.name || 'Моя кофейня', { okText: 'Сохранить' });
+  if (!name || !name.trim()) return;
+  try {
+    await renameWorkspace(current.id, name.trim());
+    renderLocSwitcherUI();
+    document.getElementById('loc-menu')?.classList.remove('open');
+  } catch (e) {
+    window.showAlert(e.message || 'Не удалось переименовать проект');
   }
 }
 
@@ -418,7 +439,7 @@ export async function revokeWorkspaceInviteFromModal(inviteId) {
 
 function _activityLabel(action) {
   const labels = {
-    project_opened: 'Вход в проект', workspace_created: 'Создан проект', workspace_switched: 'Смена проекта', workspace_reset: 'Сброс проекта',
+    project_opened: 'Вход в проект', workspace_created: 'Создан проект', workspace_renamed: 'Проект переименован', workspace_switched: 'Смена проекта', workspace_reset: 'Сброс проекта',
     snapshot_created: 'Точка восстановления', snapshot_restored: 'Восстановление',
     invite_created: 'Приглашение', invite_accepted: 'Принято приглашение', invite_revoked: 'Отозвано приглашение', member_removed: 'Участник удалён',
     location_created: 'Точка добавлена', location_renamed: 'Точка изменена', location_deleted: 'Точка удалена',
@@ -445,7 +466,7 @@ const ACTIVITY_FILTERS = [
 
 function _activityGroup(action) {
   if (['invite_created', 'invite_accepted', 'invite_revoked', 'member_removed'].includes(action)) return 'team';
-  if (['location_created', 'location_renamed', 'location_deleted', 'workspace_created', 'workspace_switched'].includes(action)) return 'locations';
+  if (['location_created', 'location_renamed', 'location_deleted', 'workspace_created', 'workspace_renamed', 'workspace_switched'].includes(action)) return 'locations';
   if (action === 'opening_costs_changed') return 'budget';
   if (['finmodel_changed', 'payroll_changed', 'sales_changed'].includes(action)) return 'finance';
   if (action === 'recipe_changed') return 'recipes';

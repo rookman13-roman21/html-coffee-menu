@@ -263,6 +263,17 @@ export async function createWorkspace(name) {
   return d.workspace;
 }
 
+export async function renameWorkspace(workspaceId, name) {
+  if (!workspaceId) throw new Error('Проект не выбран');
+  const d = await apiJson(`/api/workspaces/${encodeURIComponent(workspaceId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name })
+  });
+  rememberWorkspacePayload(d);
+  return d.workspace;
+}
+
 export async function fetchWorkspaceMembers(workspaceId = getActiveWorkspaceId()) {
   if (!workspaceId) return { members: [], invites: [] };
   return apiJson(`/api/workspaces/${encodeURIComponent(workspaceId)}/members`);
