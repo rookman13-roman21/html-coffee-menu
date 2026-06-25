@@ -414,11 +414,11 @@ async function loadActivitySection() {
                 <span>${esc(r.summary || '')}</span>
               </div>
               <div class="workspace-activity-actor">
-                ${avatarHtml(r.actor_avatar_url, r.actor_name || 'Система', 'workspace-activity-avatar')}
                 <div>
                   <span>${esc(r.actor_name || 'Система')}</span>
                   <small>${esc(activityRoleLabel(r))}</small>
                 </div>
+                ${avatarHtml(r.actor_avatar_url, r.actor_name || 'Система', 'workspace-activity-avatar')}
               </div>
             </div>
           `).join('') || '<div class="settings-empty">По этому фильтру событий пока нет.</div>'}

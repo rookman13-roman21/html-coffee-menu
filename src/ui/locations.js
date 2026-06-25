@@ -547,11 +547,11 @@ function _renderWorkspaceActivityRows(modal, rows) {
           <span>${_esc(r.summary || '')}</span>
         </div>
         <div class="workspace-activity-actor" title="${_esc(r.actor_name || 'Система')}">
-          ${_workspaceAvatarHtml(r.actor_avatar_url, r.actor_name || 'Система', 'workspace-activity-avatar')}
           <div>
             <span>${_esc(r.actor_name || 'Система')}</span>
             <small>${_esc(_activityRoleLabel(r))}</small>
           </div>
+          ${_workspaceAvatarHtml(r.actor_avatar_url, r.actor_name || 'Система', 'workspace-activity-avatar')}
         </div>
       </div>
     `;
