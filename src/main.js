@@ -119,8 +119,12 @@ import {
 } from './render/settings.js';
 import {
   renderWorkspace, workspaceSetView, workspaceNewNote, workspaceOpenNote,
-  workspaceSaveNote, workspaceDeleteNote, workspaceFormat, workspaceInsertLink,
-  workspaceNewLink, workspaceEditLink, workspaceDeleteLink, workspaceTogglePinLink,
+  workspaceEditNote, workspaceSaveNote, workspaceDeleteNote, workspaceFormat, workspaceFormatBlock,
+  workspaceInsertChecklist, workspaceInsertDivider, workspaceOpenLinkPanel, workspaceApplyEditorLink,
+  workspaceNewLink, workspaceEditLink, workspaceDeleteLink, workspaceTogglePinLink, workspaceTogglePinNote,
+  workspaceViewLink, workspaceCloseLinkModal, workspaceAutofillLinkType, workspaceSetLinkFilter,
+  workspaceSetLinkSearch, workspaceSaveProjectLink, workspaceOpenProjectLink, workspaceCopyLink,
+  workspaceFlushNoteAutosave, workspaceHasUnsavedNote,
 } from './render/workspace.js';
 
 import {
@@ -450,8 +454,12 @@ const _srcExports = {
   settingsSaveProjectMeta, settingsResetProjectContent,
   // render/workspace
   renderWorkspace, workspaceSetView, workspaceNewNote, workspaceOpenNote,
-  workspaceSaveNote, workspaceDeleteNote, workspaceFormat, workspaceInsertLink,
-  workspaceNewLink, workspaceEditLink, workspaceDeleteLink, workspaceTogglePinLink,
+  workspaceEditNote, workspaceSaveNote, workspaceDeleteNote, workspaceFormat, workspaceFormatBlock,
+  workspaceInsertChecklist, workspaceInsertDivider, workspaceOpenLinkPanel, workspaceApplyEditorLink,
+  workspaceNewLink, workspaceEditLink, workspaceDeleteLink, workspaceTogglePinLink, workspaceTogglePinNote,
+  workspaceViewLink, workspaceCloseLinkModal, workspaceAutofillLinkType, workspaceSetLinkFilter,
+  workspaceSetLinkSearch, workspaceSaveProjectLink, workspaceOpenProjectLink, workspaceCopyLink,
+  workspaceFlushNoteAutosave, workspaceHasUnsavedNote,
   // ui/payroll
   calcPositionCosts, payrollPositionTotal, payrollTotal, payrollTotals,
   empTypeTip, onPayrollPos, addPayrollPosition, deletePayrollPosition,

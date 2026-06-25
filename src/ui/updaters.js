@@ -340,6 +340,9 @@ export function resetAll() {
 }
 
 export function switchTab(tab, opts = {}) {
+  if (window.activeTab === 'workspace' && tab !== 'workspace') {
+    window.workspaceFlushNoteAutosave?.();
+  }
   const canOpenTab = isAuthorMode() ? ['cost', 'recipes', 'authorProfile'].includes(tab) : canAccessTab(tab);
   if (!canOpenTab) {
     const fallback = isAuthorMode() ? 'recipes' : firstAllowedTab();
@@ -349,6 +352,7 @@ export function switchTab(tab, opts = {}) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.mobile-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.body.classList.add('app-hide-footer');
   window.activeTab = tab;
   const tabEl = document.getElementById('tab-' + tab);
   if (tabEl) tabEl.classList.add('active');
