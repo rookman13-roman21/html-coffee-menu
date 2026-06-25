@@ -407,6 +407,57 @@ export async function fetchWorkspaceActivity(workspaceId = getActiveWorkspaceId(
   return d.activity || [];
 }
 
+export async function uploadWorkspaceFile(file, noteId = '', workspaceId = getActiveWorkspaceId()) {
+  const token = getToken();
+  if (!token) throw new Error('Нужно войти в аккаунт');
+  if (!workspaceId) throw new Error('Проект не выбран');
+  if (!file) throw new Error('Выберите файл');
+  const form = new FormData();
+  form.append('file', file);
+  const qs = noteId ? `?note_id=${encodeURIComponent(noteId)}` : '';
+  const r = await fetch(`${API}/api/workspaces/${encodeURIComponent(workspaceId)}/files${qs}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: form
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.detail || d.message || 'Не удалось загрузить файл');
+  return d.file;
+}
+
+export async function deleteWorkspaceFile(fileId, workspaceId = getActiveWorkspaceId()) {
+  if (!workspaceId || !fileId) throw new Error('Файл не выбран');
+  return apiJson(`/api/workspaces/${encodeURIComponent(workspaceId)}/files/${encodeURIComponent(fileId)}`, { method: 'DELETE' });
+}
+
+export async function fetchWorkspaceFileBlob(fileId, workspaceId = getActiveWorkspaceId()) {
+  const token = getToken();
+  if (!token) throw new Error('Нужно войти в аккаунт');
+  if (!workspaceId || !fileId) throw new Error('Файл не выбран');
+  const r = await fetch(`${API}/api/workspaces/${encodeURIComponent(workspaceId)}/files/${encodeURIComponent(fileId)}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!r.ok) {
+    const d = await r.json().catch(() => ({}));
+    throw new Error(d.detail || d.message || 'Не удалось открыть файл');
+  }
+  return r.blob();
+}
+
+export async function openWorkspaceFile(fileId, workspaceId = getActiveWorkspaceId(), filename = 'file') {
+  const blob = await fetchWorkspaceFileBlob(fileId, workspaceId);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.download = filename || 'file';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+
 export async function fetchWorkspaceSnapshots(workspaceId = getActiveWorkspaceId()) {
   if (!workspaceId) return [];
   const d = await apiJson(`/api/workspaces/${encodeURIComponent(workspaceId)}/snapshots`);

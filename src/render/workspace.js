@@ -1,5 +1,5 @@
 import { S, saveState } from '../state/store.js';
-import { getCurrentWorkspace, getUser } from '../ui/auth.js';
+import { getCurrentWorkspace, getUser, isWorkspaceOwner, uploadWorkspaceFile, deleteWorkspaceFile, fetchWorkspaceFileBlob } from '../ui/auth.js';
 
 const LINK_TYPES = [
   ['drive', 'Google Drive'],
@@ -30,6 +30,7 @@ let _savedEditorRange = null;
 let _linkFilter = 'all';
 let _linkSearch = '';
 let _linkModal = null;
+let _filePreview = null;
 
 function esc(value) {
   return String(value ?? '').replace(/[&<>"']/g, ch => ({
@@ -163,6 +164,124 @@ function sortNotes(notes) {
 function notePreview(note) {
   const text = stripHtml(cleanEditorHtml(note.body || '')).trim();
   return text ? esc(text.slice(0, 180)) : 'Пока нет текста';
+}
+
+function noteFiles(note) {
+  if (!Array.isArray(note.files)) note.files = [];
+  return note.files;
+}
+
+function formatFileSize(size) {
+  const n = Number(size || 0);
+  if (!n) return '';
+  if (n < 1024) return `${n} Б`;
+  if (n < 1024 * 1024) return `${Math.round(n / 1024)} КБ`;
+  return `${(n / 1024 / 1024).toFixed(n >= 10 * 1024 * 1024 ? 0 : 1)} МБ`;
+}
+
+function fileIcon(file) {
+  const type = String(file?.content_type || '').toLowerCase();
+  const name = String(file?.name || '').toLowerCase();
+  if (type.includes('image/')) return 'image';
+  if (type.includes('pdf') || name.endsWith('.pdf')) return 'file-text';
+  if (type.includes('spreadsheet') || name.endsWith('.xlsx') || name.endsWith('.csv')) return 'sheet';
+  if (type.includes('word') || name.endsWith('.docx')) return 'file-type';
+  return 'paperclip';
+}
+
+function isPreviewImage(file) {
+  const type = String(file?.content_type || '').toLowerCase();
+  const name = String(file?.name || '').toLowerCase();
+  return type.startsWith('image/') || /\.(png|jpe?g|webp)$/i.test(name);
+}
+
+function shouldPreviewBlob(file, blob) {
+  const blobType = String(blob?.type || '').toLowerCase();
+  return blobType.startsWith('image/') || isPreviewImage(file);
+}
+
+function downloadBlob(blob, filename = 'file') {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename || 'file';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+
+function validateWorkspaceUploadFile(file) {
+  if (!file) return 'Выберите файл';
+  const allowedExt = /\.(pdf|docx|xlsx|csv|txt|png|jpe?g|webp)$/i;
+  const allowedMime = /^(application\/pdf|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document|application\/vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet|text\/csv|text\/plain|image\/png|image\/jpeg|image\/webp)$/i;
+  if (!allowedExt.test(file.name || '') && !allowedMime.test(file.type || '')) {
+    return 'Можно загрузить PDF, DOCX, XLSX, CSV, TXT, PNG, JPG или WebP';
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    return 'Файл должен быть не больше 10 МБ';
+  }
+  return '';
+}
+
+function canDeleteNoteFile(file) {
+  const user = getUser?.();
+  return !!(isWorkspaceOwner?.() || user?.is_admin || Number(file?.uploaded_by_user_id || 0) === Number(user?.id || 0));
+}
+
+function renderNoteFiles(note, editable = false) {
+  const files = noteFiles(note);
+  return `
+    <section class="workspace-note-files">
+      <div class="workspace-note-files-head">
+        <div>
+          <h3>Вложения</h3>
+          <p>PDF, DOCX, XLSX, CSV, TXT, PNG, JPG или WebP до 10 МБ.</p>
+        </div>
+        ${editable ? `
+          <label class="btn-outline workspace-file-upload">
+            <i data-lucide="paperclip" class="icon"></i> Прикрепить файл
+            <input type="file" onchange="workspaceUploadNoteFile('${esc(note.id)}', this.files?.[0]); this.value=''" accept=".pdf,.docx,.xlsx,.csv,.txt,.png,.jpg,.jpeg,.webp,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain,image/png,image/jpeg,image/webp">
+          </label>
+        ` : ''}
+      </div>
+      <div class="workspace-note-file-list">
+        ${files.length ? files.map(file => `
+          <article class="workspace-note-file">
+            <button class="workspace-note-file-main" onclick="workspaceOpenNoteFile('${esc(note.id)}','${esc(file.id)}')">
+              <i data-lucide="${fileIcon(file)}" class="icon"></i>
+              <span>
+                <strong>${esc(file.name || 'Файл')}</strong>
+                <small>${esc(formatFileSize(file.size))}${file.created_at ? ` · ${esc(formatDate(file.created_at))}` : ''}</small>
+              </span>
+            </button>
+            ${canDeleteNoteFile(file) ? `
+              <button class="btn-outline work-mini-btn danger" onclick="workspaceDeleteNoteFile('${esc(note.id)}','${esc(file.id)}')" title="Удалить файл"><i data-lucide="trash-2" class="icon"></i></button>
+            ` : ''}
+          </article>
+        `).join('') : '<div class="workspace-empty workspace-file-empty">Файлы пока не прикреплены.</div>'}
+      </div>
+      ${renderFilePreviewModal()}
+    </section>
+  `;
+}
+
+function renderFilePreviewModal() {
+  if (!_filePreview?.url) return '';
+  return `
+    <div class="workspace-file-preview-backdrop" onclick="workspaceCloseFilePreview()">
+      <section class="workspace-file-preview" onclick="event.stopPropagation()">
+        <header>
+          <strong>${esc(_filePreview.name || 'Изображение')}</strong>
+          <button class="btn-outline work-mini-btn" onclick="workspaceCloseFilePreview()" title="Закрыть"><i data-lucide="x" class="icon"></i></button>
+        </header>
+        <img src="${esc(_filePreview.url)}" alt="${esc(_filePreview.name || 'Изображение')}">
+        <footer>
+          <button class="btn-outline" onclick="workspaceCloseFilePreview()">Закрыть</button>
+        </footer>
+      </section>
+    </div>
+  `;
 }
 
 function linkHost(url) {
@@ -377,6 +496,24 @@ function renderLinkCard(link) {
   `;
 }
 
+function renderOverviewLinkCard(link) {
+  const url = normalizeUrl(link.url);
+  return `
+    <article class="work-link-card work-link-card-compact ${link.pinned ? 'is-pinned' : ''}" onclick="workspaceViewLink('${esc(link.id)}')">
+      <div class="work-link-main">
+        <div class="work-link-kicker">${esc(linkTypeLabel(link.type))}${link.pinned ? ' · закреплено' : ''}</div>
+        <h3>${esc(link.title || linkHost(url) || 'Ссылка')}</h3>
+        ${link.description ? `<p>${esc(link.description)}</p>` : ''}
+        <a href="${esc(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(linkHost(url) || url)}</a>
+      </div>
+      <div class="work-card-actions">
+        <button class="btn-outline work-mini-btn" onclick="event.stopPropagation(); workspaceOpenProjectLink('${esc(link.id)}')" title="Открыть"><i data-lucide="external-link" class="icon"></i></button>
+        <button class="btn-outline work-mini-btn" onclick="event.stopPropagation(); workspaceCopyLink('${esc(link.id)}')" title="Скопировать"><i data-lucide="copy" class="icon"></i></button>
+      </div>
+    </article>
+  `;
+}
+
 function renderNoteCard(note) {
   const author = note.updatedBy || note.createdBy || 'участник';
   const avatarUrl = note.updatedAvatarUrl || note.createdAvatarUrl || '';
@@ -393,6 +530,27 @@ function renderNoteCard(note) {
       <div class="work-author-line">
         ${avatarHtml(author, avatarUrl)}
         <small>изменил ${esc(author)} · ${esc(formatDate(note.updatedAt || note.createdAt))}</small>
+      </div>
+    </article>
+  `;
+}
+
+function renderOverviewNoteCard(note) {
+  const author = note.updatedBy || note.createdBy || 'участник';
+  const avatarUrl = note.updatedAvatarUrl || note.createdAvatarUrl || '';
+  return `
+    <article class="work-note-card work-note-card-compact ${note.pinned ? 'is-pinned' : ''}" onclick="workspaceOpenNote('${esc(note.id)}')">
+      <div class="work-note-compact-main">
+        <div class="work-note-meta">
+          <span>${esc(noteTypeLabel(note.type))}</span>
+          ${note.pinned ? '<span><i data-lucide="pin" class="icon"></i> закреплено</span>' : ''}
+        </div>
+        <h3>${esc(note.title || 'Новая заметка')}</h3>
+        <p>${notePreview(note)}</p>
+      </div>
+      <div class="work-author-line work-author-line-compact">
+        ${avatarHtml(author, avatarUrl)}
+        <small>${esc(author)} · ${esc(formatDate(note.updatedAt || note.createdAt))}</small>
       </div>
     </article>
   `;
@@ -426,7 +584,7 @@ function renderOverview(root, data, workspace) {
               <button class="btn-outline" onclick="workspaceSetView('links')">Все ссылки</button>
             </div>
             <div class="work-link-grid">
-              ${pinned.length ? pinned.map(renderLinkCard).join('') : emptyState(
+              ${pinned.length ? pinned.map(renderOverviewLinkCard).join('') : emptyState(
                 'Нет закреплённых ссылок',
                 'Закрепите главную папку Google Drive, Miro-доску или макеты, чтобы команда быстро находила важные материалы.',
                 '<button class="btn-outline" onclick="workspaceNewLink()"><i data-lucide="link" class="icon"></i> Добавить первую ссылку</button>'
@@ -443,7 +601,7 @@ function renderOverview(root, data, workspace) {
               <button class="btn-outline" onclick="workspaceSetView('notes')">Все заметки</button>
             </div>
             <div class="work-note-grid">
-              ${sortNotes(data.notes).slice(0, 4).map(renderNoteCard).join('') || emptyState(
+              ${sortNotes(data.notes).slice(0, 4).map(renderOverviewNoteCard).join('') || emptyState(
                 'Заметок пока нет',
                 'Создайте первую заметку: концепция проекта, вопросы подрядчикам или список решений.',
                 '<button class="btn-primary" onclick="workspaceNewNote()"><i data-lucide="file-plus-2" class="icon"></i> Создать заметку</button>'
@@ -565,6 +723,7 @@ function renderNoteView(root, data, workspace, noteId) {
             </div>
           </div>
           <div class="workspace-note-view-body">${safeBody}</div>
+          ${renderNoteFiles(note, false)}
         </article>
       </div>
     </section>
@@ -650,6 +809,7 @@ function renderEditor(root, data, workspace, noteId) {
             <div class="workspace-editor-placeholder">Опишите договорённости, идеи, вопросы или ссылки по запуску проекта...</div>
             <div id="workspace-note-body" class="workspace-editor-body" contenteditable="true" spellcheck="true">${safeBody}</div>
           </div>
+          ${renderNoteFiles(note, true)}
         </div>
       </div>
     </section>
@@ -721,6 +881,80 @@ export async function workspaceOpenNote(id) {
 export async function workspaceEditNote(id) {
   if (!(await ensureNoteCanLeave(id))) return;
   renderWorkspace(`note-edit:${id}`);
+}
+
+export async function workspaceUploadNoteFile(noteId, file) {
+  if (!file) return;
+  const validationError = validateWorkspaceUploadFile(file);
+  if (validationError) {
+    window.showAlert?.(validationError);
+    return;
+  }
+  const data = area();
+  const note = data.notes.find(item => item.id === noteId);
+  if (!note) return;
+  try {
+    const uploaded = await uploadWorkspaceFile(file, noteId);
+    if (!uploaded?.id) throw new Error('Не удалось загрузить файл');
+    const files = noteFiles(note);
+    files.push(uploaded);
+    note.updatedAt = nowIso();
+    const actor = actorMeta();
+    note.updatedBy = actor.name;
+    note.updatedAvatarUrl = actor.avatarUrl;
+    saveState();
+    window.showToast?.('Файл прикреплён');
+    renderWorkspace(window._workspaceView || `note-edit:${noteId}`);
+  } catch (e) {
+    window.showAlert?.(e?.message || 'Не удалось загрузить файл');
+  }
+}
+
+export async function workspaceOpenNoteFile(noteId, fileId) {
+  const data = area();
+  const note = data.notes.find(item => item.id === noteId);
+  const file = noteFiles(note || {}).find(item => String(item.id) === String(fileId));
+  if (!file) return;
+  try {
+    const blob = await fetchWorkspaceFileBlob(file.id);
+    if (shouldPreviewBlob(file, blob)) {
+      if (_filePreview?.url) URL.revokeObjectURL(_filePreview.url);
+      _filePreview = { url: URL.createObjectURL(blob), name: file.name || 'Изображение' };
+      renderWorkspace(window._workspaceView || `note:${noteId}`);
+    } else {
+      downloadBlob(blob, file.name || 'file');
+    }
+  } catch (e) {
+    window.showAlert?.(e?.message || 'Не удалось открыть файл');
+  }
+}
+
+export function workspaceCloseFilePreview() {
+  if (_filePreview?.url) URL.revokeObjectURL(_filePreview.url);
+  _filePreview = null;
+  renderWorkspace(window._workspaceView || 'notes');
+}
+
+export async function workspaceDeleteNoteFile(noteId, fileId) {
+  const data = area();
+  const note = data.notes.find(item => item.id === noteId);
+  const file = noteFiles(note || {}).find(item => String(item.id) === String(fileId));
+  if (!note || !file) return;
+  const ok = await window.showConfirm?.(`Удалить файл «${file.name || 'Файл'}»?`, null, { icon: '📎', okText: 'Удалить', danger: true });
+  if (!ok) return;
+  try {
+    await deleteWorkspaceFile(file.id);
+    note.files = noteFiles(note).filter(item => String(item.id) !== String(fileId));
+    note.updatedAt = nowIso();
+    const actor = actorMeta();
+    note.updatedBy = actor.name;
+    note.updatedAvatarUrl = actor.avatarUrl;
+    saveState();
+    window.showToast?.('Файл удалён');
+    renderWorkspace(window._workspaceView || `note-edit:${noteId}`);
+  } catch (e) {
+    window.showAlert?.(e?.message || 'Не удалось удалить файл');
+  }
 }
 
 export function workspaceFormat(command) {

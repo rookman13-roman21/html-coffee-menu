@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends, Request, status, Background
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, Text, DateTime
 from sqlalchemy.ext.declarative import declarative_base
@@ -14,6 +15,7 @@ import os, json, urllib.request, urllib.parse, hashlib
 import threading, time
 import re
 import base64
+import mimetypes
 
 import secrets
 import smtplib
@@ -40,9 +42,32 @@ ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@barista-school.online")
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/app.db")
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 PUBLIC_UPLOAD_DIR = os.path.join(DATA_DIR, "public_uploads")
+WORKSPACE_UPLOAD_DIR = os.path.join(DATA_DIR, "workspace_uploads")
 ACCOUNT_AVATAR_DIR = os.path.join(PUBLIC_UPLOAD_DIR, "accounts")
 AUTHOR_AVATAR_DIR = os.path.join(PUBLIC_UPLOAD_DIR, "authors")
 AUTHOR_RECIPE_IMAGE_DIR = os.path.join(PUBLIC_UPLOAD_DIR, "author-recipes")
+WORKSPACE_FILE_MAX_BYTES = 10 * 1024 * 1024
+WORKSPACE_FILE_TYPES = {
+    "application/pdf": "pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+    "text/csv": "csv",
+    "text/plain": "txt",
+    "image/png": "png",
+    "image/jpeg": "jpg",
+    "image/webp": "webp",
+}
+WORKSPACE_FILE_EXTENSIONS = {
+    "pdf": ("application/pdf", "pdf"),
+    "docx": ("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx"),
+    "xlsx": ("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"),
+    "csv": ("text/csv", "csv"),
+    "txt": ("text/plain", "txt"),
+    "png": ("image/png", "png"),
+    "jpg": ("image/jpeg", "jpg"),
+    "jpeg": ("image/jpeg", "jpg"),
+    "webp": ("image/webp", "webp"),
+}
 OAUTH_EXCHANGE_TTL_SECONDS = 120
 _oauth_exchange_codes: dict[str, dict] = {}
 TG_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
@@ -64,6 +89,7 @@ YANDEX_REDIRECT  = os.getenv("YANDEX_REDIRECT", "https://barista-school.online/a
 # ── БД ────────────────────────────────────────────────────────
 os.makedirs("data", exist_ok=True)
 os.makedirs(DATA_DIR, exist_ok=True)
+os.makedirs(WORKSPACE_UPLOAD_DIR, exist_ok=True)
 os.makedirs(ACCOUNT_AVATAR_DIR, exist_ok=True)
 os.makedirs(AUTHOR_AVATAR_DIR, exist_ok=True)
 os.makedirs(AUTHOR_RECIPE_IMAGE_DIR, exist_ok=True)
@@ -331,6 +357,19 @@ def _run_migrations():
                 created_at TEXT NOT NULL
             )
         """)
+        con.execute("""
+            CREATE TABLE IF NOT EXISTS workspace_files (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                workspace_id INTEGER NOT NULL,
+                note_id TEXT DEFAULT '',
+                uploader_user_id INTEGER NOT NULL,
+                original_name TEXT NOT NULL,
+                stored_name TEXT NOT NULL,
+                content_type TEXT DEFAULT '',
+                size_bytes INTEGER DEFAULT 0,
+                created_at TEXT NOT NULL
+            )
+        """)
         for col in ("archived_at", "deleted_at"):
             try:
                 con.execute(f"ALTER TABLE workspaces ADD COLUMN {col} TEXT")
@@ -340,6 +379,7 @@ def _run_migrations():
         con.execute("CREATE INDEX IF NOT EXISTS idx_workspace_invites_token ON workspace_invites(token)")
         con.execute("CREATE INDEX IF NOT EXISTS idx_workspace_activity_workspace ON workspace_activity(workspace_id, created_at)")
         con.execute("CREATE INDEX IF NOT EXISTS idx_workspace_snapshots_workspace ON workspace_state_snapshots(workspace_id, id)")
+        con.execute("CREATE INDEX IF NOT EXISTS idx_workspace_files_workspace ON workspace_files(workspace_id, note_id, id)")
         con.commit()
         con.close()
     except Exception as e:
@@ -905,6 +945,29 @@ def _workspace_snapshot_payload(row) -> dict:
         "created_at": row["created_at"] or "",
         **meta,
     }
+
+def _workspace_file_payload(row, workspace_id: int) -> dict:
+    file_id = int(row["id"])
+    return {
+        "id": file_id,
+        "workspace_id": int(row["workspace_id"]),
+        "note_id": row["note_id"] or "",
+        "name": row["original_name"] or "Файл",
+        "content_type": row["content_type"] or "",
+        "size": int(row["size_bytes"] or 0),
+        "uploaded_by_user_id": int(row["uploader_user_id"] or 0),
+        "created_at": row["created_at"] or "",
+        "url": f"/api/workspaces/{int(workspace_id)}/files/{file_id}",
+    }
+
+def _safe_workspace_filename(name: str, fallback_ext: str) -> str:
+    raw = os.path.basename(str(name or "")).strip()
+    base, ext = os.path.splitext(raw)
+    ext = ext.lower().lstrip(".") or fallback_ext
+    if ext == "jpeg":
+        ext = "jpg"
+    base = re.sub(r"[^A-Za-z0-9А-Яа-яЁё._ -]+", "_", base).strip(" ._-")[:80] or "file"
+    return f"{base}.{ext}"
 
 def _create_workspace_snapshot(con, workspace_row, actor: Optional[User], reason: str = "manual"):
     workspace_id = int(workspace_row["id"])
@@ -3086,6 +3149,112 @@ def create_workspace_activity(workspace_id: int, body: WorkspaceActivityPayload,
         _require_workspace_owner_activity(user, role, action)
         _log_workspace_activity(con, workspace_id, user, body.action, body.target_type, body.target_id, body.summary, body.metadata)
         con.commit()
+        return {"ok": True}
+    finally:
+        con.close()
+
+@app.post("/api/workspaces/{workspace_id}/files")
+def upload_workspace_file(
+    workspace_id: int,
+    note_id: str = "",
+    file: UploadFile = File(...),
+    user: User = Depends(get_current_user),
+):
+    con = _workspace_con()
+    try:
+        _workspace, _role = _require_workspace(con, workspace_id, user)
+        content_type = (file.content_type or "").lower().split(";")[0].strip()
+        ext = WORKSPACE_FILE_TYPES.get(content_type)
+        guessed = mimetypes.guess_type(file.filename or "")[0] or ""
+        if not ext and guessed:
+            content_type = guessed.lower()
+            ext = WORKSPACE_FILE_TYPES.get(content_type)
+        original_ext = os.path.splitext(file.filename or "")[1].lower().lstrip(".")
+        if not ext and original_ext in WORKSPACE_FILE_EXTENSIONS:
+            content_type, ext = WORKSPACE_FILE_EXTENSIONS[original_ext]
+        if not ext:
+            raise HTTPException(status_code=400, detail="Можно загрузить PDF, DOCX, XLSX, CSV, TXT, PNG, JPG или WebP")
+        data = file.file.read()
+        if not data:
+            raise HTTPException(status_code=400, detail="Файл пустой")
+        if len(data) > WORKSPACE_FILE_MAX_BYTES:
+            raise HTTPException(status_code=400, detail="Файл должен быть не больше 10 МБ")
+        workspace_dir = os.path.join(WORKSPACE_UPLOAD_DIR, str(int(workspace_id)))
+        os.makedirs(workspace_dir, exist_ok=True)
+        original_name = _safe_workspace_filename(file.filename or f"file.{ext}", ext)
+        stored_name = f"{int(time.time())}-{secrets.token_hex(8)}.{ext}"
+        path = os.path.join(workspace_dir, stored_name)
+        with open(path, "wb") as f:
+            f.write(data)
+        now = utc_now_iso()
+        cur = con.execute(
+            """
+            INSERT INTO workspace_files
+                (workspace_id,note_id,uploader_user_id,original_name,stored_name,content_type,size_bytes,created_at)
+            VALUES (?,?,?,?,?,?,?,?)
+            """,
+            (workspace_id, str(note_id or "")[:120], user.id, original_name, stored_name, content_type, len(data), now),
+        )
+        file_id = int(cur.lastrowid)
+        row = con.execute("SELECT * FROM workspace_files WHERE id=? AND workspace_id=?", (file_id, workspace_id)).fetchone()
+        _log_workspace_activity(
+            con,
+            workspace_id,
+            user,
+            "workspace_file_uploaded",
+            "workspace_file",
+            str(file_id),
+            f"Прикреплён файл «{original_name}»",
+            {"note_id": str(note_id or "")[:120], "size": len(data), "content_type": content_type},
+        )
+        con.commit()
+        return {"ok": True, "file": _workspace_file_payload(row, workspace_id)}
+    finally:
+        con.close()
+
+@app.get("/api/workspaces/{workspace_id}/files/{file_id}")
+def download_workspace_file(workspace_id: int, file_id: int, user: User = Depends(get_current_user)):
+    con = _workspace_con()
+    try:
+        _require_workspace(con, workspace_id, user)
+        row = con.execute("SELECT * FROM workspace_files WHERE id=? AND workspace_id=?", (file_id, workspace_id)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Файл не найден")
+        path = os.path.join(WORKSPACE_UPLOAD_DIR, str(int(workspace_id)), row["stored_name"] or "")
+        if not os.path.exists(path):
+            raise HTTPException(status_code=404, detail="Файл не найден")
+        return FileResponse(path, media_type=row["content_type"] or "application/octet-stream", filename=row["original_name"] or "file")
+    finally:
+        con.close()
+
+@app.delete("/api/workspaces/{workspace_id}/files/{file_id}")
+def delete_workspace_file(workspace_id: int, file_id: int, user: User = Depends(get_current_user)):
+    con = _workspace_con()
+    try:
+        _workspace, role = _require_workspace(con, workspace_id, user)
+        row = con.execute("SELECT * FROM workspace_files WHERE id=? AND workspace_id=?", (file_id, workspace_id)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Файл не найден")
+        if role != "owner" and not user.is_admin and int(row["uploader_user_id"] or 0) != int(user.id):
+            raise HTTPException(status_code=403, detail="Удалить файл может владелец проекта или тот, кто загрузил файл")
+        path = os.path.join(WORKSPACE_UPLOAD_DIR, str(int(workspace_id)), row["stored_name"] or "")
+        con.execute("DELETE FROM workspace_files WHERE id=? AND workspace_id=?", (file_id, workspace_id))
+        _log_workspace_activity(
+            con,
+            workspace_id,
+            user,
+            "workspace_file_deleted",
+            "workspace_file",
+            str(file_id),
+            f"Удалён файл «{row['original_name'] or 'Файл'}»",
+            {"note_id": row["note_id"] or ""},
+        )
+        con.commit()
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+        except Exception:
+            pass
         return {"ok": True}
     finally:
         con.close()
