@@ -166,33 +166,47 @@ function renderWorkspaceList() {
   `).join('');
 }
 
-async function _reloadWorkspaceState(serverState) {
+export async function reloadWorkspaceState(serverState, options = {}) {
+  const shouldRenderActive = options.renderActive !== false;
   window.Loc.list = [];
   window.Loc.activeId = null;
-  window.resetGlobalsToBase();
+  window.resetGlobalsToBase?.();
   if (!hasWorkspaceMembership()) {
     window.clearLocStorage?.();
     renderLocSwitcherUI();
     if (window.lucide) window.lucide.createIcons();
     return;
   }
-  if (serverState) window.restoreFromServer(serverState);
-  window.loadLocIndex();
+  const restored = serverState ? window.restoreFromServer?.(serverState) : false;
+  if (!restored) window.loadLocIndex?.();
   if (!window.Loc.list.length) {
     window.Loc.list = [{ id: 'loc_default', name: 'Моя кофейня', icon: '☕' }];
     window.Loc.activeId = 'loc_default';
-    window.saveLocIndex();
+    window.saveLocIndex?.();
   }
   if (!window.Loc.activeId) {
     window.Loc.activeId = window.Loc.list[0].id;
-    window.saveLocIndex();
+    window.saveLocIndex?.();
   }
-  window.loadState();
+  window.loadState?.();
   window.searchQuery = '';
   Object.keys(window.dirty || {}).forEach(k => window.dirty[k] = true);
-  if (window.renderActive) window.renderActive();
+  if (shouldRenderActive && window.renderActive) window.renderActive();
   renderLocSwitcherUI();
   if (window.lucide) window.lucide.createIcons();
+}
+
+export async function loadWorkspaceContext(id, options = {}) {
+  const targetId = id ? String(id) : '';
+  const currentId = String(getActiveWorkspaceId() || '');
+  if (targetId && targetId !== currentId) {
+    window.saveState?.();
+    await window.flushServerSync?.(currentId);
+    setActiveWorkspaceId(targetId);
+  }
+  const serverState = await fetchState();
+  await reloadWorkspaceState(serverState, options);
+  return serverState;
 }
 
 export async function switchWorkspace(id) {
@@ -200,12 +214,8 @@ export async function switchWorkspace(id) {
     document.getElementById('loc-menu')?.classList.remove('open');
     return;
   }
-  window.saveState();
-  await window.flushServerSync?.(getActiveWorkspaceId());
-  setActiveWorkspaceId(id);
-  const serverState = await fetchState();
+  await loadWorkspaceContext(id);
   await logWorkspaceActivity('workspace_switched', 'workspace', String(id), 'Переключился на проект');
-  await _reloadWorkspaceState(serverState);
   document.getElementById('loc-menu')?.classList.remove('open');
 }
 
@@ -218,9 +228,7 @@ export async function createWorkspaceFromMenu() {
   if (!name || !name.trim()) return;
   try {
     const ws = await createWorkspace(name.trim());
-    setActiveWorkspaceId(ws.id);
-    const serverState = await fetchState();
-    await _reloadWorkspaceState(serverState);
+    await loadWorkspaceContext(ws.id);
     document.getElementById('loc-menu')?.classList.remove('open');
   } catch (e) {
     window.showAlert(e.message || 'Не удалось создать проект');
@@ -645,7 +653,7 @@ export async function restoreWorkspaceSnapshotFromModal(snapshotId) {
     try {
       await window.flushServerSync?.(getActiveWorkspaceId());
       const serverState = await restoreWorkspaceSnapshot(snapshotId);
-      await _reloadWorkspaceState(serverState);
+      await reloadWorkspaceState(serverState);
       await openWorkspaceActivityModal();
     } catch (e) {
       window.showAlert(e.message || 'Не удалось восстановить проект');

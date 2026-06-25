@@ -1,17 +1,27 @@
 import {
   getActiveWorkspaceId, getCurrentWorkspace, getWorkspaces, getArchivedWorkspaces, setActiveWorkspaceId,
-  fetchState, createWorkspace, renameWorkspace, archiveWorkspace, restoreArchivedWorkspace, deleteWorkspace, fetchWorkspaceMembers,
+  createWorkspace, renameWorkspace, archiveWorkspace, restoreArchivedWorkspace, deleteWorkspace, fetchWorkspaceMembers,
   createWorkspaceInvite, removeWorkspaceMember, revokeWorkspaceInvite,
   fetchWorkspaceActivity, fetchWorkspaceSnapshots, createWorkspaceSnapshot,
   restoreWorkspaceSnapshot, canCreateWorkspaces, isWorkspaceOwner, getUser,
   refreshCurrentUser, updateAccountProfile, uploadAccountAvatar as uploadAccountAvatarApi,
   requestOwnPasswordReset,
 } from '../ui/auth.js';
+import { loadWorkspaceContext, reloadWorkspaceState } from '../ui/locations.js';
 
 let _settingsSection = 'account';
 let _activityFilter = 'all';
 let _settingsNotice = '';
+let _settingsRenderSeq = 0;
 const _projectSummaryCache = new Map();
+
+function isFreshSettingsLoad(seq, section, workspaceId) {
+  const current = getCurrentWorkspace();
+  return seq === _settingsRenderSeq
+    && _settingsSection === section
+    && String(current?.id || '') === String(workspaceId || '')
+    && !!document.getElementById('settings-panel');
+}
 
 function esc(s) {
   return String(s || '')
@@ -455,12 +465,14 @@ function renderTeamLoading() {
   return '<div class="settings-card"><div class="settings-empty">Загружаем участников...</div></div>';
 }
 
-async function loadTeamSection() {
+async function loadTeamSection(seq = _settingsRenderSeq) {
   const current = getCurrentWorkspace();
+  const workspaceId = current?.id;
   const panel = document.getElementById('settings-panel');
   if (!panel || !current) return;
   try {
-    const data = await fetchWorkspaceMembers(current.id);
+    const data = await fetchWorkspaceMembers(workspaceId);
+    if (!isFreshSettingsLoad(seq, 'team', workspaceId)) return;
     const owner = isWorkspaceOwner();
     const members = (data.members || []).map(m => `
       <div class="settings-member-row">
@@ -512,11 +524,14 @@ async function loadTeamSection() {
     `;
     if (window.lucide) window.lucide.createIcons({ nodes: [panel] });
   } catch (e) {
-    panel.innerHTML = `<div class="settings-card"><div class="settings-empty">${esc(e.message || 'Не удалось загрузить команду')}</div></div>`;
+    if (isFreshSettingsLoad(seq, 'team', workspaceId)) {
+      panel.innerHTML = `<div class="settings-card"><div class="settings-empty">${esc(e.message || 'Не удалось загрузить команду')}</div></div>`;
+    }
   }
 }
 
 function renderLocationsSection() {
+  const current = getCurrentWorkspace();
   const owner = isWorkspaceOwner();
   const locs = window.Loc?.list || [];
   const activeId = window.Loc?.activeId || '';
@@ -536,7 +551,7 @@ function renderLocationsSection() {
             <span>${esc(l.name)}</span>
             ${l.id === activeId ? '<small>активно</small>' : ''}
           </button>
-        `).join('') || '<div class="settings-empty">Заведений пока нет.</div>'}
+        `).join('') || `<div class="settings-empty">В проекте «${esc(current?.name || 'Проект')}» пока нет заведений.</div>`}
       </div>
       <div class="settings-action-grid">
         ${owner ? `
@@ -554,12 +569,14 @@ function renderActivityLoading() {
   return '<div class="settings-card"><div class="settings-empty">Загружаем журнал...</div></div>';
 }
 
-async function loadActivitySection() {
+async function loadActivitySection(seq = _settingsRenderSeq) {
   const panel = document.getElementById('settings-panel');
   const current = getCurrentWorkspace();
+  const workspaceId = current?.id;
   if (!panel || !current) return;
   try {
-    const rows = await fetchWorkspaceActivity(current.id);
+    const rows = await fetchWorkspaceActivity(workspaceId);
+    if (!isFreshSettingsLoad(seq, 'activity', workspaceId)) return;
     const filters = [
       ['all', 'Все'], ['team', 'Команда'], ['locations', 'Заведения'], ['budget', 'Бюджет'],
       ['finance', 'Финмодель'], ['recipes', 'Рецепты'], ['suppliers', 'Поставщики'],
@@ -570,7 +587,7 @@ async function loadActivitySection() {
       <div class="settings-card">
         <div class="settings-card-head">
           <div>
-            <h2>Журнал действий</h2>
+            <h2>Журнал проекта: ${esc(current.name || 'Проект')}</h2>
             <p>Ключевые события проекта без лишних автосохранений.</p>
           </div>
         </div>
@@ -602,7 +619,9 @@ async function loadActivitySection() {
       </div>
     `;
   } catch (e) {
-    panel.innerHTML = `<div class="settings-card"><div class="settings-empty">${esc(e.message || 'Не удалось загрузить журнал')}</div></div>`;
+    if (isFreshSettingsLoad(seq, 'activity', workspaceId)) {
+      panel.innerHTML = `<div class="settings-card"><div class="settings-empty">${esc(e.message || 'Не удалось загрузить журнал')}</div></div>`;
+    }
   }
 }
 
@@ -610,18 +629,20 @@ function renderSnapshotsLoading() {
   return '<div class="settings-card"><div class="settings-empty">Загружаем точки восстановления...</div></div>';
 }
 
-async function loadSnapshotsSection() {
+async function loadSnapshotsSection(seq = _settingsRenderSeq) {
   const panel = document.getElementById('settings-panel');
   const current = getCurrentWorkspace();
+  const workspaceId = current?.id;
   if (!panel || !current) return;
   try {
     const owner = isWorkspaceOwner();
-    const rows = await fetchWorkspaceSnapshots(current.id);
+    const rows = await fetchWorkspaceSnapshots(workspaceId);
+    if (!isFreshSettingsLoad(seq, 'snapshots', workspaceId)) return;
     panel.innerHTML = `
       <div class="settings-card">
         <div class="settings-card-head">
           <div>
-            <h2>Восстановление</h2>
+            <h2>Восстановление проекта: ${esc(current.name || 'Проект')}</h2>
             <p>Точки восстановления помогают откатить ошибочные правки проекта.</p>
           </div>
           ${owner ? '<button class="btn-green" type="button" onclick="settingsCreateSnapshot()"><i data-lucide="save" class="icon"></i> Создать точку</button>' : ''}
@@ -644,7 +665,9 @@ async function loadSnapshotsSection() {
     `;
     if (window.lucide) window.lucide.createIcons({ nodes: [panel] });
   } catch (e) {
-    panel.innerHTML = `<div class="settings-card"><div class="settings-empty">${esc(e.message || 'Не удалось загрузить точки восстановления')}</div></div>`;
+    if (isFreshSettingsLoad(seq, 'snapshots', workspaceId)) {
+      panel.innerHTML = `<div class="settings-card"><div class="settings-empty">${esc(e.message || 'Не удалось загрузить точки восстановления')}</div></div>`;
+    }
   }
 }
 
@@ -685,11 +708,11 @@ function refreshUserMenu() {
   window.renderLocSwitcherUI?.();
 }
 
-function afterRender() {
+function afterRender(seq) {
   if (_settingsSection === 'project') loadProjectSummary();
-  if (_settingsSection === 'team') loadTeamSection();
-  if (_settingsSection === 'activity') loadActivitySection();
-  if (_settingsSection === 'snapshots') loadSnapshotsSection();
+  if (_settingsSection === 'team') loadTeamSection(seq);
+  if (_settingsSection === 'activity') loadActivitySection(seq);
+  if (_settingsSection === 'snapshots') loadSnapshotsSection(seq);
   if (window.lucide) window.lucide.createIcons();
 }
 
@@ -697,8 +720,9 @@ export function renderSettings(section) {
   if (section) _settingsSection = section;
   const root = document.getElementById('tab-settings');
   if (!root) return;
+  const seq = ++_settingsRenderSeq;
   root.innerHTML = renderLayout(renderSection());
-  afterRender();
+  afterRender(seq);
 }
 
 export function settingsSetSection(section) {
@@ -814,26 +838,15 @@ export function settingsResetProjectContent() {
 }
 
 async function openWorkspaceAfterDangerAction(data, notice) {
-  const next = (data?.workspaces || [])[0] || null;
+  const next = (data?.workspace || data?.workspaces?.[0]) || null;
   if (next?.id) {
-    setActiveWorkspaceId(next.id);
-    const state = await fetchState();
-    window.Loc.list = [];
-    window.Loc.activeId = null;
-    window.resetGlobalsToBase?.();
-    if (state) window.restoreFromServer?.(state);
-    window.loadLocIndex?.();
-    window.loadState?.();
+    await loadWorkspaceContext(next.id, { renderActive: false });
   } else {
     setActiveWorkspaceId('');
-    window.Loc.list = [];
-    window.Loc.activeId = null;
-    window.resetGlobalsToBase?.();
+    await reloadWorkspaceState(null, { renderActive: false });
   }
-  Object.keys(window.dirty || {}).forEach(k => window.dirty[k] = true);
   _settingsNotice = notice;
-  window.renderLocSwitcherUI?.();
-  renderSettings('project');
+  renderSettings(_settingsSection);
 }
 
 export async function settingsArchiveProject() {
@@ -912,12 +925,9 @@ export async function settingsCreateWorkspace() {
   if (!name || !name.trim()) return;
   try {
     const ws = await createWorkspace(name.trim());
-    setActiveWorkspaceId(ws.id);
-    const state = await fetchState();
-    if (state) window.restoreFromServer?.(state);
+    await loadWorkspaceContext(ws.id, { renderActive: false });
     _settingsNotice = 'Проект создан.';
-    window.renderLocSwitcherUI?.();
-    renderSettings('project');
+    renderSettings(_settingsSection);
   } catch (e) {
     window.showAlert?.(e.message || 'Не удалось создать проект');
   }
@@ -926,21 +936,8 @@ export async function settingsCreateWorkspace() {
 export async function settingsSwitchWorkspace(id) {
   if (!id || String(id) === String(getActiveWorkspaceId())) return;
   try {
-    window.saveState?.();
-    await window.flushServerSync?.(getActiveWorkspaceId());
-    setActiveWorkspaceId(id);
-    const state = await fetchState();
-    if (state) {
-      window.Loc.list = [];
-      window.Loc.activeId = null;
-      window.resetGlobalsToBase?.();
-      window.restoreFromServer?.(state);
-      window.loadLocIndex?.();
-      window.loadState?.();
-    }
-    Object.keys(window.dirty || {}).forEach(k => window.dirty[k] = true);
-    window.renderLocSwitcherUI?.();
-    renderSettings('project');
+    await loadWorkspaceContext(id, { renderActive: false });
+    renderSettings(_settingsSection);
   } catch (e) {
     window.showAlert?.(e.message || 'Не удалось переключить проект');
   }
@@ -1038,17 +1035,8 @@ export async function settingsRestoreSnapshot(snapshotId) {
   try {
     await window.flushServerSync?.(getActiveWorkspaceId());
     const state = await restoreWorkspaceSnapshot(snapshotId);
-    if (state) {
-      window.Loc.list = [];
-      window.Loc.activeId = null;
-      window.resetGlobalsToBase?.();
-      window.restoreFromServer?.(state);
-      window.loadLocIndex?.();
-      window.loadState?.();
-    }
-    Object.keys(window.dirty || {}).forEach(k => window.dirty[k] = true);
+    await reloadWorkspaceState(state, { renderActive: false });
     _settingsNotice = 'Проект восстановлен из точки восстановления.';
-    window.renderLocSwitcherUI?.();
     renderSettings('snapshots');
   } catch (e) {
     window.showAlert?.(e.message || 'Не удалось восстановить проект');

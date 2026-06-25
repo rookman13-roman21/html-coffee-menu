@@ -22,8 +22,13 @@ function _storageUserScope() {
   return String(raw).toLowerCase().replace(/[^a-z0-9_.@-]+/gi, '_');
 }
 
+function _storageWorkspaceScope() {
+  const workspaceId = getActiveWorkspaceId();
+  return workspaceId ? `ws_${String(workspaceId).replace(/[^a-z0-9_.@-]+/gi, '_')}` : 'local';
+}
+
 function _userStorageKey(key) {
-  return `${key}__${_storageUserScope()}`;
+  return `${key}__${_storageUserScope()}__${_storageWorkspaceScope()}`;
 }
 
 export const locDataKey = id => _userStorageKey(LOC_DATA_PREFIX + id);
@@ -448,23 +453,25 @@ export function loadState() {
 // ─── Восстановить стейт из объекта, загруженного с сервера ───────────
 //     serverData = { locIndex, activeId, locations }
 export function restoreFromServer(serverData) {
-  if (!serverData || !serverData.locations) return false;
+  if (!serverData || typeof serverData !== 'object') return false;
   try {
     const projectMeta = serverData.projectMeta || null;
     if (projectMeta) S.projectMeta = { city: '', stage: 'idea', openingDate: '', ...projectMeta };
-    // Записываем все локации в localStorage
-    for (const [id, data] of Object.entries(serverData.locations)) {
+
+    Loc.list = Array.isArray(serverData.locIndex) ? serverData.locIndex : [];
+    Loc.activeId = serverData.activeId && Loc.list.some(l => l.id === serverData.activeId)
+      ? serverData.activeId
+      : (Loc.list[0]?.id || null);
+
+    const locations = serverData.locations && typeof serverData.locations === 'object' ? serverData.locations : {};
+    for (const [id, data] of Object.entries(locations)) {
       const nextData = projectMeta ? { ...data, projectMeta } : data;
       localStorage.setItem(locDataKey(id), JSON.stringify(nextData));
     }
-    if (serverData.locIndex && Array.isArray(serverData.locIndex)) {
-      Loc.list = serverData.locIndex;
-      localStorage.setItem(_userStorageKey(LOC_INDEX_KEY), JSON.stringify(Loc.list));
-    }
-    if (serverData.activeId) {
-      Loc.activeId = serverData.activeId;
-      localStorage.setItem(_userStorageKey(LOC_ACTIVE_KEY), Loc.activeId);
-    }
+
+    localStorage.setItem(_userStorageKey(LOC_INDEX_KEY), JSON.stringify(Loc.list));
+    if (Loc.activeId) localStorage.setItem(_userStorageKey(LOC_ACTIVE_KEY), Loc.activeId);
+    else localStorage.removeItem(_userStorageKey(LOC_ACTIVE_KEY));
     return true;
   } catch(e) { return false; }
 }
