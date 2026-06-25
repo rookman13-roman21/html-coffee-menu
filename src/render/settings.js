@@ -31,15 +31,6 @@ function accountRoleLabel(user = getUser(), current = getCurrentWorkspace()) {
   return 'редактор';
 }
 
-function bitrixSyncLabel(status) {
-  const labels = {
-    pending: 'синхронизация с Битрикс ожидает выполнения',
-    synced: 'профиль синхронизирован с Битрикс',
-    error: 'не удалось синхронизировать с Битрикс',
-  };
-  return labels[status] || 'синхронизация с Битрикс ещё не выполнялась';
-}
-
 function userInitial(user = {}) {
   return String(user.name || user.email || '?')[0].toUpperCase();
 }
@@ -50,7 +41,7 @@ function accessItems(user = getUser()) {
     ['Проекты', user?.can_create_workspaces ? 'доступно' : 'гость'],
     ['Финмодель', access.finance || user?.is_admin ? 'доступно' : 'нет доступа'],
     ['Рецепты', access.drinks || user?.is_admin ? 'доступно' : 'нет доступа'],
-    ['Author', access.author || user?.is_admin ? 'доступно' : 'нет доступа'],
+    ['Авторский режим', access.author || user?.is_admin ? 'доступно' : 'нет доступа'],
   ];
 }
 
@@ -204,7 +195,7 @@ function renderAccountSection() {
         <button class="btn btn-outline settings-full-btn" type="button" onclick="settingsRequestPasswordReset()">
           <i data-lucide="key-round" class="icon"></i> Сменить пароль
         </button>
-        <div class="settings-hint">${esc(bitrixSyncLabel(user.bitrix_sync_status || ''))}</div>
+        <div class="settings-hint">Мы отправим ссылку для смены пароля на email, указанный в аккаунте.</div>
       </div>
     </div>
   `;
