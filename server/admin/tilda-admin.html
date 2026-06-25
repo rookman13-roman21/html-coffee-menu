@@ -1,0 +1,350 @@
+<!-- ADMIN PANEL — вставить в Tilda через блок "HTML-код" -->
+<style>
+  #adm-wrap * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  #adm-wrap { max-width: 960px; margin: 0 auto; padding: 32px 16px 60px; }
+
+  /* LOGIN */
+  #adm-login { max-width: 400px; margin: 60px auto 0; background: #fff; border-radius: 16px; padding: 36px 32px; box-shadow: 0 4px 32px rgba(0,0,0,.10); }
+  #adm-login h2 { margin: 0 0 6px; font-size: 22px; font-weight: 800; color: #1a1a1a; }
+  #adm-login p { margin: 0 0 24px; font-size: 14px; color: #888; }
+  .adm-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+  .adm-field label { font-size: 13px; font-weight: 600; color: #444; }
+  .adm-field input { border: 1.5px solid #e0ddd8; border-radius: 10px; padding: 10px 12px; font-size: 14px; outline: none; background: #faf9f7; transition: border-color .15s; }
+  .adm-field input:focus { border-color: #417033; background: #fff; }
+  #adm-login-btn { width: 100%; padding: 12px; background: #417033; color: #fff; border: none; border-radius: 11px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 6px; transition: opacity .15s; }
+  #adm-login-btn:hover { opacity: .88; }
+  #adm-login-btn:disabled { opacity: .5; cursor: not-allowed; }
+  #adm-login-err { color: #d44; font-size: 13px; margin-top: 10px; text-align: center; min-height: 18px; }
+
+  /* PANEL */
+  #adm-panel { display: none; }
+  .adm-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+  .adm-header h2 { margin: 0; font-size: 22px; font-weight: 800; color: #1a1a1a; }
+  #adm-logout { background: #f4f3f0; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; color: #555; }
+  .adm-stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .adm-stat { background: #fff; border: 1.5px solid #e8e6e1; border-radius: 12px; padding: 14px 20px; flex: 1; min-width: 120px; }
+  .adm-stat-val { font-size: 26px; font-weight: 800; color: #1a1a1a; }
+  .adm-stat-lbl { font-size: 12px; color: #888; margin-top: 2px; }
+  .adm-toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+  .adm-search { flex: 1; min-width: 180px; border: 1.5px solid #e0ddd8; border-radius: 10px; padding: 9px 12px; font-size: 14px; outline: none; background: #faf9f7; }
+  .adm-search:focus { border-color: #417033; background: #fff; }
+  .adm-filter-btns { display: flex; gap: 6px; }
+  .adm-fb { border: 1.5px solid #e0ddd8; background: #faf9f7; border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; color: #555; transition: all .15s; }
+  .adm-fb.active { background: #417033; border-color: #417033; color: #fff; }
+  #adm-refresh { background: #f0f0ee; border: none; border-radius: 9px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; color: #333; }
+  .adm-table-wrap { background: #fff; border: 1.5px solid #e8e6e1; border-radius: 14px; overflow: hidden; }
+  table.adm-table { width: 100%; border-collapse: collapse; }
+  table.adm-table th { background: #faf9f7; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #999; padding: 12px 16px; text-align: left; border-bottom: 1.5px solid #e8e6e1; }
+  table.adm-table td { padding: 13px 16px; font-size: 14px; color: #1a1a1a; border-bottom: 1px solid #f4f3f0; vertical-align: middle; }
+  table.adm-table tr:last-child td { border-bottom: none; }
+  table.adm-table tr:hover td { background: #faf9f7; }
+  .adm-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 9px; }
+  .adm-badge.active { background: #e8f5ee; color: #2d8a56; }
+  .adm-badge.inactive { background: #fef3f3; color: #c44; }
+  .adm-badge.admin { background: #ede9ff; color: #6c3fc5; }
+  .adm-actions { display: flex; gap: 6px; }
+  .adm-btn { border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity .15s; white-space: nowrap; }
+  .adm-btn:hover { opacity: .80; }
+  .adm-btn.on { background: #e8f5ee; color: #2d8a56; }
+  .adm-btn.off { background: #fef3f3; color: #c44; }
+  .adm-btn.del { background: #f4f3f0; color: #888; }
+  .adm-btn.adm { background: #ede9ff; color: #6c3fc5; }
+  #adm-loading { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
+
+  /* CONFIRM MODAL */
+  #adm-confirm { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 9999; align-items: center; justify-content: center; }
+  #adm-confirm.show { display: flex; }
+  #adm-confirm-box { background: #fff; border-radius: 14px; padding: 28px 28px 24px; max-width: 360px; width: 90%; box-shadow: 0 8px 40px rgba(0,0,0,.15); }
+  #adm-confirm-box h3 { margin: 0 0 10px; font-size: 17px; font-weight: 800; color: #1a1a1a; }
+  #adm-confirm-box p { margin: 0 0 22px; font-size: 14px; color: #666; line-height: 1.5; }
+  .adm-confirm-btns { display: flex; gap: 10px; }
+  .adm-confirm-btns button { flex: 1; padding: 11px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  #adm-confirm-cancel { background: #f4f3f0; color: #555; }
+  #adm-confirm-ok { background: #c44; color: #fff; }
+
+  /* TOAST */
+  #adm-toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(12px); background: #1a1a1a; color: #fff; font-size: 13px; font-weight: 600; border-radius: 999px; padding: 10px 22px; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 99999; white-space: nowrap; }
+  #adm-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+
+<div id="adm-wrap">
+  <!-- LOGIN SCREEN -->
+  <div id="adm-login">
+    <h2>🛡️ Администратор</h2>
+    <p>Управление пользователями Barista School</p>
+    <div class="adm-field">
+      <label>Email</label>
+      <input type="email" id="adm-email" placeholder="admin@example.com" autocomplete="username">
+    </div>
+    <div class="adm-field">
+      <label>Пароль</label>
+      <input type="password" id="adm-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button id="adm-login-btn" onclick="admLogin()">Войти</button>
+    <div id="adm-login-err"></div>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div id="adm-panel">
+    <div class="adm-header">
+      <h2>👥 Пользователи</h2>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span id="adm-me" style="font-size:13px;color:#888"></span>
+        <button id="adm-logout" onclick="admLogout()">Выйти</button>
+      </div>
+    </div>
+
+    <div class="adm-stats">
+      <div class="adm-stat"><div class="adm-stat-val" id="adm-s-total">—</div><div class="adm-stat-lbl">Всего</div></div>
+      <div class="adm-stat"><div class="adm-stat-val" id="adm-s-active" style="color:#2d8a56">—</div><div class="adm-stat-lbl">Активных</div></div>
+      <div class="adm-stat"><div class="adm-stat-val" id="adm-s-wait" style="color:#e07b00">—</div><div class="adm-stat-lbl">Ожидают</div></div>
+      <div class="adm-stat"><div class="adm-stat-val" id="adm-s-admin" style="color:#6c3fc5">—</div><div class="adm-stat-lbl">Админов</div></div>
+    </div>
+
+    <div class="adm-toolbar">
+      <input class="adm-search" id="adm-search" placeholder="🔍 Поиск по email или имени..." oninput="admFilter()">
+      <div class="adm-filter-btns">
+        <button class="adm-fb active" onclick="admSetFilter('all',this)">Все</button>
+        <button class="adm-fb" onclick="admSetFilter('active',this)">Активные</button>
+        <button class="adm-fb" onclick="admSetFilter('wait',this)">Ожидают</button>
+      </div>
+      <button id="adm-refresh" onclick="admLoad()">↻ Обновить</button>
+    </div>
+
+    <div class="adm-table-wrap">
+      <div id="adm-loading">Загрузка...</div>
+      <table class="adm-table" id="adm-table" style="display:none">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Email</th>
+            <th>Имя</th>
+            <th>Статус</th>
+            <th>Роль</th>
+            <th>Регистрация</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody id="adm-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div id="adm-confirm">
+  <div id="adm-confirm-box">
+    <h3 id="adm-confirm-title">Подтвердите</h3>
+    <p id="adm-confirm-text">Вы уверены?</p>
+    <div class="adm-confirm-btns">
+      <button id="adm-confirm-cancel" onclick="admConfirmClose()">Отмена</button>
+      <button id="adm-confirm-ok">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<div id="adm-toast"></div>
+
+<script>
+(function(){
+  var API = 'https://barista-school.online/api';
+  var _token = localStorage.getItem('adm_token') || '';
+  var _users = [];
+  var _filter = 'all';
+
+  // ── UTILS ──────────────────────────────────────────────────────
+  function toast(msg, dur) {
+    var t = document.getElementById('adm-toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._t);
+    t._t = setTimeout(function(){ t.classList.remove('show'); }, dur || 3000);
+  }
+
+  function api(method, path, body) {
+    var opts = { method: method, headers: { 'Content-Type': 'application/json' } };
+    if (_token) opts.headers['Authorization'] = 'Bearer ' + _token;
+    if (body) opts.body = JSON.stringify(body);
+    return fetch(API + path, opts).then(function(r){
+      if (r.status === 401) { admLogout(); throw new Error('401'); }
+      return r.json();
+    });
+  }
+
+  function fmtDate(s) {
+    if (!s) return '—';
+    return new Date(s).toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric' });
+  }
+
+  // ── LOGIN ──────────────────────────────────────────────────────
+  window.admLogin = function() {
+    var btn = document.getElementById('adm-login-btn');
+    var err = document.getElementById('adm-login-err');
+    var email = document.getElementById('adm-email').value.trim();
+    var pass = document.getElementById('adm-pass').value;
+    err.textContent = '';
+    if (!email || !pass) { err.textContent = 'Введите email и пароль'; return; }
+    btn.disabled = true; btn.textContent = 'Вход…';
+    api('POST', '/auth/login', { email: email, password: pass })
+      .then(function(d) {
+        if (!d.access_token) throw new Error(d.detail || 'Неверные данные');
+        _token = d.access_token;
+        localStorage.setItem('adm_token', _token);
+        return api('GET', '/auth/me');
+      })
+      .then(function(me) {
+        if (!me.is_admin) { err.textContent = '⛔ Нет прав администратора'; _token = ''; localStorage.removeItem('adm_token'); return; }
+        document.getElementById('adm-me').textContent = me.email;
+        document.getElementById('adm-login').style.display = 'none';
+        document.getElementById('adm-panel').style.display = 'block';
+        admLoad();
+      })
+      .catch(function(e) { err.textContent = '❌ ' + (e.message || 'Ошибка входа'); })
+      .finally(function() { btn.disabled = false; btn.textContent = 'Войти'; });
+  };
+
+  window.admLogout = function() {
+    _token = ''; localStorage.removeItem('adm_token');
+    document.getElementById('adm-panel').style.display = 'none';
+    document.getElementById('adm-login').style.display = 'block';
+    document.getElementById('adm-email').value = '';
+    document.getElementById('adm-pass').value = '';
+  };
+
+  // ── LOAD USERS ─────────────────────────────────────────────────
+  window.admLoad = function() {
+    document.getElementById('adm-loading').style.display = 'block';
+    document.getElementById('adm-table').style.display = 'none';
+    api('GET', '/admin/users')
+      .then(function(users) {
+        _users = users;
+        admRender();
+        // stats
+        var active = users.filter(function(u){ return u.is_active; }).length;
+        var wait = users.filter(function(u){ return !u.is_active; }).length;
+        var admins = users.filter(function(u){ return u.is_admin; }).length;
+        document.getElementById('adm-s-total').textContent = users.length;
+        document.getElementById('adm-s-active').textContent = active;
+        document.getElementById('adm-s-wait').textContent = wait;
+        document.getElementById('adm-s-admin').textContent = admins;
+      })
+      .catch(function(e) { toast('❌ Ошибка загрузки: ' + e.message); });
+  };
+
+  function admRender() {
+    var q = (document.getElementById('adm-search').value || '').toLowerCase();
+    var rows = _users.filter(function(u) {
+      var match = (u.email||'').toLowerCase().includes(q) || (u.name||'').toLowerCase().includes(q);
+      if (!match) return false;
+      if (_filter === 'active') return u.is_active;
+      if (_filter === 'wait') return !u.is_active;
+      return true;
+    });
+    var tbody = document.getElementById('adm-tbody');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:32px">Нет пользователей</td></tr>';
+    } else {
+      tbody.innerHTML = rows.map(function(u, i) {
+        return '<tr>' +
+          '<td style="color:#aaa;font-size:12px">' + (i+1) + '</td>' +
+          '<td style="font-weight:600">' + u.email + '</td>' +
+          '<td>' + (u.name || '<span style="color:#bbb">—</span>') + '</td>' +
+          '<td><span class="adm-badge ' + (u.is_active ? 'active' : 'inactive') + '">' + (u.is_active ? '✓ Активен' : '⏳ Ожидает') + '</span></td>' +
+          '<td>' + (u.is_admin ? '<span class="adm-badge admin">👑 Админ</span>' : '<span style="font-size:12px;color:#aaa">Пользователь</span>') + '</td>' +
+          '<td style="font-size:12px;color:#888">' + fmtDate(u.created_at) + '</td>' +
+          '<td><div class="adm-actions">' +
+            (u.is_active
+              ? '<button class="adm-btn off" onclick="admToggle(' + u.id + ',false)">Заблокировать</button>'
+              : '<button class="adm-btn on" onclick="admToggle(' + u.id + ',true)">Активировать</button>') +
+            (!u.is_admin ? '<button class="adm-btn adm" onclick="admMakeAdmin(' + u.id + ')">Сделать админом</button>' : '') +
+            '<button class="adm-btn del" onclick="admDelete(' + u.id + ',\'' + u.email.replace(/'/g,"\\'") + '\')">Удалить</button>' +
+          '</div></td>' +
+        '</tr>';
+      }).join('');
+    }
+    document.getElementById('adm-loading').style.display = 'none';
+    document.getElementById('adm-table').style.display = 'table';
+  }
+
+  window.admFilter = function() { admRender(); };
+  window.admSetFilter = function(f, btn) {
+    _filter = f;
+    document.querySelectorAll('.adm-fb').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    admRender();
+  };
+
+  // ── ACTIONS ────────────────────────────────────────────────────
+  window.admToggle = function(id, activate) {
+    var path = activate ? '/admin/activate/' + id : '/admin/deactivate/' + id;
+    api('POST', path)
+      .then(function() {
+        var u = _users.find(function(x){ return x.id === id; });
+        if (u) u.is_active = activate;
+        admRender();
+        // update stats
+        var active = _users.filter(function(u){ return u.is_active; }).length;
+        document.getElementById('adm-s-active').textContent = active;
+        document.getElementById('adm-s-wait').textContent = _users.length - active;
+        toast(activate ? '✅ Пользователь активирован' : '🚫 Пользователь заблокирован');
+      })
+      .catch(function(e){ toast('❌ Ошибка: ' + e.message); });
+  };
+
+  window.admMakeAdmin = function(id) {
+    api('PATCH', '/admin/users/' + id, { is_admin: true })
+      .then(function() {
+        var u = _users.find(function(x){ return x.id === id; });
+        if (u) u.is_admin = true;
+        admRender();
+        document.getElementById('adm-s-admin').textContent = _users.filter(function(u){ return u.is_admin; }).length;
+        toast('👑 Пользователь назначен администратором');
+      })
+      .catch(function(e){ toast('❌ Ошибка: ' + e.message); });
+  };
+
+  window.admDelete = function(id, email) {
+    var modal = document.getElementById('adm-confirm');
+    document.getElementById('adm-confirm-title').textContent = 'Удалить пользователя?';
+    document.getElementById('adm-confirm-text').textContent = 'Удалить «' + email + '»? Действие необратимо.';
+    document.getElementById('adm-confirm-ok').textContent = 'Удалить';
+    document.getElementById('adm-confirm-ok').onclick = function() {
+      admConfirmClose();
+      api('DELETE', '/admin/users/' + id)
+        .then(function() {
+          _users = _users.filter(function(u){ return u.id !== id; });
+          admRender();
+          document.getElementById('adm-s-total').textContent = _users.length;
+          var active = _users.filter(function(u){ return u.is_active; }).length;
+          document.getElementById('adm-s-active').textContent = active;
+          document.getElementById('adm-s-wait').textContent = _users.length - active;
+          document.getElementById('adm-s-admin').textContent = _users.filter(function(u){ return u.is_admin; }).length;
+          toast('🗑️ Пользователь удалён');
+        })
+        .catch(function(e){ toast('❌ Ошибка: ' + e.message); });
+    };
+    modal.classList.add('show');
+  };
+
+  window.admConfirmClose = function() {
+    document.getElementById('adm-confirm').classList.remove('show');
+  };
+
+  // Enter в полях логина
+  document.getElementById('adm-email').addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('adm-pass').focus(); });
+  document.getElementById('adm-pass').addEventListener('keydown', function(e){ if(e.key==='Enter') admLogin(); });
+
+  // Автовход если есть токен
+  if (_token) {
+    api('GET', '/auth/me')
+      .then(function(me) {
+        if (!me.is_admin) { _token=''; localStorage.removeItem('adm_token'); return; }
+        document.getElementById('adm-me').textContent = me.email;
+        document.getElementById('adm-login').style.display = 'none';
+        document.getElementById('adm-panel').style.display = 'block';
+        admLoad();
+      })
+      .catch(function(){ _token=''; localStorage.removeItem('adm_token'); });
+  }
+})();
+</script>

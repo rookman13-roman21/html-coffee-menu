@@ -1,0 +1,2047 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vibe Coding — рабочая инструкция</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0;padding:0;background:#F5F5F5;">
+
+<section class="vibe-guide">
+  <style>
+    .vibe-guide {
+      --green-dark: #243522;
+      --green: #417033;
+      --green-soft: #E7F2E3;
+      --green-light: #B6D8AB;
+      --red: #CC2841;
+      --red-soft: #F8DDE1;
+      --gray: #F5F5F5;
+      --text: #1F1F1F;
+      --muted: #667066;
+      --white: #FFFFFF;
+
+      font-family: 'Mulish', Arial, sans-serif;
+      background: var(--gray);
+      color: var(--text);
+      padding: 42px 18px;
+      line-height: 1.55;
+    }
+
+    .vibe-guide * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    .vibe-guide__container {
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+
+    .vibe-guide__hero {
+      background: linear-gradient(135deg, #E7F2E3 0%, #FFFFFF 100%);
+      border: 1px solid var(--green-light);
+      border-radius: 32px;
+      padding: 38px;
+      margin-bottom: 22px;
+    }
+
+    .vibe-guide__label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--green);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 8px 13px;
+      border-radius: 999px;
+      margin-bottom: 18px;
+    }
+
+    .vibe-guide h1 {
+      font-size: 44px;
+      line-height: 1.08;
+      margin: 0 0 18px;
+      color: var(--green-dark);
+      letter-spacing: -0.03em;
+    }
+
+    .vibe-guide h2 {
+      font-size: 28px;
+      line-height: 1.18;
+      margin: 0 0 16px;
+      color: var(--green-dark);
+      letter-spacing: -0.02em;
+    }
+
+    .vibe-guide h3 {
+      font-size: 20px;
+      line-height: 1.25;
+      margin: 22px 0 10px;
+      color: var(--green);
+    }
+
+    .vibe-guide p {
+      margin: 0 0 14px;
+      font-size: 16px;
+    }
+
+    .vibe-guide ul,
+    .vibe-guide ol {
+      margin: 12px 0 0;
+      padding-left: 22px;
+    }
+
+    .vibe-guide li {
+      margin-bottom: 8px;
+    }
+
+    .vibe-guide__lead {
+      max-width: 790px;
+      font-size: 19px;
+      color: #344334;
+      margin: 0;
+    }
+
+    .vibe-guide__nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(245, 245, 245, 0.94);
+      backdrop-filter: blur(10px);
+      padding: 10px 0 14px;
+      margin-bottom: 16px;
+    }
+
+    .vibe-guide__nav-inner {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .vibe-guide__nav a {
+      white-space: nowrap;
+      text-decoration: none;
+      background: #fff;
+      color: var(--green-dark);
+      border: 1px solid #E2E8DF;
+      border-radius: 999px;
+      padding: 9px 13px;
+      font-size: 14px;
+      font-weight: 700;
+      transition: 0.18s ease;
+    }
+
+    .vibe-guide__nav a:hover {
+      background: var(--green);
+      color: #fff;
+      border-color: var(--green);
+    }
+
+    .vibe-guide__section {
+      background: #fff;
+      border-radius: 26px;
+      padding: 30px;
+      margin-bottom: 18px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.045);
+      scroll-margin-top: 82px;
+    }
+
+    .vibe-guide__section--green {
+      background: var(--green-soft);
+      border: 1px solid var(--green-light);
+    }
+
+    .vibe-guide__section--dark {
+      background: var(--green-dark);
+      color: #fff;
+    }
+
+    .vibe-guide__section--dark h2,
+    .vibe-guide__section--dark h3 {
+      color: #fff;
+    }
+
+    .vibe-guide__section--dark p {
+      color: #EEF5EB;
+    }
+
+    .vibe-guide__quick-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .vibe-guide__quick-card {
+      background: #fff;
+      border: 1px solid #DDE8D8;
+      border-radius: 22px;
+      padding: 18px;
+    }
+
+    .vibe-guide__quick-card h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+
+    .vibe-guide__quick-card p {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 14px;
+    }
+
+    .vibe-guide__btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: var(--green);
+      color: #fff;
+      border-radius: 999px;
+      padding: 10px 15px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 0.18s ease;
+    }
+
+    .vibe-guide__btn:hover {
+      background: var(--green-dark);
+      transform: translateY(-1px);
+    }
+
+    .vibe-guide__btn--light {
+      background: #fff;
+      color: var(--green);
+      border: 1px solid var(--green-light);
+    }
+
+    .vibe-guide__btn--light:hover {
+      color: #fff;
+      background: var(--green);
+    }
+
+    .vibe-guide__protocol {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      counter-reset: protocol;
+      margin-top: 18px;
+    }
+
+    .vibe-guide__step {
+      background: #fff;
+      border: 1px solid #E2E8DF;
+      border-radius: 20px;
+      padding: 18px;
+      position: relative;
+    }
+
+    .vibe-guide__step:before {
+      counter-increment: protocol;
+      content: counter(protocol);
+      display: inline-flex;
+      width: 28px;
+      height: 28px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: var(--green);
+      color: #fff;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .vibe-guide__step strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--green-dark);
+    }
+
+    .vibe-guide__step span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .vibe-guide__table-wrap {
+      overflow-x: auto;
+      margin-top: 18px;
+      border-radius: 20px;
+      border: 1px solid #E2E8DF;
+    }
+
+    .vibe-guide table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      min-width: 760px;
+    }
+
+    .vibe-guide th,
+    .vibe-guide td {
+      text-align: left;
+      vertical-align: top;
+      padding: 15px 16px;
+      border-bottom: 1px solid #E9EEE7;
+      font-size: 15px;
+    }
+
+    .vibe-guide th {
+      background: var(--green-soft);
+      color: var(--green-dark);
+      font-weight: 900;
+    }
+
+    .vibe-guide tr:last-child td {
+      border-bottom: none;
+    }
+
+    .vibe-guide__tag {
+      display: inline-flex;
+      background: var(--green-soft);
+      color: var(--green);
+      border: 1px solid var(--green-light);
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .vibe-guide__tag--danger {
+      background: var(--red-soft);
+      color: var(--red);
+      border-color: #EC98A7;
+    }
+
+    .vibe-guide__prompt {
+      border: 1px solid #E2E8DF;
+      border-radius: 22px;
+      overflow: hidden;
+      margin: 16px 0;
+      background: #fff;
+    }
+
+    .vibe-guide__prompt-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      background: #F8FAF7;
+      border-bottom: 1px solid #E2E8DF;
+    }
+
+    .vibe-guide__prompt-title {
+      font-weight: 900;
+      color: var(--green-dark);
+      font-size: 15px;
+    }
+
+    .vibe-guide__code {
+      background: #1F1F1F;
+      color: #F5F5F5;
+      padding: 20px;
+      overflow-x: auto;
+      font-size: 14px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      margin: 0;
+    }
+
+    .vibe-guide__details {
+      border: 1px solid #E2E8DF;
+      border-radius: 22px;
+      overflow: hidden;
+      margin: 12px 0;
+      background: #fff;
+    }
+
+    .vibe-guide__details summary {
+      cursor: pointer;
+      padding: 18px 20px;
+      font-weight: 900;
+      color: var(--green-dark);
+      background: #F8FAF7;
+      list-style: none;
+      position: relative;
+    }
+
+    .vibe-guide__details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .vibe-guide__details summary:after {
+      content: "+";
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 24px;
+      color: var(--green);
+      font-weight: 800;
+    }
+
+    .vibe-guide__details[open] summary:after {
+      content: "−";
+    }
+
+    .vibe-guide__details-content {
+      padding: 20px;
+    }
+
+    .vibe-guide__cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .vibe-guide__card {
+      background: #fff;
+      border: 1px solid #E2E8DF;
+      border-radius: 20px;
+      padding: 18px;
+    }
+
+    .vibe-guide__card strong {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--green);
+      font-size: 16px;
+    }
+
+    .vibe-guide__card span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .vibe-guide__compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .vibe-guide__bad,
+    .vibe-guide__good {
+      border-radius: 22px;
+      padding: 20px;
+    }
+
+    .vibe-guide__bad {
+      background: var(--red-soft);
+      border: 1px solid #EC98A7;
+    }
+
+    .vibe-guide__good {
+      background: var(--green-soft);
+      border: 1px solid var(--green-light);
+    }
+
+    .vibe-guide__bad h3 {
+      color: var(--red);
+      margin-top: 0;
+    }
+
+    .vibe-guide__good h3 {
+      color: var(--green);
+      margin-top: 0;
+    }
+
+    .vibe-guide__checklist {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .vibe-guide__check {
+      background: #fff;
+      border: 1px solid #E2E8DF;
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .vibe-guide__check strong {
+      color: var(--green);
+    }
+
+    .vibe-guide__note {
+      background: var(--red-soft);
+      border-left: 5px solid var(--red);
+      border-radius: 18px;
+      padding: 18px 20px;
+      margin: 18px 0;
+      color: #3A2226;
+    }
+
+    .vibe-guide__note strong {
+      color: var(--red);
+    }
+
+    .vibe-guide__toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--green-dark);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 800;
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.2s ease;
+      z-index: 99;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+    }
+
+    .vibe-guide__toast.is-visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 900px) {
+      .vibe-guide__quick-grid,
+      .vibe-guide__protocol,
+      .vibe-guide__cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 680px) {
+      .vibe-guide {
+        padding: 28px 12px;
+      }
+
+      .vibe-guide__hero,
+      .vibe-guide__section {
+        padding: 22px;
+        border-radius: 22px;
+      }
+
+      .vibe-guide h1 {
+        font-size: 31px;
+      }
+
+      .vibe-guide h2 {
+        font-size: 23px;
+      }
+
+      .vibe-guide__lead {
+        font-size: 16px;
+      }
+
+      .vibe-guide__quick-grid,
+      .vibe-guide__protocol,
+      .vibe-guide__cards,
+      .vibe-guide__compare,
+      .vibe-guide__checklist {
+        grid-template-columns: 1fr;
+      }
+
+      .vibe-guide__prompt-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .vibe-guide__btn {
+        width: 100%;
+      }
+
+      .vibe-guide__code {
+        font-size: 13px;
+      }
+    }
+    .vibe-guide__prompt-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .vibe-guide__prompt-card {
+      background: #fff;
+      border: 1px solid #E2E8DF;
+      border-radius: 22px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      min-height: 245px;
+      transition: 0.18s ease;
+    }
+
+    .vibe-guide__prompt-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.055);
+    }
+
+    .vibe-guide__prompt-card-top {
+      flex: 1;
+    }
+
+    .vibe-guide__prompt-card h3 {
+      margin: 12px 0 8px;
+      font-size: 18px;
+      color: var(--green-dark);
+    }
+
+    .vibe-guide__prompt-card p {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .vibe-guide__prompt-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 1040px) {
+      .vibe-guide__prompt-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 780px) {
+      .vibe-guide__prompt-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .vibe-guide__prompt-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .vibe-guide__prompt-card {
+        min-height: auto;
+      }
+    }
+
+    /* ── Модальный попап для просмотра промптов ── */
+    .vibe-prompt-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(31, 31, 31, 0.6);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .vibe-prompt-modal.is-open {
+      display: flex;
+    }
+
+    .vibe-prompt-modal__inner {
+      background: #fff;
+      border-radius: 26px;
+      max-width: 680px;
+      width: 100%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.18);
+    }
+
+    .vibe-prompt-modal__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px;
+      border-bottom: 1px solid #E2E8DF;
+      background: #F8FAF7;
+      flex-shrink: 0;
+    }
+
+    .vibe-prompt-modal__title {
+      font-weight: 900;
+      color: var(--green-dark);
+      font-size: 16px;
+    }
+
+    .vibe-prompt-modal__actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .vibe-prompt-modal__close {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid #E2E8DF;
+      background: #fff;
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.15s ease;
+    }
+
+    .vibe-prompt-modal__close:hover {
+      background: var(--red-soft);
+      color: var(--red);
+      border-color: #EC98A7;
+    }
+
+    .vibe-prompt-modal__body {
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .vibe-prompt-modal__body .vibe-guide__code {
+      border-radius: 0;
+      max-height: none;
+      font-size: 14px;
+    }
+
+    @media (max-width: 560px) {
+      .vibe-prompt-modal__inner {
+        max-height: 95vh;
+        border-radius: 20px;
+      }
+    }
+
+    /* ── Активный пункт nav ── */
+    .vibe-guide__nav a.is-active {
+      background: var(--green);
+      color: #fff;
+      border-color: var(--green);
+    }
+
+    /* ── Фидбэк на кнопке Копировать ── */
+    .vibe-guide__btn.is-copied {
+      background: #2E7D32;
+    }
+
+    .vibe-guide__btn.is-copied::before {
+      content: '✓ ';
+    }
+
+    /* ── Кнопка наверх ── */
+    .vibe-back-to-top {
+      position: fixed;
+      right: 22px;
+      bottom: 24px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--green-dark);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      z-index: 90;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.22);
+    }
+
+    .vibe-back-to-top.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .vibe-back-to-top:hover {
+      background: var(--green);
+      transform: translateY(-2px);
+    }
+
+    /* ── contenteditable в модале ── */
+    .vibe-prompt-modal__body [contenteditable] {
+      outline: none;
+      caret-color: #88c980;
+    }
+
+    .vibe-prompt-modal__body [contenteditable]:focus {
+      background: #262626;
+    }
+
+    /* ── Счётчик слов ── */
+    .vibe-prompt-modal__counter {
+      padding: 8px 20px;
+      font-size: 12px;
+      color: #888;
+      background: #1F1F1F;
+      border-top: 1px solid #333;
+      text-align: right;
+      font-family: 'Mulish', Arial, sans-serif;
+      flex-shrink: 0;
+    }
+
+    /* ── Подсказка в модале ── */
+    .vibe-prompt-modal__hint {
+      padding: 10px 20px;
+      font-size: 12px;
+      color: #aaa;
+      background: #1a1a1a;
+      border-top: 1px solid #2a2a2a;
+      font-family: 'Mulish', Arial, sans-serif;
+      flex-shrink: 0;
+    }
+
+    /* ── Кнопка переключения темы ── */
+    .vibe-theme-toggle {
+      margin-left: auto;
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid #E2E8DF;
+      background: #fff;
+      cursor: pointer;
+      font-size: 17px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.18s ease;
+      color: var(--green-dark);
+    }
+
+    .vibe-theme-toggle:hover {
+      background: var(--green-soft);
+      border-color: var(--green-light);
+    }
+
+    /* ── Тёмная тема (GitHub Dark style) ── */
+    .vibe-guide.dark {
+      --green-dark: #58a6ff;
+      --green: #3fb950;
+      --green-soft: #161b22;
+      --green-light: #30363d;
+      --red: #f85149;
+      --red-soft: #1f1116;
+      --gray: #0d1117;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --white: #161b22;
+      background: #0d1117;
+      color: #e6edf3;
+    }
+
+    /* Hero */
+    .vibe-guide.dark .vibe-guide__hero {
+      background: #161b22;
+      border-color: #30363d;
+    }
+
+    .vibe-guide.dark .vibe-guide__hero h1 {
+      color: #e6edf3;
+    }
+
+    .vibe-guide.dark .vibe-guide__lead {
+      color: #8b949e;
+    }
+
+    .vibe-guide.dark .vibe-guide__label {
+      background: #238636;
+    }
+
+    /* Nav */
+    .vibe-guide.dark .vibe-guide__nav {
+      background: rgba(13, 17, 23, 0.96);
+    }
+
+    .vibe-guide.dark .vibe-guide__nav a {
+      background: #161b22;
+      color: #c9d1d9;
+      border-color: #30363d;
+    }
+
+    .vibe-guide.dark .vibe-guide__nav a:hover {
+      background: #21262d;
+      color: #e6edf3;
+      border-color: #8b949e;
+    }
+
+    .vibe-guide.dark .vibe-guide__nav a.is-active {
+      background: #238636;
+      color: #fff;
+      border-color: #2ea043;
+    }
+
+    .vibe-guide.dark .vibe-theme-toggle {
+      background: #161b22;
+      border-color: #30363d;
+      color: #8b949e;
+    }
+
+    .vibe-guide.dark .vibe-theme-toggle:hover {
+      background: #21262d;
+      color: #c9d1d9;
+    }
+
+    /* Sections */
+    .vibe-guide.dark .vibe-guide__section {
+      background: #161b22;
+      box-shadow: 0 1px 0 rgba(48,54,61,0.6);
+      border: 1px solid #30363d;
+    }
+
+    .vibe-guide.dark .vibe-guide__section--green {
+      background: #161b22;
+      border-color: #30363d;
+    }
+
+    .vibe-guide.dark .vibe-guide__section--dark {
+      background: #010409;
+      border-color: #30363d;
+    }
+
+    /* Typography */
+    .vibe-guide.dark h2 {
+      color: #e6edf3;
+    }
+
+    .vibe-guide.dark h3 {
+      color: #58a6ff;
+    }
+
+    .vibe-guide.dark p {
+      color: #c9d1d9;
+    }
+
+    /* Quick cards */
+    .vibe-guide.dark .vibe-guide__quick-card {
+      background: #21262d;
+      border-color: #30363d;
+    }
+
+    .vibe-guide.dark .vibe-guide__quick-card h3 {
+      color: #e6edf3;
+    }
+
+    .vibe-guide.dark .vibe-guide__quick-card p {
+      color: #8b949e;
+    }
+
+    /* Protocol steps */
+    .vibe-guide.dark .vibe-guide__step {
+      background: #21262d;
+      border-color: #30363d;
+    }
+
+    .vibe-guide.dark .vibe-guide__step strong {
+      color: #e6edf3;
+    }
+
+    .vibe-guide.dark .vibe-guide__step span {
+      color: #8b949e;
+    }
+
+    /* Table */
+    .vibe-guide.dark .vibe-guide__table-wrap {
+      border-color: #30363d;
+    }
+
+    .vibe-guide.dark table {
+      background: #161b22;
+    }
+
+    .vibe-guide.dark th {
+      background: #21262d;
+      color: #c9d1d9;
+    }
+
+    .vibe-guide.dark td {
+      color: #c9d1d9;
+    }
+
+    .vibe-guide.dark td,
+    .vibe-guide.dark th {
+      border-bottom-color: #21262d;
+    }
+
+    /* Prompt cards */
+    .vibe-guide.dark .vibe-guide__prompt-card {
+      background: #21262d;
+      border-color: #30363d;
+    }
+
+    .vibe-guide.dark .vibe-guide__prompt-card h3 {
+      color: #e6edf3;
+    }
+
+    .vibe-guide.dark .vibe-guide__prompt-card p {
+      color: #8b949e;
+    }
+
+    /* Prompt blocks (in Files section) */
+    .vibe-guide.dark .vibe-guide__prompt {
+      border-color: #30363d;
+      background: #161b22;
+    }
+
+    .vibe-guide.dark .vibe-guide__prompt-head {
+      background: #21262d;
+      border-bottom-color: #30363d;
+    }
+
+    .vibe-guide.dark .vibe-guide__prompt-title {
+      color: #e6edf3;
+    }
+
+    /* File cards */
+    .vibe-guide.dark .vibe-guide__card {
+      background: #21262d;
+      border-color: #30363d;
+    }
+
+    .vibe-guide.dark .vibe-guide__card strong {
+      color: #58a6ff;
+    }
+
+    .vibe-guide.dark .vibe-guide__card span {
+      color: #8b949e;
+    }
+
+    /* Checklist */
+    .vibe-guide.dark .vibe-guide__check {
+      background: #21262d;
+      border-color: #30363d;
+    }
+
+    .vibe-guide.dark .vibe-guide__check strong {
+      color: #3fb950;
+    }
+
+    /* Details / accordion */
+    .vibe-guide.dark .vibe-guide__details {
+      background: #161b22;
+      border-color: #30363d;
+    }
+
+    .vibe-guide.dark .vibe-guide__details summary {
+      background: #21262d;
+      color: #e6edf3;
+    }
+
+    /* Compare bad/good */
+    .vibe-guide.dark .vibe-guide__bad {
+      background: #160b0b;
+      border-color: #6e2a2a;
+    }
+
+    .vibe-guide.dark .vibe-guide__bad h3 {
+      color: #f85149;
+    }
+
+    .vibe-guide.dark .vibe-guide__bad li {
+      color: #c9d1d9;
+    }
+
+    .vibe-guide.dark .vibe-guide__good {
+      background: #0b1a0f;
+      border-color: #1a4328;
+    }
+
+    .vibe-guide.dark .vibe-guide__good h3 {
+      color: #3fb950;
+    }
+
+    .vibe-guide.dark .vibe-guide__good li {
+      color: #c9d1d9;
+    }
+
+    /* Note (red warning) */
+    .vibe-guide.dark .vibe-guide__note {
+      background: #160b0b;
+      border-left-color: #f85149;
+      color: #c9d1d9;
+    }
+
+    .vibe-guide.dark .vibe-guide__note strong {
+      color: #f85149;
+    }
+
+    /* Buttons */
+    .vibe-guide.dark .vibe-guide__btn {
+      background: #238636;
+    }
+
+    .vibe-guide.dark .vibe-guide__btn:hover {
+      background: #2ea043;
+    }
+
+    .vibe-guide.dark .vibe-guide__btn.is-copied {
+      background: #1a7f37;
+    }
+
+    .vibe-guide.dark .vibe-guide__btn--light {
+      background: #21262d;
+      color: #3fb950;
+      border-color: #30363d;
+    }
+
+    .vibe-guide.dark .vibe-guide__btn--light:hover {
+      background: #238636;
+      color: #fff;
+      border-color: #2ea043;
+    }
+
+    /* Tags */
+    .vibe-guide.dark .vibe-guide__tag {
+      background: #0b1a0f;
+      color: #3fb950;
+      border-color: #1a4328;
+    }
+
+    .vibe-guide.dark .vibe-guide__tag--danger {
+      background: #160b0b;
+      color: #f85149;
+      border-color: #6e2a2a;
+    }
+
+    /* Modal */
+    .vibe-guide.dark .vibe-prompt-modal {
+      background: rgba(1, 4, 9, 0.8);
+    }
+
+    .vibe-guide.dark .vibe-prompt-modal__inner {
+      background: #161b22;
+      box-shadow: 0 8px 24px rgba(1,4,9,0.6);
+    }
+
+    .vibe-guide.dark .vibe-prompt-modal__head {
+      background: #21262d;
+      border-bottom-color: #30363d;
+    }
+
+    .vibe-guide.dark .vibe-prompt-modal__title {
+      color: #e6edf3;
+    }
+
+    .vibe-guide.dark .vibe-prompt-modal__close {
+      background: #21262d;
+      border-color: #30363d;
+      color: #8b949e;
+    }
+
+    .vibe-guide.dark .vibe-prompt-modal__close:hover {
+      background: #160b0b;
+      color: #f85149;
+      border-color: #6e2a2a;
+    }
+
+    /* Back to top */
+    .vibe-guide.dark ~ .vibe-back-to-top {
+      background: #238636;
+    }
+
+  </style>
+
+  <div class="vibe-guide__container">
+
+    <header class="vibe-guide__hero" id="top">
+      <div class="vibe-guide__label">Vibe Coding · рабочая инструкция</div>
+      <h1>Как эффективно работать с AI в коде</h1>
+      <p class="vibe-guide__lead">
+        Эта страница — не статья, а рабочая панель промптов.
+        Используй её, когда работаешь в VS Code, GitHub, Claude, Cursor или другой AI-среде.
+        Главная задача — быстрее давать точные команды и не позволять AI ломать проект лишней инициативой.
+      </p>
+    </header>
+
+    <nav class="vibe-guide__nav">
+      <div class="vibe-guide__nav-inner">
+        <a href="#quick">Быстрый старт</a>
+        <a href="#protocol">Протокол</a>
+        <a href="#scenarios">Сценарии</a>
+        <a href="#prompts">Промпты</a>
+        <a href="#files">Файлы проекта</a>
+        <a href="#security">Безопасность</a>
+        <a href="#bad-good">Формулировки</a>
+        <a href="#checklist">Чек-лист</a>
+        <button class="vibe-theme-toggle" id="vibeThemeToggle" title="Переключить тему">🌙</button>
+      </div>
+    </nav>
+
+    <section class="vibe-guide__section vibe-guide__section--green" id="quick">
+      <h2>Быстрый старт</h2>
+      <p>
+        Самые частые команды. Нажал — скопировал — вставил в Claude или другую модель.
+      </p>
+
+      <div class="vibe-guide__quick-grid">
+        <div class="vibe-guide__quick-card">
+          <h3>Универсальная задача</h3>
+          <p>Когда нужно начать работу с конкретной проблемой.</p>
+          <button class="vibe-guide__btn" data-copy-target="prompt-universal">Скопировать</button>
+        </div>
+
+        <div class="vibe-guide__quick-card">
+          <h3>Ввести AI в контекст</h3>
+          <p>Когда нужно оценить существующий проект перед работой.</p>
+          <button class="vibe-guide__btn" data-copy-target="prompt-project-audit">Скопировать</button>
+        </div>
+
+        <div class="vibe-guide__quick-card">
+          <h3>Новый проект</h3>
+          <p>Когда начинаешь с нуля и нужно утвердить структуру.</p>
+          <button class="vibe-guide__btn" data-copy-target="prompt-new-project">Скопировать</button>
+        </div>
+
+        <div class="vibe-guide__quick-card">
+          <h3>Диагностика ошибки</h3>
+          <p>Когда сначала нужно найти причину, а не сразу менять код.</p>
+          <button class="vibe-guide__btn" data-copy-target="prompt-diagnostic">Скопировать</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="vibe-guide__section" id="protocol">
+      <h2>Рабочий протокол</h2>
+      <p>
+        Не проси AI сразу «сделать». Веди его по шагам. Иначе он начнёт менять то, что не просили.
+      </p>
+
+      <div class="vibe-guide__protocol">
+        <div class="vibe-guide__step">
+          <strong>Дай контекст</strong>
+          <span>Страница, функция, проблема, что уже известно.</span>
+        </div>
+
+        <div class="vibe-guide__step">
+          <strong>Попроси диагностику</strong>
+          <span>Сначала найти файлы и причину. Код не менять.</span>
+        </div>
+
+        <div class="vibe-guide__step">
+          <strong>Утверди план</strong>
+          <span>AI предлагает шаги, ты разрешаешь только нужное.</span>
+        </div>
+
+        <div class="vibe-guide__step">
+          <strong>Требуй отчёт</strong>
+          <span>Файлы, изменения, проверка, риски, что не трогал.</span>
+        </div>
+      </div>
+
+      <div class="vibe-guide__note">
+        <strong>Жёсткое правило:</strong> чем больше проект, тем меньше должна быть одна задача для AI.
+      </div>
+    </section>
+
+    <section class="vibe-guide__section" id="scenarios">
+      <h2>Сценарии: что просить у AI</h2>
+      <p>
+        Быстрая таблица для выбора правильного режима работы.
+      </p>
+
+      <div class="vibe-guide__table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Ситуация</th>
+              <th>Что просить</th>
+              <th>Режим</th>
+              <th>Что важно запретить</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Не понимаю, где ошибка</td>
+              <td>Найти причину без изменений в коде</td>
+              <td><span class="vibe-guide__tag">Диагностика</span></td>
+              <td>Не менять файлы до плана</td>
+            </tr>
+            <tr>
+              <td>Нужно исправить один баг</td>
+              <td>Минимальный патч в связанных файлах</td>
+              <td><span class="vibe-guide__tag">Точечная правка</span></td>
+              <td>Не делать рефакторинг</td>
+            </tr>
+            <tr>
+              <td>Нужно добавить функцию</td>
+              <td>Сначала план, потом реализация</td>
+              <td><span class="vibe-guide__tag">Архитектура</span></td>
+              <td>Не менять структуру без согласования</td>
+            </tr>
+            <tr>
+              <td>AI начал менять лишнее</td>
+              <td>Ограничить область изменений</td>
+              <td><span class="vibe-guide__tag vibe-guide__tag--danger">Стоп-кран</span></td>
+              <td>Не трогать соседний функционал</td>
+            </tr>
+            <tr>
+              <td>Проект стал большим</td>
+              <td>Создать PROJECT_MAP.md</td>
+              <td><span class="vibe-guide__tag">Навигация</span></td>
+              <td>Не менять код</td>
+            </tr>
+            <tr>
+              <td>Новый чат</td>
+              <td>Передать краткий контекст проекта</td>
+              <td><span class="vibe-guide__tag">Контекст</span></td>
+              <td>Не тащить весь старый чат</td>
+            </tr>
+            <tr>
+              <td>Есть токены или пароли</td>
+              <td>Проверить хранение секретов</td>
+              <td><span class="vibe-guide__tag vibe-guide__tag--danger">Безопасность</span></td>
+              <td>Не коммитить .env</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="vibe-guide__section" id="prompts">
+      <h2>Готовые промпты</h2>
+      <p>
+        Основные команды для ежедневной работы. Используй карточки: копируй сразу или раскрывай полный текст.
+      </p>
+
+      <div class="vibe-guide__prompt-grid">
+
+        <article class="vibe-guide__prompt-card">
+          <div class="vibe-guide__prompt-card-top">
+            <span class="vibe-guide__tag">База</span>
+            <h3>Универсальная задача</h3>
+            <p>Стартовый промпт для любой задачи: сначала найти файлы, объяснить логику и предложить план.</p>
+          </div>
+          <div class="vibe-guide__prompt-actions">
+            <button class="vibe-guide__btn" data-copy-target="prompt-universal">Скопировать</button>
+            <button class="vibe-guide__btn vibe-guide__btn--light" data-toggle-prompt="prompt-universal">Посмотреть текст</button>
+          </div>
+          <pre class="vibe-guide__code" id="prompt-universal" style="display:none">Задача: [кратко описать задачу]
+
+Контекст:
+[что это за страница, функция или проблема]
+
+Ограничения:
+— работай минимальными изменениями
+— не делай рефакторинг без необходимости
+— не меняй архитектуру
+— не трогай соседний функционал
+— не добавляй новые зависимости без согласования
+
+Сначала:
+1. Найди файлы, которые отвечают за эту логику
+2. Объясни, как сейчас всё работает
+3. Предложи план исправления
+
+Код пока не меняй.</pre>
+        </article>
+
+        <article class="vibe-guide__prompt-card">
+          <div class="vibe-guide__prompt-card-top">
+            <span class="vibe-guide__tag">Диагностика</span>
+            <h3>Найти причину ошибки</h3>
+            <p>Когда нужно сначала разобраться, а не позволить AI сразу лезть в код.</p>
+          </div>
+          <div class="vibe-guide__prompt-actions">
+            <button class="vibe-guide__btn" data-copy-target="prompt-diagnostic">Скопировать</button>
+            <button class="vibe-guide__btn vibe-guide__btn--light" data-toggle-prompt="prompt-diagnostic">Посмотреть текст</button>
+          </div>
+          <pre class="vibe-guide__code" id="prompt-diagnostic" style="display:none">Сначала найди причину ошибки.
+Ничего не меняй в коде.
+
+Дай:
+1. Какие файлы связаны с проблемой
+2. Как сейчас работает логика
+3. 2–3 возможные причины ошибки
+4. Какая причина наиболее вероятна
+5. Минимальный план исправления
+6. Какие риски есть при правке
+
+Код пока не меняй.</pre>
+        </article>
+
+        <article class="vibe-guide__prompt-card">
+          <div class="vibe-guide__prompt-card-top">
+            <span class="vibe-guide__tag">Правка</span>
+            <h3>Точечная правка</h3>
+            <p>Для одного бага или небольшого изменения без рефакторинга и без затрагивания соседних блоков.</p>
+          </div>
+          <div class="vibe-guide__prompt-actions">
+            <button class="vibe-guide__btn" data-copy-target="prompt-small-fix">Скопировать</button>
+            <button class="vibe-guide__btn vibe-guide__btn--light" data-toggle-prompt="prompt-small-fix">Посмотреть текст</button>
+          </div>
+          <pre class="vibe-guide__code" id="prompt-small-fix" style="display:none">Внеси минимальную правку только в файлы, связанные с этой задачей.
+
+Важно:
+— не делай рефакторинг
+— не меняй архитектуру
+— не трогай соседний функционал
+— не меняй названия переменных и файлов без необходимости
+— не добавляй новые зависимости
+— не удаляй код без объяснения
+
+После правки дай отчёт:
+1. Какие файлы изменены
+2. Что именно изменено
+3. Почему выбрано такое решение
+4. Как проверить результат
+5. Какие риски остались
+6. Что специально не трогал</pre>
+        </article>
+
+        <article class="vibe-guide__prompt-card">
+          <div class="vibe-guide__prompt-card-top">
+            <span class="vibe-guide__tag">Архитектура</span>
+            <h3>Крупное изменение</h3>
+            <p>Когда задача может затронуть структуру проекта, несколько файлов или важную логику.</p>
+          </div>
+          <div class="vibe-guide__prompt-actions">
+            <button class="vibe-guide__btn" data-copy-target="prompt-architecture">Скопировать</button>
+            <button class="vibe-guide__btn vibe-guide__btn--light" data-toggle-prompt="prompt-architecture">Посмотреть текст</button>
+          </div>
+          <pre class="vibe-guide__code" id="prompt-architecture" style="display:none">Это архитектурная задача.
+
+Сначала предложи план изменений.
+Код не пиши, пока я не подтвержу план.
+
+В плане укажи:
+1. Какие файлы будут затронуты
+2. Что именно нужно изменить
+3. Какие есть риски
+4. Какие альтернативы возможны
+5. Как проверить результат
+6. Что может сломаться в соседнем функционале
+
+После этого остановись и жди подтверждения.</pre>
+        </article>
+
+        <article class="vibe-guide__prompt-card">
+          <div class="vibe-guide__prompt-card-top">
+            <span class="vibe-guide__tag">Выполнение</span>
+            <h3>После утверждения плана</h3>
+            <p>Когда AI уже предложил план, и ты разрешаешь выполнить только конкретные пункты.</p>
+          </div>
+          <div class="vibe-guide__prompt-actions">
+            <button class="vibe-guide__btn" data-copy-target="prompt-approve">Скопировать</button>
+            <button class="vibe-guide__btn vibe-guide__btn--light" data-toggle-prompt="prompt-approve">Посмотреть текст</button>
+          </div>
+          <pre class="vibe-guide__code" id="prompt-approve" style="display:none">План принимаю.
+
+Выполни только пункты: [указать номера пунктов].
+Остальное не трогай.
+
+После изменений дай отчёт:
+— какие файлы изменены
+— что изменено
+— как проверить
+— какие риски остались
+— что специально не трогал</pre>
+        </article>
+
+        <article class="vibe-guide__prompt-card">
+          <div class="vibe-guide__prompt-card-top">
+            <span class="vibe-guide__tag">Контроль</span>
+            <h3>Отчёт после правки</h3>
+            <p>Чтобы AI не писал просто «готово», а фиксировал результат, риски и способ проверки.</p>
+          </div>
+          <div class="vibe-guide__prompt-actions">
+            <button class="vibe-guide__btn" data-copy-target="prompt-report">Скопировать</button>
+            <button class="vibe-guide__btn vibe-guide__btn--light" data-toggle-prompt="prompt-report">Посмотреть текст</button>
+          </div>
+          <pre class="vibe-guide__code" id="prompt-report" style="display:none">После выполнения задачи дай отчёт:
+
+1. Что было изменено
+2. Какие файлы изменены
+3. Почему выбрано такое решение
+4. Как проверить результат
+5. Какие риски или ограничения остались
+6. Что не трогал специально
+7. Нужно ли обновить PROJECT_CONTEXT.md, PROJECT_MAP.md или CHANGELOG_AI.md</pre>
+        </article>
+
+        <article class="vibe-guide__prompt-card">
+          <div class="vibe-guide__prompt-card-top">
+            <span class="vibe-guide__tag">Дизайн</span>
+            <h3>Правка визуала</h3>
+            <p>Когда нужно улучшить интерфейс без фразы «сделай красиво» и без лишней самодеятельности.</p>
+          </div>
+          <div class="vibe-guide__prompt-actions">
+            <button class="vibe-guide__btn" data-copy-target="prompt-design">Скопировать</button>
+            <button class="vibe-guide__btn vibe-guide__btn--light" data-toggle-prompt="prompt-design">Посмотреть текст</button>
+          </div>
+          <pre class="vibe-guide__code" id="prompt-design" style="display:none">Улучши визуал блока: [название блока или страницы].
+
+Конкретные требования:
+— [например: увеличь внутренние отступы]
+— [например: сделай заголовок 18px]
+— [например: кнопку растяни на всю ширину]
+— [например: расстояние между блоками 12px]
+— не меняй фирменные цвета
+— не меняй десктопную версию, если задача только про мобильную
+— не трогай соседние блоки
+— не добавляй новые библиотеки
+
+Сначала найди файл/блок, который отвечает за этот элемент.
+Потом предложи минимальный план правки.
+Код пока не меняй.</pre>
+        </article>
+
+        <article class="vibe-guide__prompt-card">
+          <div class="vibe-guide__prompt-card-top">
+            <span class="vibe-guide__tag">Мобайл</span>
+            <h3>Починить мобильную вёрстку</h3>
+            <p>Когда карточки, таблицы или блоки ломаются на маленьких экранах — без затрагивания десктопа.</p>
+          </div>
+          <div class="vibe-guide__prompt-actions">
+            <button class="vibe-guide__btn" data-copy-target="prompt-mobile-fix">Скопировать</button>
+            <button class="vibe-guide__btn vibe-guide__btn--light" data-toggle-prompt="prompt-mobile-fix">Посмотреть текст</button>
+          </div>
+          <pre class="vibe-guide__code" id="prompt-mobile-fix" style="display:none">Исправь отображение на мобильных устройствах.
+Страница / блок: [название страницы или блока]
+Проблема: [например: карточки не помещаются, текст обрезается, кнопка выходит за экран]
+Ширина, при которой ломается: [например: до 480px]
+
+Ограничения:
+— не трогай десктопную вёрстку (от 768px и выше)
+— работай только через медиа-запросы или мобильные классы
+— не меняй структуру HTML без необходимости
+— не делай рефакторинг остальных стилей
+— не добавляй новые зависимости
+
+Сначала:
+1. Найди файл со стилями этого блока
+2. Покажи, какие CSS-правила сейчас отвечают за мобильный вид
+3. Объясни, почему ломается
+4. Предложи минимальный патч только для мобильного брейкпоинта
+
+Код пока не меняй.</pre>
+        </article>
+
+        <article class="vibe-guide__prompt-card">
+          <div class="vibe-guide__prompt-card-top">
+            <span class="vibe-guide__tag">Новый чат</span>
+            <h3>Передать контекст</h3>
+            <p>Когда длинный чат пора закрыть и нужно начать новый без потери смысла.</p>
+          </div>
+          <div class="vibe-guide__prompt-actions">
+            <button class="vibe-guide__btn" data-copy-target="prompt-new-chat">Скопировать</button>
+            <button class="vibe-guide__btn vibe-guide__btn--light" data-toggle-prompt="prompt-new-chat">Посмотреть текст</button>
+          </div>
+          <pre class="vibe-guide__code" id="prompt-new-chat" style="display:none">Контекст проекта:
+— проект: [название проекта]
+— цель проекта: [что делает проект]
+— где хранится код: [репозиторий/папка]
+— важные страницы: [список]
+— важные интеграции: [API, Google Sheets, Tilda, Bitrix24, yClients и т.д.]
+— что уже сделано: [кратко]
+— текущая задача: [что нужно сделать сейчас]
+— что нельзя трогать: [ограничения]
+— как проверить результат: [команда/страница/действие]
+
+Перед изменениями сначала изучи нужные файлы и предложи план.
+Код сразу не меняй.</pre>
+        </article>
+
+        <article class="vibe-guide__prompt-card">
+          <div class="vibe-guide__prompt-card-top">
+            <span class="vibe-guide__tag">Новый проект</span>
+            <h3>Начать проект с нуля</h3>
+            <p>Когда нужно создать новый проект: сначала утвердить структуру, потом код.</p>
+          </div>
+          <div class="vibe-guide__prompt-actions">
+            <button class="vibe-guide__btn" data-copy-target="prompt-new-project">Скопировать</button>
+            <button class="vibe-guide__btn vibe-guide__btn--light" data-toggle-prompt="prompt-new-project">Посмотреть текст</button>
+          </div>
+          <pre class="vibe-guide__code" id="prompt-new-project" style="display:none">Создай новый проект с нуля.
+
+Технологии: [указать стек]
+Цель проекта: [что должен делать]
+Пользователи: [кто будет использовать]
+
+Перед кодом:
+1. Предложи структуру папок
+2. Список файлов и их назначение
+3. Порядок реализации (что делать первым)
+4. Что нужно уточнить до начала работы
+
+Ограничения:
+— не добавляй лишние зависимости
+— не усложняй архитектуру без необходимости
+— предпочитай простые решения
+
+Код не пиши, пока я не утвержу структуру.</pre>
+        </article>
+
+        <article class="vibe-guide__prompt-card">
+          <div class="vibe-guide__prompt-card-top">
+            <span class="vibe-guide__tag">Аудит</span>
+            <h3>Ввести AI в контекст проекта</h3>
+            <p>Когда нужно оценить существующий проект перед началом работы — чтобы AI понял структуру и не ломал лишнее.</p>
+          </div>
+          <div class="vibe-guide__prompt-actions">
+            <button class="vibe-guide__btn" data-copy-target="prompt-project-audit">Скопировать</button>
+            <button class="vibe-guide__btn vibe-guide__btn--light" data-toggle-prompt="prompt-project-audit">Посмотреть текст</button>
+          </div>
+          <pre class="vibe-guide__code" id="prompt-project-audit" style="display:none">Изучи существующий проект и введи себя в контекст.
+Ничего не меняй.
+
+Я хочу, чтобы ты:
+1. Описал структуру проекта: папки, ключевые файлы, за что каждый отвечает
+2. Выявил основные зависимости и технологии
+3. Определил точки входа (главные файлы, роуты, index)
+4. Нашёл критичные места — то, что нельзя ломать
+5. Выявил потенциальные проблемы: дублирование, устаревший код, уязвимости
+6. Описал, как запустить проект локально
+7. Предложил, с чего начать работу
+
+После анализа задай уточняющие вопросы, если что-то неясно.
+Код пока не меняй.</pre>
+        </article>
+
+      </div>
+    </section>
+
+    <section class="vibe-guide__section" id="files">
+      <h2>Файлы, которые стоит создать в проекте</h2>
+      <p>
+        Эти файлы помогают AI быстрее понимать проект и меньше делать глупостей.
+      </p>
+
+      <div class="vibe-guide__cards">
+        <div class="vibe-guide__card">
+          <strong>PROJECT_CONTEXT.md</strong>
+          <span>Описание проекта, цели, страницы, интеграции, ограничения.</span>
+        </div>
+
+        <div class="vibe-guide__card">
+          <strong>PROJECT_MAP.md</strong>
+          <span>Карта папок, файлов, компонентов, API, стилей и критичных мест.</span>
+        </div>
+
+        <div class="vibe-guide__card">
+          <strong>AI_RULES.md</strong>
+          <span>Правила работы AI: что можно, что нельзя, как сдавать результат.</span>
+        </div>
+
+        <div class="vibe-guide__card">
+          <strong>CHANGELOG_AI.md</strong>
+          <span>Журнал изменений: дата, задача, файлы, проверка, риски.</span>
+        </div>
+
+        <div class="vibe-guide__card">
+          <strong>.env.example</strong>
+          <span>Пример переменных окружения без реальных ключей и паролей.</span>
+        </div>
+
+        <div class="vibe-guide__card">
+          <strong>SECURITY_NOTES.md</strong>
+          <span>Правила хранения токенов, API-ключей и приватных данных.</span>
+        </div>
+      </div>
+
+      <div class="vibe-guide__prompt">
+        <div class="vibe-guide__prompt-head">
+          <div class="vibe-guide__prompt-title">Создать PROJECT_MAP.md</div>
+          <button class="vibe-guide__btn vibe-guide__btn--light" data-copy-target="prompt-project-map">Скопировать</button>
+        </div>
+        <pre class="vibe-guide__code" id="prompt-project-map">Изучи структуру проекта и создай файл PROJECT_MAP.md.
+
+Мне нужно, чтобы ты описал:
+1. Основные папки проекта
+2. За что отвечает каждая папка
+3. Главные страницы и где они лежат
+4. Где находится логика API
+5. Где находятся стили
+6. Где находятся компоненты
+7. Где конфиги
+8. Какие файлы критичные и требуют осторожности
+9. Как запускать проект локально
+10. Как проверять изменения
+
+Ничего в коде не меняй.</pre>
+      </div>
+
+      <div class="vibe-guide__prompt">
+        <div class="vibe-guide__prompt-head">
+          <div class="vibe-guide__prompt-title">Шаблон AI_RULES.md</div>
+          <button class="vibe-guide__btn vibe-guide__btn--light" data-copy-target="prompt-ai-rules">Скопировать</button>
+        </div>
+        <pre class="vibe-guide__code" id="prompt-ai-rules"># Правила работы AI с проектом
+
+1. Перед изменениями сначала понять текущую логику.
+2. Не делать рефакторинг без отдельного запроса.
+3. Не менять архитектуру без согласования.
+4. Не трогать .env, ключи, токены и приватные данные.
+5. Работать минимальными изменениями.
+6. После каждой задачи указывать:
+   - какие файлы изменены
+   - что именно изменено
+   - как проверить
+   - какие риски остались
+7. Если задача неясна — сначала задать уточняющий вопрос или предложить план.
+8. Не создавать новые зависимости без согласования.
+9. Не удалять код без объяснения.
+10. Не менять рабочую логику соседних страниц.
+11. Если нужно изменить больше файлов, чем ожидалось, сначала остановиться и объяснить причину.
+12. После крупных задач предлагать обновление CHANGELOG_AI.md.</pre>
+      </div>
+    </section>
+
+    <section class="vibe-guide__section" id="security">
+      <h2>Безопасность: пароли, токены, API-ключи</h2>
+
+      <div class="vibe-guide__note">
+        <strong>Важно:</strong> если пароль, токен или API-ключ попал в чат, код или GitHub — считай его скомпрометированным. Его нужно заменить.
+      </div>
+
+      <details class="vibe-guide__details" open>
+        <summary>Базовые правила безопасности</summary>
+        <div class="vibe-guide__details-content">
+          <ul>
+            <li>Реальные ключи хранятся только в <strong>.env</strong>.</li>
+            <li><strong>.env</strong> должен быть добавлен в <strong>.gitignore</strong>.</li>
+            <li>В GitHub можно отправлять только <strong>.env.example</strong>.</li>
+            <li>Нельзя вставлять реальные токены в публичный код.</li>
+            <li>Если ключ уже попал в GitHub — его нужно перевыпустить.</li>
+            <li>После работы с секретами нужно проверить историю коммитов.</li>
+          </ul>
+        </div>
+      </details>
+
+      <div class="vibe-guide__prompt">
+        <div class="vibe-guide__prompt-head">
+          <div class="vibe-guide__prompt-title">Проверка хранения чувствительных данных</div>
+          <button class="vibe-guide__btn vibe-guide__btn--light" data-copy-target="prompt-security">Скопировать</button>
+        </div>
+        <pre class="vibe-guide__code" id="prompt-security">Проверь, как в проекте организовано хранение чувствительной информации.
+
+Под чувствительной информацией я имею в виду:
+— API-ключи
+— токены
+— логины
+— пароли
+— секреты вебхуков
+— доступы к внешним сервисам
+
+Ничего не меняй сразу.
+
+Сначала дай отчёт:
+1. Есть ли реальные секреты в коде
+2. Есть ли файл .env
+3. Добавлен ли .env в .gitignore
+4. Есть ли .env.example
+5. Какие файлы требуют внимания
+6. Есть ли риск, что секреты попали в GitHub
+7. Что нужно сделать для безопасного хранения
+
+Код пока не меняй.</pre>
+      </div>
+    </section>
+
+    <section class="vibe-guide__section" id="bad-good">
+      <h2>Плохие и хорошие формулировки</h2>
+      <p>
+        AI хорошо работает с конкретикой. Размытые задачи почти всегда приводят к лишним правкам.
+      </p>
+
+      <div class="vibe-guide__compare">
+        <div class="vibe-guide__bad">
+          <h3>Не писать</h3>
+          <ul>
+            <li>Сделай красиво.</li>
+            <li>Исправь всё.</li>
+            <li>Наведи порядок.</li>
+            <li>Оптимизируй проект.</li>
+            <li>Посмотри, что не так.</li>
+            <li>Доделай сайт.</li>
+          </ul>
+        </div>
+
+        <div class="vibe-guide__good">
+          <h3>Писать вместо этого</h3>
+          <ul>
+            <li>Исправь мобильное отображение карточки на странице /casino.</li>
+            <li>Не трогай десктопную версию.</li>
+            <li>Сначала найди файлы, отвечающие за этот блок.</li>
+            <li>Предложи план, код пока не меняй.</li>
+            <li>Работай минимальным патчем.</li>
+            <li>После правки дай отчёт и способ проверки.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="vibe-guide__section" id="checklist">
+      <h2>Чек-лист перед отправкой задачи AI</h2>
+
+      <div class="vibe-guide__checklist">
+        <div class="vibe-guide__check">
+          <strong>1. Одна задача</strong><br>
+          Не смешивать баг, дизайн, архитектуру и интеграции в один запрос.
+        </div>
+
+        <div class="vibe-guide__check">
+          <strong>2. Есть контекст</strong><br>
+          Указать страницу, файл, функцию или конкретную проблему.
+        </div>
+
+        <div class="vibe-guide__check">
+          <strong>3. Есть ограничения</strong><br>
+          Написать, что нельзя трогать.
+        </div>
+
+        <div class="vibe-guide__check">
+          <strong>4. Сначала план</strong><br>
+          Для сложных задач не разрешать сразу писать код.
+        </div>
+
+        <div class="vibe-guide__check">
+          <strong>5. Есть проверка</strong><br>
+          Указать, как понять, что задача выполнена правильно.
+        </div>
+
+        <div class="vibe-guide__check">
+          <strong>6. Нужен отчёт</strong><br>
+          Файлы, изменения, риски, способ проверки.
+        </div>
+      </div>
+    </section>
+
+    <section class="vibe-guide__section vibe-guide__section--dark">
+      <h2>Главная мысль</h2>
+      <p>
+        Vibe coding работает хорошо, когда AI не получает власть над проектом,
+        а получает точную задачу, понятные границы и обязанность отчитаться.
+      </p>
+      <p>
+        AI может ускорить разработку в несколько раз. Но если не управлять им жёстко,
+        он с такой же скоростью внесёт хаос в проект.
+      </p>
+    </section>
+
+  </div>
+
+  <!-- Модальный попап для просмотра промптов -->
+  <div class="vibe-prompt-modal" id="vibePromptModal" role="dialog" aria-modal="true">
+    <div class="vibe-prompt-modal__inner">
+      <div class="vibe-prompt-modal__head">
+        <div class="vibe-prompt-modal__title" id="vibePromptModalTitle"></div>
+        <div class="vibe-prompt-modal__actions">
+          <button class="vibe-guide__btn" id="vibePromptModalCopy">Скопировать</button>
+          <button class="vibe-prompt-modal__close" id="vibePromptModalClose" aria-label="Закрыть">✕</button>
+        </div>
+      </div>
+      <div class="vibe-prompt-modal__body">
+        <pre class="vibe-guide__code" id="vibePromptModalText" contenteditable="true" spellcheck="false"></pre>
+      </div>
+      <div class="vibe-prompt-modal__hint">✏️ Текст можно редактировать прямо здесь — заполни плейсхолдеры перед копированием</div>
+      <div class="vibe-prompt-modal__counter" id="vibePromptModalCounter">0 слов · 0 симв.</div>
+    </div>
+  </div>
+
+  <!-- Кнопка наверх -->
+  <button class="vibe-back-to-top" id="vibeBackToTop" aria-label="Наверх">↑</button>
+
+  <div class="vibe-guide__toast" id="vibeCopyToast">Скопировано</div>
+
+  <script>
+    (function () {
+      const buttons = document.querySelectorAll('.vibe-guide [data-copy-target]');
+      const toast = document.getElementById('vibeCopyToast');
+
+      function showToast(text) {
+        if (!toast) return;
+        toast.textContent = text || 'Скопировано';
+        toast.classList.add('is-visible');
+
+        setTimeout(function () {
+          toast.classList.remove('is-visible');
+        }, 1600);
+      }
+
+      function fallbackCopy(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+
+        try {
+          document.execCommand('copy');
+          showToast('Скопировано');
+        } catch (err) {
+          showToast('Не удалось скопировать');
+        }
+
+        document.body.removeChild(textarea);
+      }
+
+      buttons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          const targetId = button.getAttribute('data-copy-target');
+          const target = document.getElementById(targetId);
+
+          if (!target) {
+            showToast('Текст не найден');
+            return;
+          }
+
+          const text = target.innerText.trim();
+
+          function markCopied() {
+            const orig = button.textContent;
+            button.textContent = 'Скопировано';
+            button.classList.add('is-copied');
+            setTimeout(function () {
+              button.textContent = orig;
+              button.classList.remove('is-copied');
+            }, 1800);
+          }
+
+          if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text)
+              .then(function () { showToast('Скопировано'); markCopied(); })
+              .catch(function () { fallbackCopy(text); markCopied(); });
+          } else {
+            fallbackCopy(text); markCopied();
+          }
+        });
+      });
+
+      var modal = document.getElementById('vibePromptModal');
+      var modalTitle = document.getElementById('vibePromptModalTitle');
+      var modalText = document.getElementById('vibePromptModalText');
+      var modalCopy = document.getElementById('vibePromptModalCopy');
+      var modalClose = document.getElementById('vibePromptModalClose');
+      var modalCounter = document.getElementById('vibePromptModalCounter');
+
+      function updateCounter() {
+        var text = modalText.textContent || '';
+        var words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+        var chars = text.length;
+        modalCounter.textContent = words + ' слов · ' + chars + ' симв.';
+      }
+
+      function openPromptModal(promptId) {
+        var source = document.getElementById(promptId);
+        if (!source) return;
+        var card = source.closest('.vibe-guide__prompt-card');
+        var titleEl = card ? card.querySelector('h3') : null;
+        modalTitle.textContent = titleEl ? titleEl.textContent : '';
+        modalText.textContent = source.textContent;
+        updateCounter();
+        modal.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closePromptModal() {
+        modal.classList.remove('is-open');
+        document.body.style.overflow = '';
+      }
+
+      modalText.addEventListener('input', updateCounter);
+
+      document.querySelectorAll('.vibe-guide [data-toggle-prompt]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          openPromptModal(button.getAttribute('data-toggle-prompt'));
+        });
+      });
+
+      modalClose.addEventListener('click', closePromptModal);
+
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) closePromptModal();
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closePromptModal();
+      });
+
+      modalCopy.addEventListener('click', function () {
+        var text = modalText.textContent.trim();
+        function markModalCopied() {
+          modalCopy.textContent = '✓ Скопировано';
+          modalCopy.classList.add('is-copied');
+          setTimeout(function () {
+            modalCopy.textContent = 'Скопировать';
+            modalCopy.classList.remove('is-copied');
+          }, 1800);
+        }
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(text).then(function () { showToast('Скопировано'); markModalCopied(); }).catch(function () { fallbackCopy(text); markModalCopied(); });
+        } else {
+          fallbackCopy(text); markModalCopied();
+        }
+      });
+
+      // ── Тёмная тема ──
+      var guide = document.querySelector('.vibe-guide');
+      var themeToggle = document.getElementById('vibeThemeToggle');
+
+      function applyTheme(dark) {
+        guide.classList.toggle('dark', dark);
+        themeToggle.textContent = dark ? '☀️' : '🌙';
+        themeToggle.title = dark ? 'Светлая тема' : 'Тёмная тема';
+      }
+
+      var savedDark = localStorage.getItem('vibe-dark') === '1';
+      applyTheme(savedDark);
+
+      themeToggle.addEventListener('click', function () {
+        var isDark = guide.classList.toggle('dark');
+        themeToggle.textContent = isDark ? '☀️' : '🌙';
+        themeToggle.title = isDark ? 'Светлая тема' : 'Тёмная тема';
+        localStorage.setItem('vibe-dark', isDark ? '1' : '0');
+      });
+
+      // ── Кнопка наверх ──
+      var backToTop = document.getElementById('vibeBackToTop');
+      window.addEventListener('scroll', function () {
+        backToTop.classList.toggle('is-visible', window.scrollY > 400);
+      }, { passive: true });
+      backToTop.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      // ── Активный пункт nav через IntersectionObserver ──
+      var navLinks = document.querySelectorAll('.vibe-guide__nav a[href^="#"]');
+      var sections = Array.from(navLinks).map(function (a) {
+        return document.getElementById(a.getAttribute('href').slice(1));
+      }).filter(Boolean);
+
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            var id = entry.target.id;
+            navLinks.forEach(function (a) {
+              a.classList.toggle('is-active', a.getAttribute('href') === '#' + id);
+            });
+          }
+        });
+      }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+
+      sections.forEach(function (s) { observer.observe(s); });
+
+    })();
+  </script>
+</section>
+
+</body>
+</html>

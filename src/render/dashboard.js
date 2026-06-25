@@ -5,7 +5,7 @@
 
 import { S, saveState } from '../state/store.js';
 import { rub } from '../utils/format.js';
-import { isWorkspaceOwner, requireWorkspaceOwner } from '../ui/auth.js';
+import { canDeleteWorkspaceData, requireWorkspaceDeletePermission } from '../ui/auth.js';
 
 // ─── Stub exports (совместимость с updaters.js / main.js) ────────────
 export function filterDashboard() {}
@@ -542,7 +542,7 @@ export function ocMoveRow(id, newCat) {
 }
 
 export function ocClearAll() {
-  if (!requireWorkspaceOwner('Очистка всех статей бюджета доступна только владельцу проекта.')) return;
+  if (!requireWorkspaceDeletePermission('Очистка всех статей бюджета доступна только владельцу проекта.')) return;
   window.showConfirm(
     'Очистить все статьи расходов?<br><span style="font-size:12px;color:var(--muted)">Действие нельзя отменить.</span>',
     () => {
@@ -1591,7 +1591,7 @@ export function renderDashboard() {
           <button class="btn btn-outline" onclick="exportOpeningCostsXLSX()">
             <i data-lucide="table-2" class="icon"></i> Excel
           </button>
-          ${costs.length > 0 && isWorkspaceOwner() ? `<button class="btn btn-outline oc-clear-btn" onclick="ocClearAll()" title="Очистить всё"><i data-lucide="trash-2" class="icon"></i></button>` : ''}
+          ${costs.length > 0 && canDeleteWorkspaceData() ? `<button class="btn btn-outline oc-clear-btn" onclick="ocClearAll()" title="Очистить всё"><i data-lucide="trash-2" class="icon"></i></button>` : ''}
         </div>
       </div>
 

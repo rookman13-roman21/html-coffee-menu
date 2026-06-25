@@ -1,5 +1,7 @@
 // src/ui/auth.js — JWT auth gate for Coffee Menu SaaS
 // API base — same origin in prod, configurable via import.meta.env in dev
+import * as Permissions from '../access/permissions.js';
+
 const API = import.meta.env.VITE_API_URL || '';
 
 const TOKEN_KEY = 'cm_token';
@@ -23,16 +25,33 @@ export function getCurrentWorkspace() { return _currentWorkspace; }
 export function getWorkspaces() { return _workspaces.slice(); }
 export function getArchivedWorkspaces() { return _archivedWorkspaces.slice(); }
 export function canCreateWorkspaces() {
-  const user = getUser();
-  if (user && typeof user.can_create_workspaces !== 'undefined') return !!user.can_create_workspaces;
-  return !!_canCreateWorkspaces;
+  return Permissions.canCreateOwnWorkspace(getUser(), _canCreateWorkspaces);
 }
-export function hasWorkspaceMembership() { return !!(_currentWorkspace && _currentWorkspace.id); }
-export function isWorkspaceOwner() { return _currentWorkspace?.role === 'owner'; }
+export function hasWorkspaceMembership() { return Permissions.hasWorkspaceMembership(_currentWorkspace); }
+export function isWorkspaceOwner() { return Permissions.canManageWorkspace(_currentWorkspace); }
+export function canManageWorkspace() { return Permissions.canManageWorkspace(_currentWorkspace); }
+export function canManageWorkspaceMembers() { return Permissions.canManageWorkspaceMembers(_currentWorkspace); }
+export function canManageWorkspaceStructure() { return Permissions.canManageWorkspaceStructure(_currentWorkspace); }
+export function canDeleteWorkspaceData() { return Permissions.canDeleteWorkspaceData(_currentWorkspace); }
+export function canRestoreWorkspace() { return Permissions.canRestoreWorkspace(_currentWorkspace); }
+export function canEditWorkspaceContent() { return Permissions.canEditWorkspaceContent(_currentWorkspace); }
+export function getWorkspaceAccountRole() { return Permissions.accountRole(getUser(), _currentWorkspace); }
+export function workspaceRoleLabel(role = '') { return Permissions.workspaceRoleLabel(role); }
+export function accountRoleLabel(user = getUser(), workspace = _currentWorkspace) { return Permissions.accountRoleLabel(user, workspace); }
+export function requireWorkspacePermission(allowed, message = 'Это действие доступно только владельцу проекта.') {
+  return Permissions.requireWorkspacePermission(allowed, message);
+}
 export function requireWorkspaceOwner(message = 'Это действие доступно только владельцу проекта.') {
-  if (isWorkspaceOwner()) return true;
-  window.showAlert?.(message, '🔒');
-  return false;
+  return requireWorkspacePermission(canManageWorkspace(), message);
+}
+export function requireWorkspaceStructurePermission(message = 'Менять структуру проекта может только владелец проекта.') {
+  return requireWorkspacePermission(canManageWorkspaceStructure(), message);
+}
+export function requireWorkspaceDeletePermission(message = 'Удалять данные проекта может только владелец проекта.') {
+  return requireWorkspacePermission(canDeleteWorkspaceData(), message);
+}
+export function requireWorkspaceRestorePermission(message = 'Восстанавливать проект может только владелец проекта.') {
+  return requireWorkspacePermission(canRestoreWorkspace(), message);
 }
 
 function rememberWorkspacePayload(data = {}) {

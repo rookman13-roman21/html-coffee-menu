@@ -5,3 +5,12 @@ dist/
 .env.*
 !.env.example
 scripts/smoke_api.local.json
+
+# Backend runtime files inside tracked server source
+server/.env
+server/.env.*
+!server/.env.example
+server/data/
+server/**/__pycache__/
+server/**/*.py[cod]
+server/admin/admin-panel.js

@@ -79,7 +79,10 @@ import {
   acceptWorkspaceInvite, fetchWorkspaceActivity, logWorkspaceActivity,
   fetchWorkspaceSnapshots, createWorkspaceSnapshot, restoreWorkspaceSnapshot,
   removeWorkspaceMember, revokeWorkspaceInvite,
-  isWorkspaceOwner, requireWorkspaceOwner,
+  isWorkspaceOwner, requireWorkspaceOwner, canManageWorkspace, canManageWorkspaceMembers,
+  canManageWorkspaceStructure, canDeleteWorkspaceData, canRestoreWorkspace,
+  requireWorkspacePermission, requireWorkspaceStructurePermission,
+  requireWorkspaceDeletePermission, requireWorkspaceRestorePermission,
 } from './ui/auth.js';
 import {
   isAuthorMode, filterAuthorServerSuppliers,
@@ -415,7 +418,10 @@ const _srcExports = {
   acceptWorkspaceInvite, fetchWorkspaceActivity, logWorkspaceActivity,
   fetchWorkspaceSnapshots, createWorkspaceSnapshot, restoreWorkspaceSnapshot,
   removeWorkspaceMember, revokeWorkspaceInvite,
-  isWorkspaceOwner, requireWorkspaceOwner,
+  isWorkspaceOwner, requireWorkspaceOwner, canManageWorkspace, canManageWorkspaceMembers,
+  canManageWorkspaceStructure, canDeleteWorkspaceData, canRestoreWorkspace,
+  requireWorkspacePermission, requireWorkspaceStructurePermission,
+  requireWorkspaceDeletePermission, requireWorkspaceRestorePermission,
   authorCanPublish, renderAuthorWorkspace, renderAuthorProfile, loadAuthorWorkspace,
   saveAuthorProfile, uploadAuthorAvatar, submitRecipeForPublication, authorPublicationForDrink,
   authorRecipeProgress, authorHasMixologyParticipation,
@@ -550,7 +556,7 @@ function _applyAccessUI() {
   const exportWrap = document.getElementById('export-wrap');
   if (exportWrap) exportWrap.style.display = (!isAuthorMode() && hasAccess('drinks') && hasAccess('finance')) ? '' : 'none';
   const resetBtn = document.querySelector('.btn-reset');
-  if (resetBtn) resetBtn.style.display = (!isAuthorMode() && hasAccess('drinks') && hasAccess('finance') && isWorkspaceOwner()) ? '' : 'none';
+  if (resetBtn) resetBtn.style.display = (!isAuthorMode() && hasAccess('drinks') && hasAccess('finance') && canDeleteWorkspaceData()) ? '' : 'none';
 }
 
 function _getAllowedTabsForMode() {

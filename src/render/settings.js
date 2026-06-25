@@ -3,7 +3,11 @@ import {
   createWorkspace, renameWorkspace, archiveWorkspace, restoreArchivedWorkspace, deleteWorkspace, fetchWorkspaceMembers,
   createWorkspaceInvite, removeWorkspaceMember, revokeWorkspaceInvite,
   fetchWorkspaceActivity, fetchWorkspaceSnapshots, createWorkspaceSnapshot,
-  restoreWorkspaceSnapshot, canCreateWorkspaces, isWorkspaceOwner, getUser,
+  restoreWorkspaceSnapshot, canCreateWorkspaces, canManageWorkspace, canManageWorkspaceMembers,
+  requireWorkspacePermission,
+  canRestoreWorkspace,
+  requireWorkspaceOwner, requireWorkspaceDeletePermission, requireWorkspaceRestorePermission,
+  workspaceRoleLabel, accountRoleLabel as accountRoleLabelFromPermissions, getUser,
   refreshCurrentUser, updateAccountProfile, uploadAccountAvatar as uploadAccountAvatarApi,
   requestOwnPasswordReset,
 } from '../ui/auth.js';
@@ -36,14 +40,11 @@ function jsArgAttr(value) {
 }
 
 function roleLabel(role) {
-  return role === 'owner' ? 'владелец' : 'редактор';
+  return workspaceRoleLabel(role);
 }
 
 function accountRoleLabel(user = getUser(), current = getCurrentWorkspace()) {
-  if (current?.role === 'owner') return 'владелец проекта';
-  if (user?.account_role === 'guest') return 'гость';
-  if (user?.can_create_workspaces) return 'платный аккаунт';
-  return 'редактор';
+  return accountRoleLabelFromPermissions(user, current);
 }
 
 function userInitial(user = {}) {
@@ -130,7 +131,7 @@ function snapshotReasonLabel(reason) {
 }
 
 function currentRoleHint() {
-  return isWorkspaceOwner()
+  return canManageWorkspace()
     ? 'Вы владелец проекта и можете управлять командой, заведениями и восстановлением.'
     : 'Вы редактор проекта. Управление командой и структурой доступно владельцу проекта.';
 }
@@ -310,7 +311,7 @@ function renderProjectSection() {
   const current = getCurrentWorkspace();
   const workspaces = getWorkspaces();
   const archivedWorkspaces = getArchivedWorkspaces();
-  const owner = isWorkspaceOwner();
+  const owner = canManageWorkspace();
   const meta = projectMeta();
   const summary = projectSummary(current);
   if (!current) return emptyProjectHtml();
@@ -477,7 +478,7 @@ async function loadTeamSection(seq = _settingsRenderSeq) {
   try {
     const data = await fetchWorkspaceMembers(workspaceId);
     if (!isFreshSettingsLoad(seq, 'team', workspaceId)) return;
-    const owner = isWorkspaceOwner();
+    const owner = canManageWorkspaceMembers();
     const members = (data.members || []).map(m => `
       <div class="settings-member-row">
         ${avatarHtml(m.avatar_url, m.name || m.email)}
@@ -536,7 +537,7 @@ async function loadTeamSection(seq = _settingsRenderSeq) {
 
 function renderLocationsSection() {
   const current = getCurrentWorkspace();
-  const owner = isWorkspaceOwner();
+  const owner = canManageWorkspace();
   const locs = window.Loc?.list || [];
   const activeId = window.Loc?.activeId || '';
   return `
@@ -639,7 +640,7 @@ async function loadSnapshotsSection(seq = _settingsRenderSeq) {
   const workspaceId = current?.id;
   if (!panel || !current) return;
   try {
-    const owner = isWorkspaceOwner();
+    const owner = canRestoreWorkspace();
     const rows = await fetchWorkspaceSnapshots(workspaceId);
     if (!isFreshSettingsLoad(seq, 'snapshots', workspaceId)) return;
     panel.innerHTML = `
@@ -791,7 +792,7 @@ async function loadProjectSummary() {
     const owner = (data.members || []).find(m => m.role === 'owner');
     const next = {
       memberCount: (data.members || []).length,
-      ownerName: owner?.name || owner?.email || (current.role === 'owner' ? 'Вы' : 'Владелец проекта'),
+      ownerName: owner?.name || owner?.email || (canManageWorkspace() ? 'Вы' : 'Владелец проекта'),
     };
     const prev = _projectSummaryCache.get(key) || {};
     if (prev.memberCount !== next.memberCount || prev.ownerName !== next.ownerName) {
@@ -816,10 +817,7 @@ function persistProjectMetaToLocations(meta) {
 }
 
 export function settingsSaveProjectMeta() {
-  if (!isWorkspaceOwner()) {
-    window.showAlert?.('Параметры проекта может менять только владелец.');
-    return;
-  }
+  if (!requireWorkspaceOwner('Параметры проекта может менять только владелец.')) return;
   const meta = {
     city: (document.getElementById('settings-project-city')?.value || '').trim(),
     openingDate: (document.getElementById('settings-project-opening-date')?.value || '').trim(),
@@ -834,10 +832,7 @@ export function settingsSaveProjectMeta() {
 }
 
 export function settingsResetProjectContent() {
-  if (!isWorkspaceOwner()) {
-    window.showAlert?.('Сброс проекта доступен только владельцу.');
-    return;
-  }
+  if (!requireWorkspaceDeletePermission('Сброс проекта доступен только владельцу.')) return;
   window.resetAll?.();
 }
 
@@ -855,10 +850,7 @@ async function openWorkspaceAfterDangerAction(data, notice) {
 
 export async function settingsArchiveProject() {
   const current = getCurrentWorkspace();
-  if (!current?.id || !isWorkspaceOwner()) {
-    window.showAlert?.('Архивировать проект может только владелец.');
-    return;
-  }
+  if (!current?.id || !requireWorkspaceDeletePermission('Архивировать проект может только владелец.')) return;
   const ok = await window.showConfirm?.(`Архивировать проект «${current.name}»? Он исчезнет из списка активных проектов.`, null, { icon: '📦', okText: 'Архивировать', danger: false });
   if (!ok) return;
   try {
@@ -871,10 +863,7 @@ export async function settingsArchiveProject() {
 }
 
 export async function settingsRestoreArchivedProject(workspaceId) {
-  if (!workspaceId || !isWorkspaceOwner()) {
-    window.showAlert?.('Восстановить проект может только владелец.');
-    return;
-  }
+  if (!workspaceId || !requireWorkspaceRestorePermission('Восстановить проект может только владелец.')) return;
   const ok = await window.showConfirm?.('Восстановить проект из архива?', null, { icon: '↩️', okText: 'Восстановить', danger: false });
   if (!ok) return;
   try {
@@ -887,10 +876,7 @@ export async function settingsRestoreArchivedProject(workspaceId) {
 
 export async function settingsDeleteProject() {
   const current = getCurrentWorkspace();
-  if (!current?.id || !isWorkspaceOwner()) {
-    window.showAlert?.('Удалить проект может только владелец.');
-    return;
-  }
+  if (!current?.id || !requireWorkspaceDeletePermission('Удалить проект может только владелец.')) return;
   const typed = await window.showPrompt?.(`Чтобы удалить проект, введите его название: ${current.name}`, '', { okText: 'Продолжить', placeholder: current.name });
   if (typed === null || typeof typed === 'undefined') return;
   if (String(typed).trim() !== String(current.name || '').trim()) {
@@ -913,6 +899,7 @@ export async function settingsRenameProject() {
   const input = document.getElementById('settings-project-name');
   const name = (input?.value || '').trim();
   if (!current?.id || !name) return;
+  if (!requireWorkspaceOwner('Переименовывать проект может только владелец.')) return;
   try {
     await renameWorkspace(current.id, name);
     _settingsNotice = 'Название проекта обновлено.';
@@ -948,6 +935,7 @@ export async function settingsSwitchWorkspace(id) {
 }
 
 export async function settingsSendInvite() {
+  if (!requireWorkspacePermission(canManageWorkspaceMembers(), 'Приглашать участников может только владелец проекта.')) return;
   const input = document.getElementById('settings-invite-email');
   const result = document.getElementById('settings-invite-result');
   const email = (input?.value || '').trim();
@@ -972,6 +960,7 @@ export async function settingsSendInvite() {
 }
 
 export async function settingsRemoveMember(userId) {
+  if (!requireWorkspacePermission(canManageWorkspaceMembers(), 'Удалять участников может только владелец проекта.')) return;
   const ok = await window.showConfirm?.('Удалить участника из проекта?', null, { icon: '🔒', okText: 'Убрать' });
   if (!ok) return;
   try {
@@ -984,6 +973,7 @@ export async function settingsRemoveMember(userId) {
 }
 
 export async function settingsRevokeInvite(inviteId) {
+  if (!requireWorkspacePermission(canManageWorkspaceMembers(), 'Отзывать приглашения может только владелец проекта.')) return;
   try {
     await revokeWorkspaceInvite(inviteId);
     _settingsNotice = 'Приглашение отозвано.';
@@ -1023,6 +1013,7 @@ export function settingsSetActivityFilter(filter) {
 }
 
 export async function settingsCreateSnapshot() {
+  if (!requireWorkspaceRestorePermission('Создавать точки восстановления может только владелец проекта.')) return;
   try {
     await window.flushServerSync?.(getActiveWorkspaceId());
     await createWorkspaceSnapshot('manual');
@@ -1034,6 +1025,7 @@ export async function settingsCreateSnapshot() {
 }
 
 export async function settingsRestoreSnapshot(snapshotId) {
+  if (!requireWorkspaceRestorePermission('Восстанавливать проект может только владелец проекта.')) return;
   const ok = await window.showConfirm?.('Восстановить проект из выбранной точки? Текущее состояние будет сохранено перед откатом.', null, { icon: '↩️', okText: 'Восстановить' });
   if (!ok) return;
   try {

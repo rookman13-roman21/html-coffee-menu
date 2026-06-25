@@ -152,13 +152,14 @@ Admin panel:
 - При переключении workspace старые `Loc.list`, `Loc.activeId` и runtime state очищаются до восстановления server state текущего проекта.
 - Любые `loc.id/name/icon` из state экранируются перед `innerHTML` и inline handlers: не вставлять эти поля напрямую в HTML/JS-атрибуты.
 - Autosave должен быть привязан к конкретному `workspace_id`, который был активен в момент сохранения; перед переключением проекта текущий workspace нужно принудительно синхронизировать.
-- Guest/editor может редактировать общий state, но не управляет командой, не создаёт свои проекты без `access_drinks/access_finance` и не может писать произвольные типы событий в журнал.
+- Guest/editor может редактировать общий state, но не управляет командой, не создаёт свои проекты без `access_drinks/access_finance` и не может писать произвольные типы событий в журнал. Owner-only события журнала (`workspace_deleted`, `member_removed`, `location_deleted`, `snapshot_restored` и похожие) блокируются backend даже при прямом API-запросе.
 - Точки восстановления: backend-таблица `workspace_state_snapshots` хранит последние 40 снимков workspace. Autosnapshot создаётся перед перезаписью state не чаще одного раза в 15 минут, ручной снимок и восстановление доступны владельцу в меню `Восстановление`.
 - Restore-flow owner-only: перед восстановлением backend сохраняет текущее состояние как `before_restore`, затем заменяет `workspaces.state_json` выбранным снимком и пишет событие `snapshot_restored` в журнал.
 - Destructive-действия v1 owner-only в клиентском workspace: удаление заведений, рецептов, поставщиков, сырья и полуфабрикатов недоступно `editor` / `guest-editor` в штатном UI и дополнительно блокируется в функциях удаления. Это сохраняет совместное редактирование, но защищает основу проекта от безвозвратного удаления.
 - Структура заведений owner-only: `editor` / `guest-editor` не может добавлять точку, создавать точку из шаблона или переименовывать текущую. Гость редактирует содержимое существующей точки, но не меняет каркас проекта.
 - Массовые destructive-действия owner-only: верхний `Сброс`, `Очистить всё` в бюджете открытия и прямой API-save, похожий на массовую очистку/сброс `prices`, `salePrices`, `portions`, `fixedCosts`, `payroll`, `payrollPositions`, `addonSales`, `openingCosts`, `suppliers` или `priceLog`, недоступны `editor` / `guest-editor`.
 - Backend state-guard: `PUT /api/state` для не-владельца сравнивает старый и новый JSON workspace и запрещает structural/destructive overwrite, если появляются/исчезают локации, меняется metadata `locIndex`, исчезают `customDrinks`, `customMats`, `semiItems`, `suppliers` или `supplierBook`, очищаются важные списки или одновременно меняется много reset-sensitive полей. Обычные изменения полей внутри существующей точки и редактирование рецептур остаются разрешёнными. Это минимальный semantic diff, не полный аудит всех полей.
+- Frontend permission layer: `src/access/permissions.js` содержит единую матрицу owner/editor/guest для workspace UI; `src/ui/auth.js` экспортирует wrappers `canManageWorkspace*`, `canDeleteWorkspaceData`, `canRestoreWorkspace`, `requireWorkspace*Permission`. Новые UI-проверки прав не писать прямым сравнением роли.
 
 ---
 
@@ -170,7 +171,7 @@ Admin panel:
 - **Сервер:** Beget VPS `root@159.194.233.13`, Ubuntu 24.04, nginx 1.24, Python 3.12
 - **SSH:** `ssh -i ~/.ssh/id_ed25519 root@159.194.233.13`
 - **Бэкенд:** FastAPI 0.111 + SQLite, systemd сервис `coffee-menu-api`, порт 8000
-- **Код бэкенда:** `Coffee_menu/server/main.py`
+- **Код бэкенда:** `Coffee_menu/HTML_coffee_menu/server/main.py` (source of truth в Git)
 - **БД:** SQLite `/var/www/coffee-menu/server/data/app.db`
 - **SSL:** Let’s Encrypt, истекает 2026-08-19
 - **nginx snippet:** `/etc/nginx/snippets/coffee-api.conf` — `location /api/` вынесен туда, в основном конфиге `include /etc/nginx/snippets/coffee-api.conf;` — certbot renew больше не перезапишет прокси-блок

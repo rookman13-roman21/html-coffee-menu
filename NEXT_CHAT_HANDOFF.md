@@ -64,7 +64,7 @@ Safety baseline командной работы после production-теста
 - `autosave` привязан к workspace, который был активен в момент сохранения; при переключении проекта старый workspace принудительно синхронизируется до смены active workspace.
 - отказ `PUT /api/state` с `403/404` больше не маскируется как успешная локальная работа: frontend сбрасывает active workspace и перезагружает доступы.
 - создание, переименование и удаление заведений отправляют общий state, чтобы владелец и участники видели одну картину.
-- backend принимает в журнал только известные типы событий, чтобы editor/guest не мог через прямой API создавать произвольные записи.
+- backend принимает в журнал только известные типы событий; owner-only события управления проектом, командой, заведениями и восстановлением дополнительно блокируются для editor/guest, чтобы прямой API не мог подделать критические записи.
 - Добавлены точки восстановления workspace: backend хранит последние 40 снимков в `workspace_state_snapshots`, создаёт autosnapshot перед перезаписью state не чаще одного раза в 15 минут, а владелец может вручную создать точку и восстановить проект из меню `Восстановление`.
 - Восстановление доступно только `owner`; перед откатом backend сохраняет текущее состояние как `before_restore`, чтобы откат тоже можно было отменить.
 - Destructive-действия v1 в клиентском workspace owner-only: удаление заведений, рецептов, поставщиков, сырья и полуфабрикатов скрыто/заблокировано для `editor` / `guest-editor`. Гость может редактировать общий проект, но не должен безвозвратно удалять ключевые сущности владельца.
@@ -77,20 +77,21 @@ Safety baseline командной работы после production-теста
 - Раздел `Аккаунт` показывает личные данные пользователя: имя, телефон, email read-only, роль/доступы и аватар. Email в v1 нельзя изменить; смена пароля идёт через письмо на текущий email. В клиентском UI не показывать внутренние названия интеграций и статусы синхронизаций.
 - Аватар пользователя используется в верхнем меню, карточке аккаунта, списке команды и журнале действий. В строке журнала справа порядок должен быть `имя → роль → аватар`; время журнала форматируется в московском часовом поясе `Europe/Moscow`, потому что backend timestamps приходят без timezone и трактуются как UTC.
 - Аудит безопасности 25 июня 2026: меню заведений и `/app/settings` экранируют `loc.id/name/icon` перед вставкой в `innerHTML` и inline handlers; `src/main.js` больше не делает двойные стартовые запросы `/suppliers` и `/drinks/overrides`; production smoke: `/api/health` ok, anonymous `/api/suppliers` = 403, public recipes API без приватных ключей.
+- Frontend-права workspace централизованы в `src/access/permissions.js`; новые owner/editor/guest проверки добавлять через wrappers из `src/ui/auth.js`, а не через прямые сравнения `current.role === 'owner'` в UI.
 
 ## 2. Связанные проекты
 
 Основные проекты:
 
 - `/Users/Romka/Downloads/All_Code/Coffee_menu` — ядро `barista-school.online`.
-- `/Users/Romka/Downloads/All_Code/Coffee_menu/HTML_coffee_menu` — Git-репозиторий frontend/workflow-документов.
-- `/Users/Romka/Downloads/All_Code/Coffee_menu/server` — backend FastAPI + admin panel.
+- `/Users/Romka/Downloads/All_Code/Coffee_menu/HTML_coffee_menu` — Git-репозиторий приложения: frontend, workflow-документы и актуальный backend source в `server/`.
+- `/Users/Romka/Downloads/All_Code/Coffee_menu/server` — legacy/runtime-копия backend; новые правки делать в `HTML_coffee_menu/server`.
 - `/Users/Romka/Downloads/All_Code/bitrix-tools` — существующие инструменты Битрикс, справочник паттернов, будущие выплаты/документы.
 - `/Users/Romka/Downloads/All_Code/mbs-mixology-cup` — контекст по участникам чемпионата.
 
 Важно: пока не делать глубокую чистку `bitrix-tools`, если задача не про него напрямую. Для нового продукта использовать его как reference по Битрикс-паттернам.
 
-Важно по Git: активный Git-репозиторий сейчас только `HTML_coffee_menu`. Backend `Coffee_menu/server/main.py` лежит рядом и не находится в этом Git-репозитории, но `npm run check` компилирует его и production-деплой берёт его из соседней папки.
+Важно по Git: source of truth теперь `HTML_coffee_menu`. Backend-код хранится в `HTML_coffee_menu/server` и попадает в GitHub вместе с frontend. Соседний `Coffee_menu/server` считать legacy/runtime-копией; `npm run check`, `deploy:backend` и `deploy:admin` используют tracked `HTML_coffee_menu/server`.
 
 ## 3. Термины и стиль
 

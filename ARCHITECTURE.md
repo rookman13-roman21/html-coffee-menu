@@ -9,11 +9,11 @@
 | Поверхность | Назначение | Основные файлы |
 |---|---|---|
 | Кабинет кофейни | Бюджет, поставщики, план продаж, финмодель, рецепты, настройки проекта | `src/main.js`, `src/render/*`, `src/ui/*`, `src/state/store.js` |
-| Настройки проекта | Аккаунт, проект, команда, заведения, журнал, восстановление, интеграции | `src/render/settings.js`, `src/ui/auth.js`, `src/ui/locations.js` |
+| Настройки проекта | Аккаунт, проект, команда, заведения, журнал, восстановление, интеграции | `src/render/settings.js`, `src/ui/auth.js`, `src/ui/locations.js`, `src/access/permissions.js` |
 | Кабинет автора | Авторские рецепты, профиль, черновики, отправка на модерацию | `src/access/author-layer.js`, `src/ui/author.js`, `server/main.py` |
 | Admin | Пользователи, доступы, авторы, публикации, справочники | `server/admin/src/*`, `server/admin/admin-panel.js`, `server/main.py` |
 
-Правило: новая функция должна быть явно привязана к одной из этих поверхностей. Если функция затрагивает несколько поверхностей, сначала описать контракт между ними.
+Правило: новая функция должна быть явно привязана к одной из этих поверхностей. Если функция затрагивает несколько поверхностей, сначала описать контракт между ними. Source of truth для backend-кода — `HTML_coffee_menu/server`; соседний `Coffee_menu/server` не использовать для новых правок.
 
 ## 2. Домены и источники правды
 
@@ -23,7 +23,7 @@
 | Проект | `workspaces.state_json` + `workspace_members` | `src/render/settings.js`, `src/ui/locations.js`, `src/state/store.js` | `/api/workspaces`, `/api/state` | `workspace` = общий проект команды |
 | Заведения | `workspaces.state_json.locIndex/locations/activeId` | `src/ui/locations.js`, `src/render/settings.js` | `/api/state` | `Заведение` = точка внутри проекта; структура owner-only |
 | Команда | `workspace_members`, `workspace_invites` | `src/render/settings.js` | `/api/workspaces/{id}/members`, `/invites` | Управляет только owner |
-| Журнал | `workspace_activity` | `src/render/settings.js` | `/api/workspaces/{id}/activity` | Append-only; не логировать каждый autosave |
+| Журнал | `workspace_activity` | `src/render/settings.js` | `/api/workspaces/{id}/activity` | Append-only; не логировать каждый autosave; owner-only события нельзя писать от editor/guest |
 | Восстановление | `workspace_state_snapshots` | `src/render/settings.js` | `/api/workspaces/{id}/snapshots` | Restore только owner; перед restore создавать `before_restore` |
 | Бюджет/финмодель/продажи | `workspaces.state_json` | `src/render/dashboard.js`, `src/render/finmodel.js`, `src/render/sales.js` | `/api/state` | Guest/editor редактирует содержимое, но не может массово очистить проект |
 | Рецепты/поставщики клиента | `workspaces.state_json` + справочники | `src/render/recipes.js`, `src/render/cost.js`, `src/ui/suppliers.js` | `/api/state`, `/api/suppliers`, `/api/drinks/overrides` | Удаление ключевых сущностей owner-only |
@@ -44,9 +44,9 @@
 | Массовый сброс/очистка проекта | да | нет | нет | да |
 | Создать/восстановить snapshot | да | нет | нет | да |
 | Видеть журнал проекта | да | да | да | да |
-| Писать произвольные события журнала | только allowlist | только allowlist | только allowlist | только allowlist |
+| Писать события журнала | allowlist + owner-only события | allowlist без owner-only событий | allowlist без owner-only событий | allowlist |
 
-Правило: UI-ограничение не считается защитой. Всё owner-only должно блокироваться на backend или в `PUT /api/state` semantic guard.
+Правило: UI-ограничение не считается защитой. Всё owner-only должно блокироваться на backend, в `PUT /api/state` semantic guard или в owner-only guard ручного журнала. Frontend-права централизованы в `src/access/permissions.js`, а `src/ui/auth.js` отдаёт совместимые wrappers для существующих inline-сценариев.
 
 ## 4. Правила безопасности данных
 
@@ -60,6 +60,7 @@
 8. Public API не должен отдавать приватные поля автора, внутренние IDs, телефоны поставщиков anonymous-пользователю или служебные sync-статусы.
 9. `.env`, runtime DB, private whitelist и реальные токены не должны попадать в Git.
 10. В клиентском UI не показывать пользователям внутренние названия интеграций и CRM-синхронизаций.
+11. `POST /api/workspaces/{id}/activity` не должен принимать owner-only события от editor/guest: журнал является частью контроля безопасности.
 
 ## 5. API-карта для командного слоя
 
@@ -79,7 +80,7 @@
 | `POST /api/workspace-invites/{token}/accept` | user | Принять приглашение |
 | `DELETE /api/workspaces/{id}/members/{user_id}` | owner | Удалить участника |
 | `GET /api/workspaces/{id}/activity` | member | Журнал активного проекта |
-| `POST /api/workspaces/{id}/activity` | member + allowlist | Записать явное событие, не autosave |
+| `POST /api/workspaces/{id}/activity` | member + allowlist + owner-only guard | Записать явное событие, не autosave; owner-only события блокируются для editor/guest |
 | `GET /api/workspaces/{id}/snapshots` | member | Список точек восстановления |
 | `POST /api/workspaces/{id}/snapshots` | owner | Создать ручную точку восстановления |
 | `POST /api/workspaces/{id}/snapshots/{snapshot_id}/restore` | owner | Восстановить проект из точки |
@@ -115,6 +116,7 @@
 8. Журнал показывает московское время, роль и аватар автора события.
 9. Anonymous `/api/suppliers` возвращает `403`.
 10. Public recipes API не отдаёт приватные ключи и служебные поля.
+11. Editor/guest не может через прямой `POST /api/workspaces/{id}/activity` записать `workspace_deleted`, `member_removed`, `location_deleted`, `snapshot_restored` и другие owner-only события.
 
 ## 8. Что не делать без отдельного решения
 

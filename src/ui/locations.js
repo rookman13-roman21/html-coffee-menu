@@ -7,7 +7,8 @@ import {
   createWorkspaceInvite, fetchWorkspaceActivity, removeWorkspaceMember,
   revokeWorkspaceInvite, fetchWorkspaceSnapshots, createWorkspaceSnapshot,
   restoreWorkspaceSnapshot, logWorkspaceActivity, canCreateWorkspaces, hasWorkspaceMembership,
-  isWorkspaceOwner, requireWorkspaceOwner,
+  canManageWorkspaceMembers, canManageWorkspaceStructure, canRestoreWorkspace,
+  requireWorkspaceOwner, requireWorkspaceStructurePermission, requireWorkspaceDeletePermission,
 } from './auth.js';
 
 function _esc(s) {
@@ -298,7 +299,7 @@ async function _renderWorkspaceTeam(modal, inviteResult = null) {
   const current = getCurrentWorkspace();
   if (!current) return;
   const data = await fetchWorkspaceMembers(current.id);
-  const isOwner = current.role === 'owner';
+  const isOwner = canManageWorkspaceMembers();
   const notice = typeof inviteResult === 'string' ? inviteResult : '';
   const result = inviteResult && typeof inviteResult === 'object' ? inviteResult : null;
   const hasGuest = (data.members || []).some(m => m.account_role === 'guest' && m.role !== 'owner');
@@ -612,7 +613,7 @@ export async function openWorkspaceSnapshotsModal() {
   }
   try {
     const rows = await fetchWorkspaceSnapshots(current.id);
-    const isOwner = current.role === 'owner';
+    const isOwner = canRestoreWorkspace();
     const actions = isOwner ? `
       <div class="workspace-action-row" style="justify-content:flex-start;margin-bottom:14px">
         <button class="btn-green" type="button" onclick="createWorkspaceSnapshotFromModal()">
@@ -686,7 +687,7 @@ export function renderLocList() {
   const actionButtons = menu?.querySelectorAll('[data-location-action]') || [];
   actionButtons.forEach(btn => { btn.style.display = ''; });
   const ownerActionButtons = menu?.querySelectorAll('[data-owner-action]') || [];
-  ownerActionButtons.forEach(btn => { btn.style.display = isWorkspaceOwner() ? '' : 'none'; });
+  ownerActionButtons.forEach(btn => { btn.style.display = canManageWorkspaceStructure() ? '' : 'none'; });
   list.innerHTML = Loc.list.map(l =>
     `<button class="loc-menu-item ${l.id===Loc.activeId?'active':''}" onclick="switchLocation(${_jsArgAttr(l.id)})">
       <span class="loc-emoji">${_esc(l.icon || '☕')}</span>
@@ -746,7 +747,7 @@ export function switchLocation(id) {
 
 export function openAddLocation() {
   if (!_canUseClientLocations()) { _showWorkspaceRequired(); return; }
-  if (!requireWorkspaceOwner('Добавлять заведения может только владелец проекта.')) return;
+  if (!requireWorkspaceStructurePermission('Добавлять заведения может только владелец проекта.')) return;
   const Loc = window.Loc;
   window._locModalMode = 'add'; window._locTemplateId = null;
   document.getElementById('modal-loc-title').innerHTML = '<i data-lucide="plus" class="icon"></i> Новая точка';
@@ -769,7 +770,7 @@ export function openAddLocation() {
 
 export function renameActiveLocation() {
   if (!_canUseClientLocations()) { _showWorkspaceRequired(); return; }
-  if (!requireWorkspaceOwner('Переименовывать заведения может только владелец проекта.')) return;
+  if (!requireWorkspaceStructurePermission('Переименовывать заведения может только владелец проекта.')) return;
   const loc = window.activeLoc(); if (!loc) return;
   window._locModalMode = 'rename'; window._locTemplateId = null;
   document.getElementById('modal-loc-title').innerHTML = '<i data-lucide="pencil" class="icon"></i> Переименовать точку';
@@ -821,12 +822,12 @@ export function authorOpenTechcardSettings() {
 
 export function deleteActiveLocation() {
   if (!_canUseClientLocations()) { _showWorkspaceRequired(); return; }
-  if (!requireWorkspaceOwner('Удалять заведения может только владелец проекта.')) return;
+  if (!requireWorkspaceDeletePermission('Удалять заведения может только владелец проекта.')) return;
   const Loc = window.Loc;
   if (Loc.list.length <= 1) { window.showAlert('Нельзя удалить единственную точку. Сначала добавьте ещё одну.', 'ℹ️'); return; }
   const loc = window.activeLoc(); if (!loc) return;
   window.showConfirm(`Удалить «${loc.name}»? Текущее состояние проекта будет сохранено для восстановления.`, async () => {
-    if (getCurrentWorkspace()?.role === 'owner') {
+    if (canManageWorkspaceStructure()) {
       try {
         await window.flushServerSync?.(getActiveWorkspaceId());
         await createWorkspaceSnapshot('before_location_delete');
@@ -850,7 +851,7 @@ export function deleteActiveLocation() {
 
 export function saveLocation() {
   if (!isAuthorMode() && !_canUseClientLocations()) { _showWorkspaceRequired(); return; }
-  if (!isAuthorMode() && !requireWorkspaceOwner('Менять структуру заведений может только владелец проекта.')) return;
+  if (!isAuthorMode() && !requireWorkspaceStructurePermission('Менять структуру заведений может только владелец проекта.')) return;
   const Loc = window.Loc;
   const name = document.getElementById('ml-name').value.trim();
   const icon = document.getElementById('ml-icon').value.trim() || '☕';

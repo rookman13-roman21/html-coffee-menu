@@ -7,7 +7,7 @@
 // ═══════════════════════════════════════════════════════════════════
 
 import { filterAuthorSupplierGroups } from '../access/author-layer.js';
-import { isWorkspaceOwner } from '../ui/auth.js';
+import { canDeleteWorkspaceData } from '../ui/auth.js';
 
 let _supSearch  = '';
 let _ingSearch  = '';
@@ -211,7 +211,7 @@ export function renderCost() {
   // ── Базовая категория полуфабрикатов ─────────────────────────────
   const SEMI_BASE_CATS = { semi_default: { label: '📦 Полуфабрикаты', order: 1 } };
   const SEMI_ALL_CATS  = { ...SEMI_BASE_CATS, ...(S.semiCustomCategories || {}) };
-  const canDeleteRecipeAssets = isWorkspaceOwner() || !!(window.authorCanPublish && window.authorCanPublish());
+  const canDeleteRecipeAssets = canDeleteWorkspaceData() || !!(window.authorCanPublish && window.authorCanPublish());
 
   // ── Сырьё по категориям ──────────────────────────────────────────
   const matGroups = {};

@@ -141,7 +141,7 @@ ssh -i "$HOME/.ssh/id_ed25519" root@159.194.233.13 \
   'sqlite3 /var/www/coffee-menu/server/data/app.db ".tables" | tr " " "\n" | grep -E "author_(recipe_drafts|ingredients|semis)|recipe_publication_(versions|events)"'
 ```
 
-Если `scripts/deploy_backend.sh` останавливается из-за локального `server/data/mixology_author_access.json`, не загружать whitelist вместе с обычным backend-деплоем. Для правок только `server/main.py` можно вручную загрузить файл и перезапустить API, не трогая приватный whitelist. После ручного hotfix обязательно проверить production API и наличие ключевых строк исправления на сервере, потому что backend-файл лежит вне Git-репозитория `HTML_coffee_menu`:
+Backend source of truth находится в `HTML_coffee_menu/server`. `scripts/deploy_backend.sh` берёт `server/main.py` именно из Git-репозитория. Если скрипт останавливается из-за локального `server/data/mixology_author_access.json`, не загружать whitelist вместе с обычным backend-деплоем: обновлять whitelist отдельным refresh-flow. Для экстренного hotfix можно вручную загрузить tracked `server/main.py`, затем проверить production API и наличие ключевых строк исправления на сервере:
 
 ```bash
 scp -i "$HOME/.ssh/id_ed25519" server/main.py \

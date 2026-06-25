@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROJECT_ROOT="$(cd "$ROOT/.." && pwd)"
-SERVER_DIR="$PROJECT_ROOT/server"
+SERVER_DIR="$ROOT/server"
 ADMIN_DIR="$SERVER_DIR/admin"
 PY_CACHE="${TMPDIR:-/tmp}/coffee-menu-pycache"
 

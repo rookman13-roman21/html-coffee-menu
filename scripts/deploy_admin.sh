@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROJECT_ROOT="$(cd "$ROOT/.." && pwd)"
-ADMIN_DIR="$PROJECT_ROOT/server/admin"
+ADMIN_DIR="$ROOT/server/admin"
 REMOTE="${COFFEE_REMOTE:-root@159.194.233.13}"
 SSH_KEY="${COFFEE_SSH_KEY:-$HOME/.ssh/id_ed25519}"
 REMOTE_PANEL="${COFFEE_REMOTE_PANEL:-/var/www/coffee-menu/dist/admin-panel.js}"
