@@ -135,6 +135,41 @@ function stripHtml(html) {
   return div.textContent || div.innerText || '';
 }
 
+function isEmptyDraftNote(note) {
+  if (!note || !note.draft) return false;
+  return !noteHasEditorText(note);
+}
+
+function noteHasEditorText(note) {
+  if (!note) return false;
+  const titleInput = _activeEditorNoteId === note.id ? document.getElementById('workspace-note-title') : null;
+  const bodyInput = _activeEditorNoteId === note.id ? document.getElementById('workspace-note-body') : null;
+  const currentBody = (_tiptapEditor && _activeEditorNoteId === note.id)
+    ? _tiptapEditor.getHTML()
+    : (bodyInput?.innerHTML || note.body || '');
+  return !!stripHtml(cleanEditorHtml(currentBody)).trim();
+}
+
+function discardDraftNote(id, persist = false) {
+  const data = area();
+  const note = data.notes.find(item => item.id === id);
+  if (!isEmptyDraftNote(note)) return false;
+  data.notes = data.notes.filter(item => item.id !== id);
+  S.workspaceArea.notes = data.notes;
+  clearTimeout(_noteAutosaveTimer);
+  _noteDirty = false;
+  if (persist) saveState();
+  return true;
+}
+
+function cleanupEmptyDraftNotes(data) {
+  const before = data.notes.length;
+  data.notes = data.notes.filter(item => !isEmptyDraftNote(item));
+  if (data.notes.length === before) return;
+  S.workspaceArea.notes = data.notes;
+  saveState();
+}
+
 function cleanEditorHtml(html) {
   const template = document.createElement('template');
   template.innerHTML = String(html || '');
@@ -795,7 +830,7 @@ function renderEditor(root, data, workspace, noteId) {
   const author = note.updatedBy || note.createdBy || 'участник';
   const avatarUrl = note.updatedAvatarUrl || note.createdAvatarUrl || '';
   root.innerHTML = `
-    <section class="workspace-page">
+    <section class="workspace-page workspace-editor-page">
       <div class="workspace-page-head">
         <div>
           <h1>Редактор заметки</h1>
@@ -803,7 +838,7 @@ function renderEditor(root, data, workspace, noteId) {
         </div>
         <div class="workspace-page-actions">
           <span class="workspace-save-status" id="workspace-note-save-status" data-mode="muted">Сохранено</span>
-          <button class="btn-outline" onclick="workspaceSetView('notes')"><i data-lucide="arrow-left" class="icon"></i> К заметкам</button>
+          <button class="btn-outline" onclick="workspaceBackToNotes('${esc(note.id)}')"><i data-lucide="arrow-left" class="icon"></i> К заметкам</button>
           <button class="btn-outline danger" onclick="workspaceDeleteNote('${esc(note.id)}')"><i data-lucide="trash-2" class="icon"></i> Удалить</button>
           <button class="btn-primary" onclick="workspaceSaveNote('${esc(note.id)}')"><i data-lucide="save" class="icon"></i> Сохранить</button>
         </div>
@@ -818,7 +853,7 @@ function renderEditor(root, data, workspace, noteId) {
               ${avatarHtml(author, avatarUrl)}
               <small>изменил ${esc(author)} · ${esc(formatDate(note.updatedAt || note.createdAt))}</small>
             </div>
-            <button class="btn-outline workspace-pin-btn ${note.pinned ? 'active' : ''}" onclick="workspaceTogglePinNote('${esc(note.id)}')">
+            <button class="btn-outline workspace-pin-btn ${note.pinned ? 'active' : ''}" onclick="workspaceTogglePinNote('${esc(note.id)}')" title="${note.pinned ? 'Открепить заметку' : 'Закрепить заметку'}">
               <i data-lucide="pin" class="icon"></i> ${note.pinned ? 'Закреплена' : 'Закрепить'}
             </button>
           </div>
@@ -891,6 +926,7 @@ export function renderWorkspace(view = window._workspaceView || 'overview') {
   const data = area();
   const workspace = getCurrentWorkspace?.();
   window._workspaceView = view || 'overview';
+  if (!String(view).startsWith('note-edit:')) cleanupEmptyDraftNotes(data);
   if (!String(view).startsWith('note-edit:')) clearEditorRuntime();
   if (view === 'notes') renderNotes(root, data, workspace);
   else if (view === 'links') renderLinks(root, data, workspace);
@@ -921,11 +957,18 @@ export async function workspaceNewNote(defaultTitle = 'Новая заметка
     updatedAvatarUrl: actor.avatarUrl,
     type: defaultTitle === 'Концепция проекта' ? 'task' : 'idea',
     pinned: false,
+    draft: true,
   };
   data.notes.unshift(note);
-  saveState();
-  window.logWorkspaceActivity?.('workspace_note_changed', 'workspace_note', note.id, `Создана заметка «${note.title}»`);
   renderWorkspace(`note-edit:${note.id}`);
+}
+
+export async function workspaceBackToNotes(id) {
+  if (discardDraftNote(id, true)) {
+    renderWorkspace('notes');
+    return;
+  }
+  await workspaceSetView('notes');
 }
 
 export async function workspaceDeleteNote(id) {
@@ -1137,12 +1180,18 @@ export function workspaceSaveNote(id, options = {}) {
   const title = titleInput.value?.trim() || 'Без названия';
   const body = cleanEditorHtml((_tiptapEditor && _activeEditorNoteId === id) ? _tiptapEditor.getHTML() : (bodyInput.innerHTML || ''));
   const type = typeInput.value || 'idea';
+  if (!stripHtml(body).trim()) {
+    setEditorStatus('Добавьте текст заметки', 'error');
+    if (options.log !== false) window.showAlert?.('Добавьте текст заметки перед сохранением');
+    return false;
+  }
   note.title = title;
   note.body = body || '<p></p>';
   note.type = NOTE_TYPES.some(([key]) => key === type) ? type : 'idea';
   note.updatedAt = nowIso();
   note.updatedBy = actor.name;
   note.updatedAvatarUrl = actor.avatarUrl;
+  note.draft = false;
   saveState();
   if (options.log !== false) {
     window.logWorkspaceActivity?.('workspace_note_changed', 'workspace_note', id, `Изменена заметка «${title}»`);
@@ -1514,9 +1563,10 @@ function markNoteDirty() {
 
 async function ensureNoteCanLeave(nextId = '') {
   if (!_noteDirty || !_activeEditorNoteId || nextId === _activeEditorNoteId) return true;
+  if (discardDraftNote(_activeEditorNoteId, true)) return true;
   const ok = await window.showConfirm?.('Есть несохранённые изменения в заметке. Сохранить перед переходом?', null, { icon: '💾', okText: 'Сохранить', danger: false });
   if (!ok) return false;
-  workspaceSaveNote(_activeEditorNoteId, { log: false });
+  if (!workspaceSaveNote(_activeEditorNoteId, { log: false })) return false;
   _noteDirty = false;
   return true;
 }

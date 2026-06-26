@@ -119,7 +119,7 @@ import {
 } from './render/settings.js';
 import {
   renderWorkspace, workspaceSetView, workspaceNewNote, workspaceOpenNote,
-  workspaceEditNote, workspaceSaveNote, workspaceDeleteNote, workspaceFormat, workspaceFormatBlock,
+  workspaceEditNote, workspaceBackToNotes, workspaceSaveNote, workspaceDeleteNote, workspaceFormat, workspaceFormatBlock,
   workspaceInsertChecklist, workspaceInsertDivider, workspaceInsertImage,
   workspaceOpenLinkPanel, workspaceApplyEditorLink,
   workspaceUploadNoteFile, workspaceOpenNoteFile, workspaceDeleteNoteFile, workspaceCloseFilePreview,
@@ -456,7 +456,7 @@ const _srcExports = {
   settingsSaveProjectMeta, settingsResetProjectContent,
   // render/workspace
   renderWorkspace, workspaceSetView, workspaceNewNote, workspaceOpenNote,
-  workspaceEditNote, workspaceSaveNote, workspaceDeleteNote, workspaceFormat, workspaceFormatBlock,
+  workspaceEditNote, workspaceBackToNotes, workspaceSaveNote, workspaceDeleteNote, workspaceFormat, workspaceFormatBlock,
   workspaceInsertChecklist, workspaceInsertDivider, workspaceInsertImage,
   workspaceOpenLinkPanel, workspaceApplyEditorLink,
   workspaceUploadNoteFile, workspaceOpenNoteFile, workspaceDeleteNoteFile, workspaceCloseFilePreview,
