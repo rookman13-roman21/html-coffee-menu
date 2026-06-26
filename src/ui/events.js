@@ -40,6 +40,33 @@ document.addEventListener('click', e => {
 
 // Закрыть дропдауны при клике вне их
 const DROPDOWN_IDS = ['loc-menu', 'export-menu'];
+function openMobileMoreSheet() {
+  const sheet = document.getElementById('mobile-more-sheet');
+  const backdrop = document.getElementById('mobile-more-backdrop');
+  const btn = document.querySelector('.mobile-tab[data-mobile-more]');
+  if (!sheet || !backdrop) return;
+  backdrop.hidden = false;
+  requestAnimationFrame(() => {
+    sheet.classList.add('open');
+    backdrop.classList.add('open');
+    sheet.setAttribute('aria-hidden', 'false');
+    if (btn) btn.setAttribute('aria-expanded', 'true');
+  });
+}
+
+function closeMobileMoreSheet() {
+  const sheet = document.getElementById('mobile-more-sheet');
+  const backdrop = document.getElementById('mobile-more-backdrop');
+  const btn = document.querySelector('.mobile-tab[data-mobile-more]');
+  if (!sheet || !backdrop) return;
+  sheet.classList.remove('open');
+  backdrop.classList.remove('open');
+  sheet.setAttribute('aria-hidden', 'true');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+  setTimeout(() => {
+    if (!backdrop.classList.contains('open')) backdrop.hidden = true;
+  }, 180);
+}
 document.addEventListener('click', () => {
   DROPDOWN_IDS.forEach(id => document.getElementById(id)?.classList.remove('open'));
 });
@@ -51,6 +78,11 @@ document.addEventListener('keydown', e => {
   for (const id of DROPDOWN_IDS) {
     const el = document.getElementById(id);
     if (el && el.classList.contains('open')) { el.classList.remove('open'); return; }
+  }
+  const mobileMoreSheet = document.getElementById('mobile-more-sheet');
+  if (mobileMoreSheet && mobileMoreSheet.classList.contains('open')) {
+    closeMobileMoreSheet();
+    return;
   }
   // затем модалки
   for (const id of MODAL_IDS) {
@@ -72,6 +104,11 @@ if (_mobileTabbar) {
   _mobileTabbar.addEventListener('click', e => {
     const btn = e.target.closest('.mobile-tab');
     if (!btn) return;
+    if (btn.dataset.mobileMore) {
+      if (document.getElementById('mobile-more-sheet')?.classList.contains('open')) closeMobileMoreSheet();
+      else openMobileMoreSheet();
+      return;
+    }
     const tab = btn.dataset.tab;
     const now = Date.now();
     if (tab === window.activeTab && tab === _lastTabTap.tab && now - _lastTabTap.time < 400) {
@@ -84,6 +121,17 @@ if (_mobileTabbar) {
     }
   });
 }
+
+document.addEventListener('click', e => {
+  if (e.target.closest('[data-mobile-more-close]') || e.target.id === 'mobile-more-backdrop') {
+    closeMobileMoreSheet();
+    return;
+  }
+  const item = e.target.closest('.mobile-more-item[data-tab]');
+  if (!item) return;
+  closeMobileMoreSheet();
+  switchTab(item.dataset.tab);
+});
 
 window.addEventListener('popstate', () => {
   const tab = tabFromPath();

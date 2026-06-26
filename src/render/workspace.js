@@ -27,6 +27,8 @@ let _noteStatusTimer = null;
 let _activeEditorNoteId = null;
 let _noteDirty = false;
 let _savedEditorRange = null;
+let _tiptapEditor = null;
+let _tiptapModulesPromise = null;
 let _linkFilter = 'all';
 let _linkSearch = '';
 let _linkModal = null;
@@ -47,6 +49,31 @@ function area() {
 
 function nowIso() {
   return new Date().toISOString();
+}
+
+function loadTiptapModules() {
+  if (!_tiptapModulesPromise) {
+    _tiptapModulesPromise = Promise.all([
+      import('@tiptap/core'),
+      import('@tiptap/starter-kit'),
+      import('@tiptap/extension-link'),
+      import('@tiptap/extension-placeholder'),
+      import('@tiptap/extension-task-list'),
+      import('@tiptap/extension-task-item'),
+      import('@tiptap/extension-image'),
+      import('@tiptap/extension-typography'),
+    ]).then(([core, starterKit, link, placeholder, taskList, taskItem, image, typography]) => ({
+      Editor: core.Editor,
+      StarterKit: starterKit.default,
+      Link: link.default,
+      Placeholder: placeholder.default,
+      TaskList: taskList.default,
+      TaskItem: taskItem.default,
+      Image: image.default,
+      Typography: typography.default,
+    }));
+  }
+  return _tiptapModulesPromise;
 }
 
 function actorMeta() {
@@ -111,7 +138,7 @@ function stripHtml(html) {
 function cleanEditorHtml(html) {
   const template = document.createElement('template');
   template.innerHTML = String(html || '');
-  const allowed = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'A', 'BR', 'DIV', 'P', 'UL', 'OL', 'LI', 'H2', 'H3', 'BLOCKQUOTE', 'HR']);
+  const allowed = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'A', 'BR', 'DIV', 'P', 'UL', 'OL', 'LI', 'H2', 'H3', 'BLOCKQUOTE', 'HR', 'LABEL', 'INPUT', 'SPAN', 'IMG']);
   const walk = node => {
     [...node.childNodes].forEach(child => {
       if (child.nodeType === Node.ELEMENT_NODE) {
@@ -130,6 +157,27 @@ function cleanEditorHtml(html) {
             } else {
               child.removeAttribute('href');
             }
+          } else if ((child.tagName === 'UL' && name === 'data-type' && attr.value === 'taskList')
+            || (child.tagName === 'LI' && name === 'data-type' && attr.value === 'taskItem')
+            || (child.tagName === 'LI' && name === 'data-checked' && /^(true|false)$/i.test(attr.value))) {
+            child.setAttribute(name, attr.value);
+          } else if (child.tagName === 'INPUT' && name === 'type' && attr.value === 'checkbox') {
+            child.setAttribute('type', 'checkbox');
+            child.setAttribute('disabled', '');
+          } else if (child.tagName === 'INPUT' && name === 'checked') {
+            child.setAttribute('checked', '');
+          } else if (child.tagName === 'INPUT' && name === 'disabled') {
+            child.setAttribute('disabled', '');
+          } else if (child.tagName === 'IMG' && name === 'src') {
+            const src = String(attr.value || '').trim();
+            if (/^https?:\/\//i.test(src)) {
+              child.setAttribute('src', src);
+              child.setAttribute('loading', 'lazy');
+            } else {
+              child.removeAttribute('src');
+            }
+          } else if (child.tagName === 'IMG' && (name === 'alt' || name === 'title')) {
+            child.setAttribute(name, attr.value.slice(0, 160));
           } else {
             child.removeAttribute(attr.name);
           }
@@ -247,12 +295,12 @@ function renderNoteFiles(note, editable = false) {
       </div>
       <div class="workspace-note-file-list">
         ${files.length ? files.map(file => `
-          <article class="workspace-note-file">
+          <article class="workspace-note-file ${isPreviewImage(file) ? 'is-image' : ''}">
             <button class="workspace-note-file-main" onclick="workspaceOpenNoteFile('${esc(note.id)}','${esc(file.id)}')">
-              <i data-lucide="${fileIcon(file)}" class="icon"></i>
+              <span class="workspace-note-file-icon"><i data-lucide="${fileIcon(file)}" class="icon"></i></span>
               <span>
                 <strong>${esc(file.name || 'Файл')}</strong>
-                <small>${esc(formatFileSize(file.size))}${file.created_at ? ` · ${esc(formatDate(file.created_at))}` : ''}</small>
+                <small>${isPreviewImage(file) ? 'Изображение · ' : ''}${esc(formatFileSize(file.size))}${file.created_at ? ` · ${esc(formatDate(file.created_at))}` : ''}</small>
               </span>
             </button>
             ${canDeleteNoteFile(file) ? `
@@ -368,11 +416,13 @@ function emptyState(title, text, actionHtml = '') {
 }
 
 function renderLinkControls(data) {
+  if (!data.links.length) return '';
   const filters = [
     ['all', 'Все', data.links.length],
     ['pinned', 'Закреплённые', data.links.filter(link => link.pinned).length],
     ...LINK_TYPES.map(([key, label]) => [key, label, data.links.filter(link => link.type === key).length]),
-  ];
+  ].filter(([key, , count]) => key === 'all' || Number(count) > 0);
+  if (!filters.some(([key]) => key === _linkFilter)) _linkFilter = 'all';
   return `
     <div class="workspace-link-tools">
       <div class="workspace-link-search">
@@ -523,6 +573,7 @@ function renderNoteCard(note) {
         <div class="work-note-meta">
           <span>${esc(noteTypeLabel(note.type))}</span>
           ${note.pinned ? '<span><i data-lucide="pin" class="icon"></i> закреплено</span>' : ''}
+          ${noteFiles(note).length ? `<span><i data-lucide="paperclip" class="icon"></i> ${noteFiles(note).length}</span>` : ''}
         </div>
         <h3>${esc(note.title || 'Новая заметка')}</h3>
         <p>${notePreview(note)}</p>
@@ -544,6 +595,7 @@ function renderOverviewNoteCard(note) {
         <div class="work-note-meta">
           <span>${esc(noteTypeLabel(note.type))}</span>
           ${note.pinned ? '<span><i data-lucide="pin" class="icon"></i> закреплено</span>' : ''}
+          ${noteFiles(note).length ? `<span><i data-lucide="paperclip" class="icon"></i> ${noteFiles(note).length}</span>` : ''}
         </div>
         <h3>${esc(note.title || 'Новая заметка')}</h3>
         <p>${notePreview(note)}</p>
@@ -557,7 +609,9 @@ function renderOverviewNoteCard(note) {
 }
 
 function renderOverview(root, data, workspace) {
-  const pinned = data.links.filter(link => link.pinned).slice(0, 4);
+  const pinnedLinks = data.links.filter(link => link.pinned).slice(0, 4);
+  const pinnedNotes = sortNotes(data.notes).filter(note => note.pinned).slice(0, 4);
+  const hasPinned = pinnedLinks.length || pinnedNotes.length;
   root.innerHTML = `
     <section class="workspace-page">
       <div class="workspace-page-head">
@@ -565,32 +619,26 @@ function renderOverview(root, data, workspace) {
           <h1>Рабочая зона проекта</h1>
           <p>${esc(workspace?.name || 'Проект кофейни')}</p>
         </div>
-        <div class="workspace-page-actions">
-          <button class="btn-primary" onclick="workspaceNewNote()"><i data-lucide="file-plus-2" class="icon"></i> Новая заметка</button>
-          <button class="btn-outline" onclick="workspaceNewLink()"><i data-lucide="link" class="icon"></i> Добавить ссылку</button>
-        </div>
       </div>
 
       ${renderWorkspaceTabs('overview', data)}
 
       <main class="workspace-area-main">
         ${!data.notes.length && !data.links.length ? renderQuickStart() : ''}
-          <section class="workspace-card">
-            <div class="workspace-card-head">
-              <div>
-                <h2>Закреплённое</h2>
-                <p>Главные материалы проекта: папки, доски, макеты и документы.</p>
+          ${hasPinned ? `
+            <section class="workspace-card">
+              <div class="workspace-card-head">
+                <div>
+                  <h2>Закреплённое</h2>
+                  <p>Главные материалы проекта: заметки, папки, доски, макеты и документы.</p>
+                </div>
               </div>
-              <button class="btn-outline" onclick="workspaceSetView('links')">Все ссылки</button>
-            </div>
-            <div class="work-link-grid">
-              ${pinned.length ? pinned.map(renderOverviewLinkCard).join('') : emptyState(
-                'Нет закреплённых ссылок',
-                'Закрепите главную папку Google Drive, Miro-доску или макеты, чтобы команда быстро находила важные материалы.',
-                '<button class="btn-outline" onclick="workspaceNewLink()"><i data-lucide="link" class="icon"></i> Добавить первую ссылку</button>'
-              )}
-            </div>
-          </section>
+              <div class="work-link-grid">
+                ${pinnedLinks.map(renderOverviewLinkCard).join('')}
+                ${pinnedNotes.map(renderOverviewNoteCard).join('')}
+              </div>
+            </section>
+          ` : ''}
 
           <section class="workspace-card">
             <div class="workspace-card-head">
@@ -621,12 +669,15 @@ function renderNotes(root, data, workspace) {
           <h1>Заметки проекта</h1>
           <p>${esc(workspace?.name || 'Проект кофейни')}</p>
         </div>
-        <div class="workspace-page-actions">
-          <button class="btn-outline" onclick="workspaceSetView('overview')"><i data-lucide="arrow-left" class="icon"></i> Обзор</button>
-          <button class="btn-primary" onclick="workspaceNewNote()"><i data-lucide="file-plus-2" class="icon"></i> Новая заметка</button>
-        </div>
       </div>
       ${renderWorkspaceTabs('notes', data)}
+      <section class="workspace-action-panel">
+        <div>
+          <strong>Заметки</strong>
+          <span>Фиксируйте идеи, решения, вопросы и договорённости команды.</span>
+        </div>
+        <button class="btn-primary" onclick="workspaceNewNote()"><i data-lucide="file-plus-2" class="icon"></i> Новая заметка</button>
+      </section>
       <div class="work-note-grid work-note-grid-wide">
         ${sortNotes(data.notes).map(renderNoteCard).join('') || emptyState(
           'Заметок пока нет',
@@ -647,12 +698,15 @@ function renderLinks(root, data, workspace) {
           <h1>Полезные ссылки</h1>
           <p>${esc(workspace?.name || 'Проект кофейни')}</p>
         </div>
-        <div class="workspace-page-actions">
-          <button class="btn-outline" onclick="workspaceSetView('overview')"><i data-lucide="arrow-left" class="icon"></i> Обзор</button>
-          <button class="btn-primary" onclick="workspaceNewLink()"><i data-lucide="link" class="icon"></i> Добавить ссылку</button>
-        </div>
       </div>
       ${renderWorkspaceTabs('links', data)}
+      <section class="workspace-action-panel">
+        <div>
+          <strong>Ссылки</strong>
+          <span>Добавляйте Google Drive, Miro, документы и другие материалы проекта.</span>
+        </div>
+        <button class="btn-primary" onclick="workspaceNewLink()"><i data-lucide="link" class="icon"></i> Добавить ссылку</button>
+      </section>
       ${renderLinkControls(data)}
       <div class="work-link-grid">
         ${links.map(renderLinkCard).join('') || emptyState(
@@ -780,17 +834,32 @@ function renderEditor(root, data, workspace, noteId) {
             </label>
           </div>
 
-          <div class="workspace-editor-toolbar">
-            <button onclick="workspaceFormat('bold')" title="Жирный · Ctrl/Cmd+B"><b>B</b></button>
-            <button onclick="workspaceFormat('italic')" title="Курсив · Ctrl/Cmd+I"><i>I</i></button>
-            <button onclick="workspaceFormatBlock('h2')" title="Заголовок · Ctrl/Cmd+Alt+2">H2</button>
-            <button onclick="workspaceFormat('insertUnorderedList')" title="Маркированный список · Ctrl/Cmd+Shift+8"><i data-lucide="list" class="icon"></i></button>
-            <button onclick="workspaceFormat('insertOrderedList')" title="Нумерованный список · Ctrl/Cmd+Shift+7"><i data-lucide="list-ordered" class="icon"></i></button>
-            <button onclick="workspaceInsertChecklist()" title="Чеклист · Ctrl/Cmd+Shift+9"><i data-lucide="list-checks" class="icon"></i></button>
-            <button onclick="workspaceFormatBlock('blockquote')" title="Цитата · Ctrl/Cmd+Shift+."><i data-lucide="quote" class="icon"></i></button>
-            <button onclick="workspaceInsertDivider()" title="Разделитель · Ctrl/Cmd+Shift+-"><i data-lucide="minus" class="icon"></i></button>
-            <button onclick="workspaceOpenLinkPanel()" title="Вставить ссылку · Ctrl/Cmd+K"><i data-lucide="link" class="icon"></i></button>
-            <button onclick="workspaceFormat('removeFormat')" title="Очистить формат · Ctrl/Cmd+\\"><i data-lucide="eraser" class="icon"></i></button>
+          <div class="workspace-editor-toolbar" aria-label="Инструменты заметки">
+            <div class="workspace-toolbar-group">
+              <button data-workspace-tool="undo" onclick="workspaceFormat('undo')" title="Отменить"><i data-lucide="undo-2" class="icon"></i></button>
+              <button data-workspace-tool="redo" onclick="workspaceFormat('redo')" title="Повторить"><i data-lucide="redo-2" class="icon"></i></button>
+            </div>
+            <div class="workspace-toolbar-group">
+              <button data-workspace-tool="bold" onclick="workspaceFormat('bold')" title="Жирный · Ctrl/Cmd+B"><b>B</b></button>
+              <button data-workspace-tool="italic" onclick="workspaceFormat('italic')" title="Курсив · Ctrl/Cmd+I"><i>I</i></button>
+              <button data-workspace-tool="link" onclick="workspaceOpenLinkPanel()" title="Вставить ссылку · Ctrl/Cmd+K"><i data-lucide="link" class="icon"></i></button>
+            </div>
+            <div class="workspace-toolbar-group">
+              <button data-workspace-tool="h2" onclick="workspaceFormatBlock('h2')" title="Заголовок · Ctrl/Cmd+Alt+2">H2</button>
+              <button data-workspace-tool="blockquote" onclick="workspaceFormatBlock('blockquote')" title="Цитата · Ctrl/Cmd+Shift+."><i data-lucide="quote" class="icon"></i></button>
+              <button data-workspace-tool="divider" onclick="workspaceInsertDivider()" title="Разделитель · Ctrl/Cmd+Shift+-"><i data-lucide="minus" class="icon"></i></button>
+            </div>
+            <div class="workspace-toolbar-group">
+              <button data-workspace-tool="image" onclick="workspaceInsertImage()" title="Изображение по ссылке"><i data-lucide="image" class="icon"></i></button>
+            </div>
+            <div class="workspace-toolbar-group">
+              <button data-workspace-tool="bulletList" onclick="workspaceFormat('insertUnorderedList')" title="Маркированный список · Ctrl/Cmd+Shift+8"><i data-lucide="list" class="icon"></i></button>
+              <button data-workspace-tool="orderedList" onclick="workspaceFormat('insertOrderedList')" title="Нумерованный список · Ctrl/Cmd+Shift+7"><i data-lucide="list-ordered" class="icon"></i></button>
+              <button data-workspace-tool="taskList" onclick="workspaceInsertChecklist()" title="Чеклист · Ctrl/Cmd+Shift+9"><i data-lucide="list-checks" class="icon"></i></button>
+            </div>
+            <div class="workspace-toolbar-group">
+              <button data-workspace-tool="clear" onclick="workspaceFormat('removeFormat')" title="Очистить формат · Ctrl/Cmd+\\"><i data-lucide="eraser" class="icon"></i></button>
+            </div>
           </div>
 
           <div class="workspace-link-panel" id="workspace-link-panel" style="display:none">
@@ -806,8 +875,7 @@ function renderEditor(root, data, workspace, noteId) {
           </div>
 
           <div class="workspace-editor-wrap">
-            <div class="workspace-editor-placeholder">Опишите договорённости, идеи, вопросы или ссылки по запуску проекта...</div>
-            <div id="workspace-note-body" class="workspace-editor-body" contenteditable="true" spellcheck="true">${safeBody}</div>
+            <div id="workspace-note-body" class="workspace-editor-body" spellcheck="true"></div>
           </div>
           ${renderNoteFiles(note, true)}
         </div>
@@ -958,35 +1026,65 @@ export async function workspaceDeleteNoteFile(noteId, fileId) {
 }
 
 export function workspaceFormat(command) {
-  document.execCommand(command, false, null);
+  if (!_tiptapEditor) return;
+  const chain = _tiptapEditor.chain().focus();
+  if (command === 'bold') chain.toggleBold().run();
+  else if (command === 'italic') chain.toggleItalic().run();
+  else if (command === 'insertUnorderedList') chain.toggleBulletList().run();
+  else if (command === 'insertOrderedList') chain.toggleOrderedList().run();
+  else if (command === 'taskList') chain.toggleTaskList().run();
+  else if (command === 'undo') chain.undo().run();
+  else if (command === 'redo') chain.redo().run();
+  else if (command === 'removeFormat') chain.unsetAllMarks().clearNodes().run();
+  updateToolbarState();
   markNoteDirty();
-  document.getElementById('workspace-note-body')?.focus();
 }
 
 export function workspaceFormatBlock(tagName) {
-  document.execCommand('formatBlock', false, tagName);
+  if (!_tiptapEditor) return;
+  const chain = _tiptapEditor.chain().focus();
+  if (tagName === 'h2') chain.toggleHeading({ level: 2 }).run();
+  else if (tagName === 'h3') chain.toggleHeading({ level: 3 }).run();
+  else if (tagName === 'blockquote') chain.toggleBlockquote().run();
+  else chain.setParagraph().run();
+  updateToolbarState();
   markNoteDirty();
-  document.getElementById('workspace-note-body')?.focus();
 }
 
 export function workspaceInsertChecklist() {
-  document.execCommand('insertHTML', false, '<ul><li>☐ Новый пункт</li></ul>');
+  if (!_tiptapEditor) return;
+  _tiptapEditor.chain().focus().toggleTaskList().run();
+  updateToolbarState();
   markNoteDirty();
-  document.getElementById('workspace-note-body')?.focus();
 }
 
 export function workspaceInsertDivider() {
-  document.execCommand('insertHTML', false, '<hr><p><br></p>');
+  if (!_tiptapEditor) return;
+  _tiptapEditor.chain().focus().setHorizontalRule().run();
+  updateToolbarState();
   markNoteDirty();
-  document.getElementById('workspace-note-body')?.focus();
+}
+
+export async function workspaceInsertImage() {
+  if (!_tiptapEditor) return;
+  const value = await window.showPrompt?.('Ссылка на изображение', 'https://', { okText: 'Вставить' });
+  const src = normalizeUrl(value || '');
+  if (!value) return;
+  if (!/^https?:\/\//i.test(src)) {
+    window.showAlert?.('Введите корректную ссылку на изображение');
+    return;
+  }
+  _tiptapEditor.chain().focus().setImage({ src, alt: 'Изображение' }).run();
+  updateToolbarState();
+  markNoteDirty();
 }
 
 export function workspaceOpenLinkPanel() {
   const panel = document.getElementById('workspace-link-panel');
-  if (!panel) return;
-  const selectionObj = window.getSelection?.();
-  const selection = selectionObj?.toString?.() || '';
-  _savedEditorRange = selectionObj?.rangeCount ? selectionObj.getRangeAt(0).cloneRange() : null;
+  if (!panel || !_tiptapEditor) return;
+  const { from, to } = _tiptapEditor.state.selection;
+  const selection = from !== to ? _tiptapEditor.state.doc.textBetween(from, to, ' ') : '';
+  _savedEditorRange = from !== to ? { from, to } : null;
   const textInput = document.getElementById('workspace-link-text');
   const urlInput = document.getElementById('workspace-link-url');
   if (textInput && !textInput.value) textInput.value = selection;
@@ -996,6 +1094,7 @@ export function workspaceOpenLinkPanel() {
 }
 
 export function workspaceApplyEditorLink() {
+  if (!_tiptapEditor) return;
   const textInput = document.getElementById('workspace-link-text');
   const urlInput = document.getElementById('workspace-link-url');
   const text = (textInput?.value || '').trim();
@@ -1004,25 +1103,22 @@ export function workspaceApplyEditorLink() {
     window.showAlert?.('Введите корректную ссылку');
     return;
   }
-  if (_savedEditorRange) {
-    const selection = window.getSelection?.();
-    selection?.removeAllRanges();
-    selection?.addRange(_savedEditorRange);
+  const range = _savedEditorRange || _tiptapEditor.state.selection;
+  const selectedText = range?.from !== range?.to ? _tiptapEditor.state.doc.textBetween(range.from, range.to, ' ') : '';
+  if (range?.from !== range?.to && text && text !== selectedText) {
+    _tiptapEditor.chain().focus().insertContentAt(range, `<a href="${esc(url)}">${esc(text)}</a>`).run();
+  } else if (range?.from !== range?.to) {
+    _tiptapEditor.chain().focus().setTextSelection(range).setLink({ href: url }).run();
+  } else {
+    _tiptapEditor.chain().focus().insertContent(`<a href="${esc(url)}">${esc(text || url)}</a>`).run();
   }
-  const safeText = esc(text || url);
-  document.execCommand('insertHTML', false, `<a href="${esc(url)}" target="_blank" rel="noopener">${safeText}</a>`);
-  const editor = document.getElementById('workspace-note-body');
-  editor?.querySelectorAll('a').forEach(a => {
-    a.setAttribute('target', '_blank');
-    a.setAttribute('rel', 'noopener');
-  });
   if (textInput) textInput.value = '';
   if (urlInput) urlInput.value = '';
   const panel = document.getElementById('workspace-link-panel');
   if (panel) panel.style.display = 'none';
   _savedEditorRange = null;
+  updateToolbarState();
   markNoteDirty();
-  editor?.focus();
 }
 
 export function workspaceSaveNote(id, options = {}) {
@@ -1034,8 +1130,12 @@ export function workspaceSaveNote(id, options = {}) {
   const bodyInput = document.getElementById('workspace-note-body');
   const typeInput = document.getElementById('workspace-note-type');
   if (!titleInput || !bodyInput || !typeInput) return false;
+  if (_activeEditorNoteId === id && !_tiptapEditor) {
+    setEditorStatus('Редактор загружается...', 'saving');
+    return false;
+  }
   const title = titleInput.value?.trim() || 'Без названия';
-  const body = cleanEditorHtml(bodyInput.innerHTML || '');
+  const body = cleanEditorHtml((_tiptapEditor && _activeEditorNoteId === id) ? _tiptapEditor.getHTML() : (bodyInput.innerHTML || ''));
   const type = typeInput.value || 'idea';
   note.title = title;
   note.body = body || '<p></p>';
@@ -1225,10 +1325,15 @@ export function workspaceTogglePinNote(id) {
   renderWorkspace(`note:${id}`);
 }
 
-function setupEditor(noteId) {
+async function setupEditor(noteId) {
+  if (_tiptapEditor) {
+    _tiptapEditor.destroy();
+    _tiptapEditor = null;
+  }
   _activeEditorNoteId = noteId;
   _noteDirty = false;
   clearTimeout(_noteAutosaveTimer);
+  const note = area().notes.find(item => item.id === noteId);
   const title = document.getElementById('workspace-note-title');
   const type = document.getElementById('workspace-note-type');
   const body = document.getElementById('workspace-note-body');
@@ -1244,12 +1349,65 @@ function setupEditor(noteId) {
   [linkText, linkUrl].forEach(el => {
     el?.addEventListener('keydown', handleLinkPanelShortcut);
   });
-  body?.addEventListener('paste', () => setTimeout(() => {
-    if (body) body.innerHTML = cleanEditorHtml(body.innerHTML);
-    markNoteDirty();
-  }, 0));
-  updateEditorPlaceholder();
+  if (body) body.innerHTML = '<div class="workspace-editor-loading">Загружаем редактор...</div>';
   window.onbeforeunload = () => _noteDirty ? 'Есть несохранённые изменения в заметке.' : null;
+  try {
+    const { Editor, StarterKit, Link, Placeholder, TaskList, TaskItem, Image, Typography } = await loadTiptapModules();
+    if (_activeEditorNoteId !== noteId) return;
+    const currentBody = document.getElementById('workspace-note-body');
+    if (!currentBody) return;
+    currentBody.innerHTML = '';
+    _tiptapEditor = new Editor({
+      element: currentBody,
+      content: cleanEditorHtml(note?.body || '') || '<p></p>',
+      extensions: [
+        StarterKit.configure({
+          heading: { levels: [2, 3] },
+        }),
+        Link.configure({
+          openOnClick: false,
+          autolink: true,
+          defaultProtocol: 'https',
+          HTMLAttributes: {
+            target: '_blank',
+            rel: 'noopener',
+          },
+        }),
+        Placeholder.configure({
+          placeholder: 'Опишите договорённости, идеи, вопросы или ссылки по запуску проекта...',
+        }),
+        TaskList,
+        TaskItem.configure({
+          nested: true,
+        }),
+        Image.configure({
+          inline: false,
+          allowBase64: false,
+        }),
+        Typography,
+      ],
+      editorProps: {
+        attributes: {
+          class: 'workspace-tiptap-content',
+          spellcheck: 'true',
+        },
+        transformPastedHTML(html) {
+          return cleanEditorHtml(html);
+        },
+      },
+      onUpdate: () => {
+        updateToolbarState();
+        markNoteDirty();
+      },
+      onSelectionUpdate: () => updateToolbarState(),
+      onTransaction: () => updateToolbarState(),
+    });
+    updateEditorPlaceholder();
+    updateToolbarState();
+  } catch (e) {
+    console.error('[workspace] tiptap init failed', e);
+    if (body) body.innerHTML = '<div class="workspace-editor-loading is-error">Не удалось загрузить редактор. Обновите страницу.</div>';
+  }
 }
 
 function handleEditorShortcut(event) {
@@ -1263,8 +1421,9 @@ function handleEditorShortcut(event) {
   };
   if (!primary && key === 'escape') {
     closeLinkPanel();
-    return;
+      return;
   }
+  if (event.defaultPrevented) return;
   if (!primary) return;
   if (key === 's') {
     event.preventDefault();
@@ -1282,7 +1441,7 @@ function handleEditorShortcut(event) {
   if (event.altKey && (code === 'Digit2' || key === '2')) return run(() => workspaceFormatBlock('h2'));
   if (event.shiftKey && (code === 'Digit7' || key === '7' || key === '&')) return run(() => workspaceFormat('insertOrderedList'));
   if (event.shiftKey && (code === 'Digit8' || key === '8' || key === '*')) return run(() => workspaceFormat('insertUnorderedList'));
-  if (event.shiftKey && (code === 'Digit9' || key === '9' || key === '(')) return run(workspaceInsertChecklist);
+  if (event.shiftKey && (code === 'Digit9' || key === '9' || key === '(')) return run(() => workspaceFormat('taskList'));
   if (event.shiftKey && (code === 'Period' || key === '.')) return run(() => workspaceFormatBlock('blockquote'));
   if (event.shiftKey && (code === 'Minus' || key === '-' || key === '_')) return run(workspaceInsertDivider);
   if (!event.shiftKey && !event.altKey && (code === 'Backslash' || key === '\\')) return run(() => workspaceFormat('removeFormat'));
@@ -1301,6 +1460,29 @@ function handleLinkPanelShortcut(event) {
   }
 }
 
+function updateToolbarState() {
+  if (!_tiptapEditor) return;
+  const setActive = (tool, active) => {
+    document.querySelectorAll(`[data-workspace-tool="${tool}"]`).forEach(btn => btn.classList.toggle('active', !!active));
+  };
+  const setDisabled = (tool, disabled) => {
+    document.querySelectorAll(`[data-workspace-tool="${tool}"]`).forEach(btn => {
+      btn.disabled = !!disabled;
+      btn.classList.toggle('disabled', !!disabled);
+    });
+  };
+  setActive('bold', _tiptapEditor.isActive('bold'));
+  setActive('italic', _tiptapEditor.isActive('italic'));
+  setActive('link', _tiptapEditor.isActive('link'));
+  setActive('h2', _tiptapEditor.isActive('heading', { level: 2 }));
+  setActive('blockquote', _tiptapEditor.isActive('blockquote'));
+  setActive('bulletList', _tiptapEditor.isActive('bulletList'));
+  setActive('orderedList', _tiptapEditor.isActive('orderedList'));
+  setActive('taskList', _tiptapEditor.isActive('taskList'));
+  setDisabled('undo', !_tiptapEditor.can().undo());
+  setDisabled('redo', !_tiptapEditor.can().redo());
+}
+
 function closeLinkPanel() {
   const panel = document.getElementById('workspace-link-panel');
   if (panel) panel.style.display = 'none';
@@ -1308,9 +1490,14 @@ function closeLinkPanel() {
 }
 
 function clearEditorRuntime() {
+  if (_tiptapEditor) {
+    _tiptapEditor.destroy();
+    _tiptapEditor = null;
+  }
   _activeEditorNoteId = null;
   _noteDirty = false;
   clearTimeout(_noteAutosaveTimer);
+  _savedEditorRange = null;
   window.onbeforeunload = null;
 }
 
@@ -1345,8 +1532,6 @@ export function workspaceHasUnsavedNote() {
 
 function updateEditorPlaceholder() {
   const body = document.getElementById('workspace-note-body');
-  const placeholder = document.querySelector('.workspace-editor-placeholder');
-  if (!body || !placeholder) return;
-  const isEmpty = !stripHtml(body.innerHTML).trim();
-  placeholder.style.display = isEmpty ? 'block' : 'none';
+  if (!body || !_tiptapEditor) return;
+  body.classList.toggle('is-empty', _tiptapEditor.isEmpty);
 }

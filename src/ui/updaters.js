@@ -351,7 +351,12 @@ export function switchTab(tab, opts = {}) {
   }
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.mobile-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  const mobileMoreTabs = ['cost', 'sales', 'recipes', 'settings', 'authorProfile'];
+  document.querySelectorAll('.mobile-tab').forEach(b => {
+    const isDirect = b.dataset.tab === tab;
+    const isMore = !!b.dataset.mobileMore && mobileMoreTabs.includes(tab);
+    b.classList.toggle('active', isDirect || isMore);
+  });
   document.body.classList.add('app-hide-footer');
   window.activeTab = tab;
   const tabEl = document.getElementById('tab-' + tab);

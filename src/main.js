@@ -120,7 +120,8 @@ import {
 import {
   renderWorkspace, workspaceSetView, workspaceNewNote, workspaceOpenNote,
   workspaceEditNote, workspaceSaveNote, workspaceDeleteNote, workspaceFormat, workspaceFormatBlock,
-  workspaceInsertChecklist, workspaceInsertDivider, workspaceOpenLinkPanel, workspaceApplyEditorLink,
+  workspaceInsertChecklist, workspaceInsertDivider, workspaceInsertImage,
+  workspaceOpenLinkPanel, workspaceApplyEditorLink,
   workspaceUploadNoteFile, workspaceOpenNoteFile, workspaceDeleteNoteFile, workspaceCloseFilePreview,
   workspaceNewLink, workspaceEditLink, workspaceDeleteLink, workspaceTogglePinLink, workspaceTogglePinNote,
   workspaceViewLink, workspaceCloseLinkModal, workspaceAutofillLinkType, workspaceSetLinkFilter,
@@ -456,7 +457,8 @@ const _srcExports = {
   // render/workspace
   renderWorkspace, workspaceSetView, workspaceNewNote, workspaceOpenNote,
   workspaceEditNote, workspaceSaveNote, workspaceDeleteNote, workspaceFormat, workspaceFormatBlock,
-  workspaceInsertChecklist, workspaceInsertDivider, workspaceOpenLinkPanel, workspaceApplyEditorLink,
+  workspaceInsertChecklist, workspaceInsertDivider, workspaceInsertImage,
+  workspaceOpenLinkPanel, workspaceApplyEditorLink,
   workspaceUploadNoteFile, workspaceOpenNoteFile, workspaceDeleteNoteFile, workspaceCloseFilePreview,
   workspaceNewLink, workspaceEditLink, workspaceDeleteLink, workspaceTogglePinLink, workspaceTogglePinNote,
   workspaceViewLink, workspaceCloseLinkModal, workspaceAutofillLinkType, workspaceSetLinkFilter,
@@ -568,10 +570,21 @@ window._authLogout = logout;
 
 function _applyAccessUI() {
   const allowed = _getAllowedTabsForMode();
+  const mobileMoreAllowed = isAuthorMode() ? allowed : Array.from(new Set([...allowed, 'settings']));
   document.querySelectorAll('.nav-btn, .mobile-tab').forEach(btn => {
     const tab = btn.dataset.tab;
     btn.style.display = !tab || allowed.includes(tab) ? '' : 'none';
   });
+  document.querySelectorAll('.mobile-more-item[data-tab]').forEach(btn => {
+    const tab = btn.dataset.tab;
+    btn.style.display = !tab || mobileMoreAllowed.includes(tab) ? '' : 'none';
+  });
+  const moreBtn = document.querySelector('.mobile-tab[data-mobile-more]');
+  if (moreBtn) {
+    const hasMoreItems = Array.from(document.querySelectorAll('.mobile-more-item[data-tab]'))
+      .some(btn => btn.style.display !== 'none');
+    moreBtn.style.display = hasMoreItems ? '' : 'none';
+  }
   const exportWrap = document.getElementById('export-wrap');
   if (exportWrap) exportWrap.style.display = (!isAuthorMode() && hasAccess('drinks') && hasAccess('finance')) ? '' : 'none';
   const resetBtn = document.querySelector('.btn-reset');
