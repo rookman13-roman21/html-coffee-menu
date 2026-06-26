@@ -32,6 +32,7 @@ let _tiptapModulesPromise = null;
 let _linkFilter = 'all';
 let _linkSearch = '';
 let _linkModal = null;
+let _noteModal = null;
 let _filePreview = null;
 
 function esc(value) {
@@ -554,6 +555,87 @@ function renderLinkModal() {
   `;
 }
 
+function renderNoteModal() {
+  if (!_noteModal) return '';
+  const title = _noteModal.title || 'Новая заметка';
+  const type = _noteModal.type || 'idea';
+  return `
+    <div class="workspace-modal-backdrop" onclick="workspaceCloseNoteModal()">
+      <section class="workspace-link-modal workspace-note-modal" onclick="event.stopPropagation()">
+        <header>
+          <div>
+            <h2>Новая заметка</h2>
+            <p>Зафиксируйте идею, решение или вопрос для команды. Расширенное форматирование можно добавить после создания.</p>
+          </div>
+          <button class="btn-outline work-mini-btn" onclick="workspaceCloseNoteModal()" title="Закрыть"><i data-lucide="x" class="icon"></i></button>
+        </header>
+
+        <div class="workspace-link-form">
+          <div class="workspace-link-form-row">
+            <label>
+              <span>Название</span>
+              <input id="workspace-note-title" value="${esc(title)}" placeholder="Например: Концепция проекта">
+            </label>
+            <label>
+              <span>Тип</span>
+              <select id="workspace-note-type">${renderNoteTypeOptions(type)}</select>
+            </label>
+          </div>
+          <label>
+            <span>Текст заметки</span>
+            <div class="workspace-editor-toolbar" aria-label="Инструменты заметки">
+              <div class="workspace-toolbar-group">
+                <button data-workspace-tool="undo" onclick="workspaceFormat('undo')" title="Отменить"><i data-lucide="undo-2" class="icon"></i></button>
+                <button data-workspace-tool="redo" onclick="workspaceFormat('redo')" title="Повторить"><i data-lucide="redo-2" class="icon"></i></button>
+              </div>
+              <div class="workspace-toolbar-group">
+                <button data-workspace-tool="bold" onclick="workspaceFormat('bold')" title="Жирный · Ctrl/Cmd+B"><b>B</b></button>
+                <button data-workspace-tool="italic" onclick="workspaceFormat('italic')" title="Курсив · Ctrl/Cmd+I"><i>I</i></button>
+                <button data-workspace-tool="link" onclick="workspaceOpenLinkPanel()" title="Вставить ссылку · Ctrl/Cmd+K"><i data-lucide="link" class="icon"></i></button>
+              </div>
+              <div class="workspace-toolbar-group">
+                <button data-workspace-tool="h2" onclick="workspaceFormatBlock('h2')" title="Заголовок · Ctrl/Cmd+Alt+2">H2</button>
+                <button data-workspace-tool="blockquote" onclick="workspaceFormatBlock('blockquote')" title="Цитата · Ctrl/Cmd+Shift+."><i data-lucide="quote" class="icon"></i></button>
+                <button data-workspace-tool="divider" onclick="workspaceInsertDivider()" title="Разделитель · Ctrl/Cmd+Shift+-"><i data-lucide="minus" class="icon"></i></button>
+              </div>
+              <div class="workspace-toolbar-group">
+                <button data-workspace-tool="image" onclick="workspaceInsertImage()" title="Изображение по ссылке"><i data-lucide="image" class="icon"></i></button>
+              </div>
+              <div class="workspace-toolbar-group">
+                <button data-workspace-tool="bulletList" onclick="workspaceFormat('insertUnorderedList')" title="Маркированный список · Ctrl/Cmd+Shift+8"><i data-lucide="list" class="icon"></i></button>
+                <button data-workspace-tool="orderedList" onclick="workspaceFormat('insertOrderedList')" title="Нумерованный список · Ctrl/Cmd+Shift+7"><i data-lucide="list-ordered" class="icon"></i></button>
+                <button data-workspace-tool="taskList" onclick="workspaceInsertChecklist()" title="Чеклист · Ctrl/Cmd+Shift+9"><i data-lucide="list-checks" class="icon"></i></button>
+              </div>
+              <div class="workspace-toolbar-group">
+                <button data-workspace-tool="clear" onclick="workspaceFormat('removeFormat')" title="Очистить формат · Ctrl/Cmd+\\"><i data-lucide="eraser" class="icon"></i></button>
+              </div>
+            </div>
+          </label>
+          <div class="workspace-link-panel" id="workspace-link-panel" style="display:none">
+            <label>
+              <span>Текст ссылки</span>
+              <input id="workspace-link-text" placeholder="Например: Google Drive">
+            </label>
+            <label>
+              <span>URL</span>
+              <input id="workspace-link-url" placeholder="https://">
+            </label>
+            <button class="btn-primary" onclick="workspaceApplyEditorLink()"><i data-lucide="link" class="icon"></i> Вставить</button>
+          </div>
+          <div class="workspace-editor-wrap">
+            <div id="workspace-note-body" class="workspace-editor-body" spellcheck="true"></div>
+          </div>
+        </div>
+
+        <footer>
+          <button class="btn-outline" onclick="workspaceCloseNoteModal()">Отмена</button>
+          <button class="btn-primary" onclick="workspaceSaveNewNote()"><i data-lucide="file-plus-2" class="icon"></i> Создать</button>
+        </footer>
+      </section>
+    </div>
+  `;
+}
+
 function renderLinkCard(link) {
   const url = normalizeUrl(link.url);
   const author = link.updatedBy || link.createdBy || 'участник';
@@ -692,6 +774,7 @@ function renderOverview(root, data, workspace) {
             </div>
           </section>
         </main>
+      ${renderNoteModal()}
     </section>
   `;
 }
@@ -720,6 +803,7 @@ function renderNotes(root, data, workspace) {
           '<button class="btn-primary" onclick="workspaceNewNote()"><i data-lucide="file-plus-2" class="icon"></i> Создать заметку</button>'
         )}
       </div>
+      ${renderNoteModal()}
     </section>
   `;
 }
@@ -751,6 +835,7 @@ function renderLinks(root, data, workspace) {
         )}
       </div>
       ${renderLinkModal()}
+      ${renderNoteModal()}
     </section>
   `;
 }
@@ -934,6 +1019,7 @@ export function renderWorkspace(view = window._workspaceView || 'overview') {
   else if (String(view).startsWith('note:')) renderNoteView(root, data, workspace, String(view).slice(5));
   else renderOverview(root, data, workspace);
   if (window.lucide) window.lucide.createIcons();
+  if (_noteModal) setupEditor(_noteModal.id);
 }
 
 export async function workspaceSetView(view) {
@@ -943,24 +1029,57 @@ export async function workspaceSetView(view) {
 
 export async function workspaceNewNote(defaultTitle = 'Новая заметка') {
   if (!(await ensureNoteCanLeave())) return;
+  _noteModal = {
+    id: nextId('new_note'),
+    title: defaultTitle || 'Новая заметка',
+    type: defaultTitle === 'Концепция проекта' ? 'task' : 'idea',
+    body: '',
+  };
+  const current = String(window._workspaceView || 'notes');
+  renderWorkspace(current.startsWith('note') ? 'notes' : current);
+}
+
+export function workspaceCloseNoteModal() {
+  _noteModal = null;
+  clearEditorRuntime();
+  renderWorkspace(window._workspaceView || 'notes');
+}
+
+export function workspaceSaveNewNote() {
   const data = area();
   const actor = actorMeta();
+  const titleInput = document.getElementById('workspace-note-title');
+  const bodyInput = document.getElementById('workspace-note-body');
+  const typeInput = document.getElementById('workspace-note-type');
+  const title = String(titleInput?.value || '').trim() || 'Новая заметка';
+  const body = cleanEditorHtml((_tiptapEditor && _activeEditorNoteId === _noteModal?.id) ? _tiptapEditor.getHTML() : (bodyInput?.innerHTML || ''));
+  const type = typeInput?.value || _noteModal?.type || 'idea';
+  if (!stripHtml(body).trim()) {
+    window.showAlert?.('Добавьте текст заметки перед созданием');
+    bodyInput?.focus();
+    return false;
+  }
   const note = {
     id: nextId('note'),
-    title: defaultTitle || 'Новая заметка',
-    body: '<p></p>',
+    title,
+    body: body || '<p></p>',
     createdAt: nowIso(),
     updatedAt: nowIso(),
     createdBy: actor.name,
     updatedBy: actor.name,
     createdAvatarUrl: actor.avatarUrl,
     updatedAvatarUrl: actor.avatarUrl,
-    type: defaultTitle === 'Концепция проекта' ? 'task' : 'idea',
+    type: NOTE_TYPES.some(([key]) => key === type) ? type : 'idea',
     pinned: false,
-    draft: true,
+    draft: false,
   };
   data.notes.unshift(note);
-  renderWorkspace(`note-edit:${note.id}`);
+  saveState();
+  window.logWorkspaceActivity?.('workspace_note_changed', 'workspace_note', note.id, `Добавлена заметка «${title}»`);
+  _noteModal = null;
+  clearEditorRuntime();
+  renderWorkspace(`note:${note.id}`);
+  return true;
 }
 
 export async function workspaceBackToNotes(id) {
@@ -1408,7 +1527,7 @@ async function setupEditor(noteId) {
     currentBody.innerHTML = '';
     _tiptapEditor = new Editor({
       element: currentBody,
-      content: cleanEditorHtml(note?.body || '') || '<p></p>',
+      content: cleanEditorHtml(note?.body || (_noteModal?.id === noteId ? _noteModal.body : '')) || '<p></p>',
       extensions: [
         StarterKit.configure({
           heading: { levels: [2, 3] },
@@ -1466,7 +1585,8 @@ function handleEditorShortcut(event) {
   const body = document.getElementById('workspace-note-body');
   const inBody = event.currentTarget === body;
   const save = () => {
-    if (_activeEditorNoteId) workspaceSaveNote(_activeEditorNoteId);
+    if (_noteModal && _activeEditorNoteId === _noteModal.id) workspaceSaveNewNote();
+    else if (_activeEditorNoteId) workspaceSaveNote(_activeEditorNoteId);
   };
   if (!primary && key === 'escape') {
     closeLinkPanel();
@@ -1553,8 +1673,9 @@ function clearEditorRuntime() {
 function markNoteDirty() {
   if (!_activeEditorNoteId) return;
   _noteDirty = true;
-  setEditorStatus('Сохраняем...', 'saving');
   updateEditorPlaceholder();
+  if (_noteModal && _activeEditorNoteId === _noteModal.id) return;
+  setEditorStatus('Сохраняем...', 'saving');
   clearTimeout(_noteAutosaveTimer);
   _noteAutosaveTimer = setTimeout(() => {
     if (_activeEditorNoteId) workspaceSaveNote(_activeEditorNoteId, { log: false });
@@ -1563,6 +1684,7 @@ function markNoteDirty() {
 
 async function ensureNoteCanLeave(nextId = '') {
   if (!_noteDirty || !_activeEditorNoteId || nextId === _activeEditorNoteId) return true;
+  if (_noteModal && _activeEditorNoteId === _noteModal.id) return true;
   if (discardDraftNote(_activeEditorNoteId, true)) return true;
   const ok = await window.showConfirm?.('Есть несохранённые изменения в заметке. Сохранить перед переходом?', null, { icon: '💾', okText: 'Сохранить', danger: false });
   if (!ok) return false;

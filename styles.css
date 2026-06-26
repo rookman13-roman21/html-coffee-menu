@@ -4766,6 +4766,9 @@ body.dark .workspace-invite-form label, body.dark .workspace-section-title, body
 }
 .workspace-link-form input, .workspace-link-form select { height: 44px; }
 .workspace-link-form textarea { min-height: 92px; padding-top: 11px; resize: vertical; line-height: 1.45; }
+.workspace-note-modal { width: min(760px, 100%); }
+.workspace-note-modal .workspace-editor-body { min-height: 190px; }
+.workspace-note-modal .workspace-tiptap-content { min-height: 190px; padding: 16px; }
 .workspace-link-form input:focus, .workspace-link-form select:focus, .workspace-link-form textarea:focus {
   outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(79,136,62,.14);
 }

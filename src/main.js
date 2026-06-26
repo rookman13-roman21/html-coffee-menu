@@ -126,6 +126,7 @@ import {
   workspaceNewLink, workspaceEditLink, workspaceDeleteLink, workspaceTogglePinLink, workspaceTogglePinNote,
   workspaceViewLink, workspaceCloseLinkModal, workspaceAutofillLinkType, workspaceSetLinkFilter,
   workspaceSetLinkSearch, workspaceSaveProjectLink, workspaceOpenProjectLink, workspaceCopyLink,
+  workspaceCloseNoteModal, workspaceSaveNewNote,
   workspaceFlushNoteAutosave, workspaceHasUnsavedNote,
 } from './render/workspace.js';
 
@@ -463,6 +464,7 @@ const _srcExports = {
   workspaceNewLink, workspaceEditLink, workspaceDeleteLink, workspaceTogglePinLink, workspaceTogglePinNote,
   workspaceViewLink, workspaceCloseLinkModal, workspaceAutofillLinkType, workspaceSetLinkFilter,
   workspaceSetLinkSearch, workspaceSaveProjectLink, workspaceOpenProjectLink, workspaceCopyLink,
+  workspaceCloseNoteModal, workspaceSaveNewNote,
   workspaceFlushNoteAutosave, workspaceHasUnsavedNote,
   // ui/payroll
   calcPositionCosts, payrollPositionTotal, payrollTotal, payrollTotals,
